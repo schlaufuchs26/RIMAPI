@@ -39,6 +39,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/builder/cancel")]
+        [EndpointMetadata("Cancel every blueprint and frame inside a rectangle, the game's own cancel order")]
+        public async Task CancelBlueprints(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<CancelBlueprintsRequestDto>();
+            var result = _builderService.CancelBlueprints(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/builder/check-zone")]
         public async Task CheckZone(HttpListenerContext context)
         {

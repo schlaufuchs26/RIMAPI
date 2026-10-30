@@ -38,5 +38,20 @@ namespace RIMAPI.Models.Map
 
         /// <summary>The thing's id, the handle the write endpoints use.</summary>
         public int ThingId { get; set; }
+
+        /// <summary>
+        /// How much of its material the build still needs, in units of
+        /// <see cref="Stuff"/>; 0 when the def takes no material or the entry is
+        /// a frame (its material is delivered into the frame itself).
+        /// </summary>
+        public int MaterialNeeded { get; set; }
+
+        /// <summary>
+        /// How much of that material lies on the map right now, counted the way
+        /// the colony's resource counter counts it. A blueprint with fewer units
+        /// than <see cref="MaterialNeeded"/> cannot be built until more arrives,
+        /// which is what colony 6 sat on for two days (fox ticket #3133).
+        /// </summary>
+        public int MaterialAvailable { get; set; }
     }
 }

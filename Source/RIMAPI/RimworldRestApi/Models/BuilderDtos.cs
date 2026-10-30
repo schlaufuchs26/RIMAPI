@@ -78,6 +78,46 @@ namespace RIMAPI.Models
         public string Reason { get; set; }
     }
 
+    /// <summary>
+    /// Cancel every blueprint and frame inside a rectangle: the game's own
+    /// cancel designator, applied to the whole area at once (fox ticket #3133).
+    /// A blueprint whose material never arrives used to be stuck: it could only
+    /// be overwritten cell by cell, and a wrong cell could not be removed.
+    /// </summary>
+    public class CancelBlueprintsRequestDto
+    {
+        public int MapId { get; set; }
+        public PositionDto PointA { get; set; }
+        public PositionDto PointB { get; set; }
+    }
+
+    public class CancelResultDto
+    {
+        /// <summary>How many planned builds were removed (a multi-cell blueprint counts once).</summary>
+        public int Cancelled { get; set; }
+
+        public List<CancelEntryDto> Removed { get; set; } = new List<CancelEntryDto>();
+
+        /// <summary>Every cell of the rectangle that held nothing to cancel, with the reason.</summary>
+        public List<PlaceRefusalDto> Skipped { get; set; } = new List<PlaceRefusalDto>();
+    }
+
+    /// <summary>One planned build the cancel removed: the def, its material, the cell and the kind.</summary>
+    public class CancelEntryDto
+    {
+        public string DefName { get; set; }
+
+        /// <summary>The material's defName, null when the def takes none.</summary>
+        public string Stuff { get; set; }
+
+        /// <summary>"blueprint" (nothing built yet) or "frame" (started).</summary>
+        public string Kind { get; set; }
+
+        public int X { get; set; }
+
+        public int Z { get; set; }
+    }
+
     public class CheckZoneResultDto
     {
         public bool CanBuild { get; set; }

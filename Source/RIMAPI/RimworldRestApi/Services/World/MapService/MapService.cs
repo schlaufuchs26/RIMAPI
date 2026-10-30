@@ -195,18 +195,25 @@ namespace RIMAPI.Services
                 // The blueprint's own WorkTotal is protected; a blueprint has no
                 // work done yet, so the def's build cost is the work left.
                 var work = target.GetStatValueAbstract(StatDefOf.WorkToBuild, build?.stuffToUse);
+                // A blueprint that never gets its material is invisible as such:
+                // the read showed the def and the work left, so thirteen granite
+                // walls read like thirteen walls (ticket #3133). The counter is
+                // the colony's own count of what lies on the map.
+                var stuffDef = build?.stuffToUse;
                 result.Add(new BlueprintEntryDto
                 {
                     DefName = target.defName,
                     Label = target.LabelCap,
                     Kind = "blueprint",
-                    Stuff = build?.stuffToUse?.defName,
+                    Stuff = stuffDef?.defName,
                     X = blueprint.Position.x,
                     Z = blueprint.Position.z,
                     Rotation = blueprint.Rotation.AsInt,
                     WorkLeft = work,
                     WorkTotal = work,
                     ThingId = blueprint.thingIDNumber,
+                    MaterialNeeded = stuffDef == null ? 0 : target.CostStuffCount,
+                    MaterialAvailable = stuffDef == null ? 0 : map.resourceCounter.GetCount(stuffDef),
                 });
             }
 
@@ -218,18 +225,34 @@ namespace RIMAPI.Services
                     continue;
                 }
 
+                // A frame already holds the material a colonist hauled into it,
+                // so what it still needs is the rest of its cost, and the map's
+                // counter says whether that rest exists (ticket #3133).
+                var frameStuff = frame.EntityToBuildStuff();
+                int delivered = 0;
+                if (frameStuff != null)
+                {
+                    var held = frame.GetDirectlyHeldThings();
+                    if (held != null)
+                    {
+                        delivered = held.TotalStackCount;
+                    }
+                }
+
                 result.Add(new BlueprintEntryDto
                 {
                     DefName = frame.BuildDef.defName,
                     Label = frame.LabelEntityToBuild,
                     Kind = "frame",
-                    Stuff = frame.EntityToBuildStuff()?.defName,
+                    Stuff = frameStuff?.defName,
                     X = frame.Position.x,
                     Z = frame.Position.z,
                     Rotation = frame.Rotation.AsInt,
                     WorkLeft = frame.WorkLeft,
                     WorkTotal = frame.WorkToBuild,
                     ThingId = frame.thingIDNumber,
+                    MaterialNeeded = frameStuff == null ? 0 : Math.Max(0, frame.BuildDef.CostStuffCount - delivered),
+                    MaterialAvailable = frameStuff == null ? 0 : map.resourceCounter.GetCount(frameStuff),
                 });
             }
 

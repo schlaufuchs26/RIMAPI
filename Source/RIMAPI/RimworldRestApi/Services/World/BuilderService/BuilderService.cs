@@ -284,6 +284,110 @@ namespace RIMAPI.Services
             }
         }
 
+        /// <summary>
+        /// Cancel every blueprint and frame inside a rectangle, the game's own
+        /// cancel designator (DestroyMode.Cancel) applied cell by cell (fox
+        /// ticket #3133). A blueprint that can never be built used to be
+        /// permanent: overwriting it with another material worked per cell, and
+        /// a cell planned by mistake could not be cleared at all.
+        /// </summary>
+        public ApiResult<CancelResultDto> CancelBlueprints(CancelBlueprintsRequestDto request)
+        {
+            try
+            {
+                var map = MapHelper.GetMapByID(request.MapId);
+                if (map == null) return ApiResult<CancelResultDto>.Fail($"Map {request.MapId} not found.");
+                if (request.PointA == null || request.PointB == null)
+                {
+                    return ApiResult<CancelResultDto>.Fail("PointA and PointB are required.");
+                }
+
+                int minX = Mathf.Min(request.PointA.X, request.PointB.X);
+                int minZ = Mathf.Min(request.PointA.Z, request.PointB.Z);
+                int maxX = Mathf.Max(request.PointA.X, request.PointB.X);
+                int maxZ = Mathf.Max(request.PointA.Z, request.PointB.Z);
+
+                var result = new CancelResultDto();
+                // A multi-cell blueprint sits in several cells of the rectangle;
+                // it must be removed once, not once per cell.
+                var done = new HashSet<int>();
+
+                var rect = new CellRect(minX, minZ, maxX - minX + 1, maxZ - minZ + 1);
+                foreach (var cell in rect)
+                {
+                    if (!cell.InBounds(map))
+                    {
+                        result.Skipped.Add(new PlaceRefusalDto
+                        {
+                            DefName = null,
+                            X = cell.x,
+                            Z = cell.z,
+                            Reason = "OutOfBounds",
+                        });
+                        continue;
+                    }
+
+                    Thing planned = null;
+                    foreach (var thing in cell.GetThingList(map))
+                    {
+                        if (thing is Blueprint || thing is Frame)
+                        {
+                            planned = thing;
+                            break;
+                        }
+                    }
+
+                    if (planned == null)
+                    {
+                        result.Skipped.Add(new PlaceRefusalDto
+                        {
+                            DefName = null,
+                            X = cell.x,
+                            Z = cell.z,
+                            Reason = "NothingPlanned",
+                        });
+                        continue;
+                    }
+
+                    if (!done.Add(planned.thingIDNumber))
+                    {
+                        continue;
+                    }
+
+                    var blueprint = planned as Blueprint;
+                    var frame = planned as Frame;
+                    var defName = blueprint != null
+                        ? blueprint.EntityToBuild()?.defName
+                        : frame?.BuildDef?.defName;
+                    var stuff = blueprint != null
+                        ? (blueprint as Blueprint_Build)?.stuffToUse?.defName
+                        : frame?.EntityToBuildStuff()?.defName;
+                    var kind = frame != null ? "frame" : "blueprint";
+                    int x = planned.Position.x;
+                    int z = planned.Position.z;
+
+                    planned.Destroy(DestroyMode.Cancel);
+
+                    result.Cancelled++;
+                    result.Removed.Add(new CancelEntryDto
+                    {
+                        DefName = defName,
+                        Stuff = stuff,
+                        Kind = kind,
+                        X = x,
+                        Z = z,
+                    });
+                }
+
+                return ApiResult<CancelResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"Cancel Error: {ex}");
+                return ApiResult<CancelResultDto>.Fail(ex.Message);
+            }
+        }
+
         public ApiResult<CheckZoneResultDto> CheckZone(CheckZoneRequestDto request)
         {
             try
