@@ -172,6 +172,29 @@ namespace RIMAPI.Models
         public bool IsTotallyDisabled { get; set; }
     }
 
+    // One work type's level on one pawn (fox, #3085). The game keeps two
+    // numbers and they are not the same: Stored is what the pawn is set to,
+    // Priority is what the game acts on. While manual priorities are off the
+    // game treats every active type as 3, whatever the pawn stores, so a read
+    // that only reported GetPriority could not tell a hand-set level from a
+    // default one.
+    public class WorkPriorityEntryDto
+    {
+        public string WorkType { get; set; }
+        public int Priority { get; set; }
+        public int Stored { get; set; }
+        public bool Disabled { get; set; }
+    }
+
+    public class ColonistWorkPrioritiesDto
+    {
+        public int PawnId { get; set; }
+        public string PawnName { get; set; }
+        public bool ManualPriorities { get; set; }
+        public bool Initialized { get; set; }
+        public List<WorkPriorityEntryDto> Work { get; set; } = new List<WorkPriorityEntryDto>();
+    }
+
     public class PawnTimeAssignmentRequestDto
     {
         public int PawnId { get; set; }

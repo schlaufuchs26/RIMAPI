@@ -186,6 +186,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/colonist/work-priorities")]
+        [EndpointMetadata("Read one pawn's work priorities")]
+        public async Task GetColonistWorkPriorities(HttpListenerContext context)
+        {
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var result = _colonistService.GetColonistWorkPriorities(pawnId);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/colonist/work-priority")]
         [EndpointMetadata("Set pawn work priorities")]
         public async Task SetColonistWorkPriority(HttpListenerContext context)

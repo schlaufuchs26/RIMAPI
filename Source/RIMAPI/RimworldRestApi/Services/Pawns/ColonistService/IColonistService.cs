@@ -18,6 +18,7 @@ namespace RIMAPI.Services
         ApiResult<BodyPartsDto> GetColonistBodyParts(int pawnId);
         ApiResult<OpinionAboutPawnDto> GetOpinionAboutPawn(int pawnId, int otherPawnId);
         ApiResult<WorkListDto> GetWorkList();
+        ApiResult<ColonistWorkPrioritiesDto> GetColonistWorkPriorities(int pawnId);
         ApiResult<List<TimeAssignmentDto>> GetTimeAssignmentsList();
         ApiResult SetColonistWorkPriority(WorkPriorityRequestDto body);
         ApiResult SetColonistsWorkPriority(ColonistsWorkPrioritiesRequestDto body);

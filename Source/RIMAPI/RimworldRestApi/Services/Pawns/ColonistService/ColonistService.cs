@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RIMAPI.Models;
@@ -185,6 +186,90 @@ namespace RIMAPI.Services
             }
 
             return ApiResult<WorkListDto>.Ok(workList);
+        }
+
+        // GetColonistWorkPriorities answers "what will this pawn do, and what is
+        // it set to" in one read (fox, #3085): every work type with its stored
+        // level, the level the game acts on, and whether the pawn can do it at
+        // all. Without it a caller has to guess from the work tab.
+        public ApiResult<ColonistWorkPrioritiesDto> GetColonistWorkPriorities(int pawnId)
+        {
+            try
+            {
+                if (pawnId <= 0)
+                {
+                    return ApiResult<ColonistWorkPrioritiesDto>.Fail(
+                        "pawn_id is required; it is the id the colonists read reports."
+                    );
+                }
+
+                Pawn pawn = PawnHelper.FindPawnById(pawnId);
+                if (pawn == null)
+                {
+                    return ApiResult<ColonistWorkPrioritiesDto>.Fail(
+                        $"Could not find pawn with ID {pawnId}"
+                    );
+                }
+
+                var result = new ColonistWorkPrioritiesDto
+                {
+                    PawnId = pawn.thingIDNumber,
+                    PawnName = pawn.LabelShortCap,
+                    ManualPriorities = Find.PlaySettings?.useWorkPriorities ?? false,
+                    Initialized = pawn.workSettings != null && pawn.workSettings.EverWork,
+                };
+
+                if (!result.Initialized)
+                {
+                    return ApiResult<ColonistWorkPrioritiesDto>.Ok(result);
+                }
+
+                DefMap<WorkTypeDef, int> stored = StoredWorkPriorities(pawn);
+                foreach (WorkTypeDef workType in DefDatabase<WorkTypeDef>.AllDefs)
+                {
+                    if (workType == null)
+                        continue;
+                    int priority = pawn.workSettings.GetPriority(workType);
+                    result.Work.Add(
+                        new WorkPriorityEntryDto
+                        {
+                            WorkType = workType.defName,
+                            Priority = priority,
+                            Stored = stored != null ? stored[workType] : priority,
+                            Disabled = pawn.WorkTypeIsDisabled(workType),
+                        }
+                    );
+                }
+
+                return ApiResult<ColonistWorkPrioritiesDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<ColonistWorkPrioritiesDto>.Fail(ex.Message);
+            }
+        }
+
+        // StoredWorkPriorities reads the levels the pawn keeps. The game holds
+        // them in a private DefMap and GetPriority collapses every active type
+        // to 3 while manual priorities are off, so the numbers behind the work
+        // tab are only visible through that field. Null means unreadable, and
+        // the caller falls back to the effective level.
+        private static DefMap<WorkTypeDef, int> StoredWorkPriorities(Pawn pawn)
+        {
+            try
+            {
+                return Traverse
+                    .Create(pawn.workSettings)
+                    .Field("priorities")
+                    .GetValue<DefMap<WorkTypeDef, int>>();
+            }
+            catch (Exception ex)
+            {
+                Core.LogApi.Error(
+                    $"Error reading stored work priorities for pawn {pawn.thingIDNumber} - {ex.Message}"
+                );
+                return null;
+            }
         }
 
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
