@@ -274,5 +274,22 @@ namespace RIMAPI.Controllers
             var result = _gameStateService.GetRunInBackground();
             await context.SendJsonResponse(result);
         }
+
+        [Post("/api/v1/game/settings/manual-priorities")]
+        [EndpointMetadata("Switch the colony's manual work priorities on or off (?enabled=true|false)")]
+        public async Task SetManualPriorities(HttpListenerContext context)
+        {
+            if (!RequestParser.HasParameter(context, "enabled"))
+            {
+                await context.SendJsonResponse(
+                    ApiResult.Fail("Missing 'enabled' parameter: pass enabled=true or enabled=false.")
+                );
+                return;
+            }
+
+            bool enabled = RequestParser.GetBooleanParameter(context, "enabled");
+            var result = _gameStateService.SetManualPriorities(enabled);
+            await context.SendJsonResponse(result);
+        }
     }
 }

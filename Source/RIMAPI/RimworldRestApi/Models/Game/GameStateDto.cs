@@ -67,6 +67,9 @@ namespace RIMAPI.Models
         public bool PauseOnLoad { get; set; }
         public string PauseOnUrgentLetter { get; set; }
         public bool AutomaticPauseOnLetter { get; set; } // Any letter? (Check nuances)
+        // Manual work priorities: while off, the game treats every active work
+        // type as 3 and a pawn's stored level orders nothing.
+        public bool ManualPriorities { get; set; }
         public bool EdgeScreenScroll { get; set; }
         public float MapDragSensitivity { get; set; }
         public bool ZoomToMouse { get; set; }

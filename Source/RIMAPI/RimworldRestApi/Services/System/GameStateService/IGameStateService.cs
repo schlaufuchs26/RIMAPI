@@ -16,5 +16,6 @@ namespace RIMAPI.Services
         ApiResult<GameSettingsDto> GetCurrentSettings();
         ApiResult<bool> ToggleRunInBackground();
         ApiResult<bool> GetRunInBackground();
+        ApiResult<bool> SetManualPriorities(bool enabled);
     }
 }

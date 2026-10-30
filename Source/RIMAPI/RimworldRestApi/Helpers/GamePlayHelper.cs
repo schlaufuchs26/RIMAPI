@@ -253,6 +253,7 @@ namespace RIMAPI.Helpers
                 // --- Gameplay ---
                 PauseOnLoad = Prefs.PauseOnLoad,
                 PauseOnUrgentLetter = Prefs.AutomaticPauseMode.ToString(),
+                ManualPriorities = Find.PlaySettings?.useWorkPriorities ?? false,
                 EdgeScreenScroll = Prefs.EdgeScreenScroll,
                 MapDragSensitivity = Prefs.MapDragSensitivity,
                 ZoomToMouse = Prefs.ZoomToMouse,

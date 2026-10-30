@@ -152,5 +152,27 @@ namespace RIMAPI.Services
         {
             return ApiResult<bool>.Ok(Prefs.RunInBackground);
         }
+
+        // SetManualPriorities switches the colony's manual work priorities, the
+        // option that decides whether a pawn's stored level orders its work.
+        // The flag lives in PlaySettings (per game, saved with the colony), not
+        // in Prefs, so it needs a loaded game and is not persisted on its own.
+        public ApiResult<bool> SetManualPriorities(bool enabled)
+        {
+            try
+            {
+                if (Current.Game == null || Find.PlaySettings == null)
+                {
+                    return ApiResult<bool>.Fail("No colony is loaded, so there are no work priorities to switch.");
+                }
+
+                Find.PlaySettings.useWorkPriorities = enabled;
+                return ApiResult<bool>.Ok(Find.PlaySettings.useWorkPriorities);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<bool>.Fail(ex.Message);
+            }
+        }
     }
 }
