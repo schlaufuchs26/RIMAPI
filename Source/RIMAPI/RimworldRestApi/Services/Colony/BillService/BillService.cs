@@ -80,7 +80,7 @@ namespace RIMAPI.Services
             }
             catch (Exception ex)
             {
-                return ApiResult<BillDto>.Fail($"Failed to create bill: {ex.Message}");
+                return ApiResult<BillDto>.Fail($"Failed to create bill: {ex}");
             }
         }
 
