@@ -24,7 +24,21 @@ public class OrderService : IOrderService
         {
             if (!c.InBounds(map)) continue;
 
-            if (type == "mine")
+            if (type == "chop" || type == "cut")
+            {
+                // Chop wood is the game's CutPlant designation (Designator_PlantsHarvestWood);
+                // HarvestPlant is the harvest order and does nothing on a tree, so marking a
+                // tree as Harvest is a silent no-op (fox ticket #3058).
+                foreach (var t in c.GetThingList(map))
+                {
+                    var plant = t as Plant;
+                    if (plant == null || !plant.def.plant.IsTree) continue;
+                    if (map.designationManager.DesignationOn(plant, DesignationDefOf.CutPlant) != null) continue;
+                    map.designationManager.AddDesignation(new Designation(plant, DesignationDefOf.CutPlant));
+                    count++;
+                }
+            }
+            else if (type == "mine")
             {
                 // Add Mining Designation
                 var edifice = c.GetEdifice(map);
