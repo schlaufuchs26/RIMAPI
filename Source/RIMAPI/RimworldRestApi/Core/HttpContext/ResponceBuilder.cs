@@ -68,11 +68,16 @@ namespace RIMAPI.Core
     public class ApiResult
     {
         public bool Success { get; set; }
+        // Data carries a payload for commands that have something to report back
+        // (the designate counts); null is left out of the JSON entirely.
+        public object Data { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
         public List<string> Warnings { get; set; } = new List<string>();
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         public static ApiResult Ok() => new ApiResult { Success = true };
+
+        public static ApiResult Ok(object data) => new ApiResult { Success = true, Data = data };
 
         public static ApiResult Fail(string error) =>
             new ApiResult { Success = false, Errors = { error } };

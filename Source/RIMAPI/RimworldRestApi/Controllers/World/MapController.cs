@@ -66,6 +66,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/designations")]
+        [EndpointMetadata("Get every designation on the map: what is marked for chopping, mining, deconstructing, harvesting or hunting, with its cell or thing")]
+        public async Task GetMapDesignations(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var result = _mapService.GetMapDesignations(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/weather")]
         [EndpointMetadata("Get weather on the map")]
         public async Task GetMapWeather(HttpListenerContext context)

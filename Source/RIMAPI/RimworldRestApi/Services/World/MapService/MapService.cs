@@ -121,6 +121,48 @@ namespace RIMAPI.Services
             return ApiResult<List<ThingDto>>.Ok(result);
         }
 
+        /// <summary>
+        /// Every designation the map currently carries: what is marked for
+        /// chopping, mining, deconstructing, harvesting or hunting, and where.
+        /// The manager holds both the saved and the spawned designations, so
+        /// the answer is the same set the game draws (fox ticket #3060).
+        /// </summary>
+        public ApiResult<List<DesignationDto>> GetMapDesignations(int mapId)
+        {
+            var map = MapHelper.GetMapByID(mapId);
+            if (map == null)
+            {
+                return ApiResult<List<DesignationDto>>.Fail($"Map not found: {mapId}");
+            }
+
+            var result = new List<DesignationDto>();
+            foreach (var designation in map.designationManager.AllDesignations)
+            {
+                var dto = new DesignationDto
+                {
+                    DefName = designation.def?.defName,
+                    Label = designation.def?.label,
+                    Target = designation.target.HasThing ? "thing" : "cell",
+                    X = designation.target.Cell.x,
+                    Z = designation.target.Cell.z,
+                };
+
+                // A thing-targeted designation names the thing, so a caller can
+                // address the same thing again (the ids the things read prints).
+                if (designation.target.HasThing && designation.target.Thing != null)
+                {
+                    var thing = designation.target.Thing;
+                    dto.ThingId = thing.thingIDNumber;
+                    dto.ThingDefName = thing.def?.defName;
+                    dto.ThingLabel = thing.LabelShort;
+                }
+
+                result.Add(dto);
+            }
+
+            return ApiResult<List<DesignationDto>>.Ok(result);
+        }
+
         public ApiResult<MapZonesDto> GetMapZones(int mapId)
         {
             MapZonesDto mapZones = new MapZonesDto();
