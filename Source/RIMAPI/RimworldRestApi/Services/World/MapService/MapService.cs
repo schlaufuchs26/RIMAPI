@@ -244,6 +244,59 @@ namespace RIMAPI.Services
             return ApiResult<MapZonesDto>.Ok(mapZones);
         }
 
+        /// <summary>
+        /// One area and its cells (fox ticket #3095). The Home area is the one
+        /// that decides where colonists haul, so a build order outside it never
+        /// happens; this read is how a caller checks before it places one.
+        /// </summary>
+        public ApiResult<AreaCellsDto> GetMapArea(int mapId, string label)
+        {
+            Map map = MapHelper.GetMapByID(mapId);
+            if (map == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail($"Map not found: {mapId}");
+            }
+
+            Area area = MapHelper.FindArea(map, label, out string error);
+            if (area == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ApiResult<AreaCellsDto>.Ok(MapHelper.GetAreaCells(map, area));
+        }
+
+        /// <summary>
+        /// Extend one area over a rectangle, the game's own expand designator
+        /// applied at once (fox ticket #3095). The answer is the area after the
+        /// change plus how many cells were added, already inside, or outside the
+        /// map, so a caller never has to guess what a rectangle did.
+        /// </summary>
+        public ApiResult<AreaCellsDto> ExpandMapArea(AreaExpandRequestDto request)
+        {
+            Map map = MapHelper.GetMapByID(request.MapId);
+            if (map == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail($"Map not found: {request.MapId}");
+            }
+            if (request.PointA == null || request.PointB == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail("point_a and point_b are required: the rectangle the area grows over.");
+            }
+
+            Area area = MapHelper.FindArea(map, request.Label, out string error);
+            if (area == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+
+            int x1 = Math.Min(request.PointA.X, request.PointB.X);
+            int x2 = Math.Max(request.PointA.X, request.PointB.X);
+            int z1 = Math.Min(request.PointA.Z, request.PointB.Z);
+            int z2 = Math.Max(request.PointA.Z, request.PointB.Z);
+            CellRect rect = CellRect.FromLimits(x1, z1, x2, z2);
+            return ApiResult<AreaCellsDto>.Ok(MapHelper.ExpandArea(map, area, rect));
+        }
+
         public ApiResult<MapWeatherDto> GetWeather(int mapId)
         {
             var map = MapHelper.GetMapByID(mapId);

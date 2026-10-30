@@ -351,6 +351,163 @@ namespace RIMAPI.Helpers
             }
         }
 
+        /// <summary>
+        /// Find one area by its label or its type name, Home when nothing is
+        /// named (fox ticket #3095). The game translates the label, so a German
+        /// install answers "Zuhause" for the home area; the type name
+        /// Area_Home does not move, so both are accepted.
+        /// </summary>
+        public static Area FindArea(Map map, string label, out string error)
+        {
+            error = null;
+            if (map == null)
+            {
+                error = "No map is loaded.";
+                return null;
+            }
+
+            string wanted = string.IsNullOrWhiteSpace(label) ? "Home" : label.Trim();
+            var areas = map.areaManager.AllAreas;
+            foreach (var area in areas)
+            {
+                string type = area.GetType().Name;
+                if (string.Equals(area.Label.ToString(), wanted, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(type, wanted, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(type, "Area_" + wanted, StringComparison.OrdinalIgnoreCase))
+                {
+                    return area;
+                }
+            }
+
+            error = $"No area is named \"{wanted}\". The map has: " +
+                string.Join(", ", areas.Select(a => a.Label + " (" + a.GetType().Name + ")"));
+            return null;
+        }
+
+        /// <summary>
+        /// One area's cells as rectangles (fox ticket #3095). The area read
+        /// listed only a count, so a caller could not tell whether a cell was
+        /// inside the Home area, which is where colonists haul and therefore
+        /// where a blueprint is ever built.
+        /// </summary>
+        public static AreaCellsDto GetAreaCells(Map map, Area area)
+        {
+            var cells = new HashSet<IntVec3>(area.ActiveCells);
+            var dto = new AreaCellsDto
+            {
+                Id = area.ID,
+                Label = area.Label,
+                Type = area.GetType().Name,
+                CellsCount = cells.Count,
+                Rects = AreaRectangles(cells),
+            };
+            if (dto.Rects.Count > 0)
+            {
+                dto.Bounds = new AreaRectDto
+                {
+                    X1 = dto.Rects.Min(r => r.X1),
+                    Z1 = dto.Rects.Min(r => r.Z1),
+                    X2 = dto.Rects.Max(r => r.X2),
+                    Z2 = dto.Rects.Max(r => r.Z2),
+                };
+            }
+            return dto;
+        }
+
+        /// <summary>
+        /// Compress a set of cells into non-overlapping rectangles: horizontal
+        /// runs per row, merged downward while the run stays identical. A home
+        /// area is usually a few hundred to a few thousand cells, and a list of
+        /// rectangles is what a caller can test a cell against.
+        /// </summary>
+        public static List<AreaRectDto> AreaRectangles(HashSet<IntVec3> cells)
+        {
+            var rects = new List<AreaRectDto>();
+            if (cells.Count == 0)
+            {
+                return rects;
+            }
+
+            // Runs still open at the previous row, keyed by their x span.
+            var open = new Dictionary<(int, int), AreaRectDto>();
+            var rows = cells.GroupBy(c => c.z).OrderBy(g => g.Key);
+            foreach (var row in rows)
+            {
+                var next = new Dictionary<(int, int), AreaRectDto>();
+                foreach (var run in RowRuns(row.Select(c => c.x)))
+                {
+                    if (open.TryGetValue(run, out AreaRectDto rect) && rect.Z2 == row.Key - 1)
+                    {
+                        rect.Z2 = row.Key;
+                    }
+                    else
+                    {
+                        rect = new AreaRectDto { X1 = run.Item1, X2 = run.Item2, Z1 = row.Key, Z2 = row.Key };
+                        rects.Add(rect);
+                    }
+                    next[run] = rect;
+                }
+                open = next;
+            }
+
+            rects.Sort((a, b) => a.Z1 != b.Z1 ? a.Z1.CompareTo(b.Z1) : a.X1.CompareTo(b.X1));
+            return rects;
+        }
+
+        /// <summary>The contiguous x spans of one row, sorted.</summary>
+        private static List<(int, int)> RowRuns(IEnumerable<int> xs)
+        {
+            var sorted = xs.OrderBy(x => x).ToList();
+            var runs = new List<(int, int)>();
+            if (sorted.Count == 0)
+            {
+                return runs;
+            }
+            int start = sorted[0];
+            for (int i = 1; i < sorted.Count; i++)
+            {
+                if (sorted[i] != sorted[i - 1] + 1)
+                {
+                    runs.Add((start, sorted[i - 1]));
+                    start = sorted[i];
+                }
+            }
+            runs.Add((start, sorted[sorted.Count - 1]));
+            return runs;
+        }
+
+        /// <summary>
+        /// Turn every cell of the rectangle on in the area, the game's own
+        /// "expand area" designator applied at once (fox ticket #3095). Cells
+        /// outside the map are counted, not set, so the answer can say why a
+        /// rectangle did not land whole.
+        /// </summary>
+        public static AreaCellsDto ExpandArea(Map map, Area area, CellRect rect)
+        {
+            int added = 0, already = 0, outside = 0;
+            foreach (IntVec3 cell in rect)
+            {
+                if (!cell.InBounds(map))
+                {
+                    outside++;
+                    continue;
+                }
+                if (area[cell])
+                {
+                    already++;
+                    continue;
+                }
+                area[cell] = true;
+                added++;
+            }
+
+            AreaCellsDto dto = GetAreaCells(map, area);
+            dto.Added = added;
+            dto.Already = already;
+            dto.Outside = outside;
+            return dto;
+        }
+
         public static List<BuildingDto> GetMapBuildings(int mapId)
         {
             List<BuildingDto> buildings = new List<BuildingDto>();

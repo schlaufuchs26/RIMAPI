@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using RIMAPI.Core;
 using RIMAPI.Http;
 using RIMAPI.Models;
+using RIMAPI.Models.Map;
 using RIMAPI.Services;
 
 namespace RIMAPI.Controllers
@@ -81,6 +82,25 @@ namespace RIMAPI.Controllers
         {
             var mapId = RequestParser.GetMapId(context);
             var result = _mapService.GetMapBlueprints(mapId);
+            await context.SendJsonResponse(result);
+        }
+
+        [Get("/api/v1/map/area")]
+        [EndpointMetadata("Get one area's cells as rectangles: where the Home area reaches, which is where colonists haul and therefore where a blueprint is ever built")]
+        public async Task GetMapArea(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var label = RequestParser.GetStringParameter(context, "label", required: false);
+            var result = _mapService.GetMapArea(mapId, label);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/area/expand")]
+        [EndpointMetadata("Extend one area over a rectangle, the game's own expand designator applied at once")]
+        public async Task ExpandMapArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<AreaExpandRequestDto>();
+            var result = _mapService.ExpandMapArea(body);
             await context.SendJsonResponse(result);
         }
 
