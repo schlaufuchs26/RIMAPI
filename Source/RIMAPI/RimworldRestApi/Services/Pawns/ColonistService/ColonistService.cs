@@ -297,27 +297,48 @@ namespace RIMAPI.Services
                     return ApiResult.Fail($"Thing with ID={equipmentId} not found");
                 }
 
+                // The def decides the job, and only its own check may run: a
+                // weapon has no ThingDef.apparel, so ApparelUtility.HasPartsToWear
+                // dereferences null there and upstream's blanket catch turned that
+                // NullReferenceException into "Failed to determine equip job" for
+                // every weapon (#3102). Apparel is worn, everything else that can
+                // be held is equipped (beer included, JobDriver_Equip handles it).
                 Job job = null;
                 try
                 {
-                    if (EquipmentUtility.CanEquip(foundThing, pawn) == true)
+                    if (foundThing.def.IsApparel)
                     {
-                        job = JobMaker.MakeJob(JobDefOf.Equip, foundThing);
-                    }
-
-                    if (ApparelUtility.HasPartsToWear(pawn, foundThing.def) == true)
-                    {
+                        if (!ApparelUtility.HasPartsToWear(pawn, foundThing.def))
+                        {
+                            return ApiResult.Fail(
+                                $"Pawn {pawnId} has no body part to wear {foundThing.def.defName}"
+                            );
+                        }
                         job = JobMaker.MakeJob(JobDefOf.Wear, foundThing);
                     }
+                    else
+                    {
+                        if (pawn.equipment == null)
+                        {
+                            return ApiResult.Fail($"Pawn {pawnId} cannot hold equipment");
+                        }
+                        string cantReason = null;
+                        if (!EquipmentUtility.CanEquip(foundThing, pawn, out cantReason))
+                        {
+                            return ApiResult.Fail(
+                                $"Pawn {pawnId} cannot equip {foundThing.def.defName}: "
+                                    + (cantReason ?? "unknown reason")
+                            );
+                        }
+                        job = JobMaker.MakeJob(JobDefOf.Equip, foundThing);
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return ApiResult.Fail($"Failed to determine equip job for item: {foundThing.def.defName}");
-                }
-
-                if (job == null)
-                {
-                    return ApiResult.Fail($"Failed to make a job for item: {foundThing.def.defName}");
+                    return ApiResult.Fail(
+                        $"Failed to determine equip job for item {foundThing.def.defName}: "
+                            + $"{ex.GetType().Name}: {ex.Message}"
+                    );
                 }
 
                 bool result = pawn.jobs.TryTakeOrderedJob(job);
