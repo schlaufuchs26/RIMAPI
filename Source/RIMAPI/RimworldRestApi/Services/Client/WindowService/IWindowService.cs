@@ -10,5 +10,6 @@ namespace RIMAPI.Services
         ApiResult ShowDialog(WindowDialogRequestDto request);
         ApiResult<WindowCloseResultDto> CloseWindows(WindowCloseRequestDto request);
         ApiResult<List<OpenWindowDto>> ListWindows();
+        ApiResult<WindowAcceptResultDto> AcceptWindows(WindowAcceptRequestDto request);
     }
 }

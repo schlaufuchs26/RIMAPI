@@ -47,9 +47,36 @@ namespace RIMAPI.Models
         public List<string> ClosedWindows { get; set; } = new List<string>();
     }
 
+    // One open window as the caller sees it. ForcePause marks the windows that
+    // hold the game's clock: while one is open the colony does not tick,
+    // whatever speed it was told. Title, Text and Buttons carry what the game
+    // shows, so a caller can tell a modal from a panel and name the button it
+    // would have clicked.
     public class OpenWindowDto
     {
         public string WindowType { get; set; }
         public bool ForcePause { get; set; }
+        public string Title { get; set; }
+        public string Text { get; set; }
+        public List<string> Buttons { get; set; } = new List<string>();
+    }
+
+    // Press the accept button of one open window. WindowTypes is matched
+    // case-insensitively as a substring of each window's type name; with none
+    // the topmost window that force-pauses the game is the one pressed.
+    public class WindowAcceptRequestDto
+    {
+        public List<string> WindowTypes { get; set; }
+    }
+
+    public class WindowAcceptResultDto
+    {
+        public int AcceptedCount { get; set; }
+        public List<string> AcceptedWindows { get; set; } = new List<string>();
+        // The label of the button each accepted window got, in the same order.
+        public List<string> Buttons { get; set; } = new List<string>();
+        // Windows that matched but could not be pressed; Reason says why.
+        public List<string> StillOpen { get; set; } = new List<string>();
+        public string Reason { get; set; }
     }
 }

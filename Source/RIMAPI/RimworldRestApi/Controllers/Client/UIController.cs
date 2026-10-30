@@ -51,6 +51,15 @@ namespace RIMAPI.BaseControllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/ui/window/accept")]
+        [EndpointMetadata("Press the accept button of one open window, the same code the game's own button runs, so a dialog's action happens instead of the window being dropped. Body: {window_types: [substrings]} (default: the topmost force-pause window).")]
+        public async Task AcceptWindows(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<WindowAcceptRequestDto>();
+            var result = _windowService.AcceptWindows(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/ui/window/close")]
         [EndpointMetadata("Close open windows by type name, or (default) every force-pause window — used to auto-dismiss the colony-name and debug-log popups during unattended runs.")]
         public async Task CloseWindows(HttpListenerContext context)
