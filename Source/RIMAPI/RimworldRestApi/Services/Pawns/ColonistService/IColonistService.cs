@@ -26,6 +26,8 @@ namespace RIMAPI.Services
         ApiResult SetTimeAssignment(PawnTimeAssignmentRequestDto body);
         ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId);
 
+        ApiResult MakeJobTend(int mapId, int pawnId, int patientId, int medicineId);
+
         ApiResult<List<OutfitDto>> GetOutfits();
         ApiResult<ImageDto> GetPawnPortraitImage(
             int pawnId,

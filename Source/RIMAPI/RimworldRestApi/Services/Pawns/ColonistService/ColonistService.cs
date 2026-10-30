@@ -272,6 +272,97 @@ namespace RIMAPI.Services
             }
         }
 
+        // Tending is the game's own job: a doctor walks to the patient and treats
+        // the wound, with a named medicine when one is given. The tool can queue
+        // it but must not invent the outcome, so the checks below are the ones
+        // the work giver makes before it hands the job out, and each refusal
+        // names why (ticket #3117).
+        public ApiResult MakeJobTend(int mapId, int pawnId, int patientId, int medicineId)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null)
+                {
+                    return ApiResult.Fail($"Map with ID={mapId} not found");
+                }
+                Pawn doctor = map
+                    .listerThings.AllThings.OfType<Pawn>()
+                    .FirstOrDefault(p => p.thingIDNumber == pawnId);
+                if (doctor == null)
+                {
+                    return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                }
+                Pawn patient = map
+                    .listerThings.AllThings.OfType<Pawn>()
+                    .FirstOrDefault(p => p.thingIDNumber == patientId);
+                if (patient == null)
+                {
+                    return ApiResult.Fail($"Patient with ID={patientId} not found");
+                }
+                if (patient == doctor)
+                {
+                    return ApiResult.Fail(
+                        $"Pawn {pawnId} cannot be ordered to tend itself; self-tending is a trait, not a job"
+                    );
+                }
+                if (doctor.WorkTypeIsDisabled(WorkTypeDefOf.Doctor))
+                {
+                    return ApiResult.Fail(
+                        $"Pawn {pawnId} cannot doctor: the Doctor work type is switched off or the pawn is incapable"
+                    );
+                }
+                if (!patient.health.HasHediffsNeedingTend(false))
+                {
+                    return ApiResult.Fail(
+                        $"Patient {patientId} has nothing to tend: no hediff needs treatment right now"
+                    );
+                }
+
+                Thing medicine = null;
+                if (medicineId > 0)
+                {
+                    medicine = map.listerThings.AllThings.FirstOrDefault(t =>
+                        t.thingIDNumber == medicineId
+                    );
+                    if (medicine == null)
+                    {
+                        return ApiResult.Fail($"Medicine with ID={medicineId} not found");
+                    }
+                    if (!medicine.def.IsMedicine)
+                    {
+                        return ApiResult.Fail(
+                            $"Thing {medicineId} is {medicine.def.defName}, not medicine"
+                        );
+                    }
+                }
+
+                Job job;
+                try
+                {
+                    job = JobMaker.MakeJob(JobDefOf.TendPatient, patient, medicine);
+                    job.count = 1;
+                }
+                catch (Exception ex)
+                {
+                    return ApiResult.Fail(
+                        $"Failed to build the tend job for patient {patientId}: "
+                            + $"{ex.GetType().Name}: {ex.Message}"
+                    );
+                }
+
+                if (!doctor.jobs.TryTakeOrderedJob(job))
+                {
+                    return ApiResult.Fail($"Failed to assign job to pawn: {doctor.thingIDNumber}");
+                }
+                return ApiResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                return ApiResult.Fail(ex.Message);
+            }
+        }
+
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
         {
             try
