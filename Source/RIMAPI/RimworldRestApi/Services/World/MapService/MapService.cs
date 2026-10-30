@@ -163,6 +163,79 @@ namespace RIMAPI.Services
             return ApiResult<List<DesignationDto>>.Ok(result);
         }
 
+        /// <summary>
+        /// Every blueprint and frame on the map: what will stand where and how
+        /// much work is left. A build order used to be unverifiable, because
+        /// the buildings read lists only finished buildings (fox ticket #3089).
+        /// The group reads see both kinds; a blueprint's work is its whole work,
+        /// because nothing of it is built yet.
+        /// </summary>
+        public ApiResult<List<BlueprintEntryDto>> GetMapBlueprints(int mapId)
+        {
+            var map = MapHelper.GetMapByID(mapId);
+            if (map == null)
+            {
+                return ApiResult<List<BlueprintEntryDto>>.Fail($"Map not found: {mapId}");
+            }
+
+            var result = new List<BlueprintEntryDto>();
+
+            foreach (var thing in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint))
+            {
+                var blueprint = thing as Blueprint;
+                var target = blueprint?.EntityToBuild();
+                if (target == null)
+                {
+                    continue;
+                }
+
+                // Only a Blueprint_Build carries the material; a floor blueprint
+                // is the plain base class and has none (ticket #3089).
+                var build = blueprint as Blueprint_Build;
+                // The blueprint's own WorkTotal is protected; a blueprint has no
+                // work done yet, so the def's build cost is the work left.
+                var work = target.GetStatValueAbstract(StatDefOf.WorkToBuild, build?.stuffToUse);
+                result.Add(new BlueprintEntryDto
+                {
+                    DefName = target.defName,
+                    Label = target.LabelCap,
+                    Kind = "blueprint",
+                    Stuff = build?.stuffToUse?.defName,
+                    X = blueprint.Position.x,
+                    Z = blueprint.Position.z,
+                    Rotation = blueprint.Rotation.AsInt,
+                    WorkLeft = work,
+                    WorkTotal = work,
+                    ThingId = blueprint.thingIDNumber,
+                });
+            }
+
+            foreach (var thing in map.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame))
+            {
+                var frame = thing as Frame;
+                if (frame?.BuildDef == null)
+                {
+                    continue;
+                }
+
+                result.Add(new BlueprintEntryDto
+                {
+                    DefName = frame.BuildDef.defName,
+                    Label = frame.LabelEntityToBuild,
+                    Kind = "frame",
+                    Stuff = frame.EntityToBuildStuff()?.defName,
+                    X = frame.Position.x,
+                    Z = frame.Position.z,
+                    Rotation = frame.Rotation.AsInt,
+                    WorkLeft = frame.WorkLeft,
+                    WorkTotal = frame.WorkToBuild,
+                    ThingId = frame.thingIDNumber,
+                });
+            }
+
+            return ApiResult<List<BlueprintEntryDto>>.Ok(result);
+        }
+
         public ApiResult<MapZonesDto> GetMapZones(int mapId)
         {
             MapZonesDto mapZones = new MapZonesDto();

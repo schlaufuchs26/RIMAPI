@@ -50,6 +50,34 @@ namespace RIMAPI.Models
         public int Rotation { get; set; } // 0=North, 1=East, 2=South, 3=West
     }
 
+    // --- What a build call answers (fox ticket #3089) ---
+
+    /// <summary>
+    /// The result of placing a layout: how many blueprints went out, and every
+    /// cell the game refused with its own reason. The handler used to answer a
+    /// bare success, so a cell that could not take a blueprint (marsh, a wall,
+    /// an unreachable spot) disappeared without a word.
+    /// </summary>
+    public class PlaceResultDto
+    {
+        public int Placed { get; set; }
+
+        public List<PlaceRefusalDto> Dropped { get; set; } = new List<PlaceRefusalDto>();
+    }
+
+    /// <summary>One blueprint cell the game would not place, and why.</summary>
+    public class PlaceRefusalDto
+    {
+        public string DefName { get; set; }
+
+        public int X { get; set; }
+
+        public int Z { get; set; }
+
+        /// <summary>The game's own acceptance reason, e.g. "CannotPlaceOnTerrain".</summary>
+        public string Reason { get; set; }
+    }
+
     public class CheckZoneResultDto
     {
         public bool CanBuild { get; set; }

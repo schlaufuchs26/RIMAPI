@@ -166,33 +166,73 @@ namespace RIMAPI.Services
             }
         }
 
-        public ApiResult PlaceBlueprints(PasteAreaRequestDto request)
+        public ApiResult<PlaceResultDto> PlaceBlueprints(PasteAreaRequestDto request)
         {
             try
             {
-                if (request.Blueprint == null) return ApiResult.Fail("Blueprint is null");
+                if (request.Blueprint == null) return ApiResult<PlaceResultDto>.Fail("Blueprint is null");
 
                 var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map {request.MapId} not found.");
+                if (map == null) return ApiResult<PlaceResultDto>.Fail($"Map {request.MapId} not found.");
 
                 int anchorX = request.Position.X;
                 int anchorZ = request.Position.Z;
-                int count = 0;
+                var result = new PlaceResultDto();
+
+                // Every cell is asked first and only a cell the game accepts gets
+                // a blueprint. PlaceBlueprintForBuild itself does not check, so a
+                // marsh cell, a cell holding a wall or a cell outside the map
+                // used to be dropped without a word (fox ticket #3089).
+                void TryPlace(BuildableDef buildable, IntVec3 pos, Rot4 rot, ThingDef stuffDef)
+                {
+                    var report = GenConstruct.CanPlaceBlueprintAt(buildable, pos, rot, map, false, null, null, stuffDef);
+                    if (!report.Accepted)
+                    {
+                        result.Dropped.Add(new PlaceRefusalDto
+                        {
+                            DefName = buildable.defName,
+                            X = pos.x,
+                            Z = pos.z,
+                            Reason = report.Reason,
+                        });
+                        return;
+                    }
+
+                    GenConstruct.PlaceBlueprintForBuild(buildable, pos, map, rot, Faction.OfPlayer, stuffDef);
+                    result.Placed++;
+                }
 
                 // 1. Place Floor Blueprints
                 foreach (var floorDto in request.Blueprint.Floors)
                 {
                     IntVec3 pos = new IntVec3(anchorX + floorDto.RelX, 0, anchorZ + floorDto.RelZ);
-                    if (pos.InBounds(map))
+                    if (!pos.InBounds(map))
                     {
-                        TerrainDef terrainDef = DefDatabase<TerrainDef>.GetNamedSilentFail(floorDto.DefName);
-                        if (terrainDef != null)
+                        result.Dropped.Add(new PlaceRefusalDto
                         {
-                            // PlaceBlueprintForBuild works for TerrainDefs too
-                            GenConstruct.PlaceBlueprintForBuild(terrainDef, pos, map, Rot4.North, Faction.OfPlayer, null);
-                            count++;
-                        }
+                            DefName = floorDto.DefName,
+                            X = pos.x,
+                            Z = pos.z,
+                            Reason = "OutOfBounds",
+                        });
+                        continue;
                     }
+
+                    TerrainDef terrainDef = DefDatabase<TerrainDef>.GetNamedSilentFail(floorDto.DefName);
+                    if (terrainDef == null)
+                    {
+                        result.Dropped.Add(new PlaceRefusalDto
+                        {
+                            DefName = floorDto.DefName,
+                            X = pos.x,
+                            Z = pos.z,
+                            Reason = "UnknownTerrainDef",
+                        });
+                        continue;
+                    }
+
+                    // PlaceBlueprintForBuild works for TerrainDefs too
+                    TryPlace(terrainDef, pos, Rot4.North, null);
                 }
 
                 // 2. Place Building Blueprints
@@ -200,11 +240,31 @@ namespace RIMAPI.Services
                 {
                     IntVec3 pos = new IntVec3(anchorX + buildDto.RelX, 0, anchorZ + buildDto.RelZ);
 
-                    if (!pos.InBounds(map)) continue;
+                    if (!pos.InBounds(map))
+                    {
+                        result.Dropped.Add(new PlaceRefusalDto
+                        {
+                            DefName = buildDto.DefName,
+                            X = pos.x,
+                            Z = pos.z,
+                            Reason = "OutOfBounds",
+                        });
+                        continue;
+                    }
 
                     // Resolve Definitions
                     ThingDef thingDef = DefDatabase<ThingDef>.GetNamedSilentFail(buildDto.DefName);
-                    if (thingDef == null) continue;
+                    if (thingDef == null)
+                    {
+                        result.Dropped.Add(new PlaceRefusalDto
+                        {
+                            DefName = buildDto.DefName,
+                            X = pos.x,
+                            Z = pos.z,
+                            Reason = "UnknownThingDef",
+                        });
+                        continue;
+                    }
 
                     ThingDef stuffDef = null;
                     if (!string.IsNullOrEmpty(buildDto.StuffDefName))
@@ -212,25 +272,15 @@ namespace RIMAPI.Services
                         stuffDef = DefDatabase<ThingDef>.GetNamedSilentFail(buildDto.StuffDefName);
                     }
 
-                    // Create Blueprint
-                    // Note: GenConstruct handles checking if it can be placed, checking affordance, etc.
-                    GenConstruct.PlaceBlueprintForBuild(
-                        thingDef,
-                        pos,
-                        map,
-                        new Rot4(buildDto.Rotation),
-                        Faction.OfPlayer,
-                        stuffDef
-                    );
-                    count++;
+                    TryPlace(thingDef, pos, new Rot4(buildDto.Rotation), stuffDef);
                 }
 
-                return ApiResult.Ok();
+                return ApiResult<PlaceResultDto>.Ok(result);
             }
             catch (Exception ex)
             {
                 LogApi.Error($"Blueprint Error: {ex}");
-                return ApiResult.Fail(ex.Message);
+                return ApiResult<PlaceResultDto>.Fail(ex.Message);
             }
         }
 

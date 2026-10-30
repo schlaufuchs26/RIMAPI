@@ -75,6 +75,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/blueprints")]
+        [EndpointMetadata("Get every blueprint and frame on the map: the def it builds, its cell, its material and the work left")]
+        public async Task GetMapBlueprints(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var result = _mapService.GetMapBlueprints(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/weather")]
         [EndpointMetadata("Get weather on the map")]
         public async Task GetMapWeather(HttpListenerContext context)
