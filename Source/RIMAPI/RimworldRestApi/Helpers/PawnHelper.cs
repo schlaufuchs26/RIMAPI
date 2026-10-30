@@ -160,6 +160,7 @@ namespace RIMAPI.Helpers
                         FoodPolicyId = pawn.foodRestriction?.CurrentFoodPolicy?.id ?? 0,
                         HostilityResponse = (int)pawn.playerSettings.hostilityResponse,
                     },
+                    MoodInfo = GetMoodInfo(pawn),
                     MedicalInfo = new MedicalInfoDto
                     {
                         Health = pawn.health?.summaryHealth?.SummaryHealthPercent ?? 1f,
@@ -265,9 +266,61 @@ namespace RIMAPI.Helpers
             return dto;
         }
 
-        public static List<TraitDto> GetTraits(Pawn pawn)
+        // GetMoodInfo lists the thoughts the game currently counts toward this
+        // colonist's mood (fox, #3129). Without it a low mood is a number with
+        // no cause: a trait, a bad bedroom and a missing joy type all read the
+        // same.
+        public static MoodInfoDto GetMoodInfo(Pawn pawn)
         {
+            var dto = new MoodInfoDto { Thoughts = new List<MoodThoughtDto>() };
+            var mood = pawn.needs?.mood;
+            if (mood == null)
+                return dto;
+
+            dto.Mood = mood.CurLevelPercentage;
             try
+            {
+                var thoughts = new List<Thought>();
+                mood.thoughts.GetAllMoodThoughts(thoughts);
+                foreach (var thought in thoughts)
+                {
+                    if (thought?.def == null)
+                        continue;
+
+                    var entry = new MoodThoughtDto
+                    {
+                        DefName = thought.def.defName,
+                        Label = thought.LabelCap,
+                        StageLabel = thought.CurStage?.label,
+                        MoodOffset = thought.MoodOffset(),
+                        Kind = thought is Thought_Memory ? "memory" : "situation",
+                    };
+                    if (thought is Thought_Memory memory)
+                    {
+                        entry.AgeDays = memory.age / GenDate.TicksPerDay;
+                        entry.Permanent = memory.permanent;
+                    }
+                    if (thought is Thought_MemorySocial social)
+                    {
+                        entry.OtherPawn = social.otherPawn?.LabelShort;
+                    }
+                    dto.Thoughts.Add(entry);
+                }
+
+                // Worst first: a caller that only shows the head of the list
+                // must see the thought that costs the most mood.
+                dto.Thoughts = dto.Thoughts.OrderBy(t => t.MoodOffset).ToList();
+                dto.TotalOffset = dto.Thoughts.Sum(t => t.MoodOffset);
+            }
+            catch (Exception ex)
+            {
+                Core.LogApi.Error($"Error reading mood thoughts - {ex.Message}");
+            }
+            return dto;
+        }
+
+        public static List<TraitDto> GetTraits(Pawn pawn)
+        {            try
             {
                 return pawn.story?.traits?.allTraits?.Where(t => t != null)
                         .Select(t => new TraitDto

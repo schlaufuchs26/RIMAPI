@@ -24,6 +24,7 @@ namespace RIMAPI.Models
         public float SurroundingBeauty { get; set; }
         public float FreshAir { get; set; }
         public WorkInfoDto WorkInfo { get; set; }
+        public MoodInfoDto MoodInfo { get; set; }
         public PoliciesInfoDto PoliciesInfo { get; set; }
         public MedicalInfoDto MedicalInfo { get; set; }
         public SocialInfoDto SocialInfo { get; set; }
@@ -42,6 +43,7 @@ namespace RIMAPI.Models
         public float SurroundingBeauty { get; set; }
         public float FreshAir { get; set; }
         public WorkInfoDto ColonistWorkInfo { get; set; }
+        public MoodInfoDto MoodInfo { get; set; }
         public PoliciesInfoDto PoliciesInfo { get; set; }
         public MedicalInfoDto ColonistMedicalInfo { get; set; }
         public SocialInfoDto SocialInfo { get; set; }

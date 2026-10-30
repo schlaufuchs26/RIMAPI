@@ -19,6 +19,34 @@ namespace RIMAPI.Models
         public List<WorkPriorityDto> WorkPriorities { get; set; }
     }
 
+    // The thoughts behind a colonist's mood number (fox, #3129). Need_Mood only
+    // reports the level, so a caller that wants to fix a low mood cannot tell a
+    // bad bedroom from a missing joy type or a trait; this carries the active
+    // thoughts with their offsets, worst first.
+    public class MoodInfoDto
+    {
+        public float Mood { get; set; }
+        public float TotalOffset { get; set; }
+        public List<MoodThoughtDto> Thoughts { get; set; }
+    }
+
+    public class MoodThoughtDto
+    {
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public string StageLabel { get; set; }
+        public float MoodOffset { get; set; }
+        // Memory thoughts fade and carry an age; situational thoughts do not,
+        // and AgeDays stays 0 for them.
+        public int AgeDays { get; set; }
+        public bool Permanent { get; set; }
+        // "memory" or "situation": a memory disappears when it is forgotten, a
+        // situational thought disappears when the situation changes.
+        public string Kind { get; set; }
+        // The other pawn of a social thought, empty otherwise.
+        public string OtherPawn { get; set; }
+    }
+
     public class TraitDto
     {
         public string Name { get; set; }
