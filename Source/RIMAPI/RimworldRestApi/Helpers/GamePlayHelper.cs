@@ -84,6 +84,8 @@ namespace RIMAPI.Helpers
             try
             {
                 // First check if we can access basic game state
+                state.IsLoading = LongEventHandler.AnyEventNowOrWaiting;
+
                 if (Current.Game == null || Find.Maps == null)
                 {
                     // Game is not fully initialized
@@ -93,6 +95,9 @@ namespace RIMAPI.Helpers
                     state.MapCount = 0;
                     state.CurrentView = "None";
                     state.IsPaused = true;
+                    state.HasGame = false;
+                    state.HasMap = false;
+                    state.ColonyName = "";
                     return state;
                 }
 
@@ -100,6 +105,18 @@ namespace RIMAPI.Helpers
                 state.Storyteller = Current.Game.storyteller?.def?.defName ?? "Unknown";
                 state.MapCount = Find.Maps.Count;
                 state.ProgramState = Current.ProgramState.ToString();
+                // #3098: the flags that say what is loaded, instead of a
+                // colonist count a caller would have to interpret.
+                state.HasGame = true;
+                state.HasMap = Find.CurrentMap != null;
+                try
+                {
+                    state.ColonyName = Faction.OfPlayer?.Name ?? "";
+                }
+                catch
+                {
+                    state.ColonyName = "";
+                }
             }
             catch (Exception)
             {

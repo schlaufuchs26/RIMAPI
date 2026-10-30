@@ -12,6 +12,14 @@ namespace RIMAPI.Models
         public bool IsSettingsOpen { get; set; }
         public bool IsModSettingsOpen { get; set; }
         public int MapCount { get; set; }
+
+        // What is loaded (#3098). A caller that counts colonists cannot tell
+        // the title screen from a colony whose colonists all died: both report
+        // zero. These are the game's own flags.
+        public bool HasGame { get; set; }   // Current.Game != null
+        public bool HasMap { get; set; }    // Find.CurrentMap != null
+        public bool IsLoading { get; set; } // a long event is running: reading a save, generating a world
+        public string ColonyName { get; set; } // the player faction's name, the one the game shows
     }
 
     public class NewGameStartRequestDto
