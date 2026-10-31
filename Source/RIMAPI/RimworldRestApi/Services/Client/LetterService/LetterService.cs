@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using Verse;
 
@@ -195,7 +196,7 @@ namespace RIMAPI.Services
                     return ApiResult<LetterAnswerResultDto>.Ok(result);
                 }
 
-                var node = Read(tree, "curNode") as DiaNode;
+                var node = ArchiveText.Read(tree, "curNode") as DiaNode;
                 var options = node != null && node.options != null ? node.options : new List<DiaOption>();
                 result.Options = OptionLabels(options);
                 var option = MatchOption(options, request.Option);
@@ -229,7 +230,7 @@ namespace RIMAPI.Services
                 {
                     result.StillOpen = true;
                     result.OpenWindow = rest.GetType().Name;
-                    var next = Read(rest, "curNode") as DiaNode;
+                    var next = ArchiveText.Read(rest, "curNode") as DiaNode;
                     result.Options = OptionLabels(next != null ? next.options : null);
                 }
                 result.Remaining = StackLetters().Count;
@@ -272,7 +273,7 @@ namespace RIMAPI.Services
         // title field, which the faction-info subclass fills).
         private static bool TitledFor(Dialog_NodeTree tree, Letter letter)
         {
-            var own = Read(tree, "title") as string;
+            var own = ArchiveText.Read(tree, "title") as string;
             var label = letter.Label.ToString();
             if (string.IsNullOrEmpty(own) || string.IsNullOrEmpty(label))
                 return false;
@@ -364,12 +365,12 @@ namespace RIMAPI.Services
 
         private static string OptionText(DiaOption option)
         {
-            return Text(Read(option, "text"));
+            return ArchiveText.Resolve(ArchiveText.Read(option, "text"));
         }
 
         private static bool IsDisabled(DiaOption option)
         {
-            return Read(option, "disabled") is bool disabled && disabled;
+            return ArchiveText.Read(option, "disabled") is bool disabled && disabled;
         }
 
         private static string Quote(string s)
@@ -390,8 +391,8 @@ namespace RIMAPI.Services
             return new LetterDto
             {
                 Id = letter.ID,
-                Label = FirstLine(letter.Label),
-                Text = FirstLine(LetterText(letter)),
+                Label = ArchiveText.FirstLine(letter.Label),
+                Text = ArchiveText.FirstLine(ArchiveText.LetterBody(letter)),
                 Def = letter.def != null ? letter.def.defName : "",
                 Tick = letter.arrivalTick,
                 CanDismiss = letter.CanDismissWithRightClick,
@@ -424,75 +425,5 @@ namespace RIMAPI.Services
             return choice.quest.id;
         }
 
-        // LetterText is the body the game would show when the letter is opened.
-        // Letter itself declares none: StandardLetter and ChoiceLetter each
-        // hold their own, so the member is looked up on the concrete type and a
-        // letter without one falls back to its tooltip text.
-        private static string LetterText(Letter letter)
-        {
-            var text = Text(Read(letter, "Text"));
-            if (!string.IsNullOrEmpty(text))
-                return text;
-            return Text(Call(letter, "GetMouseoverText"));
-        }
-
-        // FirstLine keeps one line: a letter body is a paragraph, and the read
-        // is a list of them.
-        private static string FirstLine(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-                return "";
-            var line = s.Replace("\r", "").Split('\n')[0].Trim();
-            if (line.Length > 300)
-                line = line.Substring(0, 300) + "...";
-            return line;
-        }
-
-        // Text turns a member's value into a string: a TaggedString is resolved
-        // to what the game would draw, everything else via ToString.
-        private static string Text(object value)
-        {
-            if (value == null)
-                return "";
-            var tagged = value as TaggedString?;
-            if (tagged.HasValue)
-                return tagged.Value.Resolve();
-            return value.ToString();
-        }
-
-        // Read looks a property or field up by name up the type hierarchy, the
-        // way the window read does: the members these reads need are private or
-        // protected in Verse, and a missing name yields null instead of an
-        // exception.
-        private static object Read(object obj, string name)
-        {
-            for (var type = obj.GetType(); type != null; type = type.BaseType)
-            {
-                var property = type.GetProperty(name,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (property != null && property.GetIndexParameters().Length == 0)
-                    return property.GetValue(obj, null);
-                var field = type.GetField(name,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null)
-                    return field.GetValue(obj);
-            }
-            return null;
-        }
-
-        // Call runs a parameterless method found the same way; a name this game
-        // build does not have yields null.
-        private static object Call(object obj, string name)
-        {
-            for (var type = obj.GetType(); type != null; type = type.BaseType)
-            {
-                var method = type.GetMethod(name,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
-                    null, Type.EmptyTypes, null);
-                if (method != null)
-                    return method.Invoke(obj, null);
-            }
-            return null;
-        }
     }
 }

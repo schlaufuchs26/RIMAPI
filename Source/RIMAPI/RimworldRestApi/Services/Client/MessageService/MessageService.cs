@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RimWorld;
 using RimWorld.Planet;
@@ -19,6 +20,13 @@ namespace RIMAPI.Services
     // (Find.Archive, measured 2026-10-31), so this read answers exactly what
     // the save-backed read answered, without a save and up to the current
     // tick instead of up to the last save.
+    //
+    // Letters share that archive, and a death letter is where a death's cause
+    // is written, so this read answers them too (ticket #3400): Class says
+    // which kind an entry is, Label a letter's title. A caller that wants only
+    // the notifications filters on Class = "Message"; that is what the wait
+    // report and the digest do, because the letters read already reports the
+    // stack.
     public class MessageService : IMessageService
     {
         // A run asks for the newest few; the cap keeps a wide `since` from
@@ -39,29 +47,23 @@ namespace RIMAPI.Services
                 if (archive == null)
                     return ApiResult<List<MessageDto>>.Fail("no archive: no colony is loaded");
 
-                var messages = new List<Message>();
+                var entries = new List<MessageDto>();
                 foreach (var archivable in archive.ArchivablesListForReading)
                 {
-                    // Letters share the archive; they have their own read and
-                    // are not what this one is about.
-                    var message = archivable as Message;
-                    if (message == null)
+                    var dto = ToDto(archivable);
+                    if (dto == null)
                         continue;
-                    if (since > 0 && MessageTick(message) < since)
+                    if (since > 0 && dto.Tick < since)
                         continue;
-                    messages.Add(message);
+                    entries.Add(dto);
                 }
 
                 // Oldest first, so a caller reads them in the order they
                 // happened; the newest `limit` survive.
-                messages.Sort((a, b) => MessageTick(a).CompareTo(MessageTick(b)));
-                if (messages.Count > limit)
-                    messages = messages.Skip(messages.Count - limit).ToList();
-
-                var result = new List<MessageDto>(messages.Count);
-                foreach (var message in messages)
-                    result.Add(ToDto(message));
-                return ApiResult<List<MessageDto>>.Ok(result);
+                entries.Sort((a, b) => a.Tick.CompareTo(b.Tick));
+                if (entries.Count > limit)
+                    entries = entries.Skip(entries.Count - limit).ToList();
+                return ApiResult<List<MessageDto>>.Ok(entries);
             }
             catch (Exception ex)
             {
@@ -77,17 +79,47 @@ namespace RIMAPI.Services
             return message.startingTick > 0 ? message.startingTick : 0;
         }
 
-        private static MessageDto ToDto(Message message)
+        // ToDto turns one archive entry into its DTO. Class is the name the save
+        // writes as the entry's Class attribute, so a caller sees the same
+        // kinds it saw from a save file. An archive entry that is neither a
+        // message nor a letter answers null and is left out.
+        private static MessageDto ToDto(IArchivable archivable)
         {
-            var dto = new MessageDto
+            var message = archivable as Message;
+            if (message != null)
             {
-                Def = message.def?.defName,
-                Text = message.text,
-                Tick = MessageTick(message),
-            };
-            var lookTargets = message.lookTargets;
-            if (lookTargets == null)
+                var dto = new MessageDto
+                {
+                    Class = "Message",
+                    Def = message.def?.defName,
+                    Text = message.text,
+                    Tick = MessageTick(message),
+                };
+                FillTarget(dto, message.lookTargets);
                 return dto;
+            }
+
+            var letter = archivable as Letter;
+            if (letter == null)
+                return null;
+            var letterDto = new MessageDto
+            {
+                Class = letter.GetType().Name,
+                Def = letter.def?.defName,
+                Label = ArchiveText.FirstLine(letter.Label),
+                Text = ArchiveText.FirstLine(ArchiveText.LetterBody(letter)),
+                Tick = letter.arrivalTick,
+            };
+            FillTarget(letterDto, letter.lookTargets);
+            return letterDto;
+        }
+
+        // FillTarget names what the entry is about: the thing it points at, or
+        // the cell when the game gave no thing.
+        private static void FillTarget(MessageDto dto, LookTargets lookTargets)
+        {
+            if (lookTargets == null)
+                return;
 
             GlobalTargetInfo target = lookTargets.PrimaryTarget;
             if (target.Thing != null)
@@ -110,7 +142,6 @@ namespace RIMAPI.Services
                 if (target.Map != null)
                     dto.MapId = target.Map.uniqueID;
             }
-            return dto;
         }
     }
 }

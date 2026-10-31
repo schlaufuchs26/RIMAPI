@@ -198,12 +198,16 @@ namespace RIMAPI.Tests
         {
             // A message line the fox prints reads these keys: the text, its
             // kind, its tick, and the cell or thing it is about (ticket
-            // #3336). A rename here would leave the wait report and the digest
-            // with empty fields and no error.
+            // #3336); the class and the label tell a notification from a
+            // letter now that the archive answers both (ticket #3400). A
+            // rename here would leave the wait report and the digest with
+            // empty fields and no error.
             var expected = new[]
             {
+                "class",
                 "def",
                 "has_target",
+                "label",
                 "map_id",
                 "target_def",
                 "target_label",
