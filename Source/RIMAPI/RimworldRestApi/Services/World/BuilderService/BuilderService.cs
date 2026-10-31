@@ -179,6 +179,24 @@ namespace RIMAPI.Services
             return $"Exception during {step}: {ex.GetType().Name}: {ex.Message}{where}";
         }
 
+        /// <summary>
+        /// A def the architect menu does not offer has no blueprint def at all:
+        /// ThingDefGenerator_Buildings creates one only for a def with a
+        /// designationCategory, and GenConstruct.PlaceBlueprintForBuild hands
+        /// that null to ThingMaker.MakeThing, which is the
+        /// NullReferenceException a sculpture raised (#3260; a colony makes one
+        /// at a sculpting table instead of placing it). Refusing here names the
+        /// route that works instead of a null.
+        /// </summary>
+        private static string NoBlueprintReason(BuildableDef def)
+        {
+            var users = (def as ThingDef)?.recipeMaker?.recipeUsers;
+            string where = users != null && users.Count > 0
+                ? $"the game makes it at {string.Join(" or ", users.Where(u => u != null).Select(u => u.label ?? u.defName).Distinct())} (add a bill there)"
+                : "the game does not offer it in the architect menu";
+            return $"{def.defName} has no build blueprint: {where}, so it cannot be placed";
+        }
+
         public ApiResult<PlaceResultDto> PlaceBlueprints(PasteAreaRequestDto request)
         {            try
             {
@@ -272,6 +290,12 @@ namespace RIMAPI.Services
                         continue;
                     }
 
+                    if (terrainDef.blueprintDef == null)
+                    {
+                        Refuse(terrainDef, pos, NoBlueprintReason(terrainDef));
+                        continue;
+                    }
+
                     // PlaceBlueprintForBuild works for TerrainDefs too
                     TryPlace(terrainDef, pos, Rot4.North, null);
                 }
@@ -311,6 +335,12 @@ namespace RIMAPI.Services
                     if (!string.IsNullOrEmpty(buildDto.StuffDefName))
                     {
                         stuffDef = DefDatabase<ThingDef>.GetNamedSilentFail(buildDto.StuffDefName);
+                    }
+
+                    if (thingDef.blueprintDef == null)
+                    {
+                        Refuse(thingDef, pos, NoBlueprintReason(thingDef));
+                        continue;
                     }
 
                     TryPlace(thingDef, pos, new Rot4(buildDto.Rotation), stuffDef);
