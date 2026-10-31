@@ -18,9 +18,15 @@ namespace RIMAPI.Services
     // to a bed the same way. The work giver itself decides, so its own checks
     // (reservation, reach, the carry cooldown after being downed) apply instead
     // of a second copy of them.
+    //
+    // A bedId names the bed instead (fox ticket #3519): a downed colony animal
+    // is only carried into an animal bed or an animal sleeping spot, and the
+    // game's own lookup picks the nearest free one, which may be nowhere near
+    // the base. With a named bed the game's bed rules still decide (kind, size,
+    // sleeping slot, reach), and a refusal says which one failed.
     public partial class ColonistService
     {
-        public ApiResult MakeJobRescue(int mapId, int pawnId, int rescuerId)
+        public ApiResult MakeJobRescue(int mapId, int pawnId, int rescuerId, int bedId)
         {
             try
             {
@@ -60,40 +66,64 @@ namespace RIMAPI.Services
                     Describe(rescuer), "rescue", PawnHelper.RefusalStateOf(rescuer));
                 if (refusal != null) return ApiResult.Fail(refusal);
 
-                WorkGiver_RescueDowned giver = new WorkGiver_RescueDowned();
-                if (!giver.HasJobOnThing(rescuer, target, true))
-                {
-                    return ApiResult.Fail(
-                        $"{Describe(target)} cannot be rescued right now: {RescueRefusal(map, target, rescuer)}");
-                }
-                Job job = giver.JobOnThing(rescuer, target, true);
-                if (job == null)
-                {
-                    return ApiResult.Fail(
-                        $"{Describe(target)} cannot be rescued right now: the game's rescue order came back "
-                        + "empty, so no bed is free for him");
-                }
-                // The giver's bed is the first free one it finds, not the safest
-                // one: in colony 10 that was the bed inside a room at 111 C, so
-                // the patient was carried back into the fire (ticket #3383). A
-                // bed in a burning or oven-hot room is replaced by a safe free
-                // one when the colony has any; the answer carries the room
-                // temperature either way, so a caller sees a bed to refuse.
-                Building_Bed bed = job.targetB.Thing as Building_Bed;
+                Job job;
+                Building_Bed bed;
                 Building_Bed rejected = null;
                 float rejectedTempC = 0f;
                 bool rejectedFire = false;
-                if (bed != null && BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
+                if (bedId > 0)
                 {
-                    Building_Bed safer = BedPick.SaferBed(map, target, rescuer, bed, forPrisoners: false);
-                    if (safer != null)
+                    // The caller named the bed: its choice stands, and only the
+                    // game's own bed rules can refuse it.
+                    Thing thing = MapHelper.GetThingOnMapById(mapId, bedId);
+                    if (thing == null) return ApiResult.Fail($"Thing with ID={bedId} not found on this map");
+                    bed = thing as Building_Bed;
+                    if (bed == null)
                     {
-                        rejected = bed;
-                        rejectedTempC = bed.AmbientTemperature;
-                        rejectedFire = BedPick.RoomHasFire(map, bed);
-                        job = JobMaker.MakeJob(JobDefOf.Rescue, target, safer);
-                        job.count = 1;
-                        bed = safer;
+                        return ApiResult.Fail(
+                            $"{thing.LabelShort} (id {bedId}) is no bed: a rescue carries the pawn into a bed, "
+                            + "so name a bed or an animal sleeping spot (the `things` read prints its id)");
+                    }
+                    string bedRefusal = BedRefusal(map, target, rescuer, bed);
+                    if (bedRefusal != null) return ApiResult.Fail(bedRefusal);
+                    job = JobMaker.MakeJob(JobDefOf.Rescue, target, bed);
+                    job.count = 1;
+                }
+                else
+                {
+                    WorkGiver_RescueDowned giver = new WorkGiver_RescueDowned();
+                    if (!giver.HasJobOnThing(rescuer, target, true))
+                    {
+                        return ApiResult.Fail(
+                            $"{Describe(target)} cannot be rescued right now: {RescueRefusal(map, target, rescuer)}");
+                    }
+                    job = giver.JobOnThing(rescuer, target, true);
+                    if (job == null)
+                    {
+                        return ApiResult.Fail(
+                            $"{Describe(target)} cannot be rescued right now: the game's rescue order came back "
+                            + "empty, so no bed is free for him");
+                    }
+                    // The giver's bed is the first free one it finds, not the
+                    // safest one: in colony 10 that was the bed inside a room at
+                    // 111 C, so the patient was carried back into the fire
+                    // (ticket #3383). A bed in a burning or oven-hot room is
+                    // replaced by a safe free one when the colony has any; the
+                    // answer carries the room temperature either way, so a
+                    // caller sees a bed to refuse.
+                    bed = job.targetB.Thing as Building_Bed;
+                    if (bed != null && BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
+                    {
+                        Building_Bed safer = BedPick.SaferBed(map, target, rescuer, bed, forPrisoners: false);
+                        if (safer != null)
+                        {
+                            rejected = bed;
+                            rejectedTempC = bed.AmbientTemperature;
+                            rejectedFire = BedPick.RoomHasFire(map, bed);
+                            job = JobMaker.MakeJob(JobDefOf.Rescue, target, safer);
+                            job.count = 1;
+                            bed = safer;
+                        }
                     }
                 }
 
@@ -179,14 +209,53 @@ namespace RIMAPI.Services
                 return $"{Describe(rescuer)} cannot reserve or reach him (another pawn has him reserved, or the "
                     + "path is blocked)";
             }
-            Building_Bed bed = RestUtility.FindBedFor(target, rescuer, false, false, GuestStatus.Guest)
-                ?? RestUtility.FindBedFor(target, rescuer, false, true, GuestStatus.Guest);
+            // The same lookup the game's own rescue work giver makes
+            // (WorkGiver_TakeToBed.FindBed), so the refusal names the bed rule
+            // that actually applies: an animal's own guest status is none, and
+            // forcing GuestStatus.Guest asked for a guest bed.
+            Building_Bed bed = RestUtility.FindBedFor(target, rescuer, false, false, target.GuestStatus)
+                ?? RestUtility.FindBedFor(target, rescuer, false, true, target.GuestStatus);
             if (bed == null)
             {
-                return "no free bed takes him: a rescue carries him to a bed, so build one "
-                    + "(`build name=Bed`) or free one up";
+                return "no free bed takes him: a rescue carries him to a bed, so "
+                    + PatientRules.NoBedHint(target.RaceProps.Humanlike);
             }
             return "the game's own rescue check refuses him";
+        }
+
+        // BedRefusal says why the bed a caller named cannot take the carried
+        // pawn, in the game's own terms. RestUtility.IsValidBedFor answers a
+        // bare false, so the checks a run can act on are named first: the
+        // bed's kind (a humanlike bed never takes an animal), the animal's body
+        // size against the bed's, a prisoner setting, and reach.
+        private static string BedRefusal(Map map, Pawn target, Pawn rescuer, Building_Bed bed)
+        {
+            string where = $"{bed.Label} (id {bed.thingIDNumber})";
+            if (!bed.Spawned || bed.Map != map) return $"{where} does not stand on this map";
+            if (bed.IsBurning()) return $"{where} is on fire";
+            string kind = PatientRules.BedKindRefusal(target.RaceProps.Humanlike, bed.def.building.bed_humanlike);
+            if (kind != null) return $"{where} cannot take {Describe(target)}: {kind}";
+            if (target.BodySize > bed.def.building.bed_maxBodySize)
+            {
+                return $"{where} is too small for {Describe(target)}: body size {target.BodySize:0.#} against "
+                    + $"the bed's {bed.def.building.bed_maxBodySize:0.#}";
+            }
+            if (bed.ForPrisoners && !target.IsPrisonerOfColony)
+            {
+                return $"{where} is set for prisoners, and {Describe(target)} is none (`bed` with bed_for=colonists "
+                    + "clears that)";
+            }
+            if (!rescuer.CanReach(bed, PathEndMode.OnCell, Danger.Deadly))
+            {
+                return $"{Describe(rescuer)} cannot reach {where}";
+            }
+            if (!RestUtility.IsValidBedFor(bed, target, rescuer, checkSocialProperness: false,
+                    guestStatus: target.GuestStatus))
+            {
+                return $"{Describe(target)} cannot be carried to {where}: the game's own bed check refuses it "
+                    + "(every sleeping slot is taken, the bed is forbidden, or another pawn has it reserved)";
+            }
+            return null;
         }
     }
 }

@@ -323,9 +323,11 @@ namespace RIMAPI.Controllers
         // Rescue: the game's own job carries a downed non-enemy to a free bed,
         // which is how a crashed pod survivor joins the colony (ticket #3183).
         // rescuer_id is optional; without it the mod takes the nearest colonist
-        // who can reach him.
+        // who can reach him. bed_id names the bed instead of the game's own
+        // lookup, which is how a downed colony animal reaches an animal bed or
+        // an animal sleeping spot (fox ticket #3519).
         [Post("/api/v1/jobs/make/rescue")]
-        [EndpointMetadata("Queue the game's own rescue job: carry a downed pawn to a free bed")]
+        [EndpointMetadata("Queue the game's own rescue job: carry a downed pawn or colony animal to a bed, or to the bed named in bed_id")]
         public async Task MakeJobRescue(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -333,16 +335,21 @@ namespace RIMAPI.Controllers
             var rescuerId = RequestParser.HasParameter(context, "rescuer_id")
                 ? RequestParser.GetIntParameter(context, "rescuer_id")
                 : 0;
-            var result = _colonistService.MakeJobRescue(mapId, pawnId, rescuerId);
+            var bedId = RequestParser.HasParameter(context, "bed_id")
+                ? RequestParser.GetIntParameter(context, "bed_id")
+                : 0;
+            var result = _colonistService.MakeJobRescue(mapId, pawnId, rescuerId, bedId);
             await context.SendJsonResponse(result);
         }
 
         // Feed: the game's own FeedPatient job, which needs the patient in a
         // bed (ticket #3445). feeder_id and meal_id are optional; without them
-        // the mod takes the nearest warden and the best meal the patient may
-        // eat.
+        // the mod takes the nearest colonist who can feed and the best meal the
+        // patient may eat. The giver is the game's own for the patient's kind:
+        // a prisoner's warden, the doctor's humanlike feeder, or its animal
+        // feeder for an animal in an animal bed (fox ticket #3519).
         [Post("/api/v1/jobs/make/feed")]
-        [EndpointMetadata("Queue the game's own FeedPatient job for a downed colonist in a bed")]
+        [EndpointMetadata("Queue the game's own FeedPatient job for a downed patient in a bed: a colonist, a prisoner or a colony animal")]
         public async Task MakeJobFeed(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);

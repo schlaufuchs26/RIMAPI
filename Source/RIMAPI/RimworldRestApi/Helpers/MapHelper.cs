@@ -244,7 +244,12 @@ namespace RIMAPI.Helpers
                 HuntDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null,
                 Manhunter = Hostility.IsManhunter(p),
                 Predator = p.RaceProps.predator,
-                Position = new PositionDto { X = p.Position.x, Y = p.Position.z },
+                // X, Y and Z as the map means them: Y is the altitude (0 for a
+                // pawn on the ground) and Z the second ground coordinate. The
+                // old line put the map's z into Y, so every animal cell read
+                // "157,0" and a run could not build at the animal's position
+                // (fox ticket #3519).
+                Position = new PositionDto { X = p.Position.x, Y = p.Position.y, Z = p.Position.z },
                 Trainer = p
                     .relations?.DirectRelations.Where(r => r.def == PawnRelationDefOf.Bond)
                     .Select(r => r.otherPawn?.thingIDNumber)

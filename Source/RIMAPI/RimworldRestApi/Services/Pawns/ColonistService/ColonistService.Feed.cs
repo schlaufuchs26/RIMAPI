@@ -35,7 +35,7 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail(
                         $"{Describe(patient)} is not in a bed: the game's FeedPatient job only runs for a patient "
-                        + "in a bed, so build one (`build name=Bed`) and rescue him into it first");
+                        + "in a bed, and " + PatientRules.FeedBedHint(patient.RaceProps.Humanlike));
                 }
                 if (!FeedPatientUtility.ShouldBeFed(patient))
                 {
@@ -81,12 +81,38 @@ namespace RIMAPI.Services
                         return ApiResult.Fail(
                             $"{Describe(feeder)} cannot reach {meal.LabelShort} (id {mealId})");
                     }
-                    job = JobMaker.MakeJob(JobDefOf.FeedPatient, patient, meal);
+                    // TargetA is the food and targetB the patient: that is the
+                    // order JobDriver_FoodFeedPatient reads (the game's own
+                    // givers build it this way), and the old call had them the
+                    // other way round, so a named meal fed the meal to nobody.
+                    job = JobMaker.MakeJob(JobDefOf.FeedPatient, meal, patient);
                     job.count = 1;
                 }
                 else
                 {
-                    WorkGiver_Warden_Feed giver = new WorkGiver_Warden_Feed();
+                    // The giver is the game's own for this patient's kind. The
+                    // old code always built WorkGiver_Warden_Feed, which only
+                    // ever feeds prisoners, so a colonist and an animal were
+                    // refused by ShouldTakeCareOfPrisoner (fox ticket #3519).
+                    string giverName = PatientRules.FeedGiver(
+                        patient.IsPrisonerOfColony || patient.IsSlaveOfColony, patient.RaceProps.Humanlike);
+                    WorkGiverDef giverDef = DefDatabase<WorkGiverDef>.GetNamedSilentFail(giverName);
+                    if (giverDef == null)
+                    {
+                        return ApiResult.Fail(
+                            $"the game has no feed work giver \"{giverName}\": a mod renamed or removed it, so no "
+                            + "colonist can be sent to feed this patient");
+                    }
+                    // Every feed giver is a scanner (HasJobOnThing/JobOnThing);
+                    // the def's Worker is what carries its def, so the def's own
+                    // feedAnimalsOnly / feedHumanlikesOnly flags apply.
+                    WorkGiver_Scanner giver = giverDef.Worker as WorkGiver_Scanner;
+                    if (giver == null)
+                    {
+                        return ApiResult.Fail(
+                            $"the game's feed work giver \"{giverName}\" is no scanner, so it cannot be asked for "
+                            + "a job");
+                    }
                     if (!giver.HasJobOnThing(feeder, patient, true))
                     {
                         return ApiResult.Fail(
@@ -134,14 +160,19 @@ namespace RIMAPI.Services
         }
 
         // PickFeeder takes the nearest colonist who could feed the patient and
-        // reach him. A colonist whose Warden work is on comes first, the way the
-        // game offers the job, but any able colonist can take an ordered job.
+        // reach him. A colonist whose own work type is on comes first; Warden
+        // for a prisoner, Doctor for a colonist or an animal, which is where
+        // the game's feed givers sit; but any able colonist can take an
+        // ordered job.
         private static Pawn PickFeeder(Map map, Pawn patient)
         {
+            WorkTypeDef workType = patient.IsPrisonerOfColony || patient.IsSlaveOfColony
+                ? WorkTypeDefOf.Warden
+                : WorkTypeDefOf.Doctor;
             return map.mapPawns.FreeColonistsSpawned
                 .Where(p => !p.Downed && !p.InMentalState && p != patient)
                 .Where(p => p.CanReach(patient, PathEndMode.ClosestTouch, Danger.Deadly))
-                .OrderByDescending(p => p.workSettings != null && p.workSettings.WorkIsActive(WorkTypeDefOf.Warden))
+                .OrderByDescending(p => p.workSettings != null && p.workSettings.WorkIsActive(workType))
                 .ThenBy(p => (p.Position - patient.Position).LengthHorizontalSquared)
                 .FirstOrDefault();
         }

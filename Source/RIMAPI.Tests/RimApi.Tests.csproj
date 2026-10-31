@@ -57,6 +57,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PauseSource.cs" Link="Linked\PauseSource.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AnimalRules.cs" Link="Linked\AnimalRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\AnimalDto.cs" Link="Linked\AnimalDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ArchiveNoise.cs" Link="Linked\ArchiveNoise.cs" />
