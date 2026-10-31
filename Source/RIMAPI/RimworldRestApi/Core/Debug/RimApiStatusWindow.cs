@@ -144,7 +144,7 @@ namespace RIMAPI.UI
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Failed to generate documentation: {ex.Message}");
+                LogApi.Error($"Failed to generate documentation: {ex}");
                 Messages.Message("Error generating documentation. Check logs.", MessageTypeDefOf.NegativeEvent, false);
             }
         }

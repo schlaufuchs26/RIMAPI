@@ -5,7 +5,7 @@
   <RIMAPI.ServerPortLabel>REST server port (restart required):</RIMAPI.ServerPortLabel>
   <RIMAPI.RefreshIntervalLabel>Refresh interval (ticks):</RIMAPI.RefreshIntervalLabel>
   <RIMAPI.RestartServer>Restart Server</RIMAPI.RestartServer>
-  <RIMAPI.EnableLogging>Enable logging:</RIMAPI.EnableLogging>
+  <RIMAPI.EnableLogging>Verbose logging (errors are always logged):</RIMAPI.EnableLogging>
   <RIMAPI.LoggingLevel>Logging Level:</RIMAPI.LoggingLevel>
   <RIMAPI.EnableCaching>Enable Caching</RIMAPI.EnableCaching>
   <RIMAPI.CacheLogStatistics>Cache Log Statistics</RIMAPI.CacheLogStatistics>

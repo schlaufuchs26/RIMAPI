@@ -26,7 +26,10 @@ namespace RIMAPI.Core
     ///     DebugLogging.Info("Hello world");
     ///
     /// Note:
-    /// Logging is completely suppressed unless IsLogging = true.
+    /// IsLogging gates the chatty levels only (DEBUG, INFO, WARNING); it defaults
+    /// to false because those lines would flood Player.log. ERROR and CRITICAL are
+    /// always written: a swallowed exception leaves a failure nobody can diagnose
+    /// (ticket #3205, a NullReferenceException in a service left no trace at all).
     /// LoggingLevel acts as the minimum required severity to log.
     ///
     /// Example:
@@ -36,7 +39,8 @@ namespace RIMAPI.Core
     public class LogApi
     {
         /// <summary>
-        /// Global flag to enable or disable all logging output.
+        /// Global flag for the chatty log levels (DEBUG, INFO, WARNING).
+        /// <para>ERROR and CRITICAL are written regardless of this flag.</para>
         /// </summary>
         public static bool IsLogging = false;
 
@@ -80,8 +84,24 @@ namespace RIMAPI.Core
         }
 
         /// <summary>
+        /// Whether a message of this level reaches Verse.Log. An ERROR or CRITICAL
+        /// always goes out, whatever the settings say: that is the line a later
+        /// session reads to find the cause of a failure.
+        /// </summary>
+        private static bool ShouldWrite(LoggingLevels messageLevel)
+        {
+            if (messageLevel >= LoggingLevels.ERROR)
+                return true;
+
+            if (!IsLogging)
+                return false;
+
+            return messageLevel >= LoggingLevel;
+        }
+
+        /// <summary>
         /// Core logging method for string input.
-        /// <para>Applies filtering based on IsLogging and LoggingLevel,
+        /// <para>Applies filtering through ShouldWrite (errors always pass),
         /// then formats and routes the message to the appropriate Verse log call.</para>
         ///
         /// Example formatting:
@@ -89,12 +109,7 @@ namespace RIMAPI.Core
         /// </summary>
         public static void Message(string text, LoggingLevels messageLevel = LoggingLevels.INFO)
         {
-            // Logging disabled
-            if (!IsLogging)
-                return;
-
-            // Severity filter: ignore messages below configured level
-            if ((int)messageLevel < (int)LoggingLevel)
+            if (!ShouldWrite(messageLevel))
                 return;
 
             string message = "[RIMAPI | ";
@@ -136,12 +151,7 @@ namespace RIMAPI.Core
         /// </summary>
         public static void Message(object text, LoggingLevels messageLevel = LoggingLevels.INFO)
         {
-            // Logging disabled
-            if (!IsLogging)
-                return;
-
-            // Severity filter
-            if ((int)messageLevel < (int)LoggingLevel)
+            if (!ShouldWrite(messageLevel))
                 return;
 
             string message = "[RIMAPI] " + text.ToString();

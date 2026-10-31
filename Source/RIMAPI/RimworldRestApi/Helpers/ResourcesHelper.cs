@@ -244,7 +244,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error analyzing storage: {ex.Message}");
+                Core.LogApi.Error($"Error analyzing storage: {ex}");
             }
             return new List<ResourceCategoryDto>();
         }

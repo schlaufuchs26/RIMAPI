@@ -57,7 +57,7 @@ namespace RIMAPI.Services
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error getting body image - {ex.Message}");
+                LogApi.Error($"Error getting body image - {ex}");
             }
             return ApiResult<BodyPartsDto>.Ok(bodyParts);
         }

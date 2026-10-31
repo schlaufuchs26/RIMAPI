@@ -118,7 +118,7 @@ namespace RIMAPI.Core
             {
                 // Only log real errors, not normal disconnections
                 if (!(ex is HttpListenerException))
-                    LogApi.Error($"[SSE] Connection error - {ex.Message}");
+                    LogApi.Error($"[SSE] Connection error - {ex}");
             }
             finally
             {

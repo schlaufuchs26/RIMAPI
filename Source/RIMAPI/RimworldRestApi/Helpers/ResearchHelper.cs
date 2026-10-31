@@ -80,7 +80,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error(ex.Message);
+                Core.LogApi.Error(ex);
                 throw;
             }
         }
@@ -258,7 +258,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error(ex.Message);
+                Core.LogApi.Error(ex);
                 throw;
             }
         }

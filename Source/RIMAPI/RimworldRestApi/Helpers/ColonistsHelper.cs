@@ -93,7 +93,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error getting colonist positions - {ex.Message}");
+                Core.LogApi.Error($"Error getting colonist positions - {ex}");
             }
 
             return positions;

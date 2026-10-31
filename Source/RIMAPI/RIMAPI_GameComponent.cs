@@ -79,7 +79,7 @@ namespace RIMAPI
                 }
                 catch (Exception ex)
                 {
-                    LogApi.Error($"Failed to start API server - {ex.Message}");
+                    LogApi.Error($"Failed to start API server - {ex}");
                     _serverInitialized = false;
                 }
             }

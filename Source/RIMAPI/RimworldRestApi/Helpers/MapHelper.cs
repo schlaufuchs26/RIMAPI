@@ -58,7 +58,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return maps;
             }
         }
@@ -87,7 +87,6 @@ namespace RIMAPI.Helpers
             catch (Exception ex)
             {
                 Core.LogApi.Error($"Error - {ex}");
-                Core.LogApi.Error($"Error - {ex.Message}");
                 return new MapCreaturesSummaryDto();
             }
         }
@@ -112,7 +111,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return mapTimeDto;
             }
         }
@@ -183,7 +182,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return powerInfo;
             }
         }
@@ -230,7 +229,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return new List<AnimalDto>();
             }
         }
@@ -255,7 +254,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return new List<ThingDto>();
             }
         }
@@ -281,7 +280,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error - {ex.Message}");
+                Core.LogApi.Error($"Error - {ex}");
                 return new List<ThingDto>();
             }
         }
@@ -1514,7 +1513,7 @@ namespace RIMAPI.Helpers
                     }
                     catch (Exception ex)
                     {
-                        LogApi.Error($"Failed to apply filter changes: {ex.Message}");
+                        LogApi.Error($"Failed to apply filter changes: {ex}");
                     }
                 }
 

@@ -57,7 +57,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"[BillHelper] Error converting Bill to DTO: {ex.Message}");
+                Core.LogApi.Error($"[BillHelper] Error converting Bill to DTO: {ex}");
                 return null;
             }
         }

@@ -653,7 +653,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error in BuildingUpdateTexture: {ex.Message}");
+                Core.LogApi.Error($"Error in BuildingUpdateTexture: {ex}");
                 Core.LogApi.Error($"Stack trace: {ex.StackTrace}");
             }
         }
@@ -854,7 +854,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Failed to update subMat texture: {ex.Message}");
+                Core.LogApi.Error($"Failed to update subMat texture: {ex}");
                 Core.LogApi.Error($"Exception type: {ex.GetType().Name}");
             }
 

@@ -829,7 +829,7 @@ namespace RIMAPI.Services
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error - {ex.Message}");
+                LogApi.Error($"Error - {ex}");
                 return mapTimeDto;
             }
         }

@@ -175,7 +175,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error converting pawn to DTO - {ex.Message}");
+                Core.LogApi.Error($"Error converting pawn to DTO - {ex}");
                 return null;
             }
         }
@@ -314,7 +314,7 @@ namespace RIMAPI.Helpers
             }
             catch (Exception ex)
             {
-                Core.LogApi.Error($"Error reading mood thoughts - {ex.Message}");
+                Core.LogApi.Error($"Error reading mood thoughts - {ex}");
             }
             return dto;
         }

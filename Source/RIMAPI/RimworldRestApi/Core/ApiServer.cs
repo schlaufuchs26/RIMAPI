@@ -318,7 +318,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Failed to start API server - {ex.Message}");
+                LogApi.Error($"Failed to start API server - {ex}");
                 throw;
             }
         }
@@ -343,7 +343,7 @@ namespace RIMAPI.Core
                 catch (Exception ex)
                 {
                     if (_isRunning)
-                        LogApi.Error($"Error accepting request - {ex.Message}");
+                        LogApi.Error($"Error accepting request - {ex}");
                 }
             }
         }
@@ -389,7 +389,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error processing request - {ex.Message}");
+                LogApi.Error($"Error processing request - {ex}");
                 await ResponseBuilder.SendError(
                     context.Response,
                     System.Net.HttpStatusCode.InternalServerError,
@@ -503,7 +503,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error disposing server - {ex.Message}");
+                LogApi.Error($"Error disposing server - {ex}");
             }
         }
 

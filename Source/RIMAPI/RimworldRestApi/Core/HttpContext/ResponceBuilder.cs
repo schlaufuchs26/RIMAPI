@@ -246,7 +246,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error writing response: {ex.Message}");
+                LogApi.Error($"Error writing response: {ex}");
                 try
                 {
                     response.Abort();
@@ -278,7 +278,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error sending raw JSON: {ex.Message}");
+                LogApi.Error($"Error sending raw JSON: {ex}");
                 try
                 {
                     response.Abort();
@@ -307,7 +307,7 @@ namespace RIMAPI.Core
             }
             catch (Exception ex)
             {
-                LogApi.Error($"Error sending plain text: {ex.Message}");
+                LogApi.Error($"Error sending plain text: {ex}");
                 try
                 {
                     response.Abort();
