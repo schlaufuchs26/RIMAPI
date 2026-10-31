@@ -27,6 +27,9 @@ namespace RIMAPI.Services
         ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId);
 
         ApiResult MakeJobTend(int mapId, int pawnId, int patientId, int medicineId);
+        // The Health tab's Self-tend option, which gates the self-tend job
+        // above (ticket #3279).
+        ApiResult SetSelfTend(int pawnId, bool enabled);
 
         // Growing the colony (ticket #3137): tame a wild person or animal,
         // arrest or capture a pawn into a prisoner bed, and set a prisoner's

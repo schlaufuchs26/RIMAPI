@@ -72,6 +72,16 @@ namespace RIMAPI.Models
         public bool Guest { get; set; }
     }
 
+    // The Self-tend option after the write: the state it now has, and whether
+    // this call is what changed it (ticket #3279).
+    public class SelfTendResultDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public bool SelfTend { get; set; }
+        public bool Changed { get; set; }
+    }
+
     // The prisoner's interaction mode after the change, with the numbers a
     // recruit attempt works against.
     public class PrisonerModeResultDto

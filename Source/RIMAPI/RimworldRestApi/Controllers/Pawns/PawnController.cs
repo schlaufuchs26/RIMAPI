@@ -244,6 +244,21 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // The Health tab's Self-tend option as a write (ticket #3279): the
+        // option gates the self-tend job above, and a colony of one has no
+        // other way to move it. enabled defaults to true, so a bare call turns
+        // it on.
+        [Post("/api/v1/colonist/self-tend")]
+        [EndpointMetadata("Switch one pawn's Self-tend option on or off")]
+        public async Task SetSelfTend(HttpListenerContext context)
+        {
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var enabled = !RequestParser.HasParameter(context, "enabled")
+                || RequestParser.GetBooleanParameter(context, "enabled");
+            var result = _colonistService.SetSelfTend(pawnId, enabled);
+            await context.SendJsonResponse(result);
+        }
+
         // Hauling one named thing to one named place: item_id is the thing to
         // carry, dest_id the storage building it goes into, pawn_id the hauler
         // (0 or absent lets the mod pick a colonist that can haul). A corpse
