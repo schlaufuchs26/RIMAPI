@@ -80,14 +80,14 @@ namespace RIMAPI.Services
                 Building_Bed rejected = null;
                 float rejectedTempC = 0f;
                 bool rejectedFire = false;
-                if (bed != null && BedSafety.IsUnsafe(bed.AmbientTemperature, RoomHasFire(map, bed)))
+                if (bed != null && BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
                 {
-                    Building_Bed safer = PickSaferBed(map, target, rescuer, bed);
+                    Building_Bed safer = BedPick.SaferBed(map, target, rescuer, bed, forPrisoners: false);
                     if (safer != null)
                     {
                         rejected = bed;
                         rejectedTempC = bed.AmbientTemperature;
-                        rejectedFire = RoomHasFire(map, bed);
+                        rejectedFire = BedPick.RoomHasFire(map, bed);
                         job = JobMaker.MakeJob(JobDefOf.Rescue, target, safer);
                         job.count = 1;
                         bed = safer;
@@ -110,12 +110,12 @@ namespace RIMAPI.Services
                 };
                 if (bed != null)
                 {
-                    Room room = BedRoom(map, bed);
+                    Room room = BedPick.BedRoom(map, bed);
                     result.BedId = bed.thingIDNumber;
                     result.Bed = bed.Label;
                     result.BedForPrisoners = bed.ForPrisoners;
                     result.BedRoomTempC = bed.AmbientTemperature;
-                    result.BedRoomHasFire = RoomHasFire(map, bed);
+                    result.BedRoomHasFire = BedPick.RoomHasFire(map, bed);
                     if (room != null)
                     {
                         result.BedRoomId = room.ID;
@@ -135,41 +135,6 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.ToString());
             }
-        }
-
-        // PickSaferBed finds a free bed outside the fire's reach for a patient
-        // the game would carry into a hot or burning room (ticket #3383). It
-        // takes the nearest of them, so once safety is equal the carry stays as
-        // short as the game's own choice. Null means the colony has no safe free
-        // bed, and the caller keeps the game's bed and says how hot it is.
-        private static Building_Bed PickSaferBed(Map map, Pawn target, Pawn rescuer, Building_Bed unsafeBed)
-        {
-            return map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>()
-                .Where(b => b != unsafeBed && b.Spawned)
-                .Where(b => !b.ForPrisoners && !b.ForSlaves)
-                .Where(b => b.AnyUnownedSleepingSlot)
-                .Where(b => !BedSafety.IsUnsafe(b.AmbientTemperature, RoomHasFire(map, b)))
-                .Where(b => rescuer.CanReserveAndReach(b, PathEndMode.OnCell, Danger.Deadly, 1, -1, null, false))
-                .OrderBy(b => (b.Position - target.Position).LengthHorizontalSquared)
-                .FirstOrDefault();
-        }
-
-        // BedRoom is the room the bed stands in: the room read reports its beds,
-        // the bed itself reports no room. Null for a bed whose cell belongs to no
-        // region the room grid knows.
-        private static Room BedRoom(Map map, Building_Bed bed)
-        {
-            return map.regionGrid.AllRooms.FirstOrDefault(r => r.ContainedBeds.Contains(bed));
-        }
-
-        // RoomHasFire is the fire the thermometer can miss: a small fire in a
-        // large room leaves the room below the heat threshold while it spreads
-        // towards the bed.
-        private static bool RoomHasFire(Map map, Building_Bed bed)
-        {
-            Room room = BedRoom(map, bed);
-            if (room == null) return false;
-            return map.listerThings.ThingsOfDef(ThingDefOf.Fire).Any(f => f.GetRoom() == room);
         }
 
         // BecomesGuest is the game's own answer, not a second rule: the rescue

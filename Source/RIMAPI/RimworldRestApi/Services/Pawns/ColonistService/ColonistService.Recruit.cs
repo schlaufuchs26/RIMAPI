@@ -143,6 +143,27 @@ namespace RIMAPI.Services
                     RIMAPI_GameComponent.UndraftWhenFree(arrestor);
                 }
 
+                // The game's lookup is the first free prisoner bed, not the
+                // safest one: in a burning colony that is the bed inside the
+                // fire, and a prisoner carried into it cannot walk out (ticket
+                // #3421, the same trap the rescue route had in #3383). A safe
+                // prisoner bed replaces it when the colony has one; the answer
+                // carries the room temperature either way.
+                Building_Bed rejected = null;
+                float rejectedTempC = 0f;
+                bool rejectedFire = false;
+                if (BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
+                {
+                    Building_Bed safer = BedPick.SaferBed(map, target, arrestor, bed, forPrisoners: true);
+                    if (safer != null)
+                    {
+                        rejected = bed;
+                        rejectedTempC = bed.AmbientTemperature;
+                        rejectedFire = BedPick.RoomHasFire(map, bed);
+                        bed = safer;
+                    }
+                }
+
                 Job job = JobMaker.MakeJob(def, target, bed);
                 job.count = 1;
                 if (!arrestor.jobs.TryTakeOrderedJob(job, JobTag.Misc))
@@ -151,7 +172,7 @@ namespace RIMAPI.Services
                     return ApiResult.Fail($"Failed to assign the {def.defName} job to {Describe(arrestor)}");
                 }
 
-                return ApiResult.Ok(new ArrestResultDto
+                ArrestResultDto result = new ArrestResultDto
                 {
                     PawnId = pawnId,
                     Name = target.LabelShort,
@@ -161,7 +182,23 @@ namespace RIMAPI.Services
                     BedId = bed.thingIDNumber,
                     Bed = bed.Label,
                     Drafted = arrestor.Drafted,
-                });
+                    BedRoomTempC = bed.AmbientTemperature,
+                    BedRoomHasFire = BedPick.RoomHasFire(map, bed),
+                };
+                Room room = BedPick.BedRoom(map, bed);
+                if (room != null)
+                {
+                    result.BedRoomId = room.ID;
+                    result.BedRoomLabel = room.GetRoomRoleLabel();
+                }
+                if (rejected != null)
+                {
+                    result.RejectedBedId = rejected.thingIDNumber;
+                    result.RejectedBed = rejected.Label;
+                    result.RejectedBedTempC = rejectedTempC;
+                    result.RejectedBedRoomHasFire = rejectedFire;
+                }
+                return ApiResult.Ok(result);
             }
             catch (Exception ex)
             {

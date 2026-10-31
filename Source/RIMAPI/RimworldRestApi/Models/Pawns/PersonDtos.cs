@@ -64,6 +64,9 @@ namespace RIMAPI.Models
 
     // What an arrest order did: the job the game got (Arrest or Capture), the
     // prisoner bed it walks to, and whether the arrestor was drafted for it.
+    // The bed's room comes with it (ticket #3421): the game's own lookup takes
+    // the first free prisoner bed, and a bed in a burning or oven-hot room is
+    // where the prisoner cannot walk out.
     public class ArrestResultDto
     {
         public int PawnId { get; set; }
@@ -74,6 +77,16 @@ namespace RIMAPI.Models
         public int BedId { get; set; }
         public string Bed { get; set; }
         public bool Drafted { get; set; }
+        public int BedRoomId { get; set; }
+        public string BedRoomLabel { get; set; }
+        public float BedRoomTempC { get; set; }
+        public bool BedRoomHasFire { get; set; }
+        // The bed the game's own lookup picked first, when the tool took a safer
+        // one instead; zero when the game's choice was the one used.
+        public int RejectedBedId { get; set; }
+        public string RejectedBed { get; set; }
+        public float RejectedBedTempC { get; set; }
+        public bool RejectedBedRoomHasFire { get; set; }
     }
 
     // What a rescue order did: the job the game got, the bed it carries the
