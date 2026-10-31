@@ -1104,6 +1104,100 @@ namespace RIMAPI.Helpers
             }
         }
 
+        /// <summary>
+        /// Find any zone (stockpile, growing, dumping) by ID across all maps.
+        /// </summary>
+        private static (Zone zone, Map map) FindZoneById(int zoneId)
+        {
+            foreach (Map map in Find.Maps)
+            {
+                var zone = map.zoneManager.AllZones.FirstOrDefault(z => z.ID == zoneId);
+                if (zone != null)
+                {
+                    return (zone, map);
+                }
+            }
+            return (null, null);
+        }
+
+        /// <summary>
+        /// Delete any zone by ID, whatever its type. The stockpile route above
+        /// only clears a stockpile's cells and only knows stockpiles; a growing
+        /// zone had no removal at all, so a field sown over the wrong rectangle
+        /// stayed on the map and kept pulling work. Zone.Delete() is the game's
+        /// own removal: it clears the cells and deregisters the zone, while the
+        /// plants already growing on those cells stay where they are.
+        /// </summary>
+        public static ApiResult DeleteZone(int zoneId)
+        {
+            try
+            {
+                var found = FindZoneById(zoneId);
+                Zone zone = found.zone;
+
+                if (zone == null)
+                {
+                    return ApiResult.Fail($"Zone with ID {zoneId} not found.");
+                }
+
+                string label = zone.label;
+                string type = zone.GetType().Name;
+                int cellsCount = zone.CellCount;
+                string failure = null;
+
+                // Zone.Delete() touches the game's own state and plays its
+                // deletion sound, so it runs on the main thread. The caller
+                // waits for it: an answer that says "deleted" while the action
+                // still sits in the queue is the kind of lie that costs a
+                // colony its stores.
+                using (var done = new System.Threading.ManualResetEventSlim(false))
+                {
+                    LongEventHandler.ExecuteWhenFinished(() =>
+                    {
+                        try
+                        {
+                            zone.Delete();
+                        }
+                        catch (Exception ex)
+                        {
+                            failure = ex.Message;
+                        }
+                        finally
+                        {
+                            done.Set();
+                        }
+                    });
+
+                    if (!done.Wait(3000))
+                    {
+                        return ApiResult.Fail(
+                            $"Removal of zone {zoneId} ('{label}') is queued but the game did not run it " +
+                            "within 3 s (a loading screen or a modal holds the main thread). " +
+                            "Read the zones again to see whether it went.");
+                    }
+                }
+
+                if (failure != null)
+                {
+                    return ApiResult.Fail($"Failed to delete zone {zoneId} ('{label}'): {failure}");
+                }
+
+                LogApi.Info($"Deleted zone '{label}' ({type}, ID: {zoneId}) with {cellsCount} cells");
+                return ApiResult.Ok(new
+                {
+                    ZoneId = zoneId,
+                    Label = label,
+                    Type = type,
+                    CellsCount = cellsCount,
+                });
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"Error deleting zone: {ex}");
+                return ApiResult.Fail($"Failed to delete zone: {ex.Message}");
+            }
+        }
+
         public static ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request)
         {
             try

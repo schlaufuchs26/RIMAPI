@@ -751,6 +751,8 @@ namespace RIMAPI.Services
 
         public ApiResult DeleteStockpile(int zoneId) => MapHelper.DeleteStockpile(zoneId);
 
+        public ApiResult DeleteZone(int zoneId) => MapHelper.DeleteZone(zoneId);
+
         public ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request) => MapHelper.UpdateStockpile(request);
 
 

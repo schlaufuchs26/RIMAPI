@@ -316,6 +316,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Delete("/api/v1/map/zone/delete")]
+        [EndpointMetadata("Delete any zone (stockpile or growing) by zone ID")]
+        public async Task DeleteZone(HttpListenerContext context)
+        {
+            var zoneId = RequestParser.GetIntParameter(context, "zone_id");
+            var result = _mapService.DeleteZone(zoneId);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/zone/stockpile/update")]
         [EndpointMetadata("Update stockpile zone parameters by zone ID")]
         public async Task UpdateStockpile(HttpListenerContext context)

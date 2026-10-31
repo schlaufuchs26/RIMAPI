@@ -39,6 +39,7 @@ namespace RIMAPI.Services
         ApiResult<GrowingZoneDto> CreateGrowingZone(CreateGrowingZoneRequestDto request);
         ApiResult<StockpileResponseDto> CreateStockpile(CreateStockpileRequestDto request);
         ApiResult DeleteStockpile(int zoneId);
+        ApiResult DeleteZone(int zoneId);
         ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request);
 
         ApiResult<MapTimeDto> GetCurrentMapDatetime();
