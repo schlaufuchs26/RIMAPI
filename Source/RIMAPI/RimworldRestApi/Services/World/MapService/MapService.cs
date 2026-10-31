@@ -138,26 +138,19 @@ namespace RIMAPI.Services
             var result = new List<DesignationDto>();
             foreach (var designation in map.designationManager.AllDesignations)
             {
-                var dto = new DesignationDto
-                {
-                    DefName = designation.def?.defName,
-                    Label = designation.def?.label,
-                    Target = designation.target.HasThing ? "thing" : "cell",
-                    X = designation.target.Cell.x,
-                    Z = designation.target.Cell.z,
-                };
-
                 // A thing-targeted designation names the thing, so a caller can
                 // address the same thing again (the ids the things read prints).
-                if (designation.target.HasThing && designation.target.Thing != null)
-                {
-                    var thing = designation.target.Thing;
-                    dto.ThingId = thing.thingIDNumber;
-                    dto.ThingDefName = thing.def?.defName;
-                    dto.ThingLabel = thing.LabelShort;
-                }
-
-                result.Add(dto);
+                var target = designation.target;
+                var thing = target.HasThing ? target.Thing : null;
+                result.Add(DesignationEntry.Make(
+                    designation.def?.defName,
+                    designation.def?.label,
+                    target.HasThing,
+                    target.Cell.x,
+                    target.Cell.z,
+                    thing != null ? thing.thingIDNumber : 0,
+                    thing?.def?.defName,
+                    thing?.LabelShort));
             }
 
             return ApiResult<List<DesignationDto>>.Ok(result);

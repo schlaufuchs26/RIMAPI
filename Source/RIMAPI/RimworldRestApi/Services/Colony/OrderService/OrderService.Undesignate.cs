@@ -60,12 +60,33 @@ public partial class OrderService
             }
             doomed.Add(des);
         }
+
+        // The removed entries travel with the count (ticket #3508): a count
+        // alone cannot tell a rectangle of pines from the boulders that were
+        // meant, and the answer sends the same shape the designations read
+        // does, so a caller compares what left against what it saw. Built
+        // before the removal, because RemoveDesignation drops the target.
+        List<DesignationDto> removed = new List<DesignationDto>();
+        foreach (Designation des in doomed)
+        {
+            var target = des.target;
+            var thing = target.HasThing ? target.Thing : null;
+            removed.Add(DesignationEntry.Make(
+                des.def?.defName,
+                des.def?.label,
+                target.HasThing,
+                target.Cell.x,
+                target.Cell.z,
+                thing != null ? thing.thingIDNumber : 0,
+                thing?.def?.defName,
+                thing?.LabelShort));
+        }
         foreach (Designation des in doomed)
         {
             map.designationManager.RemoveDesignation(des);
         }
 
-        return ApiResult.Ok(new { cells, removed = doomed.Count });
+        return ApiResult.Ok(new { cells, removed = removed.Count, removed_designations = removed });
     }
 
     // The order's word is the one `designate` takes, so the call that went
