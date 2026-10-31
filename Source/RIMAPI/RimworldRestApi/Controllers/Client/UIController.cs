@@ -63,10 +63,15 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
-        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether this read is the first to report it, and whether the game's own dismiss applies. The read marks the stack seen.")]
+        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, and whether the game's own dismiss applies. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do.")]
         public async Task ListLetters(HttpListenerContext context)
         {
-            var result = _letterService.ListLetters();
+            // peek=1 is the read-only look (ticket #3214): the digest and the
+            // wait poll the stack, and a poll that marked it seen left the
+            // `letters` read unable to say which letters were new.
+            var peek = context.Request.QueryString["peek"];
+            var markSeen = !(peek == "1" || string.Equals(peek, "true", System.StringComparison.OrdinalIgnoreCase));
+            var result = _letterService.ListLetters(markSeen);
             await context.SendJsonResponse(result);
         }
 

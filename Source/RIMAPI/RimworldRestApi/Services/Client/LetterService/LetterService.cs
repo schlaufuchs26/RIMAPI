@@ -18,16 +18,19 @@ namespace RIMAPI.Services
     // was read stops covering the map.
     public class LetterService : ILetterService
     {
-        public ApiResult<List<LetterDto>> ListLetters()
+        public ApiResult<List<LetterDto>> ListLetters(bool markSeen)
         {
             try
             {
                 var standing = StackLetters();
                 // The game keeps no read flag, so the bridge remembers what it
                 // has reported: this call answers "new" for the letters no
-                // earlier read showed and marks the whole stack seen
-                // (ticket #3156).
-                var fresh = LetterSeen.Report(standing.Select(l => l.ID));
+                // earlier read showed. A reporting read marks the whole stack
+                // seen; a peek (markSeen false) leaves it for the `letters`
+                // read, because the digest and the wait look at the stack far
+                // more often than a run asks what is new (tickets #3156, #3214).
+                var ids = standing.Select(l => l.ID);
+                var fresh = markSeen ? LetterSeen.Report(ids) : LetterSeen.Peek(ids);
                 var letters = new List<LetterDto>(standing.Count);
                 foreach (var letter in standing)
                 {

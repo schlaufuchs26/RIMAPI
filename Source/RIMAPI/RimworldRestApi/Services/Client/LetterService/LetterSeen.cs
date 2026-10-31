@@ -59,6 +59,26 @@ namespace RIMAPI.Services
             return fresh;
         }
 
+        // Peek names the letters a read would report as new without marking
+        // them seen. The digest and the wait look at the stack on every turn
+        // and every poll, so a look that consumed the flags left the `letters`
+        // read with nothing to mark and a run learned a count but never which
+        // letters arrived (ticket #3214).
+        public static HashSet<int> Peek(IEnumerable<int> standing)
+        {
+            var fresh = new HashSet<int>();
+            lock (Gate)
+            {
+                EnsureLoaded();
+                foreach (var id in standing)
+                {
+                    if (!Seen.Contains(id))
+                        fresh.Add(id);
+                }
+            }
+            return fresh;
+        }
+
         // Mark records one letter as seen without a read: the game's own
         // opening counts, so a letter the player read in game is not new to the
         // next read.
