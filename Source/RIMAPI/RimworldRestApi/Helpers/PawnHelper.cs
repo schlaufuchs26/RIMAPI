@@ -391,6 +391,9 @@ namespace RIMAPI.Helpers
                 IsCurrentlyLifeThreatening = hediff.IsCurrentlyLifeThreatening,
                 CanEverKill = hediff.CanEverKill(),
 
+                IsInfection = hediff.def?.isInfection ?? false,
+                SeverityPerDay = HediffRateOf(hediff.def),
+
                 SourceDefName = hediff.sourceDef?.defName,
                 SourceLabel = hediff.sourceDef?.label,
                 SourceBodyPartGroupDefName = hediff.sourceBodyPartGroup?.defName,
@@ -403,6 +406,25 @@ namespace RIMAPI.Helpers
             };
 
             return dto;
+        }
+
+        /// <summary>
+        /// The daily severity change the def states (fox, #3449): an
+        /// immunizable infection climbs by severityPerDayNotImmune until
+        /// immunity wins, a plain SeverityPerDay hediff by its severityPerDay.
+        /// 0 means the def gives no rate, which the caller reads as "no
+        /// projection" instead of falling back on a guess.
+        /// </summary>
+        public static float HediffRateOf(HediffDef def)
+        {
+            if (def == null)
+                return 0f;
+
+            var immunizable = def.CompProps<HediffCompProperties_Immunizable>();
+            var perDay = def.CompProps<HediffCompProperties_SeverityPerDay>();
+            return HediffRate.Pick(
+                immunizable?.severityPerDayNotImmune ?? 0f,
+                perDay?.severityPerDay ?? 0f);
         }
 
         // GetMoodInfo lists the thoughts the game currently counts toward this

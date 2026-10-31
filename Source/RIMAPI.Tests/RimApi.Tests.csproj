@@ -50,6 +50,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FirefightPlan.cs" Link="Linked\FirefightPlan.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogState.cs" Link="Linked\JobLogState.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HediffRate.cs" Link="Linked\HediffRate.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\IdeoDtos.cs" Link="Linked\IdeoDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BuildingDto.cs" Link="Linked\BuildingDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\MessageDtos.cs" Link="Linked\MessageDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\JobLogDtos.cs" Link="Linked\JobLogDtos.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\ColonistDto.cs" Link="Linked\ColonistDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
   </ItemGroup>
 </Project>

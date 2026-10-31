@@ -158,6 +158,54 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryHediffFieldKeepsTheKeyTheToolReads()
+        {
+            // The untended-injury block reads these keys, the two infection
+            // facts included (ticket #3449): a rename would leave the digest
+            // with a zero rate and no infection flag, and it would silently
+            // fall back on its own table again.
+            var expected = new[]
+            {
+                "age_string",
+                "age_ticks",
+                "bleed_rate",
+                "bleeding",
+                "can_ever_kill",
+                "combat_log_text",
+                "cur_stage_index",
+                "cur_stage_label",
+                "def_name",
+                "is_currently_life_threatening",
+                "is_infection",
+                "is_lethal",
+                "is_permanent",
+                "is_tended",
+                "label",
+                "label_cap",
+                "label_in_brackets",
+                "load_id",
+                "pain_factor",
+                "pain_offset",
+                "part_def_name",
+                "part_label",
+                "severity",
+                "severity_label",
+                "severity_per_day",
+                "source_body_part_group_def_name",
+                "source_def_name",
+                "source_hediff_def_name",
+                "source_label",
+                "tendable_now",
+                "tip_string_extra",
+                "visible",
+            };
+
+            JObject json = Json(new HediffDto());
+
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public void ANestedRangeKeepsItsOwnKeys()
         {
             JObject json = Json(new BillDto

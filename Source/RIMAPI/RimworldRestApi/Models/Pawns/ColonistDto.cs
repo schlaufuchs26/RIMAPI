@@ -155,6 +155,21 @@ namespace RIMAPI.Models
         public bool IsCurrentlyLifeThreatening { get; set; }
         public bool CanEverKill { get; set; }
 
+        // Infection facts from the def itself (fox, #3449). The digest kept a
+        // hand-copied table of both, which goes stale the moment a mod or a
+        // game update changes a rate or adds an infection: the game has the
+        // def at hand here, so it says what the def says.
+        //
+        // IsInfection is HediffDef.isInfection (flu and plague inherit it
+        // through InfectionBase, gut worms carry it too).
+        public bool IsInfection { get; set; }
+
+        // SeverityPerDay is the severity the def gains per day while immunity
+        // has not won: severityPerDayNotImmune of an immunizable infection, or
+        // a plain SeverityPerDay comp's rate. 0 means the def states no rate,
+        // which the caller reads as "no projection" rather than a guess.
+        public float SeverityPerDay { get; set; }
+
         // Source information
         public string SourceDefName { get; set; }
         public string SourceLabel { get; set; }
