@@ -264,9 +264,15 @@ namespace RIMAPI.Services
                     List<Tradeable> matches = MatchingTradeables(deal, request.DefName, buying);
                     if (matches.Count == 0)
                     {
+                        // A sale that finds nothing is the case Evan met on
+                        // 2026-10-31: the goods exist, the game trades only the
+                        // stored part, and the refusal said nothing about the
+                        // rest (ticket #3494).
                         return ApiResult<TradeResultDto>.Fail(buying
                             ? $"{trader.TraderName} sells no {request.DefName}"
-                            : $"the colony has no {request.DefName} to sell");
+                            : WithHolding(
+                                $"the colony has no {request.DefName} to sell",
+                                TradeHolding.OutsideTrade(map, trader, FindThingDef(request.DefName), 0)));
                     }
 
                     // Positive countToTransfer moves goods toward the colony
@@ -305,8 +311,13 @@ namespace RIMAPI.Services
                     // than the deal says; refuse here instead, with the numbers.
                     if (buying && silver.CountPostDealFor(Transactor.Colony) < 0)
                     {
-                        return ApiResult<TradeResultDto>.Fail(
-                            $"the colony has {silver.CountHeldBy(Transactor.Colony)} silver and this purchase of {moved} {request.DefName} costs {-silver.CountToTransfer}");
+                        return ApiResult<TradeResultDto>.Fail(WithHolding(
+                            $"the colony has {silver.CountHeldBy(Transactor.Colony)} silver and this purchase of {moved} {request.DefName} costs {-silver.CountToTransfer}",
+                            TradeHolding.OutsideTrade(
+                                map,
+                                trader,
+                                ThingDefOf.Silver,
+                                silver.CountHeldBy(Transactor.Colony))));
                     }
                     if (!buying && silver.CountPostDealFor(Transactor.Trader) < 0)
                     {
@@ -464,6 +475,38 @@ namespace RIMAPI.Services
                 if (pawn == null || pawn.Dead || pawn.Downed) continue;
                 if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Talking)) continue;
                 return pawn;
+            }
+            return null;
+        }
+
+        // WithHolding appends what lies outside the trade's reach to a refusal,
+        // so a run reads the cause and the fix in the same answer (ticket
+        // #3494). An empty holding leaves the refusal as it was.
+        private static string WithHolding(string refusal, string holding)
+        {
+            return string.IsNullOrEmpty(holding) ? refusal : refusal + "; " + holding;
+        }
+
+        // FindThingDef resolves the defName a request names, falling back to the
+        // def's label the way MatchingTradeables matches. Null means the request
+        // names no thing at all, and the refusal then carries no holding text.
+        private static ThingDef FindThingDef(string defName)
+        {
+            if (string.IsNullOrEmpty(defName))
+            {
+                return null;
+            }
+            ThingDef byName = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+            if (byName != null)
+            {
+                return byName;
+            }
+            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+            {
+                if (def != null && string.Equals(def.label, defName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return def;
+                }
             }
             return null;
         }
