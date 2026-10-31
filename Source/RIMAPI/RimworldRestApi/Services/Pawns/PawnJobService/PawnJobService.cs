@@ -123,11 +123,20 @@ namespace RIMAPI.Services
                 Building_Bed bed = null;
                 if (request.BedBuildingId.HasValue)
                 {
-                    Building building = BuildingHelper.FindBuildingByID(request.BedBuildingId.Value);
+                    int bedId = request.BedBuildingId.Value;
+                    Building building = BuildingHelper.FindBuildingByID(bedId);
                     bed = building as Building_Bed;
                     if (bed == null)
                     {
-                        return ApiResult.Fail($"Bed not found: {request.BedBuildingId}");
+                        // An id from the stored read can name a bed packed up in
+                        // a stockpile or a thing inside a container, so name it
+                        // instead of a bare "not found" (ticket #3354).
+                        return ApiResult.Fail(
+                            UnbuiltBuildingReason.OrNotFound(
+                                ThingHolderHelper.DescribeUnbuilt(
+                                    bedId,
+                                    "only a built bed on the map can take a patient"),
+                                $"Bed not found: {bedId}"));
                     }
                 }
 

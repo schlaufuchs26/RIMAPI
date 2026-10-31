@@ -23,5 +23,15 @@ namespace RIMAPI.Helpers
                 ? found + "; install it first, " + onlyBuilt
                 : found + "; " + onlyBuilt;
         }
+
+        // The answer a route gives when its own lookup found nothing: the
+        // stored reason when the id names a held or a packed-up thing, else the
+        // route's own "not found" (ticket #3354). A route that skips this drops
+        // the reason the building routes carry and sends a run back to a bare
+        // id it cannot act on.
+        public static string OrNotFound(string reason, string notFound)
+        {
+            return reason ?? notFound;
+        }
     }
 }

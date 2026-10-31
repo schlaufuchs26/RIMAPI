@@ -45,5 +45,25 @@ namespace RIMAPI.Tests
             // Null means the caller answers its own "not found".
             Assert.Null(UnbuiltBuildingReason.Describe(null, true, OnlyBuilt));
         }
+
+        [Fact]
+        public void A_route_keeps_the_stored_reason()
+        {
+            const string Reason = "Thing 12 is inside Grave #7 (grave), not on the map; " + OnlyBuilt;
+
+            Assert.Equal(Reason, UnbuiltBuildingReason.OrNotFound(Reason, "Building 3 not found or is not a work table"));
+        }
+
+        [Fact]
+        public void A_route_without_a_stored_reason_answers_its_own_not_found()
+        {
+            // An id that names nothing, or a built building that is not the
+            // thing the route needs, has no stored reason to report.
+            Assert.Equal(
+                "Building 5 not found or is not a work table",
+                UnbuiltBuildingReason.OrNotFound(
+                    null,
+                    "Building 5 not found or is not a work table"));
+        }
     }
 }

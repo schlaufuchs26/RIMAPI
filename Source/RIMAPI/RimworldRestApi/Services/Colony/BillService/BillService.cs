@@ -20,7 +20,7 @@ namespace RIMAPI.Services
         {
             var workTable = FindWorkTable(buildingId);
             if (workTable == null)
-                return ApiResult<List<BillDto>>.Fail($"Building {buildingId} not found or is not a work table");
+                return ApiResult<List<BillDto>>.Fail(DescribeMissingWorkTable(buildingId));
 
             var bills = workTable.BillStack.Bills
                 .OfType<Bill_Production>()
@@ -35,7 +35,7 @@ namespace RIMAPI.Services
         {
             var workTable = FindWorkTable(buildingId);
             if (workTable == null)
-                return ApiResult<BillDto>.Fail($"Building {buildingId} not found or is not a work table");
+                return ApiResult<BillDto>.Fail(DescribeMissingWorkTable(buildingId));
 
             var bill = FindBill(workTable, billId);
             if (bill == null)
@@ -53,7 +53,7 @@ namespace RIMAPI.Services
 
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult<BillDto>.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult<BillDto>.Fail(DescribeMissingWorkTable(buildingId));
 
                 if (workTable.BillStack.Bills.Count >= MaxBillsPerStack)
                     return ApiResult<BillDto>.Fail("Bill stack is full (max 15)");
@@ -90,7 +90,7 @@ namespace RIMAPI.Services
             {
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult<BillDto>.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult<BillDto>.Fail(DescribeMissingWorkTable(buildingId));
 
                 var bill = FindBill(workTable, billId);
                 if (bill == null)
@@ -120,7 +120,7 @@ namespace RIMAPI.Services
             {
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult.Fail(DescribeMissingWorkTable(buildingId));
 
                 var bill = FindBill(workTable, billId);
                 if (bill == null)
@@ -141,7 +141,7 @@ namespace RIMAPI.Services
             {
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult.Fail(DescribeMissingWorkTable(buildingId));
 
                 var bill = FindBill(workTable, billId);
                 if (bill == null)
@@ -171,7 +171,7 @@ namespace RIMAPI.Services
             {
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult.Fail(DescribeMissingWorkTable(buildingId));
 
                 var bill = FindBill(workTable, billId);
                 if (bill == null)
@@ -192,7 +192,7 @@ namespace RIMAPI.Services
             {
                 var workTable = FindWorkTable(buildingId);
                 if (workTable == null)
-                    return ApiResult.Fail($"Building {buildingId} not found or is not a work table");
+                    return ApiResult.Fail(DescribeMissingWorkTable(buildingId));
 
                 workTable.BillStack.Clear();
                 return ApiResult.Ok();
@@ -207,7 +207,7 @@ namespace RIMAPI.Services
         {
             var workTable = FindWorkTable(buildingId);
             if (workTable == null)
-                return ApiResult<List<RecipeDto>>.Fail($"Building {buildingId} not found or is not a work table");
+                return ApiResult<List<RecipeDto>>.Fail(DescribeMissingWorkTable(buildingId));
 
             var recipes = workTable.def.AllRecipes
                 .Where(r => !onlyResearched || r.AvailableNow)
@@ -231,6 +231,20 @@ namespace RIMAPI.Services
                 .ToList();
 
             return ApiResult<List<WorkTableDto>>.Ok(workTables);
+        }
+
+        // An id from the stored read can name a held or a packed-up thing
+        // instead of a built work table, so a bill route answers the reason
+        // every building route carries rather than a bare "not found"
+        // (ticket #3354). An id that names nothing, or a built building that
+        // carries no bills, keeps this route's own wording.
+        private static string DescribeMissingWorkTable(int buildingId)
+        {
+            return UnbuiltBuildingReason.OrNotFound(
+                ThingHolderHelper.DescribeUnbuilt(
+                    buildingId,
+                    "only a built work table on the map carries bills"),
+                $"Building {buildingId} not found or is not a work table");
         }
 
         private Building_WorkTable FindWorkTable(int buildingId)
