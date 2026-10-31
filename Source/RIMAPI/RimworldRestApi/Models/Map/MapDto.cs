@@ -191,6 +191,14 @@ namespace RIMAPI.Models
         // than FoodMeals, so a player who unticks "meals" still stores meals and
         // the food-type answer reads as the opposite of the click.
         public List<string> AllowedMealDefs { get; set; }
+
+        // AllowedRawDefs names the raw-food defs the filter allows, the same
+        // question as AllowedMealDefs for the other food type. Chocolate,
+        // HemogenPack and Kibble carry Raw while sitting in Foods rather than
+        // FoodRaw, so a player who unticks "raw food" still stores raw food and
+        // the food-type answer reads as the opposite of the click (fox ticket
+        // #3303).
+        public List<string> AllowedRawDefs { get; set; }
     }
 
     // UnwantedFoodDto is the answer to "which edible things lie on the ground

@@ -435,7 +435,8 @@ namespace RIMAPI.Helpers
                 AcceptsRawFood = FilterAllowsAny(filter, def => IsFoodDef(def) && !IsMealDef(def)),
                 AllowedDefCount = filter.AllowedThingDefs.Count(),
                 AllowedFoodCategories = FoodCategoriesAllowed(filter),
-                AllowedMealDefs = AllowedMealDefs(filter),
+                AllowedMealDefs = AllowedDefsWith(filter, IsMealDef),
+                AllowedRawDefs = AllowedDefsWith(filter, def => IsFoodDef(def) && !IsMealDef(def)),
             };
         }
 
@@ -477,15 +478,17 @@ namespace RIMAPI.Helpers
             return allowed;
         }
 
-        // AllowedMealDefs names what keeps accepts_meals true, so a read can say
-        // that a meal comes in through Pemmican or BabyFood and not through the
-        // FoodMeals category the player denied.
-        private static List<string> AllowedMealDefs(ThingFilter filter)
+        // AllowedDefsWith names the allowed defs that satisfy predicate, sorted.
+        // It answers what keeps a food-type flag true when the category a player
+        // denied says otherwise: a meal comes in through Pemmican or BabyFood and
+        // not through FoodMeals (fox ticket #3231), raw food through Chocolate,
+        // HemogenPack or Kibble and not through FoodRaw (fox ticket #3303).
+        private static List<string> AllowedDefsWith(ThingFilter filter, Func<ThingDef, bool> predicate)
         {
             var names = new List<string>();
             foreach (ThingDef def in filter.AllowedThingDefs)
             {
-                if (IsMealDef(def))
+                if (predicate(def))
                 {
                     names.Add(def.defName);
                 }
