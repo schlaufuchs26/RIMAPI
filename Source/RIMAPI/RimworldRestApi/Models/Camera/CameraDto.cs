@@ -27,6 +27,10 @@ namespace RIMAPI.Models.Camera
         public float? CenterX { get; set; }
         public float? CenterZ { get; set; }
         public float? ZoomLevel { get; set; } // Typically 10 to 60
+
+        // Without the explicit name the resolver splits the acronym, so the key
+        // would be hide_u_i and a caller sending hide_ui would keep the default.
+        [JsonProperty("hide_ui")]
         public bool HideUI { get; set; } = true;
     }
 

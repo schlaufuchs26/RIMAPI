@@ -99,6 +99,7 @@ Services own all interaction with RimWorld internals. Never let a DTO or control
 - Organized by domain: `Pawns/`, `Game/`, `Map/`, `Items/`, `UI/`, `Camera/`, etc.
 - C# PascalCase properties auto-convert to `snake_case` JSON keys via `SnakeCaseContractResolver`
 - A few DTOs override this with explicit `[JsonProperty("key")]` (e.g. `WorkPriorityRequestDto`)
+- The resolver splits every capital, so an acronym becomes single letters: `HP` is `h_p`, not `hp`. A member whose name carries two capitals in a row needs an explicit `[JsonProperty("...")]`, and `ModelKeyTests` fails without one; it reads the whole Models tree, so it covers the DTOs that have no stub in the test project.
 
 ### Helpers vs Services
 

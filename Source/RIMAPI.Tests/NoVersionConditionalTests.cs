@@ -24,15 +24,14 @@ namespace RIMAPI.Tests
         [Fact]
         public void TheModSourceCarriesNoRimWorldVersionConditional()
         {
-            string root = RepoRoot();
-            List<string> hits = Directory
-                .EnumerateFiles(Path.Combine(root, "Source", "RIMAPI"), "*.cs", SearchOption.AllDirectories)
-                .Where(IsModSource)
+            string root = SourceTree.RepoRoot();
+            List<string> hits = SourceTree
+                .Sources(root)
                 .SelectMany(file =>
                     File.ReadLines(file)
                         .Select((line, index) => new { line, number = index + 1 })
                         .Where(l => VersionConditional.IsMatch(l.line))
-                        .Select(l => $"{Relative(root, file)}:{l.number}: {l.line.Trim()}"))
+                        .Select(l => $"{SourceTree.Relative(root, file)}:{l.number}: {l.line.Trim()}"))
                 .ToList();
 
             Assert.True(
@@ -41,32 +40,5 @@ namespace RIMAPI.Tests
                     + "compiles dead code or nothing at all:" + Environment.NewLine
                     + string.Join(Environment.NewLine, hits));
         }
-
-        // Build output sits under the project directory too; obj/ holds generated
-        // sources that repeat the directives.
-        private static bool IsModSource(string path)
-        {
-            string[] parts = path.Split(Path.DirectorySeparatorChar);
-            return !parts.Contains("obj") && !parts.Contains("bin");
-        }
-
-        // The test binary lives in Source/RIMAPI.Tests/bin/<config>/<tfm>/; walk up
-        // until the mod project is a sibling, so the test finds its repo from any
-        // checkout (the worker worktree included).
-        private static string RepoRoot()
-        {
-            DirectoryInfo dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null
-                   && !File.Exists(Path.Combine(dir.FullName, "Source", "RIMAPI", "RimApi.csproj")))
-            {
-                dir = dir.Parent;
-            }
-
-            Assert.NotNull(dir);
-            return dir.FullName;
-        }
-
-        private static string Relative(string root, string path) =>
-            path.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar);
     }
 }

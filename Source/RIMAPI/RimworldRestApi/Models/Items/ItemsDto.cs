@@ -35,11 +35,11 @@ namespace RIMAPI.Models
         public List<string> TradeTags { get; set; }
         public List<string> StuffCategories { get; set; }
         public float MaxHealth { get; set; }
-        public float ArmorRating_Sharp { get; set; }
-        public float ArmorRating_Blunt { get; set; }
-        public float ArmorRating_Heat { get; set; }
-        public float Insulation_Cold { get; set; }
-        public float Insulation_Heat { get; set; }
+        public float ArmorRatingSharp { get; set; }
+        public float ArmorRatingBlunt { get; set; }
+        public float ArmorRatingHeat { get; set; }
+        public float InsulationCold { get; set; }
+        public float InsulationHeat { get; set; }
 
         public static ThingDefDto ToDto(ThingDef thing)
         {
