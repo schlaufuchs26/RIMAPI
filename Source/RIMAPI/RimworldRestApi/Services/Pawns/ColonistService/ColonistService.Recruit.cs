@@ -47,7 +47,7 @@ namespace RIMAPI.Services
                 WorkGiver_Tame giver = new WorkGiver_Tame();
                 Job job = null;
                 Pawn handler = null;
-                foreach (Pawn candidate in TameHandlers(map))
+                foreach (Pawn candidate in HandlingPawns(map))
                 {
                     Job candidateJob = giver.JobOnThing(candidate, target, true);
                     if (candidateJob != null)
@@ -285,11 +285,12 @@ namespace RIMAPI.Services
             return null;
         }
 
-        // TameHandlers orders the colony the way the game does: the pawns whose
-        // Animals work is on come first, and the highest skill among them tries
-        // first. With nobody on Animals, every colonist gets a chance, because
-        // an ordered job runs even when the work type is off.
-        private static IEnumerable<Pawn> TameHandlers(Map map)
+        // HandlingPawns orders the colony the way the game hands out the
+        // Handling work: the pawns whose Handling work is on come first, and
+        // the highest Animals skill among them tries first. With nobody on
+        // Handling, every colonist gets a chance, because an ordered job runs
+        // even when the work type is off. Both tame and slaughter ask through it.
+        private static IEnumerable<Pawn> HandlingPawns(Map map)
         {
             List<Pawn> colonists = map.mapPawns.FreeColonistsSpawned
                 .OrderByDescending(p => p.skills?.GetSkill(SkillDefOf.Animals)?.Level ?? 0)

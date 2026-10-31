@@ -36,6 +36,9 @@ namespace RIMAPI.Services
         // recruitment policy. Rescue (ticket #3183) carries a downed non-enemy
         // to a free bed, which is how a crashed pod survivor is saved.
         ApiResult MakeJobTame(int mapId, int pawnId);
+        // Slaughter ends a colony animal's life for meat and leather, the
+        // Animals tab's own mark (fox ticket #3507).
+        ApiResult MakeJobSlaughter(int mapId, int pawnId);
         ApiResult MakeJobChat(int mapId, int pawnId, int chatterId);
         ApiResult MakeJobArrest(int mapId, int pawnId, int arrestorId);
         ApiResult MakeJobRescue(int mapId, int pawnId, int rescuerId);

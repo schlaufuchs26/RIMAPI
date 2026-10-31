@@ -62,6 +62,19 @@ namespace RIMAPI.Models
         public string Note { get; set; }
     }
 
+    // What a slaughter order did: which handler took it, or that the Slaughter
+    // designation stands and no handler is free right now (fox ticket #3507).
+    public class SlaughterResultDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public int HandlerId { get; set; }
+        public string Handler { get; set; }
+        public string Job { get; set; }
+        public bool Queued { get; set; }
+        public string Note { get; set; }
+    }
+
     // What an arrest order did: the job the game got (Arrest or Capture), the
     // prisoner bed it walks to, and whether the arrestor was drafted for it.
     // The bed's room comes with it (ticket #3421): the game's own lookup takes

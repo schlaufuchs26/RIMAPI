@@ -292,6 +292,18 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Slaughtering a colony animal: the Animals tab's own Slaughter mark,
+        // which the game's handler job runs off (fox ticket #3507).
+        [Post("/api/v1/jobs/make/slaughter")]
+        [EndpointMetadata("Queue the game's own slaughter job for a colony animal")]
+        public async Task MakeJobSlaughter(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var result = _colonistService.MakeJobSlaughter(mapId, pawnId);
+            await context.SendJsonResponse(result);
+        }
+
         // Arrest or capture: the game's own job, with the prisoner bed it
         // carries the pawn to. arrestor_id is optional; without it the mod
         // takes the nearest colonist who can do it.
