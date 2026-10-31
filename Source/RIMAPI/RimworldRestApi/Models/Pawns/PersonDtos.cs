@@ -92,6 +92,23 @@ namespace RIMAPI.Models
     // What a rescue order did: the job the game got, the bed it carries the
     // pawn to, and whether the pawn is a guest of the colony afterwards (a
     // rescued pod survivor becomes one, a rescued colonist stays a colonist).
+    public class FeedResultDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public int FeederId { get; set; }
+        public string Feeder { get; set; }
+        public string Job { get; set; }
+        // The meal the job carries and the bed the patient lies in (ticket
+        // #3445): a patient who is not in a bed cannot be fed at all, so the
+        // answer names the bed it happened in.
+        public int MealId { get; set; }
+        public string Meal { get; set; }
+        public int BedId { get; set; }
+        public string Bed { get; set; }
+        public bool Queued { get; set; }
+    }
+
     public class RescueResultDto
     {
         public int PawnId { get; set; }

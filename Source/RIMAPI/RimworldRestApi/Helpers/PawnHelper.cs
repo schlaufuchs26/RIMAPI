@@ -200,6 +200,7 @@ namespace RIMAPI.Helpers
                             pawn.playerSettings?.medCare ?? MedicalCareCategory.NoCare
                         ),
                         IsSelfTendAllowed = pawn.playerSettings?.selfTend ?? false,
+                        InBed = pawn.InBed(),
                     },
                     SocialInfo = CreatePawnSocialInfoDto(pawn),
                 };

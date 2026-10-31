@@ -114,6 +114,11 @@ namespace RIMAPI.Models
         public List<HediffDto> Hediffs { get; set; }
         public int MedicalPolicyId { get; set; }
         public bool IsSelfTendAllowed { get; set; }
+
+        // InBed is the game's own Pawn.InBed (ticket #3445). A downed pawn on
+        // the open ground cannot be fed: the FeedPatient job needs a bed, and
+        // without this flag the tool cannot tell the two states apart.
+        public bool InBed { get; set; }
     }
 
     public class HediffDto

@@ -325,6 +325,26 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Feed: the game's own FeedPatient job, which needs the patient in a
+        // bed (ticket #3445). feeder_id and meal_id are optional; without them
+        // the mod takes the nearest warden and the best meal the patient may
+        // eat.
+        [Post("/api/v1/jobs/make/feed")]
+        [EndpointMetadata("Queue the game's own FeedPatient job for a downed colonist in a bed")]
+        public async Task MakeJobFeed(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var feederId = RequestParser.HasParameter(context, "feeder_id")
+                ? RequestParser.GetIntParameter(context, "feeder_id")
+                : 0;
+            var mealId = RequestParser.HasParameter(context, "meal_id")
+                ? RequestParser.GetIntParameter(context, "meal_id")
+                : 0;
+            var result = _colonistService.MakeJobFeed(mapId, pawnId, feederId, mealId);
+            await context.SendJsonResponse(result);
+        }
+
         // Chat: the game's own social interaction with a stranger who wants to
         // be talked into joining (ticket #3275). chatter_id is optional; without
         // it the mod takes the nearest colonist who can reach him and talk.
