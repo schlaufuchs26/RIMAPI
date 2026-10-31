@@ -5,42 +5,12 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Verse;
 
 namespace RIMAPI.Core
 {
-    public class SnakeCaseContractResolver : DefaultContractResolver
-    {
-        protected override string ResolvePropertyName(string propertyName)
-        {
-            return ConvertToSnakeCase(propertyName);
-        }
-
-        private string ConvertToSnakeCase(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            var result = new StringBuilder();
-            result.Append(char.ToLower(input[0]));
-
-            for (int i = 1; i < input.Length; i++)
-            {
-                if (char.IsUpper(input[i]))
-                {
-                    result.Append('_');
-                    result.Append(char.ToLower(input[i]));
-                }
-                else
-                {
-                    result.Append(input[i]);
-                }
-            }
-
-            return result.ToString();
-        }
-    }
+    // SnakeCaseContractResolver lives in its own file (SnakeCaseContractResolver.cs)
+    // so the unit tests can compile it without a game type (ticket #3316).
 
     // ApiResult classes for standardized responses
     public class ApiResult<T>
