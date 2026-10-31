@@ -54,11 +54,16 @@ namespace RIMAPI.Controllers
         {
             int mapId = RequestParser.GetMapId(context);
             string ritual = RequestParser.GetStringParameter(context, "ritual");
-            int pawnId = RequestParser.GetIntParameter(context, "pawn_id");
-            int targetThingId = RequestParser.GetIntParameter(context, "target_id");
+            // Every other field is optional, and RequestParser throws on a
+            // missing one, so each is read only when the query carries it
+            // (ticket #3263: a start without a pawn is the common call).
+            int pawnId = RequestParser.HasParameter(context, "pawn_id")
+                ? RequestParser.GetIntParameter(context, "pawn_id") : 0;
+            int targetThingId = RequestParser.HasParameter(context, "target_id")
+                ? RequestParser.GetIntParameter(context, "target_id") : 0;
             bool hasCell = RequestParser.HasParameter(context, "x") && RequestParser.HasParameter(context, "z");
-            int x = RequestParser.GetIntParameter(context, "x");
-            int z = RequestParser.GetIntParameter(context, "z");
+            int x = hasCell ? RequestParser.GetIntParameter(context, "x") : 0;
+            int z = hasCell ? RequestParser.GetIntParameter(context, "z") : 0;
             var result = _ideoService.StartRitual(mapId, ritual, pawnId, targetThingId, x, z, hasCell);
             await context.SendJsonResponse(result);
         }
