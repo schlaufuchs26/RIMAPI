@@ -7,6 +7,7 @@ using RIMAPI.Models;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace RIMAPI.Services
 {
@@ -537,6 +538,7 @@ namespace RIMAPI.Services
                 Activity = pawn.CurJobDef != null ? pawn.CurJobDef.defName : "",
                 Moving = pawn.pather != null && pawn.pather.Moving,
                 Fighting = IsFightJob(pawn.CurJobDef),
+                LordJob = LordJobOf(pawn),
             };
             if (pawn.CurJob != null && pawn.CurJob.targetA.HasThing)
             {
@@ -553,6 +555,18 @@ namespace RIMAPI.Services
             string name = def.defName;
             return name == AttackStaticDef || name == AttackMeleeDef
                 || name.IndexOf("Attack", StringComparison.Ordinal) >= 0;
+        }
+
+        // LordJobOf names the group the pawn belongs to, as the game's own
+        // class name (LordJob_AssaultColony for a raid, LordJob_DefendAndExpandHive
+        // for a hive's insects), and is empty for a pawn without a lord. The
+        // tool reads it to tell a raid from a hostile that stays where it is:
+        // a hive's insects walk about their cave all day, and reading that walk
+        // as a fight cut every wait to one step (ticket #3294).
+        private static string LordJobOf(Pawn pawn)
+        {
+            Lord lord = pawn.GetLord();
+            return lord != null && lord.LordJob != null ? lord.LordJob.GetType().Name : "";
         }
 
         private static PositionDto PositionOf(Pawn pawn)

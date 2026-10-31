@@ -35,6 +35,13 @@ namespace RIMAPI.Models
         // attack. A drafted idle pawn is neither and stands.
         public bool Moving { get; set; }
         public bool Fighting { get; set; }
+        // LordJob is the game's own name for the group the pawn belongs to
+        // (LordJob_AssaultColony for a raid, LordJob_DefendAndExpandHive for a
+        // hive's insects), empty when it has no lord. Walking is no sign of a
+        // fight on its own: a hive's insects wander inside their cave all day,
+        // so the tool reads this to tell a raid from a group that stays put
+        // (ticket #3294).
+        public string LordJob { get; set; }
     }
 
     public class CombatStateDto
