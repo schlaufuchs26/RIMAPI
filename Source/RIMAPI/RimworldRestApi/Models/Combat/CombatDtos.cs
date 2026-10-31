@@ -92,6 +92,12 @@ namespace RIMAPI.Models
         // the order took.
         public PositionDto Position { get; set; }
         public string Activity { get; set; }
+        // Reachable and Reach are the reachability check the order made before
+        // it was queued (ticket #3175): an unreachable cell fails as a job the
+        // game drops, so the answer says whether the pawn can walk there and
+        // how far it is. Reach is empty when no path length was measured.
+        public bool Reachable { get; set; }
+        public string Reach { get; set; }
         public string Note { get; set; }
     }
 }

@@ -210,6 +210,17 @@ namespace RIMAPI.Services
                 return ApiResult<OrderResultDto>.Fail(
                     $"cell {request.X},{request.Z} is not standable (a wall, water, a pawn or a building)");
             }
+            // A standable cell is not necessarily a cell the pawn can walk to
+            // (ticket #3175): a sealed room, a walled-off valley or a target
+            // across water takes the job and then drops it, and the caller
+            // only sees a pawn that never moved. So the check comes before the
+            // job, and its answer carries the distance.
+            if (!map.reachability.CanReach(pawn.Position, cell, PathEndMode.OnCell, TraverseMode.ByPawn, Danger.Some))
+            {
+                return ApiResult<OrderResultDto>.Fail(
+                    $"{pawn.LabelShort} cannot reach {request.X},{request.Z} from {pawn.Position.x},{pawn.Position.z}: " +
+                    "no walkable path there (a sealed room, a wall or water in the way), so the game would drop the job");
+            }
             Job job = JobMaker.MakeJob(JobDefOf.Goto, cell);
             if (!pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
             {
@@ -218,6 +229,8 @@ namespace RIMAPI.Services
             result.X = request.X;
             result.Z = request.Z;
             result.Job = job.def.defName;
+            result.Reachable = true;
+            result.Reach = PathText(pawn, cell);
             return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
         }
 
@@ -241,6 +254,16 @@ namespace RIMAPI.Services
                 return ApiResult<OrderResultDto>.Fail(
                     $"{target.LabelShort} is not hostile, so the colony has no fight with him");
             }
+            // The same reachability check as a move (ticket #3175): a raider
+            // behind a sealed wall or across water takes the attack job and
+            // then drops it, so the pawn stands still and the caller learns
+            // nothing. A ranged pawn needs a path to its firing position too.
+            if (!pawn.Map.reachability.CanReach(pawn.Position, target, PathEndMode.Touch, TraverseMode.ByPawn, Danger.Some))
+            {
+                return ApiResult<OrderResultDto>.Fail(
+                    $"{pawn.LabelShort} cannot reach {target.LabelShort} (id {target.thingIDNumber}) from " +
+                    $"{pawn.Position.x},{pawn.Position.z}: no walkable path there, so the game would drop the attack job");
+            }
             JobDef def = HasRangedWeapon(pawn)
                 ? DefDatabase<JobDef>.GetNamedSilentFail(AttackStaticDef)
                 : DefDatabase<JobDef>.GetNamedSilentFail(AttackMeleeDef);
@@ -256,7 +279,27 @@ namespace RIMAPI.Services
             result.TargetId = target.thingIDNumber;
             result.Target = target.LabelShort;
             result.Job = job.def.defName;
+            result.Reachable = true;
+            result.Reach = PathText(pawn, target);
             return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
+        }
+
+        // PathText measures the walk the game's own pathfinder would take, in
+        // cells, so an order's answer carries the distance it checked instead
+        // of a bare "reachable". Empty when no path is found, which the
+        // reachability check has already refused.
+        private static string PathText(Pawn pawn, LocalTargetInfo dest)
+        {
+            PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, dest, pawn);
+            if (path == null) return "";
+            try
+            {
+                return path.Found ? $"{path.TotalCost:0} cells of path" : "";
+            }
+            finally
+            {
+                path.ReleaseToPool();
+            }
         }
 
         // Hold stops the pawn where it stands: the game's idle combat wait
