@@ -32,6 +32,12 @@ namespace RIMAPI.Models
         // other letter. A quest offer's letter offers no accept, so the id is
         // the link to the quests read and to quest/accept (ticket #3216).
         public int? QuestId { get; set; }
+        // Whether the game's own auto-pause rule pauses the clock when this
+        // letter is received: the player's pause setting is at or above the
+        // letter's own mode (LetterStack.ReceiveLetter). A pause with no dialog
+        // and no letter on the stack is a letter that paused the game and then
+        // left the stack, and this flag is what names it (ticket #3357).
+        public bool Pauses { get; set; }
     }
 
     // Dismiss one letter by the id the letters read prints.

@@ -66,7 +66,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
-        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, and whether the game's own dismiss applies. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do.")]
+        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, whether the game's own dismiss applies, and whether the game's auto-pause rule pauses the clock for it. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do. Add ?archive=1 to read the letters the game received instead of the ones still standing (query: since=<tick>, limit=<n>): the stack drops a letter whose target is gone, so a letter that paused the game can be off it by the next look.")]
         public async Task ListLetters(HttpListenerContext context)
         {
             // peek=1 is the read-only look (ticket #3214): the digest and the
@@ -74,6 +74,18 @@ namespace RIMAPI.BaseControllers
             // `letters` read unable to say which letters were new.
             var peek = context.Request.QueryString["peek"];
             var markSeen = !(peek == "1" || string.Equals(peek, "true", System.StringComparison.OrdinalIgnoreCase));
+            var archive = context.Request.QueryString["archive"];
+            if (archive == "1" || string.Equals(archive, "true", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // The archive branch (ticket #3357): what the game received,
+                // standing or not, so a pause a vanished letter caused has a
+                // name.
+                int.TryParse(context.Request.QueryString["since"], out var since);
+                int.TryParse(context.Request.QueryString["limit"], out var limit);
+                var archived = _letterService.ListArchivedLetters(since, limit);
+                await context.SendJsonResponse(archived);
+                return;
+            }
             var result = _letterService.ListLetters(markSeen);
             await context.SendJsonResponse(result);
         }

@@ -18,6 +18,11 @@ namespace RIMAPI.Services
     // was read stops covering the map.
     public class LetterService : ILetterService
     {
+        // A caller asks for the newest few; the caps keep a wide `since` from
+        // answering the whole colony history over the bridge.
+        private const int MaxArchivedLetters = 200;
+        private const int DefaultArchivedLetters = 25;
+
         public ApiResult<List<LetterDto>> ListLetters(bool markSeen)
         {
             try
@@ -39,6 +44,57 @@ namespace RIMAPI.Services
                     letters.Add(dto);
                 }
                 return ApiResult<List<LetterDto>>.Ok(letters);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<List<LetterDto>>.Fail(ex.Message);
+            }
+        }
+
+        // ListArchivedLetters answers the letters the game received at or after
+        // since, standing or not. The stack drops a letter whose target is gone
+        // (LetterStackUpdate) while the pause it caused stays, so a pause with no
+        // window and no letter on the stack is only nameable from the archive
+        // (ticket #3357). The archive is the list the save writes under
+        // <history><archive>, so this is what a save file would show, without a
+        // save.
+        public ApiResult<List<LetterDto>> ListArchivedLetters(int since, int limit)
+        {
+            try
+            {
+                if (limit <= 0)
+                    limit = DefaultArchivedLetters;
+                if (limit > MaxArchivedLetters)
+                    limit = MaxArchivedLetters;
+                var archive = Find.Archive;
+                if (archive == null)
+                    return ApiResult<List<LetterDto>>.Fail("no archive: no colony is loaded");
+
+                var archived = new List<Letter>();
+                foreach (var archivable in archive.ArchivablesListForReading)
+                {
+                    var letter = archivable as Letter;
+                    if (letter == null)
+                        continue;
+                    if (since > 0 && letter.arrivalTick < since)
+                        continue;
+                    archived.Add(letter);
+                }
+                archived.Sort((a, b) => a.arrivalTick.CompareTo(b.arrivalTick));
+                if (archived.Count > limit)
+                    archived = archived.Skip(archived.Count - limit).ToList();
+
+                var result = new List<LetterDto>(archived.Count);
+                foreach (var letter in archived)
+                {
+                    var dto = ToDto(letter);
+                    // An archived letter is not on the stack, so no reporting
+                    // read can have shown it; the archive branch never marks
+                    // anything seen.
+                    dto.New = false;
+                    result.Add(dto);
+                }
+                return ApiResult<List<LetterDto>>.Ok(result);
             }
             catch (Exception ex)
             {
@@ -340,7 +396,20 @@ namespace RIMAPI.Services
                 Tick = letter.arrivalTick,
                 CanDismiss = letter.CanDismissWithRightClick,
                 QuestId = QuestIdOf(letter),
+                Pauses = PausesGame(letter),
             };
+        }
+
+        // PausesGame is the game's own auto-pause rule for a letter, the test
+        // LetterStack.ReceiveLetter runs before it stops the clock: the player's
+        // setting is at or above the letter's own pause mode. A letter whose def
+        // pauses on nothing never stops the clock, so it is never blamed for a
+        // pause (ticket #3357).
+        private static bool PausesGame(Letter letter)
+        {
+            if (letter?.def == null)
+                return false;
+            return (int)Prefs.AutomaticPauseMode >= (int)letter.def.pauseMode;
         }
 
         // QuestIdOf names the quest a letter announces: a quest offer is a
