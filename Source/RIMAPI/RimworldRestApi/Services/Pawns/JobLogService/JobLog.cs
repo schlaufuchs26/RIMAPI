@@ -87,6 +87,58 @@ namespace RIMAPI.Services
             }
         }
 
+        // A terminal entry ends a pawn's record: he died or left the map, so
+        // the job he was in stops there instead of running to the end of a
+        // wait. Without it the record, which only changes on a job change,
+        // would claim work until the span ended (ticket #3311).
+        public const string Dead = "dead";
+        public const string Gone = "gone";
+
+        public static void RecordDeath(Pawn pawn)
+        {
+            Write(pawn, Dead, "died");
+        }
+
+        // A pawn who dies is despawned too, and the death is the entry a
+        // reader wants, so the despawn that follows a kill writes nothing.
+        public static void RecordLeave(Pawn pawn)
+        {
+            if (pawn != null && pawn.Dead)
+                return;
+            Write(pawn, Gone, "left the map");
+        }
+
+        private static void Write(Pawn pawn, string job, string label)
+        {
+            if (pawn == null)
+                return;
+            int id = pawn.thingIDNumber;
+            int now = Find.TickManager?.TicksGame ?? 0;
+            lock (Gate)
+            {
+                Entry last;
+                bool tracked = Current.TryGetValue(id, out last);
+                // A pawn the record never saw is only worth an exit when he is
+                // a colonist; anyone else is not part of the report anyway.
+                if (!tracked && !pawn.IsColonistPlayerControlled)
+                    return;
+                if (tracked && last.Job == job)
+                    return;
+                var entry = new Entry
+                {
+                    Tick = now,
+                    PawnId = id,
+                    Pawn = pawn.LabelShort ?? pawn.Name?.ToStringShort ?? "?",
+                    Job = job,
+                    Label = label,
+                    Target = "",
+                };
+                Entries.Add(entry);
+                Current[id] = entry;
+                Prune(now);
+            }
+        }
+
         // Since answers the record from one tick on, plus the entry each pawn
         // was in at that tick: without it the first span of the answer has no
         // start, and a pawn who began a job before the wait would look idle.

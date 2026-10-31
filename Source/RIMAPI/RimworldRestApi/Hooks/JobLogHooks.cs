@@ -53,6 +53,43 @@ namespace RimworldRestApi.Hooks
         }
     }
 
+    // A colonist who dies or leaves the map keeps his last job in the record
+    // otherwise, and a wait report counts him as working until the span ends
+    // (ticket #3311). The terminal entry ends his record where it happened.
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]
+    public static class JobLogDeathPatch
+    {
+        static void Postfix(Pawn __instance)
+        {
+            try
+            {
+                JobLog.RecordDeath(__instance);
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"[RimworldRestApi] Error in JobLogDeathPatch.Postfix: {ex}");
+            }
+        }
+    }
+
+    // Despawn covers every way off the map that is not death: captured, a
+    // caravan, a transport pod.
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.DeSpawn))]
+    public static class JobLogLeavePatch
+    {
+        static void Postfix(Pawn __instance)
+        {
+            try
+            {
+                JobLog.RecordLeave(__instance);
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"[RimworldRestApi] Error in JobLogLeavePatch.Postfix: {ex}");
+            }
+        }
+    }
+
     // A load rewinds the game clock and brings back the pawns of another
     // moment, so the record of the colony that was there before belongs to
     // nobody: start it over when a game finishes loading.
