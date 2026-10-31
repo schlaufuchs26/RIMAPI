@@ -202,7 +202,7 @@ namespace RIMAPI.Services
                 var option = MatchOption(options, request.Option);
                 if (option == null)
                 {
-                    result.Reason = $"the dialog offers no option matching {Quote(request.Option)}";
+                    result.Reason = $"the dialog offers no option matching {Quoting.Quote(request.Option)}";
                     result.Remaining = StackLetters().Count;
                     // The dialog was put there by this call, so it goes away
                     // again: a wrong word must not leave the clock held.
@@ -371,11 +371,6 @@ namespace RIMAPI.Services
         private static bool IsDisabled(DiaOption option)
         {
             return ArchiveText.Read(option, "disabled") is bool disabled && disabled;
-        }
-
-        private static string Quote(string s)
-        {
-            return "\"" + (s ?? "") + "\"";
         }
 
         private static List<Letter> StackLetters()

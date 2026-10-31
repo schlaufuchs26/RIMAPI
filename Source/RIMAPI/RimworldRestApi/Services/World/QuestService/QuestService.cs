@@ -44,8 +44,8 @@ namespace RIMAPI.Services
                 {
                     result.State = quest.State.ToString();
                     result.Reason = quest.State == QuestState.EndedOfferExpired
-                        ? $"quest {quest.id} {Quote(quest.name)} expired before it was accepted"
-                        : $"quest {quest.id} {Quote(quest.name)} is {quest.State}, not on offer; only a NotYetAccepted quest can be accepted";
+                        ? $"quest {quest.id} {Quoting.Quote(quest.name)} expired before it was accepted"
+                        : $"quest {quest.id} {Quoting.Quote(quest.name)} is {quest.State}, not on offer; only a NotYetAccepted quest can be accepted";
                     return ApiResult<QuestAcceptResultDto>.Ok(result);
                 }
 
@@ -201,11 +201,6 @@ namespace RIMAPI.Services
                 .FirstOrDefault(p => p != null && p.thingIDNumber == pawnId)
                 ?? Find.Maps.SelectMany(m => m.mapPawns.AllPawns)
                     .FirstOrDefault(p => p != null && p.thingIDNumber == pawnId);
-        }
-
-        private static string Quote(string s)
-        {
-            return "\"" + (s ?? "") + "\"";
         }
     }
 }

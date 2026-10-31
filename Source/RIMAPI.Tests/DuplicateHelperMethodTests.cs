@@ -49,6 +49,34 @@ namespace RIMAPI.Tests
                     + string.Join(Environment.NewLine, problems));
         }
 
+        /// <summary>
+        /// Two services that carry the same method are the same drift risk one
+        /// step earlier (ticket #3446): QuestService and LetterService each had
+        /// their own Quote, and an escape fix would have landed in one copy.
+        /// One of the two moves to a helper and both forward to it, which the
+        /// test above then keeps in place.
+        /// </summary>
+        [Fact]
+        public void NoTwoServicesShareAMethodBody()
+        {
+            string root = SourceTree.RepoRoot();
+            List<MethodBody> services = Methods(root, "RimworldRestApi", "Services");
+
+            List<string> problems = services
+                .SelectMany((service, index) =>
+                    services
+                        .Skip(index + 1)
+                        .Where(other => other.Name == service.Name && other.Body == service.Body)
+                        .Select(other => $"{other.Location} repeats {service.Location} ({service.Name})"))
+                .ToList();
+
+            Assert.True(
+                problems.Count == 0,
+                "Two services carry the same method, so an edit lands in one copy only; move it into a helper:"
+                    + Environment.NewLine
+                    + string.Join(Environment.NewLine, problems));
+        }
+
         private static List<MethodBody> Methods(string root, params string[] subdirs)
         {
             var methods = new List<MethodBody>();
