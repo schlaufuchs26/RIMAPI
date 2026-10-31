@@ -23,7 +23,7 @@ namespace RIMAPI.Services
         private const int MaxRadius = 12;
         // A radius of 12 holds 400+ cells; a run picks a cell, it does not read
         // a map, so the answer carries the best few and the counts for the rest.
-        private const int MaxCells = 20;
+        private const int MaxCells = 12;
 
         public ApiResult<CoverStateDto> GetCover(
             int mapId,
@@ -130,6 +130,11 @@ namespace RIMAPI.Services
                         float cover = CoverUtility.CalculateOverallBlockChance(
                             new LocalTargetInfo(cell), targetCell, map);
                         if (cover > 0f) state.CoverCount++;
+                        if (cover > 0f && los) state.CoverAndLineOfSightCount++;
+                        // A cell that neither shields the pawn nor has a shot
+                        // is not a place to send anyone: the counts still say
+                        // it exists, the list does not.
+                        if (cover <= 0f && !los) continue;
 
                         candidates.Add(new CoverCellDto
                         {
@@ -144,10 +149,13 @@ namespace RIMAPI.Services
                     }
                 }
 
-                // Best cover first, then the closer cell: a shot from cover is
-                // worth more the shorter the walk and the closer the range.
+                // A cell that can shoot comes first, then the most cover, then
+                // the closer one: a cell that only shields the pawn is no use to
+                // a shooter, so it must not push the useful cells off the list.
+                state.MatchingCount = candidates.Count;
                 candidates.Sort((a, b) =>
                 {
+                    if (a.LineOfSight != b.LineOfSight) return a.LineOfSight ? -1 : 1;
                     int byCover = b.Cover.CompareTo(a.Cover);
                     if (byCover != 0) return byCover;
                     return a.Distance.CompareTo(b.Distance);

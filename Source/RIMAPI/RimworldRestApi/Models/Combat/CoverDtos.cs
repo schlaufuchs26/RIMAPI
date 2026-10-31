@@ -51,6 +51,12 @@ namespace RIMAPI.Models
         public int CoverNeighbourCount { get; set; }
         public int CoverCount { get; set; }
         public int LineOfSightCount { get; set; }
+        // CoverAndLineOfSightCount is the number worth acting on: cells that
+        // shield the pawn and still have a shot at the target.
+        public int CoverAndLineOfSightCount { get; set; }
+        // MatchingCount is how many cells pass the filter (a cover neighbour
+        // that gives cover or a line to the target); Cells holds the best few.
+        public int MatchingCount { get; set; }
         // Cells holds the standable cells with a cover neighbour, best first,
         // capped; CoverNeighbourCount says how many there were.
         public List<CoverCellDto> Cells { get; set; }
