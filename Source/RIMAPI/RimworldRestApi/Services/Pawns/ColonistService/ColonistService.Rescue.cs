@@ -83,7 +83,7 @@ namespace RIMAPI.Services
                     RescuerId = rescuer.thingIDNumber,
                     Rescuer = rescuer.LabelShort,
                     Job = job.def.defName,
-                    Guest = target.HostFaction == Faction.OfPlayer,
+                    Guest = BecomesGuest(job, target),
                 };
                 if (bed != null)
                 {
@@ -97,6 +97,23 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.ToString());
             }
+        }
+
+        // BecomesGuest is the game's own answer, not a second rule: the rescue
+        // job's finish (JobDriver_TakeToBed.CheckMakeTakeeGuest) makes the pawn
+        // a guest of the colony unless it already belongs to the colony, is a
+        // wild man or a baby, or has no guest tracker at all (an animal). The
+        // old check asked whether the pawn was already a guest, and a downed
+        // pod survivor has no HostFaction yet, so the answer for the very case
+        // rescue exists for was "stays a colonist" (ticket #3244).
+        private static bool BecomesGuest(Job job, Pawn target)
+        {
+            return !job.def.makeTargetPrisoner
+                && target.Faction != Faction.OfPlayer
+                && target.HostFaction != Faction.OfPlayer
+                && target.guest != null
+                && !target.IsWildMan()
+                && target.DevelopmentalStage != DevelopmentalStage.Baby;
         }
 
         // PickRescuer takes the nearest colonist who could carry the pawn and
