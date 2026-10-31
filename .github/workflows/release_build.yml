@@ -7,8 +7,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    # The unit tests compile the mod's source files against stubs in
+    # Source/RIMAPI.Tests/Stubs, so they need no game assemblies and run here
+    # (ticket #3227).
+    - name: Run unit tests
+      run: dotnet test Source/RIMAPI.Tests/RimApi.Tests.csproj --nologo --verbosity minimal
+
   build:
     runs-on: windows-latest
+    needs: test
     strategy:
       matrix:
         version: [1.5, 1.6]

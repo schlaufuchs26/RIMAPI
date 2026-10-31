@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit tests for the mod's own logic (ticket #3227).
+
+    Targets net8.0 instead of the mod's net472: a test project cannot reference
+    RIMAPI.dll, because that assembly needs RimWorld's Assembly-CSharp and the
+    NuGet reference build (Krafs.Rimworld.Ref) throws as soon as it is loaded.
+    So the tests compile the source files they cover against the stubs in
+    Stubs/, and those stubs are plain C#. Nothing here runs inside the game.
+
+    Adding a file: only files that touch no RimWorld type compile this way. A
+    file that needs another game type gets a stub, not a project reference.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- The mod builds as C# 9, so the tests stay on the same language version
+         and cannot use syntax the mod itself would reject. -->
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>RimApi.Tests</AssemblyName>
+    <RootNamespace>RIMAPI.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The mod's files under test, compiled from their single source of truth
+         rather than copied. One line per covered file. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Debug\Logger.cs" Link="Linked\Logger.cs" />
+  </ItemGroup>
+</Project>

@@ -35,6 +35,7 @@ My_test_mod/
 │   ├── developer_guide/          # API conventions, extension guide, endpoint guide
 │   └── contributors_guide/       # Architecture, contributing, release flow
 ├── tests/                        # Python integration scripts + Bruno API collection
+├── Source/RIMAPI.Tests/          # xunit unit tests, run against stubs (see Testing)
 ├── scripts/                      # bump_version.py, doc generation helpers
 ├── RimApi.sln / RimApi.csproj    # Visual Studio solution
 └── CHANGELOG.md
@@ -203,6 +204,22 @@ python scripts/bump_version.py 1.9.1
 This updates `About/About.xml`, `About/Manifest.xml`, `Source/RIMAPI/RimApi.csproj`, and doc metadata atomically.
 
 ## Testing
+
+### Unit Tests (C#, no game needed)
+
+`Source/RIMAPI.Tests/` holds xunit tests for mod logic that does not need
+RimWorld: it compiles the covered source files (linked in the `.csproj`) against
+the stubs in `Source/RIMAPI.Tests/Stubs/`, because RIMAPI.dll itself cannot be
+referenced from a test host (the NuGet reference assemblies of `Verse` throw when
+loaded).
+
+```bash
+dotnet test Source/RIMAPI.Tests/RimApi.Tests.csproj
+```
+
+Add a file by linking it in the `.csproj` and stubbing only the game types it
+touches; a file that needs a whole RimWorld object graph stays an integration
+test instead.
 
 ### Integration Tests (Python)
 
