@@ -261,5 +261,47 @@ namespace RIMAPI.Controllers
             var result = _colonistService.MakeJobHaul(mapId, pawnId, itemId, destId);
             await context.SendJsonResponse(result);
         }
+
+        // Taming a wild person or an animal: the mod adds the game's Tame
+        // designation and queues the tame job on the best handler, because the
+        // job's driver only runs while the designation stands (ticket #3137).
+        [Post("/api/v1/jobs/make/tame")]
+        [EndpointMetadata("Queue the game's own tame job for a wild person or an animal")]
+        public async Task MakeJobTame(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var result = _colonistService.MakeJobTame(mapId, pawnId);
+            await context.SendJsonResponse(result);
+        }
+
+        // Arrest or capture: the game's own job, with the prisoner bed it
+        // carries the pawn to. arrestor_id is optional; without it the mod
+        // takes the nearest colonist who can do it.
+        [Post("/api/v1/jobs/make/arrest")]
+        [EndpointMetadata("Queue the game's own arrest or capture job into a prisoner bed")]
+        public async Task MakeJobArrest(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var arrestorId = RequestParser.HasParameter(context, "arrestor_id")
+                ? RequestParser.GetIntParameter(context, "arrestor_id")
+                : 0;
+            var result = _colonistService.MakeJobArrest(mapId, pawnId, arrestorId);
+            await context.SendJsonResponse(result);
+        }
+
+        // The prisoner tab's interaction setting: recruit, reduce resistance,
+        // release, maintain. mode takes the defName (AttemptRecruit) or the
+        // label the game shows (recruit).
+        [Post("/api/v1/pawn/prisoner/interaction")]
+        [EndpointMetadata("Set a prisoner's interaction mode (the recruitment policy)")]
+        public async Task SetPrisonerInteraction(HttpListenerContext context)
+        {
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var mode = RequestParser.GetStringParameter(context, "mode");
+            var result = _colonistService.SetPrisonerInteraction(pawnId, mode);
+            await context.SendJsonResponse(result);
+        }
     }
 }

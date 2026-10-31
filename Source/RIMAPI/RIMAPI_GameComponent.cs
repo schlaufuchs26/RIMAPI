@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using RIMAPI.Core;
+using RimWorld;
 using Verse;
+using Verse.AI;
 
 namespace RIMAPI
 {
@@ -31,6 +34,15 @@ namespace RIMAPI
         /// Internal tick counter used to trigger data cache refreshes.
         /// </summary>
         private static int _staticTickCounter;
+
+        /// <summary>
+        /// Colonists this mod drafted for an arrest order. The game only offers
+        /// Arrest while the colonist is drafted, so the order drafts him; the
+        /// draft is dropped here once the arrest job is neither current nor
+        /// queued, which is the moment a player would undraft by hand
+        /// (ticket #3137).
+        /// </summary>
+        private static readonly List<Pawn> _pendingUndrafts = new List<Pawn>();
 
         public RIMAPI_GameComponent(Game game) : base() { }
 
@@ -97,6 +109,47 @@ namespace RIMAPI
                 _staticTickCounter = 0;
                 _apiServer.RefreshDataCache();
             }
+
+            // 4. Drop the drafts this mod set for arrest orders.
+            ProcessPendingUndrafts();
+        }
+
+        /// <summary>
+        /// Undrafts a colonist once his arrest job is over. The arrest order
+        /// drafts him because the game offers Arrest only while drafted; leaving
+        /// him drafted would keep him out of the colony's work for good.
+        /// </summary>
+        public static void UndraftWhenFree(Pawn pawn)
+        {
+            if (pawn == null || _pendingUndrafts.Contains(pawn)) return;
+            _pendingUndrafts.Add(pawn);
+        }
+
+        private static void ProcessPendingUndrafts()
+        {
+            for (int i = _pendingUndrafts.Count - 1; i >= 0; i--)
+            {
+                Pawn pawn = _pendingUndrafts[i];
+                if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || pawn.jobs == null)
+                {
+                    _pendingUndrafts.RemoveAt(i);
+                    continue;
+                }
+                if (ArrestJobOutstanding(pawn)) continue;
+                if (pawn.Drafted) pawn.drafter.Drafted = false;
+                _pendingUndrafts.RemoveAt(i);
+            }
+        }
+
+        private static bool ArrestJobOutstanding(Pawn pawn)
+        {
+            if (pawn.jobs.curJob != null && pawn.jobs.curJob.def == JobDefOf.Arrest) return true;
+            if (pawn.jobs.jobQueue == null) return false;
+            foreach (QueuedJob queued in pawn.jobs.jobQueue)
+            {
+                if (queued.job != null && queued.job.def == JobDefOf.Arrest) return true;
+            }
+            return false;
         }
 
         /// <summary>

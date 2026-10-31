@@ -12,7 +12,7 @@ using Verse.AI;
 
 namespace RIMAPI.Services
 {
-    public class ColonistService : IColonistService
+    public partial class ColonistService : IColonistService
     {
         public ColonistService() { }
 

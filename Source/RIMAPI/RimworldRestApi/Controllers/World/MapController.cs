@@ -298,6 +298,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/people")]
+        [EndpointMetadata("The humanlike people who are not free colonists: wild people, prisoners, guests, downed raiders")]
+        public async Task GetPeople(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            var result = _pawnInfoService.GetPeople(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/zone/stockpile")]
         [EndpointMetadata("Create a new stockpile zone on the map")]
         public async Task CreateStockpile(HttpListenerContext context)
