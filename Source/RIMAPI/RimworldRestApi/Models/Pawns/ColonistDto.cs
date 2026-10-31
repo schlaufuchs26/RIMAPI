@@ -17,6 +17,17 @@ namespace RIMAPI.Models
         public string CurrentJob { get; set; }
         public List<TraitDto> Traits { get; set; }
         public List<WorkPriorityDto> WorkPriorities { get; set; }
+
+        // IncapableOf names the work tags the game disables for this pawn
+        // (fox, #3360): a pawn whose backstory disables violence carries no
+        // trait that says so, so his trait list reads like any other one's and
+        // a caller drafts him for a raid that never fires. The labels are the
+        // ones the game's own incapability list uses.
+        public List<string> IncapableOf { get; set; }
+
+        // CanFight is false when the game disables the Violent work tag for
+        // him: no draft and no attack order can make such a pawn shoot.
+        public bool CanFight { get; set; }
     }
 
     // The thoughts behind a colonist's mood number (fox, #3129). Need_Mood only

@@ -174,6 +174,16 @@ namespace RIMAPI.Services
                     case "move":
                         return Move(pawn, request, result);
                     case "attack":
+                        // A pawn the game disables violence for never fires
+                        // (fox, #3360): the order queued AttackStatic and the
+                        // raid walked up unopposed, so it is refused here with
+                        // the reason instead of queued as if it could fight.
+                        if (!PawnHelper.CanFight(pawn))
+                        {
+                            return ApiResult<OrderResultDto>.Fail(
+                                $"{pawn.LabelShort} is incapable of violence (the game disables the violent work tags for him), "
+                                + "so no attack order can make him fight; move and hold still work");
+                        }
                         return Attack(pawn, request, result);
                     case "hold":
                         return Hold(pawn, result);

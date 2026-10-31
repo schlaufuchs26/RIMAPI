@@ -154,6 +154,8 @@ namespace RIMAPI.Helpers
                         CurrentJob = pawn.CurJob?.def?.defName ?? "",
                         Traits = GetTraits(pawn),
                         WorkPriorities = GetWorkPriorities(pawn),
+                        IncapableOf = GetIncapableOfWorkTags(pawn),
+                        CanFight = CanFight(pawn),
                     },
                     PoliciesInfo = new PoliciesInfoDto
                     {
@@ -448,6 +450,37 @@ namespace RIMAPI.Helpers
             catch
             {
                 return new List<TraitDto>();
+            }
+        }
+
+        // GetIncapableOfWorkTags reads the pawn's own disable mask, which the
+        // game builds from backstory, traits and genes; the words come from
+        // IncapabilityTags (ticket #3360).
+        public static List<string> GetIncapableOfWorkTags(Pawn pawn)
+        {
+            try
+            {
+                return IncapabilityTags.From(pawn.CombinedDisabledWorkTags);
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
+        // CanFight is false when the game disables the Violent tag for him: no
+        // draft and no order can make such a pawn shoot.
+        public static bool CanFight(Pawn pawn)
+        {
+            try
+            {
+                return IncapabilityTags.CanFight(pawn.CombinedDisabledWorkTags);
+            }
+            catch
+            {
+                // A pawn we cannot ask keeps the old reading; a wrong "cannot
+                // fight" would hide a fighter instead of naming a harmless one.
+                return true;
             }
         }
 

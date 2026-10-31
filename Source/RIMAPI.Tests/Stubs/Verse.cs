@@ -70,6 +70,37 @@ namespace Verse
     }
 
     /// <summary>
+    /// The game's work tags, the mask a pawn's backstory and traits disable
+    /// (ticket #3360). The values are the game's own from Verse.WorkTags 1.6,
+    /// so a test that composes a mask composes the one the game would.
+    /// </summary>
+    [Flags]
+    public enum WorkTags
+    {
+        None = 0,
+        ManualDumb = 2,
+        ManualSkilled = 4,
+        Violent = 8,
+        Caring = 16,
+        Social = 32,
+        Commoner = 64,
+        Intellectual = 128,
+        Animals = 256,
+        Artistic = 512,
+        Crafting = 1024,
+        Cooking = 2048,
+        Firefighting = 4096,
+        Cleaning = 8192,
+        Hauling = 16384,
+        PlantWork = 32768,
+        Mining = 65536,
+        Hunting = 131072,
+        Constructing = 262144,
+        Shooting = 524288,
+        AllWork = 1048576,
+    }
+
+    /// <summary>
     /// The game's danger scale an order's max_danger uses; the walk scan puts
     /// each hazard on it, so a test can read the level a gas costs.
     /// </summary>

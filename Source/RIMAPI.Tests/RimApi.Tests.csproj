@@ -35,6 +35,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Hooks\LetterOpenTargets.cs" Link="Linked\LetterOpenTargets.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BillStateReason.cs" Link="Linked\BillStateReason.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IncapabilityTags.cs" Link="Linked\IncapabilityTags.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
   </ItemGroup>
 </Project>
