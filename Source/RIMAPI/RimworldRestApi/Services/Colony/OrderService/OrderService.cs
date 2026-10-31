@@ -86,7 +86,10 @@ public partial class OrderService : IOrderService
                 var plants = c.GetThingList(map).Where(t => t.def.category == ThingCategory.Plant).Cast<Plant>();
                 foreach (var p in plants)
                 {
-                    if (!p.HarvestableNow) continue;
+                    // The game's own harvest designator takes HarvestableNow
+                    // plus the "Standard" harvest tag; a tree carries "Wood"
+                    // and belongs to the chop order (fox ticket #3425).
+                    if (!DesignationRules.IsHarvestTarget(p.HarvestableNow, p.def.plant.harvestTag)) continue;
                     if (map.designationManager.DesignationOn(p, DesignationDefOf.HarvestPlant) != null)
                     {
                         already++;
