@@ -129,6 +129,74 @@ namespace RIMAPI.Models
 
         public List<RitualObligationDto> Obligations { get; set; }
         public List<RitualRoleDto> Roles { get; set; }
+
+        // Running is the ritual as it stands right now, null when none of this
+        // ritual is going on. A ritual that runs cannot start again, and the
+        // game's reason for that ("already in progress") says nothing about how
+        // long it has left or whether its pawns still attend it (ticket #3364).
+        public RitualRunningDto Running { get; set; }
+    }
+
+    // One pawn the running ritual owns: the job it is on and the duty the
+    // ritual gave it. A ritual whose pawns are all back on ordinary work is
+    // stuck, whatever the game's own "in progress" verdict says.
+    public class RitualParticipantDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        // Job is the pawn's current job def ("GiveSpeech", "SpectateCeremony",
+        // "Sleep"); Duty is the ritual duty the lord handed it ("GiveSpeech",
+        // "Spectate"), empty when the pawn holds none any more.
+        public string Job { get; set; }
+        public string Duty { get; set; }
+    }
+
+    // A ritual that is running right now (ticket #3364). The leader's speech
+    // lasts 5000 ticks (two in-game hours) by the game's own def, so "it takes
+    // ages" and "it never ends" look the same in a read that carries no
+    // duration: this one carries the clock, the stage, and what every pawn of
+    // the ritual is doing instead.
+    public class RitualRunningDto
+    {
+        public string Ritual { get; set; }
+        public string Def { get; set; }
+        public string Organizer { get; set; }
+        public int OrganizerId { get; set; }
+
+        // DurationTicks is the ritual's whole length (the def's range already
+        // rolled), TicksLeft what is left of it, Progress 0..1.
+        public int DurationTicks { get; set; }
+        public int TicksLeft { get; set; }
+        public float Progress { get; set; }
+
+        // StageIndex is 1-based, StageCount the ritual's number of stages.
+        public int StageIndex { get; set; }
+        public int StageCount { get; set; }
+
+        // Cancelled is the ritual's own flag: true once the game took a cancel,
+        // so a caller reads its cancel back instead of assuming it.
+        public bool Cancelled { get; set; }
+
+        // Attended is true when at least one of the ritual's pawns still holds
+        // one of the duties the ritual's stages hand out. When it is false the
+        // ritual cannot finish on its own; `ritual/end` is the way out.
+        public bool Attended { get; set; }
+
+        public List<RitualParticipantDto> Pawns { get; set; }
+    }
+
+    // What POST /api/v1/ideo/ritual/end answers: Ended is the ritual's own
+    // cancel flag read back, not the fact that the call went out.
+    public class RitualEndResultDto
+    {
+        public string Ideo { get; set; }
+        public string Ritual { get; set; }
+        public string Def { get; set; }
+        public bool Ended { get; set; }
+        public string Reason { get; set; }
+        public bool WasAttended { get; set; }
+        public List<RitualParticipantDto> Pawns { get; set; }
     }
 
     // What GET /api/v1/ideo/rituals answers: the ideoligion's rituals with the

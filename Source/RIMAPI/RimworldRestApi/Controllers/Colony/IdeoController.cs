@@ -67,5 +67,15 @@ namespace RIMAPI.Controllers
             var result = _ideoService.StartRitual(mapId, ritual, pawnId, targetThingId, x, z, hasCell);
             await context.SendJsonResponse(result);
         }
+
+        [Post("/api/v1/ideo/ritual/end")]
+        [EndpointMetadata("End a running ritual through the game's own cancel")]
+        public async Task EndRitual(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            string ritual = RequestParser.GetStringParameter(context, "ritual");
+            var result = _ideoService.EndRitual(mapId, ritual);
+            await context.SendJsonResponse(result);
+        }
     }
 }

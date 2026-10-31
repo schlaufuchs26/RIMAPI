@@ -39,6 +39,8 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BillStateReason.cs" Link="Linked\BillStateReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IncapabilityTags.cs" Link="Linked\IncapabilityTags.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\IdeoDtos.cs" Link="Linked\IdeoDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\SnakeCaseContractResolver.cs" Link="Linked\SnakeCaseContractResolver.cs" />

@@ -572,7 +572,151 @@ namespace RIMAPI.Services
             }
             dto.Ready = string.IsNullOrEmpty(why);
             dto.Reason = why ?? "";
+            dto.Running = RunningRitual(ritual, map);
             return dto;
+        }
+
+        // RunningRitual describes the ritual that is going on right now, null
+        // when none is (ticket #3364). The game's own verdict for a running
+        // ritual is one sentence, "already in progress", and it stays that way
+        // for the leader's speech's two in-game hours: a run cannot tell a
+        // speech that is simply long from one whose pawns walked off, and the
+        // one it cannot tell apart costs it the cooldown and the mood. So the
+        // entry carries the ritual's clock, its stage, and what every pawn of
+        // the ritual is doing instead.
+        private static RitualRunningDto RunningRitual(Precept_Ritual ritual, Map map)
+        {
+            if (map == null) return null;
+            LordJob_Ritual job;
+            try
+            {
+                job = Find.IdeoManager.GetActiveRituals(map).FirstOrDefault(r => r.Ritual == ritual);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            if (job == null) return null;
+
+            RitualRunningDto dto = new RitualRunningDto
+            {
+                Ritual = ritual.Label,
+                Def = ritual.def.defName,
+                DurationTicks = job.DurationTicks,
+                TicksLeft = job.TicksLeft,
+                StageIndex = job.StageIndex + 1,
+                StageCount = ritual.behavior?.def?.stages?.Count ?? 0,
+                Cancelled = job.cancelled,
+                Pawns = new List<RitualParticipantDto>(),
+            };
+            // Progress divides by the ritual's own duration; a def without one
+            // (a third-party ritual) would report NaN.
+            if (job.DurationTicks > 0) dto.Progress = job.Progress;
+            if (job.Organizer != null)
+            {
+                dto.Organizer = job.Organizer.LabelShort;
+                dto.OrganizerId = job.Organizer.thingIDNumber;
+            }
+
+            foreach (Pawn pawn in job.lord.ownedPawns)
+            {
+                if (pawn == null) continue;
+                dto.Pawns.Add(new RitualParticipantDto
+                {
+                    Id = pawn.thingIDNumber,
+                    Name = pawn.LabelShort,
+                    Job = pawn.CurJobDef?.defName ?? "",
+                    Duty = pawn.mindState?.duty?.def?.defName ?? "",
+                });
+            }
+            dto.Attended = RitualDutyHelper.AnyoneOnDuty(
+                dto.Pawns.Select(p => p.Duty), RitualDuties(ritual));
+            return dto;
+        }
+
+        // RitualDuties is every duty the ritual's stages hand out: the stage's
+        // default duty plus each role behavior's own (the speech's speaker gets
+        // GiveSpeech instead of the listeners' Spectate).
+        private static List<string> RitualDuties(Precept_Ritual ritual)
+        {
+            List<string> duties = new List<string>();
+            List<RitualStage> stages = ritual.behavior?.def?.stages;
+            if (stages == null) return duties;
+            foreach (RitualStage stage in stages)
+            {
+                if (stage == null) continue;
+                if (stage.defaultDuty != null && !duties.Contains(stage.defaultDuty.defName))
+                {
+                    duties.Add(stage.defaultDuty.defName);
+                }
+                if (stage.roleBehaviors == null) continue;
+                foreach (RitualRoleBehavior behavior in stage.roleBehaviors)
+                {
+                    if (behavior?.dutyDef != null && !duties.Contains(behavior.dutyDef.defName))
+                    {
+                        duties.Add(behavior.dutyDef.defName);
+                    }
+                }
+            }
+            return duties;
+        }
+
+        // EndRitual ends a running ritual through the game's own cancel, the
+        // same call the ritual's cancel gizmo makes (ticket #3364). It is the
+        // fallback for a ritual whose pawns left the ceremony: the lord job
+        // keeps standing, the game keeps saying "already in progress", and the
+        // ability cooldown is spent, so a run would otherwise have to draft and
+        // undraft pawns or click the gizmo on screen. The answer is the
+        // ritual's own cancelled flag read back, never the fact that the signal
+        // went out.
+        public ApiResult<RitualEndResultDto> EndRitual(int mapId, string ritualName)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null) return ApiResult<RitualEndResultDto>.Fail($"Map with ID={mapId} not found");
+
+                Ideo ideo = PlayerIdeo(out string reason);
+                if (ideo == null) return ApiResult<RitualEndResultDto>.Fail(reason);
+
+                Precept_Ritual ritual = FindRitual(ideo, ritualName, out string ritualError);
+                if (ritual == null) return ApiResult<RitualEndResultDto>.Fail(ritualError);
+
+                RitualEndResultDto result = new RitualEndResultDto
+                {
+                    Ideo = ideo.name,
+                    Ritual = ritual.Label,
+                    Def = ritual.def.defName,
+                };
+                LordJob_Ritual running = Find.IdeoManager.GetActiveRituals(map)
+                    .FirstOrDefault(r => r.Ritual == ritual);
+                if (running == null)
+                {
+                    result.Reason = "no ritual of that name is running: there is nothing to end";
+                    return ApiResult<RitualEndResultDto>.Ok(result);
+                }
+                RitualRunningDto before = RunningRitual(ritual, map);
+                result.WasAttended = before != null && before.Attended;
+                result.Pawns = before?.Pawns ?? new List<RitualParticipantDto>();
+
+                running.Cancel();
+                // Cancel sends the game's own signal, and the ritual's outcome
+                // sets `cancelled` on the spot; the lord leaves on the next
+                // game tick. Reading the flag back is what tells a caller the
+                // cancel was taken instead of lost.
+                result.Ended = running.cancelled;
+                if (!result.Ended)
+                {
+                    result.Reason = "the game's cancel signal went out but the ritual did not take it: "
+                        + "it is not in a stage that can be cancelled (a gathering before the ritual "
+                        + "starts, or one that already ended)";
+                }
+                return ApiResult<RitualEndResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<RitualEndResultDto>.Fail(ex.ToString());
+            }
         }
 
         // RoleHolder is the pawn who fills the first ideoligion role the ritual
