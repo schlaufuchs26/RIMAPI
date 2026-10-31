@@ -79,6 +79,20 @@ namespace RIMAPI.Models
         public string State { get; set; }
         public float ExpiryHours { get; set; }
         public List<string> Reward { get; set; }
+        // The game's own answer for this quest, the report its accept button
+        // greys out with (QuestUtility.CanAcceptQuest, ticket #3216).
+        public bool CanAccept { get; set; }
+        // Why the game refuses the quest; empty when it can be accepted.
+        public string AcceptReason { get; set; }
+        // Whether the quest needs a named colonist to accept it; without one
+        // the game takes the quest for the colony (Quest.Accept(null)).
+        public bool RequiresAccepter { get; set; }
+        // Reward choices the game draws one accept button per choice for. Empty
+        // for a quest with one fixed reward; a quest with choices needs the
+        // index to accept.
+        public List<QuestChoiceDto> Choices { get; set; } = new List<QuestChoiceDto>();
+        // The accepter the game recorded, once the quest was taken.
+        public string Accepter { get; set; }
     }
 
     public class TriggerIncidentRequestDto

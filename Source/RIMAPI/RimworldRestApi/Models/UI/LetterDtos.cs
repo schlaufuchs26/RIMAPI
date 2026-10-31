@@ -28,6 +28,10 @@ namespace RIMAPI.Models
         // and what the player opened, and marks the stack seen as it reports it
         // (ticket #3156).
         public bool New { get; set; }
+        // The quest this letter announces, for a NewQuestLetter; null for every
+        // other letter. A quest offer's letter offers no accept, so the id is
+        // the link to the quests read and to quest/accept (ticket #3216).
+        public int? QuestId { get; set; }
     }
 
     // Dismiss one letter by the id the letters read prints.

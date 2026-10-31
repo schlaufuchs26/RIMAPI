@@ -339,7 +339,20 @@ namespace RIMAPI.Services
                 Def = letter.def != null ? letter.def.defName : "",
                 Tick = letter.arrivalTick,
                 CanDismiss = letter.CanDismissWithRightClick,
+                QuestId = QuestIdOf(letter),
             };
+        }
+
+        // QuestIdOf names the quest a letter announces: a quest offer is a
+        // NewQuestLetter and carries the quest, so the letters read points at
+        // the quests read instead of leaving the offer without an id (ticket
+        // #3216). Every other letter answers null.
+        private static int? QuestIdOf(Letter letter)
+        {
+            var choice = letter as ChoiceLetter;
+            if (choice == null || choice.quest == null)
+                return null;
+            return choice.quest.id;
         }
 
         // LetterText is the body the game would show when the letter is opened.
