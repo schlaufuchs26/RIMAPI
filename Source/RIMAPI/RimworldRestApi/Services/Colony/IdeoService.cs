@@ -278,8 +278,12 @@ namespace RIMAPI.Services
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
+                // The assignments are built exactly as the Begin dialog builds
+                // them, with no selected pawn: the dialog opened from the
+                // ideoligion window has none either, and a selected pawn that
+                // does not fit any role makes the game's Setup throw.
                 RitualRoleAssignments assignments = Dialog_BeginRitual.CreateRitualRoleAssignments(
-                    ritual, target, map, null, null, null, organizer);
+                    ritual, target, map, null, null, null, null);
                 List<RitualRole> roles = ritual.behavior.def != null ? ritual.behavior.def.roles : null;
                 bool hasRoles = roles != null && roles.Count > 0;
                 if (assignments == null)
