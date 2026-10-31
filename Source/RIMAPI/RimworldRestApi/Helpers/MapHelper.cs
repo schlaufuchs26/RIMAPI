@@ -390,6 +390,15 @@ namespace RIMAPI.Helpers
         // GetMapPlantsInRect lists the plants standing on one rectangle, which
         // is the field-sized answer `map/plants` cannot give: that read returns
         // every plant on the map and a full map is 6.5 MB.
+        //
+        // The plants come from the cell grid, one GetPlant per cell, and not
+        // from listerThings' plant group filtered by a CellRect: that filter
+        // answered nothing for a rectangle holding the colony's own potato
+        // field, and nothing for a rectangle spanning the whole map, while
+        // `map/plants` counted 15,691 plants from the same group in the same
+        // game (fox ticket #3404). The growing-zone read asks each cell with
+        // GetPlant and has counted the same field all along, so that is the
+        // lookup this read uses too.
         public static List<PlantDto> GetMapPlantsInRect(
             int mapId,
             int x1,
@@ -410,25 +419,34 @@ namespace RIMAPI.Helpers
             int maxZ = Math.Max(z1, z2);
             CellRect rect = new CellRect(minX, minZ, maxX - minX + 1, maxZ - minZ + 1);
 
-            return map
-                .listerThings.ThingsInGroup(ThingRequestGroup.Plant)
-                .OfType<Plant>()
-                .Where(p => rect.Contains(p.Position))
-                .Select(p => new PlantDto
+            List<PlantDto> plants = new List<PlantDto>();
+            foreach (IntVec3 cell in rect)
+            {
+                if (!cell.InBounds(map))
                 {
-                    ThingId = p.thingIDNumber,
-                    DefName = p.def?.defName,
-                    Label = p.LabelShort,
-                    X = p.Position.x,
-                    Z = p.Position.z,
-                    Growth = p.Growth,
-                    Harvestable = p.HarvestableNow,
-                    Dying = p.Dying,
-                    Blighted = p.Blighted,
-                })
-                .OrderBy(p => p.Z)
-                .ThenBy(p => p.X)
-                .ToList();
+                    continue;
+                }
+                Plant plant = cell.GetPlant(map);
+                if (plant == null)
+                {
+                    continue;
+                }
+                plants.Add(
+                    new PlantDto
+                    {
+                        ThingId = plant.thingIDNumber,
+                        DefName = plant.def?.defName,
+                        Label = plant.LabelShort,
+                        X = cell.x,
+                        Z = cell.z,
+                        Growth = plant.Growth,
+                        Harvestable = plant.HarvestableNow,
+                        Dying = plant.Dying,
+                        Blighted = plant.Blighted,
+                    }
+                );
+            }
+            return plants.OrderBy(p => p.Z).ThenBy(p => p.X).ToList();
         }
 
         // GetStockpileFilter describes one stockpile's filter the way a player

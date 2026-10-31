@@ -10,6 +10,14 @@ namespace RIMAPI.Models
         public float Mood { get; set; }
         public float Hunger { get; set; }
         public PositionDto Position { get; set; }
+
+        // AllowedArea is the area the player restricted this pawn to, and the
+        // one answer that explains a colonist who walks home past a marked
+        // tree and idles: the game never gives her work outside that area, and
+        // nothing else in the reads said so (fox ticket #3404). Null means the
+        // pawn is unrestricted, which is the game's default.
+        public string AllowedArea { get; set; }
+        public int AllowedAreaCells { get; set; }
     }
 
     public class PawnDetailedDto

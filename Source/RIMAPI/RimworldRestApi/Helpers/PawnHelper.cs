@@ -48,6 +48,10 @@ namespace RIMAPI.Helpers
                     Y = pawn.Position.y,
                     Z = pawn.Position.z,
                 },
+                // Areas are per map since 1.4, so the restriction is the one for
+                // the map the pawn stands on; an unspawned pawn has none.
+                AllowedArea = pawn.Spawned ? pawn.playerSettings?.AreaRestrictionInPawnCurrentMap?.Label : null,
+                AllowedAreaCells = pawn.Spawned ? pawn.playerSettings?.AreaRestrictionInPawnCurrentMap?.TrueCount ?? 0 : 0,
             };
         }
 
