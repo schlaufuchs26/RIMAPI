@@ -50,13 +50,11 @@ What this script does automatically:
 - Updates the documentation metadata in docs/_api_macroses/controllers/_meta.yml
 - Stages all modified files in Git (git add -u)
 
-## 4. Build the Mod (Multi-Version Support)
+## 4. Build the Mod
 
-!!! warning "Important: Build for 1.5 and 1.6"
-
-    RIMAPI currently supports both RimWorld 1.5 and 1.6. You MUST compile the binaries for both engine versions before packaging the final release folder or uploading to Steam Workshop.
-
-Ensure your build pipeline or IDE targets both versions so that the respective 1.5/Assemblies and 1.6/Assemblies folders are correctly populated.
+Build the 1.6 assembly (`Release-1.6`), which lands in `1.6/Assemblies/`. The 1.5
+configuration was dropped (#3285): it stopped compiling once 1.6-only APIs came
+in, and only the 1.6 assembly is shipped.
 
 ## 5. Commit and Tag
 

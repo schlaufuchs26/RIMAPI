@@ -1,34 +1,6 @@
 {
   "version": "2.0.0",
   "tasks": [
-    // --- 1.5 TASKS ---
-    {
-      "label": "🔨 Build [1.5]",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/Source/RIMAPI/RimApi.csproj",
-        "--configuration", "Release-1.5",
-        "--verbosity", "minimal",
-        "/p:CopyLocalLockFileAssemblies=true"
-      ],
-      "group": "build",
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "🚀 Deploy [1.5]",
-      "type": "shell",
-      "command": "xcopy",
-      "args": [
-        "/Y", "/E", "/I", "/Q",
-        "${workspaceFolder}\\1.5\\Assemblies\\*",
-        "${config:rimworld.mod.deployPath}\\1.5\\Assemblies\\"
-      ],
-      "dependsOn": "🔨 Build [1.5]",
-      "presentation": { "reveal": "silent" }
-    },
-
     // --- 1.6 TASKS ---
     {
       "label": "🔨 Build [1.6]",

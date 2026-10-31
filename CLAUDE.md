@@ -7,8 +7,8 @@ RIMAPI is a RimWorld mod that embeds a REST API server directly into the game, e
 - **Language:** C# 9.0 targeting .NET Framework 4.7.2
 - **Serialization:** Newtonsoft.Json 13.0 with a custom `SnakeCaseContractResolver`
 - **Patching:** Harmony 2.3.3 for runtime method hooks
-- **RimWorld versions:** 1.5 and 1.6 (both built from the same source via conditional compilation)
-- **Build configs:** `Debug`, `Release-1.5`, `Release-1.6`
+- **RimWorld versions:** 1.6 (the 1.5 configuration was dropped in #3285: it no longer compiled)
+- **Build configs:** `Debug`, `Release-1.6`
 
 ## Repository Layout
 
@@ -27,7 +27,6 @@ My_test_mod/
 │       ├── Hooks/                # Harmony patches that publish SSE events
 │       ├── Helpers/              # Reusable utility functions
 │       └── Camera/               # UDP camera streaming
-├── 1.5/Assemblies/               # Compiled DLL for RimWorld 1.5
 ├── 1.6/Assemblies/               # Compiled DLL for RimWorld 1.6
 ├── Libraries/                    # Newtonsoft.Json.dll
 ├── docs/                         # MkDocs documentation source
@@ -189,9 +188,9 @@ Route attributes are discovered automatically — no manual registration needed.
 
 ### Building
 
-Open `Source/RimApi.sln`. Build with `Release-1.5` for RimWorld 1.5 output to `1.5/Assemblies/`, or `Release-1.6` for `1.6/Assemblies/`. Both must be built before releasing.
+Open `Source/RimApi.sln`. Build with `Release-1.6` for RimWorld 1.6 output to `1.6/Assemblies/`.
 
-Conditional compilation: `RIMWORLD_1_5` and `RIMWORLD_1_6` symbols are set per configuration.
+Conditional compilation: the `RIMWORLD_1_6` symbol is set for every configuration, so Debug compiles the same branches. The `#if RIMWORLD_1_5` branches are dead (kept for now; #3285).
 
 ### Version Bump
 
@@ -249,7 +248,7 @@ Before submitting a PR:
 1. Finalize `CHANGELOG.md` — move `[Unreleased]` to the new version + date
 2. Run doc formatting/validation scripts in `scripts/docs/`
 3. Run `python scripts/bump_version.py <version>`
-4. Build for both 1.5 and 1.6
+4. Build for 1.6 (`Release-1.6`)
 5. Commit: `git commit -m "Release v1.9.1"` then `git tag -a v1.9.1 -m "Release v1.9.1"`
 6. Push commit and tag
 
