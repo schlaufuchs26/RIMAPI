@@ -105,11 +105,33 @@ namespace RIMAPI.Services
                         $"no letter with id {request.Id} stands; the letters read prints the ids");
 
                 var result = new LetterAnswerResultDto { Label = letter.Label };
-                var tree = OpenChoiceDialog(letter);
-                if (tree == null)
+                var choice = letter as ChoiceLetter;
+                if (choice == null)
                 {
                     result.Reason =
-                        $"{letter.GetType().Name} opens no choice dialog, so there is no option to press";
+                        $"{letter.GetType().Name} is not a choice letter, so it has no option to press";
+                    result.Remaining = StackLetters().Count;
+                    return ApiResult<LetterAnswerResultDto>.Ok(result);
+                }
+
+                // The choices are read from the letter, not from a window it
+                // opens: NewQuestLetter.OpenLetter switches to the Quests tab
+                // and removes the letter, so opening a letter to look at it can
+                // throw the offer away (ticket #3188). ChoiceLetter.OpenLetter
+                // builds exactly this dialog from the same Choices.
+                var offered = choice.Choices != null ? choice.Choices.Where(o => o != null).ToList() : new List<DiaOption>();
+                if (offered.Count == 0)
+                {
+                    result.Reason = $"{letter.GetType().Name} offers no choice to press";
+                    result.Remaining = StackLetters().Count;
+                    return ApiResult<LetterAnswerResultDto>.Ok(result);
+                }
+
+                bool openedHere;
+                var tree = ChoiceDialog(letter, choice, offered, out openedHere);
+                if (tree == null)
+                {
+                    result.Reason = "no dialog could be put on the stack, so there is no option to press";
                     result.Remaining = StackLetters().Count;
                     return ApiResult<LetterAnswerResultDto>.Ok(result);
                 }
@@ -122,9 +144,10 @@ namespace RIMAPI.Services
                 {
                     result.Reason = $"the dialog offers no option matching {Quote(request.Option)}";
                     result.Remaining = StackLetters().Count;
-                    // The dialog was opened by this call, so it goes away
+                    // The dialog was put there by this call, so it goes away
                     // again: a wrong word must not leave the clock held.
-                    Find.WindowStack?.TryRemove(tree, doCloseSound: false);
+                    if (openedHere)
+                        Find.WindowStack?.TryRemove(tree, doCloseSound: false);
                     return ApiResult<LetterAnswerResultDto>.Ok(result);
                 }
 
@@ -159,25 +182,30 @@ namespace RIMAPI.Services
             }
         }
 
-        // OpenChoiceDialog returns the letter's open dialog, opening the letter
-        // when none is. Opening runs Letter.OpenLetter, the code a click on the
-        // stack runs, so the choices are the game's own; the new window is the
-        // one that was not on the stack before the call.
-        private static Dialog_NodeTree OpenChoiceDialog(Letter letter)
+        // ChoiceDialog returns the dialog to press in: one this letter already
+        // has on the stack, or a new one built from the letter's own choices,
+        // which is the dialog ChoiceLetter.OpenLetter would show. openedHere
+        // says whether this call put it there, so a wrong word can take it away
+        // again without closing a window the player opened.
+        private static Dialog_NodeTree ChoiceDialog(Letter letter, ChoiceLetter choice,
+            List<DiaOption> offered, out bool openedHere)
         {
+            openedHere = false;
             var windows = Find.WindowStack?.Windows;
             if (windows == null)
                 return null;
-            var before = windows.ToList();
-            // A letter opened by a click keeps its dialog on the stack; that
-            // one is used instead of stacking a second copy.
-            foreach (var w in before.OfType<Dialog_NodeTree>())
+            foreach (var w in windows.OfType<Dialog_NodeTree>())
             {
                 if (TitledFor(w, letter))
                     return w;
             }
-            Call(letter, "OpenLetter");
-            return windows.OfType<Dialog_NodeTree>().FirstOrDefault(w => !before.Contains(w));
+            var node = new DiaNode(choice.Text);
+            node.options.AddRange(offered);
+            var tree = new Dialog_NodeTree(node, delayInteractivity: false,
+                radioMode: choice.radioMode, title: choice.title);
+            Find.WindowStack.Add(tree);
+            openedHere = true;
+            return tree;
         }
 
         // TitledFor says whether a dialog is this letter's: a choice letter
