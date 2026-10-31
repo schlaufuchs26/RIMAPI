@@ -1,0 +1,41 @@
+using RIMAPI.Helpers;
+using Xunit;
+
+namespace RIMAPI.Tests
+{
+    /// <summary>
+    /// The bed a rescue carries a patient to (fox ticket #3383): a bed in a
+    /// burning room or above 50 C is no destination, whatever the game's own
+    /// lookup picked first.
+    /// </summary>
+    public class BedSafetyTests
+    {
+        [Fact]
+        public void A_cool_room_is_a_destination()
+        {
+            Assert.Null(BedSafety.UnsafeReason(21.3f, false));
+            Assert.False(BedSafety.IsUnsafe(21.3f, false));
+        }
+
+        [Fact]
+        public void A_room_above_the_threshold_names_its_reading()
+        {
+            Assert.Equal(
+                "its room reads 111.9 C, above the 50 C a carried patient cannot take",
+                BedSafety.UnsafeReason(111.9f, false));
+        }
+
+        [Fact]
+        public void The_threshold_itself_is_already_too_hot()
+        {
+            Assert.True(BedSafety.IsUnsafe(BedSafety.TooHotC, false));
+            Assert.False(BedSafety.IsUnsafe(BedSafety.TooHotC - 0.1f, false));
+        }
+
+        [Fact]
+        public void A_fire_counts_even_in_a_cool_room()
+        {
+            Assert.Equal("a fire burns in its room", BedSafety.UnsafeReason(18f, true));
+        }
+    }
+}

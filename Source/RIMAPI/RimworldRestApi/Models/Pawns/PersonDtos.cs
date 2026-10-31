@@ -90,6 +90,19 @@ namespace RIMAPI.Models
         public string Bed { get; set; }
         public bool BedForPrisoners { get; set; }
         public bool Guest { get; set; }
+        // The bed's room as it stands now (ticket #3383): a bed in a room above
+        // 50 C or with a fire in it is no destination for a carried patient, so
+        // the answer has to name what the room reads.
+        public int BedRoomId { get; set; }
+        public string BedRoomLabel { get; set; }
+        public float BedRoomTempC { get; set; }
+        public bool BedRoomHasFire { get; set; }
+        // The bed the game's own lookup picked first, when the tool took a safer
+        // one instead; zero when the game's choice was the one used.
+        public int RejectedBedId { get; set; }
+        public string RejectedBed { get; set; }
+        public float RejectedBedTempC { get; set; }
+        public bool RejectedBedRoomHasFire { get; set; }
     }
 
     // The Self-tend option after the write: the state it now has, and whether
