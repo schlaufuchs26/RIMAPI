@@ -109,6 +109,24 @@ namespace RIMAPI.Models
         public int CooldownTicks { get; set; }
 
         public RitualTargetDto Target { get; set; }
+
+        // TargetIsCandidate is true when the ritual's own target filter named
+        // nothing (the Begin dialog asks the player to pick a place) and the
+        // target above is the best place the ritual's obligation filter
+        // accepts instead. Readiness is judged there, and passing that thing or
+        // cell to a start is what makes the start work (ticket #3266).
+        public bool TargetIsCandidate { get; set; }
+
+        // Candidates are the further places the obligation filter accepts, so a
+        // run can pick another altar or the corpse it wants instead of guessing
+        // a cell. Capped; an empty list means the game named none.
+        public List<RitualTargetDto> Candidates { get; set; }
+
+        // TargetKinds is what the game's target filter says the ritual needs
+        // ("gather at an altar or ritual spot"), which is the only hint left
+        // when no candidate exists.
+        public List<string> TargetKinds { get; set; }
+
         public List<RitualObligationDto> Obligations { get; set; }
         public List<RitualRoleDto> Roles { get; set; }
     }

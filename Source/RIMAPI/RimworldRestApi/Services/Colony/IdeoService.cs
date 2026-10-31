@@ -174,7 +174,7 @@ namespace RIMAPI.Services
                 };
                 foreach (Precept_Ritual ritual in Rituals(ideo))
                 {
-                    IdeoRitualDto dto = DescribeRitual(ritual, colonists);
+                    IdeoRitualDto dto = DescribeRitual(ritual, colonists, map);
                     if (dto.Ready) result.ReadyCount++;
                     result.Rituals.Add(dto);
                 }
@@ -347,8 +347,11 @@ namespace RIMAPI.Services
         // DescribeRitual fills one read entry. The target is the game's own
         // choice (an obligation's target, else the ritual filter's best one),
         // because CanStartRitualNow only checks the roles once it has a valid
-        // target: without one every ritual would read as ready.
-        private static IdeoRitualDto DescribeRitual(Precept_Ritual ritual, List<Pawn> colonists)
+        // target: without one every ritual would read as ready. When the
+        // filter names nothing (the Begin dialog asks the player to pick), the
+        // entry names the places the ritual's own obligation filter accepts, so
+        // a start does not have to guess a cell (ticket #3266).
+        private static IdeoRitualDto DescribeRitual(Precept_Ritual ritual, List<Pawn> colonists, Map map)
         {
             IdeoRitualDto dto = new IdeoRitualDto
             {
@@ -398,17 +401,39 @@ namespace RIMAPI.Services
                 }
             }
 
+            Pawn organizer = RoleHolder(ritual) ?? colonists.FirstOrDefault();
             TargetInfo target = first != null
                 ? first.FirstValidTarget
-                : BestTarget(ritual, RoleHolder(ritual) ?? colonists.FirstOrDefault());
+                : BestTarget(ritual, organizer);
+            dto.Candidates = new List<RitualTargetDto>();
+
+            // The ritual's own filter often names nothing without a selected
+            // thing (funeral, conversion, duel, festival): the Begin dialog asks
+            // the player for a place. The obligation filter still knows which
+            // places the ritual accepts, so name them and judge readiness at the
+            // first one: that is the thing or cell a start has to pass.
+            if (!target.IsValid)
+            {
+                List<TargetInfo> candidates = Candidates(ritual, first, map ?? organizer?.Map);
+                if (candidates.Count > 0)
+                {
+                    target = candidates[0];
+                    dto.TargetIsCandidate = true;
+                    foreach (TargetInfo other in candidates.Skip(1))
+                    {
+                        dto.Candidates.Add(TargetRef(other));
+                    }
+                }
+            }
             dto.Target = TargetRef(target);
 
             // CanStartRitualNow is not safe without a target: the speech worker
             // dereferences it, and the game's own ideo window only asks once the
             // player picked a place. So a ritual without a target reads as not
-            // ready and says which field supplies the place.
+            // ready and says what the game asks for and which field supplies it.
             if (!target.IsValid)
             {
+                dto.TargetKinds = TargetKinds(ritual, organizer);
                 dto.Ready = false;
                 dto.Reason = "no target yet: the game picks the place at Begin, so pass the cell (x1/z1) "
                     + "or the thing (target_id) the ritual is held at";
@@ -465,6 +490,73 @@ namespace RIMAPI.Services
                 return TargetInfo.Invalid;
             }
         }
+
+        // Candidates lists the places the ritual's own obligation filter accepts
+        // (an altar, the ritual spot, the corpse of a funeral): the same places
+        // the ideo window offers for its target. The filter of a third-party
+        // ritual may throw on a null obligation or an odd map, so one that does
+        // simply contributes no candidate (ticket #3266).
+        private static List<TargetInfo> Candidates(Precept_Ritual ritual, RitualObligation obligation, Map map)
+        {
+            List<TargetInfo> found = new List<TargetInfo>();
+            RitualObligationTargetFilter filter = ritual.obligationTargetFilter;
+            if (filter == null || map == null) return found;
+            List<TargetInfo> all;
+            try
+            {
+                IEnumerable<TargetInfo> targets = filter.GetTargets(obligation, map);
+                if (targets == null) return found;
+                all = targets.ToList();
+            }
+            catch (Exception)
+            {
+                return found;
+            }
+            foreach (TargetInfo candidate in all)
+            {
+                if (found.Count >= MaxRitualCandidates) break;
+                if (!candidate.IsValid) continue;
+                if (found.Any(f => SameTarget(f, candidate))) continue;
+                try
+                {
+                    if (!filter.CanUseTarget(candidate, obligation).canUse) continue;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                found.Add(candidate);
+            }
+            return found;
+        }
+
+        // TargetKinds is what the ritual's own target filter says the ritual
+        // needs, in the words the Begin dialog uses ("gather at an altar or
+        // ritual spot"). It is the only hint left when the map holds no
+        // candidate at all.
+        private static List<string> TargetKinds(Precept_Ritual ritual, Pawn organizer)
+        {
+            List<string> kinds = new List<string>();
+            if (ritual.targetFilter == null) return kinds;
+            try
+            {
+                TargetInfo initiator = organizer != null ? new TargetInfo(organizer) : TargetInfo.Invalid;
+                foreach (string kind in ritual.targetFilter.GetTargetInfos(initiator))
+                {
+                    if (!string.IsNullOrEmpty(kind) && !kinds.Contains(kind)) kinds.Add(kind);
+                }
+            }
+            catch (Exception)
+            {
+                return kinds;
+            }
+            return kinds;
+        }
+
+        // MaxRitualCandidates caps how many places one read entry names: a colony
+        // with many altars does not need all of them listed, the first few are
+        // what a start chooses between.
+        private const int MaxRitualCandidates = 6;
 
         // PickObligation takes the due obligation a start pays off: the one
         // whose target the caller named, or the first still-valid one when the
