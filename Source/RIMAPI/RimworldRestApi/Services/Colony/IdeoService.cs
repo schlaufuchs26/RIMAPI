@@ -217,6 +217,11 @@ namespace RIMAPI.Services
                     if (organizer == null)
                         return ApiResult<RitualStartResultDto>.Fail($"Pawn with ID={pawnId} not found");
                 }
+                // Without a named organizer the pawn who fills the ritual's own
+                // role takes it (the leader for the speech): some rituals, the
+                // speech among them, are carried by that pawn alone and have no
+                // other role to fill.
+                if (organizer == null) organizer = RoleHolder(ritual);
 
                 TargetInfo target = TargetInfo.Invalid;
                 bool targetGiven = false;
@@ -274,8 +279,15 @@ namespace RIMAPI.Services
                 }
 
                 RitualRoleAssignments assignments = Dialog_BeginRitual.CreateRitualRoleAssignments(
-                    ritual, target, map, null, null, null, null);
-                if (assignments == null || assignments.Participants == null || assignments.Participants.Count == 0)
+                    ritual, target, map, null, null, null, organizer);
+                List<RitualRole> roles = ritual.behavior.def != null ? ritual.behavior.def.roles : null;
+                bool hasRoles = roles != null && roles.Count > 0;
+                if (assignments == null)
+                {
+                    result.Reason = "the game could not assemble the ritual's roles";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+                if (hasRoles && (assignments.Participants == null || assignments.Participants.Count == 0))
                 {
                     result.Reason = "no colonist can take part: the ritual's roles are empty, and its own "
                         + "requirements (a role holder, a free pawn) are not met";
