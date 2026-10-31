@@ -6,7 +6,7 @@ using RIMAPI.Services;
 using RimWorld;
 using Verse;
 
-public class OrderService : IOrderService
+public partial class OrderService : IOrderService
 {
     public ApiResult DesignateArea(DesignateRequestDto request)
     {
