@@ -43,11 +43,13 @@ namespace RIMAPI.Models
         public List<string> AvailableMaterials { get; set; } = new List<string>();
         // What the bill is doing, in the game's own terms (ticket #3306):
         // State is one of running, suspended, paused, target met, missing
-        // ingredients or no worker with the skill, and StateReason says what
-        // to fix. ProductsInColony is the count the target is compared
-        // against, MissingIngredients the ingredients the colony has none of,
-        // and the skill fields carry the recipe's requirement next to how many
-        // colonists meet it.
+        // ingredients, no colonist assigned or no worker with the skill, and
+        // StateReason says what to fix. ProductsInColony is the count the
+        // target is compared against, MissingIngredients the ingredients the
+        // colony has none of, and the skill fields carry the recipe's
+        // requirement next to how many colonists meet it. WorkTypes are the
+        // defNames of the bench's work types (ticket #3362), the ones
+        // `work_priority` takes.
         public string State { get; set; }
         public string StateReason { get; set; }
         public int ProductsInColony { get; set; }
@@ -55,6 +57,7 @@ namespace RIMAPI.Models
         public string WorkSkill { get; set; }
         public int MinSkill { get; set; }
         public int SkilledColonists { get; set; }
+        public List<string> WorkTypes { get; set; } = new List<string>();
     }
 
     public class CreateBillRequest

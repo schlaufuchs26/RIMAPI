@@ -22,6 +22,10 @@ namespace RIMAPI.Helpers
         public const string Satisfied = "target met";
         public const string MissingIngredients = "missing ingredients";
         public const string NoWorker = "no worker with the skill";
+        // NoColonistAssigned is the bench's own work type with nobody on it
+        // (ticket #3362): the material and the skill are there, but no free
+        // colonist has that type switched on, so the bill never gets a job.
+        public const string NoColonistAssigned = "no colonist assigned";
 
         public struct Facts
         {
@@ -42,6 +46,12 @@ namespace RIMAPI.Helpers
             public int MinSkill;
             public int BestSkill;
             public int SkilledColonists;
+            // WorkTypes are the defNames of the work types that can run this
+            // bench (a stove is Cooking, a machining table Smithing), null
+            // when the game names none; AssignedColonists is how many free
+            // colonists have one of them switched on.
+            public IList<string> WorkTypes;
+            public int AssignedColonists;
         }
 
         public struct State
@@ -53,7 +63,7 @@ namespace RIMAPI.Helpers
         // Describe answers the state and, when the bill is not simply running,
         // the sentence that says what to fix. The order is the order a player
         // checks: the switch they flipped, the game's own pause, the target,
-        // the material, the worker.
+        // the material, the work type, the worker.
         public static State Describe(Facts f)
         {
             if (f.Suspended)
@@ -75,6 +85,16 @@ namespace RIMAPI.Helpers
             if (f.MissingIngredients != null && f.MissingIngredients.Count > 0)
             {
                 return new State { Name = MissingIngredients, Reason = MissingText(f) };
+            }
+            // The assignment comes before the skill: a bench whose work type
+            // nobody works gives no job to anybody, however good they are.
+            if (f.WorkTypes != null && f.WorkTypes.Count > 0 && f.AssignedColonists == 0)
+            {
+                return new State
+                {
+                    Name = NoColonistAssigned,
+                    Reason = "nobody is assigned to " + string.Join(" or ", f.WorkTypes),
+                };
             }
             if (f.Skill != null && f.SkilledColonists == 0)
             {

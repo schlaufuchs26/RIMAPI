@@ -121,5 +121,72 @@ namespace RIMAPI.Tests
 
             Assert.Equal(BillStateReason.Paused, BillStateReason.Describe(facts).Name);
         }
+
+        [Fact]
+        public void ABenchNobodyIsAssignedToNamesItsWorkType()
+        {
+            // The bench is fine and the material is there, but no colonist has
+            // Crafting switched on, so the bill never gets a job (ticket
+            // #3362). "running" here is the lie the ticket is about.
+            var facts = Facts();
+            facts.WorkTypes = new List<string> { "Crafting" };
+            facts.AssignedColonists = 0;
+
+            var state = BillStateReason.Describe(facts);
+
+            Assert.Equal(BillStateReason.NoColonistAssigned, state.Name);
+            Assert.Equal("nobody is assigned to Crafting", state.Reason);
+        }
+
+        [Fact]
+        public void TwoWorkTypesOfOneBenchAreBothNamed()
+        {
+            // A bench can be served by more than one giver (a mod's smelter
+            // that both smiths and crafts), and the player then has two
+            // switches to flip.
+            var facts = Facts();
+            facts.WorkTypes = new List<string> { "Smithing", "Crafting" };
+            facts.AssignedColonists = 0;
+
+            Assert.Equal("nobody is assigned to Smithing or Crafting",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
+        public void AWorkTypeSomebodyHasBlocksNothing()
+        {
+            var facts = Facts();
+            facts.WorkTypes = new List<string> { "Crafting" };
+            facts.AssignedColonists = 2;
+
+            Assert.Equal(BillStateReason.Running, BillStateReason.Describe(facts).Name);
+        }
+
+        [Fact]
+        public void ABenchTheGameNamesNoWorkTypeForClaimsNothing()
+        {
+            // No giver lists this def (an unknown bench from a mod), so the
+            // assignment cannot be judged and the bill is not accused.
+            var facts = Facts();
+            facts.WorkTypes = new List<string>();
+
+            Assert.Equal(BillStateReason.Running, BillStateReason.Describe(facts).Name);
+        }
+
+        [Fact]
+        public void TheAssignmentComesBeforeTheSkill()
+        {
+            // Nobody works Crafting, so the skill nobody has is not the first
+            // thing to fix: switching the type on is.
+            var facts = Facts();
+            facts.WorkTypes = new List<string> { "Crafting" };
+            facts.AssignedColonists = 0;
+            facts.Skill = "Crafting";
+            facts.MinSkill = 6;
+            facts.BestSkill = 3;
+            facts.SkilledColonists = 0;
+
+            Assert.Equal(BillStateReason.NoColonistAssigned, BillStateReason.Describe(facts).Name);
+        }
     }
 }

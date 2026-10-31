@@ -88,6 +88,20 @@ namespace RIMAPI.Helpers
                 MissingIngredients = dto.MissingIngredients,
             };
 
+            List<WorkTypeDef> workTypes = BenchWorkTypes(bill);
+            if (workTypes.Count > 0)
+            {
+                dto.WorkTypes = workTypes.Select(w => w.defName).ToList();
+                facts.WorkTypes = dto.WorkTypes;
+                foreach (Pawn pawn in map.mapPawns.FreeColonists)
+                {
+                    if (pawn.workSettings == null)
+                        continue;
+                    if (workTypes.Any(w => pawn.workSettings.WorkIsActive(w)))
+                        facts.AssignedColonists++;
+                }
+            }
+
             if (recipe.skillRequirements != null && recipe.skillRequirements.Count > 0)
             {
                 SkillRequirement requirement = recipe.skillRequirements[0];
@@ -112,6 +126,29 @@ namespace RIMAPI.Helpers
             BillStateReason.State state = BillStateReason.Describe(facts);
             dto.State = state.Name;
             dto.StateReason = state.Reason;
+        }
+
+        // BenchWorkTypes is the work type (or types) that can run this bench,
+        // read from the work givers that name the bench's def: a stove is
+        // Cooking, a machining table Smithing, a drug lab Crafting (ticket
+        // #3362). Empty when the game names no giver for the def, and then
+        // nothing is claimed about the assignment.
+        private static List<WorkTypeDef> BenchWorkTypes(Bill_Production bill)
+        {
+            var types = new List<WorkTypeDef>();
+            Thing bench = bill.billStack?.billGiver as Thing;
+            if (bench == null)
+                return types;
+            foreach (WorkGiverDef workGiver in DefDatabase<WorkGiverDef>.AllDefsListForReading)
+            {
+                if (workGiver.workType == null || workGiver.fixedBillGiverDefs == null)
+                    continue;
+                if (!workGiver.fixedBillGiverDefs.Contains(bench.def))
+                    continue;
+                if (!types.Contains(workGiver.workType))
+                    types.Add(workGiver.workType);
+            }
+            return types;
         }
 
         // CountInColony is the number a "do until you have X" target is

@@ -125,6 +125,7 @@ namespace RIMAPI.Tests
                 "target_count",
                 "unpause_when_you_have",
                 "work_skill",
+                "work_types",
             };
 
             JObject json = Json(new BillDto());
