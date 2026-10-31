@@ -7,47 +7,53 @@ using Verse;
 namespace RimworldRestApi.Hooks
 {
     // A letter the player opens in game counts as seen, so the next read does
-    // not report it as new (ticket #3156). Verse.Letter.OpenLetter is abstract
-    // and six types override it in 1.6.4871, so each override is patched by
-    // hand rather than through a PatchAll attribute: a name that moves with a
-    // game update then costs one warning here instead of failing every patch in
-    // the assembly.
+    // not report it as new (ticket #3156). Verse.Letter declares OpenLetter
+    // abstract and the overrides sit on several types, so the targets come from
+    // LetterOpenTargets rather than a hand-kept list (ticket #3318): patching a
+    // type that implements nothing failed on every game start and left the
+    // feature silently dead.
     public static class LetterOpenHook
     {
-        // Types by name, not by reference: a type this build of the game does
-        // not have costs a warning, not a TypeLoadException.
-        private static readonly string[] OpeningTypes =
-        {
-            "Verse.BundleLetter",
-            "Verse.ChoiceLetter",
-            "Verse.DeathLetter",
-            "Verse.NewQuestLetter",
-            "Verse.LetterWithTimeout",
-            "RimWorld.ChoiceLetter_GrowthMoment",
-        };
-
         public static void Apply(Harmony harmony)
         {
-            foreach (var name in OpeningTypes)
+            var scan = LetterOpenTargets.ScanLoadedAssemblies(typeof(Letter));
+            foreach (var problem in scan.Problems)
             {
+                LogApi.Error(
+                    "[RimworldRestApi] letter hook: " + problem +
+                    "; a letter opened in game is not marked seen");
+            }
+
+            var patched = 0;
+            foreach (var method in scan.Targets)
+            {
+                var where = method.DeclaringType != null ? method.DeclaringType.FullName : "?";
                 try
                 {
-                    var type = AccessTools.TypeByName(name);
-                    var method = type != null ? AccessTools.Method(type, "OpenLetter") : null;
-                    if (method == null)
-                    {
-                        LogApi.Error(
-                            $"[RimworldRestApi] no {name}.OpenLetter: a letter opened in game is not marked seen");
-                        continue;
-                    }
                     harmony.Patch(method,
                         postfix: new HarmonyMethod(typeof(LetterOpenHook), nameof(Postfix)));
+                    patched++;
                 }
                 catch (Exception ex)
                 {
-                    LogApi.Error($"[RimworldRestApi] could not patch {name}.OpenLetter: {ex}");
+                    LogApi.Error(
+                        "[RimworldRestApi] could not patch " + where + "." +
+                        LetterOpenTargets.MethodName + ": " + ex +
+                        "; a letter of this type opened in game is not marked seen");
                 }
             }
+
+            if (patched == 0)
+            {
+                LogApi.Error(
+                    "[RimworldRestApi] the letter hook patched no " +
+                    LetterOpenTargets.MethodName + ": a letter the player opened in " +
+                    "game comes back as new to the next letters read");
+                return;
+            }
+            LogApi.Info(
+                "[RimworldRestApi] letter hook on " + patched + " " +
+                LetterOpenTargets.MethodName + " implementation(s)");
         }
 
         private static void Postfix(Letter __instance)

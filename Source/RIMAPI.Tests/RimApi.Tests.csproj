@@ -32,5 +32,6 @@
     <!-- The mod's files under test, compiled from their single source of truth
          rather than copied. One line per covered file. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Debug\Logger.cs" Link="Linked\Logger.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Hooks\LetterOpenTargets.cs" Link="Linked\LetterOpenTargets.cs" />
   </ItemGroup>
 </Project>
