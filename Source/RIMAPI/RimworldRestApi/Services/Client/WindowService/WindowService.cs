@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using RIMAPI.Core;
 using RIMAPI.Models;
+using RimWorld;
 using Verse;
 
 namespace RIMAPI.Services
@@ -144,6 +145,49 @@ namespace RIMAPI.Services
                 return true;
             }
 
+            // The naming dialogs (faction and settlement, settlement alone, a
+            // gravship) are no message boxes: the game draws their "OK" as an
+            // inline button whose code validates the typed name, calls Named /
+            // NamedSecond, shows the gained-name message and removes the window
+            // (Dialog_GiveName.DoWindowContents). The text fields write into
+            // curName / curSecondName, so the same steps run from here with the
+            // name the dialog already holds; which is the generated one until
+            // someone types another. Without this the dialog held the clock and
+            // only a screen click could answer it (ticket #3138).
+            var giveName = window as Dialog_GiveName;
+            if (giveName != null)
+            {
+                var name = ReadString(giveName, "curName").Trim();
+                var second = ReadString(giveName, "curSecondName").Trim();
+                bool useSecond = ReadBool(giveName, "useSecondName");
+                if (!InvokeBool(giveName, "IsValidName", name))
+                {
+                    reason = string.IsNullOrEmpty(name)
+                        ? "the dialog's name field is empty"
+                        : $"the dialog rejects the name \"{name}\"";
+                    return false;
+                }
+                if (useSecond && !InvokeBool(giveName, "IsValidSecondName", second))
+                {
+                    reason = string.IsNullOrEmpty(second)
+                        ? "the dialog's settlement name field is empty"
+                        : $"the dialog rejects the settlement name \"{second}\"";
+                    return false;
+                }
+                Invoke(giveName, "Named", name);
+                if (useSecond)
+                    Invoke(giveName, "NamedSecond", second);
+                var gained = ReadString(giveName, "gainedNameMessageKey");
+                if (!string.IsNullOrEmpty(gained))
+                {
+                    var text = useSecond ? gained.Translate(name, second) : gained.Translate(name);
+                    Messages.Message(text, MessageTypeDefOf.TaskCompletion, false);
+                }
+                button = "OK";
+                Find.WindowStack.TryRemove(giveName, true);
+                return true;
+            }
+
             reason = "the bridge knows no accept button for this window type; a screen click is the way out";
             return false;
         }
@@ -197,6 +241,14 @@ namespace RIMAPI.Services
                 if (!string.IsNullOrEmpty(box.buttonCText)) labels.Add(box.buttonCText);
                 return labels;
             }
+            var giveName = w as Dialog_GiveName;
+            if (giveName != null)
+            {
+                // The naming dialogs draw their OK inline, so no field holds
+                // the label; the button the bridge presses is that OK.
+                labels.Add("OK");
+                return labels;
+            }
             var tree = w as Dialog_NodeTree;
             if (tree != null)
             {
@@ -233,6 +285,44 @@ namespace RIMAPI.Services
         {
             var value = FindField(obj, name)?.GetValue(obj);
             return value != null ? value.ToString() : "";
+        }
+
+        private static bool ReadBool(object obj, string name)
+        {
+            var value = FindField(obj, name)?.GetValue(obj);
+            return value is bool && (bool)value;
+        }
+
+        // Dialog_GiveName's validation and naming methods are family (protected)
+        // overrides on the concrete dialog class, so they are looked up the same
+        // way the fields are and called exactly as the game's own OK button
+        // calls them. A missing method is an error, not a "no button": the
+        // bridge would be running a different game build than it knows.
+        private static bool InvokeBool(object obj, string name, string argument)
+        {
+            var value = Invoke(obj, name, argument);
+            return value is bool && (bool)value;
+        }
+
+        private static object Invoke(object obj, string name, string argument)
+        {
+            var method = FindMethod(obj.GetType(), name, 1);
+            if (method == null)
+                throw new MissingMethodException(obj.GetType().Name, name);
+            return method.Invoke(obj, new object[] { argument });
+        }
+
+        private static MethodInfo FindMethod(Type type, string name, int parameterCount)
+        {
+            for (var t = type; t != null; t = t.BaseType)
+            {
+                var method = t
+                    .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                    .FirstOrDefault(m => m.Name == name && m.GetParameters().Length == parameterCount);
+                if (method != null)
+                    return method;
+            }
+            return null;
         }
 
         public ApiResult<WindowCloseResultDto> CloseWindows(WindowCloseRequestDto request)
