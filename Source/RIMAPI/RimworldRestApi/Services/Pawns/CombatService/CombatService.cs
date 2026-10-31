@@ -233,8 +233,9 @@ namespace RIMAPI.Services
             {
                 return ApiResult<OrderResultDto>.Fail(
                     $"{pawn.LabelShort} cannot reach {destText} from {pawn.Position.x},{pawn.Position.z} at " +
-                    $"max_danger={DangerText(maxDanger)}: the only path runs through {walk.HazardText()}, " +
-                    "so the pawn would take damage on the way; pass max_danger=deadly to order it anyway");
+                    $"max_danger={DangerText(maxDanger)}: the walk the game would take runs through " +
+                    $"{walk.HazardText()}, so the pawn would take damage on the way; " +
+                    "pass max_danger=deadly to order it anyway");
             }
             Job job = JobMaker.MakeJob(JobDefOf.Goto, cell);
             if (!pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
@@ -293,8 +294,9 @@ namespace RIMAPI.Services
             {
                 return ApiResult<OrderResultDto>.Fail(
                     $"{pawn.LabelShort} cannot reach {destText} from {pawn.Position.x},{pawn.Position.z} at " +
-                    $"max_danger={DangerText(maxDanger)}: the only path runs through {walk.HazardText()}, " +
-                    "so the pawn would take damage on the way; pass max_danger=deadly to order it anyway");
+                    $"max_danger={DangerText(maxDanger)}: the walk the game would take runs through " +
+                    $"{walk.HazardText()}, so the pawn would take damage on the way; " +
+                    "pass max_danger=deadly to order it anyway");
             }
             JobDef def = HasRangedWeapon(pawn)
                 ? DefDatabase<JobDef>.GetNamedSilentFail(AttackStaticDef)
@@ -378,6 +380,10 @@ namespace RIMAPI.Services
                 for (int i = 0; i < nodes.Count; i++)
                 {
                     IntVec3 cell = nodes[i];
+                    // The pawn's own cell is where he already stands: a move
+                    // out of a burning room must not be refused for the fire
+                    // he is standing in.
+                    if (cell == pawn.Position) continue;
                     if (cell.ContainsStaticFire(pawn.Map))
                     {
                         report.Add("fire", Danger.Deadly);
@@ -405,19 +411,26 @@ namespace RIMAPI.Services
         }
 
         // ReachRefusal answers why the pawn cannot walk there at the tolerated
-        // danger, or null when it can. The second question tells a wall apart
-        // from a danger the caller did not tolerate: with Danger.Deadly the
-        // game's own check ignores heat and cold, so a path that exists then
-        // was refused by the danger, not by a wall (ticket #3209).
+        // danger, or null when it can. The pawn goes into the TraverseParms
+        // (ticket #3209): the map-level overload with a bare Danger builds
+        // TraverseParms without a pawn, and Region.Allows skips its danger
+        // check when the pawn is null, so the Danger.Some the check passed
+        // never applied to anything. With the pawn in the parms the game's own
+        // temperature check runs. The second question tells a wall apart from a
+        // danger the caller did not tolerate: with Danger.Deadly the danger
+        // check is off, so a path that exists then was refused by the heat.
         private static string ReachRefusal(Pawn pawn, LocalTargetInfo dest, PathEndMode endMode, Danger maxDanger, string destText)
         {
-            if (pawn.Map.reachability.CanReach(pawn.Position, dest, endMode, TraverseMode.ByPawn, maxDanger))
+            Map map = pawn.Map;
+            if (map.reachability.CanReach(pawn.Position, dest, endMode,
+                    TraverseParms.For(pawn, maxDanger, TraverseMode.ByPawn, false)))
             {
                 return null;
             }
             string from = $"{pawn.Position.x},{pawn.Position.z}";
             if (maxDanger < Danger.Deadly &&
-                pawn.Map.reachability.CanReach(pawn.Position, dest, endMode, TraverseMode.ByPawn, Danger.Deadly))
+                map.reachability.CanReach(pawn.Position, dest, endMode,
+                    TraverseParms.For(pawn, Danger.Deadly, TraverseMode.ByPawn, false)))
             {
                 return $"{pawn.LabelShort} cannot reach {destText} from {from} at " +
                     $"max_danger={DangerText(maxDanger)}: a path exists, but it crosses a room that is " +
