@@ -27,6 +27,11 @@ namespace RIMAPI.Services
     // the notifications filters on Class = "Message"; that is what the wait
     // report and the digest do, because the letters read already reports the
     // stack.
+    //
+    // The archive's bookkeeping is not answered at all (ticket #3428): a save
+    // notice, a SilentInput entry and the alert text another read carries are
+    // dropped before the limit applies, so `limit` counts entries a report can
+    // print.
     public class MessageService : IMessageService
     {
         // A run asks for the newest few; the cap keeps a wide `since` from
@@ -54,6 +59,12 @@ namespace RIMAPI.Services
                     if (dto == null)
                         continue;
                     if (since > 0 && dto.Tick < since)
+                        continue;
+                    // Dropped before the limit, not by the caller afterwards:
+                    // otherwise the newest `limit` entries are mostly saves and
+                    // idle notes and the answer carries fewer real lines
+                    // (ticket #3428).
+                    if (dto.Class == "Message" && ArchiveNoise.IsNoise(dto.Def, dto.Text))
                         continue;
                     entries.Add(dto);
                 }
