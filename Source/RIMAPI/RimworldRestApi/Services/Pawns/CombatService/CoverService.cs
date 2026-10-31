@@ -170,7 +170,7 @@ namespace RIMAPI.Services
                     {
                         IntVec3 c = new IntVec3(cell.X, 0, cell.Z);
                         cell.Reachable = map.reachability.CanReach(
-                            pawn.Position, c, PathEndMode.OnCell, TraverseMode.ByPawn, Danger.Some);
+                            pawn.Position, c, PathEndMode.OnCell, WalkParms.For(pawn, Danger.Some));
                     }
                 }
                 state.Cells = candidates;

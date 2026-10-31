@@ -416,28 +416,31 @@ namespace RIMAPI.Services
         // TraverseParms without a pawn, and Region.Allows skips its danger
         // check when the pawn is null, so the Danger.Some the check passed
         // never applied to anything. With the pawn in the parms the game's own
-        // temperature check runs. The second question tells a wall apart from a
-        // danger the caller did not tolerate: with Danger.Deadly the danger
-        // check is off, so a path that exists then was refused by the heat.
+        // temperature check runs, and a closed door is passable again: with a
+        // null pawn Region.Allows reads every door as a wall (ticket #3236), so
+        // the parms come from WalkParms.For. The second question tells a wall
+        // apart from a danger the caller did not tolerate: with Danger.Deadly the
+        // danger check is off, so a path that exists then was refused by the heat.
         private static string ReachRefusal(Pawn pawn, LocalTargetInfo dest, PathEndMode endMode, Danger maxDanger, string destText)
         {
             Map map = pawn.Map;
             if (map.reachability.CanReach(pawn.Position, dest, endMode,
-                    TraverseParms.For(pawn, maxDanger, TraverseMode.ByPawn, false)))
+                    WalkParms.For(pawn, maxDanger)))
             {
                 return null;
             }
             string from = $"{pawn.Position.x},{pawn.Position.z}";
             if (maxDanger < Danger.Deadly &&
                 map.reachability.CanReach(pawn.Position, dest, endMode,
-                    TraverseParms.For(pawn, Danger.Deadly, TraverseMode.ByPawn, false)))
+                    WalkParms.For(pawn, Danger.Deadly)))
             {
                 return $"{pawn.LabelShort} cannot reach {destText} from {from} at " +
                     $"max_danger={DangerText(maxDanger)}: a path exists, but it crosses a room that is " +
                     "deadly hot or cold for him; pass max_danger=deadly to order it anyway";
             }
             return $"{pawn.LabelShort} cannot reach {destText} from {from}: no walkable path there " +
-                "(a sealed room, a wall or water in the way), so the game would drop the job";
+                "(a sealed room, a wall, water or a closed door the pawn cannot open in the way), " +
+                "so the game would drop the job";
         }
 
         // TryParseDanger reads max_danger; empty keeps the old level, some.
