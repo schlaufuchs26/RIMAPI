@@ -6,7 +6,6 @@ using RIMAPI.Core;
 using RIMAPI.Models;
 using RimWorld;
 using RimWorld.Planet;
-using UnityEngine;
 using Verse;
 
 namespace RIMAPI.Helpers
@@ -45,7 +44,6 @@ namespace RIMAPI.Helpers
 
             // Food analysis
             critical.FoodSummary = GetResourcesFoodSummary(map, allItems);
-            var foodItems = allItems.Where(t => t.def.IsNutritionGivingIngestible).ToList();
 
             // Medicine analysis
             var medicineItems = allItems.Where(t => t.def.IsMedicine).ToList();
@@ -61,31 +59,46 @@ namespace RIMAPI.Helpers
 
         public static ResourcesFoodSummaryDto GetResourcesFoodSummary(Map map, List<Thing> allItems)
         {
-            ResourcesFoodSummaryDto summaryDto = new ResourcesFoodSummaryDto();
-
             var foodItems = allItems.Where(t => t.def.IsNutritionGivingIngestible).ToList();
-            summaryDto.FoodTotal = foodItems.Sum(t => t.stackCount);
+            foodItems.AddRange(GetFoodHeldInContainers(map));
 
-            float totalNutrition = map.resourceCounter.TotalHumanEdibleNutrition;
-            int colonistCount =
-                map.mapPawns.FreeColonistsSpawnedCount + map.mapPawns.PrisonersOfColonyCount;
-            int daysOfFood = Mathf.FloorToInt(totalNutrition / colonistCount);
-
-            summaryDto.TotalNutrition = foodItems.Sum(f => GetFoodNutrition(f));
-            var dto = new ResourcesFoodSummaryDto
+            // Every count below is in units, so meals + raw equals food_total and
+            // a stack of ten meals reads as ten. The old code filled a second DTO
+            // and returned the first, so meals and raw always read 0 while food
+            // sat in storage (#3202).
+            return new ResourcesFoodSummaryDto
             {
-                FoodTotal = allItems.Count(t => t.def.IsNutritionGivingIngestible),
+                FoodTotal = foodItems.Sum(t => t.stackCount),
                 TotalNutrition = map.resourceCounter.TotalHumanEdibleNutrition,
-                MealsCount = allItems.Count(t =>
-                    t.def.IsNutritionGivingIngestible && t.def.ingestible.IsMeal
-                ),
-                RawFoodCount = allItems.Count(t =>
-                    t.def.IsNutritionGivingIngestible && !t.def.ingestible.IsMeal
-                ),
-                RotStatusInfo = GetFoodRotStatusInfo(map, allItems),
+                MealsCount = foodItems
+                    .Where(t => t.def.ingestible.IsMeal)
+                    .Sum(t => t.stackCount),
+                RawFoodCount = foodItems
+                    .Where(t => !t.def.ingestible.IsMeal)
+                    .Sum(t => t.stackCount),
+                RotStatusInfo = GetFoodRotStatusInfo(map, foodItems),
             };
+        }
 
-            return summaryDto;
+        // Food on a shelf sits in the shelf's inner container instead of being
+        // spawned, so listerThings never sees it and a colony with a full shelf
+        // would still read "meals 0". A corpse in a grave is skipped: the colony
+        // cannot eat it, and graves would otherwise inflate the food line.
+        public static List<Thing> GetFoodHeldInContainers(Map map)
+        {
+            var food = new List<Thing>();
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                var holder = building as IThingHolder;
+                if (holder == null)
+                    continue;
+                foreach (var thing in holder.GetDirectlyHeldThings())
+                {
+                    if (thing.def.IsNutritionGivingIngestible && !(thing is Corpse))
+                        food.Add(thing);
+                }
+            }
+            return food;
         }
 
         public static RotStatusInfoDto GetFoodRotStatusInfo(Map map, List<Thing> allItems)
