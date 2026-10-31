@@ -266,6 +266,27 @@ namespace RIMAPI.Helpers
         {
             List<Thing> things = new List<Thing>();
 
+            // The sources below overlap: an item on a shelf keeps its position at
+            // the shelf's cell, so a shelf standing inside a stockpile zone is
+            // listed by the shelf's slot group and again by
+            // Zone_Stockpile.AllContainedThings. Adding both double-counts the
+            // stack (ticket #3232), so each thing id is taken once.
+            HashSet<int> seen = new HashSet<int>();
+            int duplicates = 0;
+
+            void Collect(IEnumerable<Thing> source)
+            {
+                foreach (Thing thing in source)
+                {
+                    if (thing == null)
+                        continue;
+                    if (seen.Add(thing.thingIDNumber))
+                        things.Add(thing);
+                    else
+                        duplicates++;
+                }
+            }
+
             List<Building> allBuildings = map.listerBuildings.allBuildingsColonist;
             LogApi.Info("allBuildings: " + allBuildings.Count);
             for (int i = 0; i < allBuildings.Count; i++)
@@ -278,7 +299,7 @@ namespace RIMAPI.Helpers
                     if (slotGroup == null)
                         continue;
                     Core.LogApi.Info($"add count: {slotGroup.HeldThings.Count()}");
-                    things.AddRange(slotGroup.HeldThings);
+                    Collect(slotGroup.HeldThings);
                     continue;
                 }
 
@@ -286,7 +307,7 @@ namespace RIMAPI.Helpers
                 IThingHolder bookcase = allBuildings[i] as IThingHolder;
                 if (bookcase != null)
                 {
-                    things.AddRange(bookcase.GetDirectlyHeldThings());
+                    Collect(bookcase.GetDirectlyHeldThings());
                     continue;
                 }
             }
@@ -298,12 +319,16 @@ namespace RIMAPI.Helpers
                 Zone_Stockpile stockpile = allZones[i] as Zone_Stockpile;
                 if (stockpile != null)
                 {
-                    things.AddRange(stockpile.AllContainedThings);
+                    Collect(stockpile.AllContainedThings);
                     LogApi.Info(
                         "stockpile.AllContainedThings: " + stockpile.AllContainedThings.Count()
                     );
                 }
             }
+            if (duplicates > 0)
+                LogApi.Info(
+                    $"storage items: {things.Count} unique, {duplicates} duplicate listing(s) skipped"
+                );
             return things;
         }
 
