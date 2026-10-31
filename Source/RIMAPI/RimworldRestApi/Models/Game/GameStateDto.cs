@@ -20,6 +20,12 @@ namespace RIMAPI.Models
         public bool HasMap { get; set; }    // Find.CurrentMap != null
         public bool IsLoading { get; set; } // a long event is running: reading a save, generating a world
         public string ColonyName { get; set; } // the player faction's name, the one the game shows
+
+        // The current map's clock offset in ticks (fox ticket #3412): the game
+        // adds the tile's whole-hour time zone to its own start tick, so a
+        // second settlement on another longitude reads hours off from the
+        // founding map. Null when the read could not name a map.
+        public int? ClockOffsetTicks { get; set; }
     }
 
     public class NewGameStartRequestDto

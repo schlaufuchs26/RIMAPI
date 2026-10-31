@@ -104,6 +104,25 @@ namespace RIMAPI.Helpers
                 {
                     state.ColonyName = "";
                 }
+                // #3412: the clock is the map's, not the colony's. The game
+                // adds the tile's whole-hour time zone to its start tick, so
+                // report the offset this map runs at instead of letting a
+                // caller assume the founding map's 06:00.
+                try
+                {
+                    Map map = Find.CurrentMap;
+                    if (map != null && Find.WorldGrid != null && Find.TickManager != null)
+                    {
+                        var longLat = Find.WorldGrid.LongLatOf(map.Tile);
+                        state.ClockOffsetTicks = ClockOffset.From(
+                            Find.TickManager.gameStartAbsTick,
+                            GenDate.TimeZoneAt(longLat.x));
+                    }
+                }
+                catch
+                {
+                    state.ClockOffsetTicks = null;
+                }
             }
             catch (Exception)
             {
