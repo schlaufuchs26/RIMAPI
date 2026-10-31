@@ -167,6 +167,13 @@ namespace RIMAPI.Models
         public bool IsDoorway { get; set; }
         public int OpenRoofCount { get; set; }
         public List<int> ContainedBedsIds { get; set; }
+
+        // ContainedPawnsIds is the humanlike pawns standing in the room (fox
+        // ticket #3225). The room read carries no cell list, so without it a
+        // caller cannot tell a hot empty workshop from the room a colonist
+        // stands in; a bed was the only occupancy signal. Animals are left out
+        // on purpose: a pen full of chickens is not a colonist's room.
+        public List<int> ContainedPawnsIds { get; set; }
     }
 
     public class MapRoomsDto

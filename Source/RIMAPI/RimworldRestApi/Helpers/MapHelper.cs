@@ -730,44 +730,40 @@ namespace RIMAPI.Helpers
             var mapRooms = new MapRoomsDto();
 #if RIMWORLD_1_5
             List<Room> allRooms = map.regionGrid.allRooms;
-            mapRooms = new MapRoomsDto
-            {
-                Rooms = allRooms
-                    .Select(s => new RoomDto
-                    {
-                        Id = s.ID,
-                        RoleLabel = s.GetRoomRoleLabel(),
-                        Temperature = s.Temperature,
-                        CellsCount = s.CellCount,
-                        TouchesMapEdge = s.TouchesMapEdge,
-                        IsPrisonCell = s.IsPrisonCell,
-                        IsDoorway = s.IsDoorway,
-                        ContainedBedsIds = s.ContainedBeds.Select(b => b.thingIDNumber).ToList(),
-                        OpenRoofCount = s.OpenRoofCount,
-                    })
-                    .ToList(),
-            };
 #elif RIMWORLD_1_6
             var allRooms = map.regionGrid.AllRooms;
+#endif
             mapRooms = new MapRoomsDto
             {
-                Rooms = allRooms
-                    .Select(s => new RoomDto
-                    {
-                        Id = s.ID,
-                        RoleLabel = s.GetRoomRoleLabel(),
-                        Temperature = s.Temperature,
-                        CellsCount = s.CellCount,
-                        TouchesMapEdge = s.TouchesMapEdge,
-                        IsPrisonCell = s.IsPrisonCell,
-                        IsDoorway = s.IsDoorway,
-                        ContainedBedsIds = s.ContainedBeds.Select(b => b.thingIDNumber).ToList(),
-                        OpenRoofCount = s.OpenRoofCount,
-                    })
-                    .ToList(),
+                Rooms = allRooms.Select(s => RoomDtoOf(s, map)).ToList(),
             };
-#endif
             return mapRooms;
+        }
+
+        /// <summary>
+        /// One room as the read reports it. The contained pawns are the
+        /// humanlike ones standing inside (fox ticket #3225): the read carries
+        /// no cell list, so a bed was the only occupancy signal, and a room
+        /// with a colonist and no bed was invisible to a caller.
+        /// </summary>
+        private static RoomDto RoomDtoOf(Room room, Map map)
+        {
+            return new RoomDto
+            {
+                Id = room.ID,
+                RoleLabel = room.GetRoomRoleLabel(),
+                Temperature = room.Temperature,
+                CellsCount = room.CellCount,
+                TouchesMapEdge = room.TouchesMapEdge,
+                IsPrisonCell = room.IsPrisonCell,
+                IsDoorway = room.IsDoorway,
+                ContainedBedsIds = room.ContainedBeds.Select(b => b.thingIDNumber).ToList(),
+                ContainedPawnsIds = map.mapPawns.AllPawnsSpawned
+                    .Where(p => p.RaceProps.Humanlike && p.GetRoom() == room)
+                    .Select(p => p.thingIDNumber)
+                    .ToList(),
+                OpenRoofCount = room.OpenRoofCount,
+            };
         }
 
         public static MapTerrainDto GetMapTerrain(int mapId)
