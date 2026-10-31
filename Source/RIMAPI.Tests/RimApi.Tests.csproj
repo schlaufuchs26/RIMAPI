@@ -33,5 +33,6 @@
          rather than copied. One line per covered file. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Debug\Logger.cs" Link="Linked\Logger.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Hooks\LetterOpenTargets.cs" Link="Linked\LetterOpenTargets.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
   </ItemGroup>
 </Project>

@@ -56,4 +56,27 @@ namespace Verse
     public class StaticConstructorOnStartup : Attribute
     {
     }
+
+    /// <summary>
+    /// The game's gas kinds. The values are the game's own (each gas sits 8
+    /// apart, so the type doubles as a mask bit); only the names matter here.
+    /// </summary>
+    public enum GasType
+    {
+        BlindSmoke = 0,
+        ToxGas = 8,
+        RotStink = 16,
+        DeadlifeDust = 24,
+    }
+
+    /// <summary>
+    /// The game's danger scale an order's max_danger uses; the walk scan puts
+    /// each hazard on it, so a test can read the level a gas costs.
+    /// </summary>
+    public enum Danger
+    {
+        None = 0,
+        Some = 1,
+        Deadly = 2,
+    }
 }

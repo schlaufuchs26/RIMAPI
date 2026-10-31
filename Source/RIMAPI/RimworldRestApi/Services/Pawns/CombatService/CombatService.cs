@@ -366,8 +366,9 @@ namespace RIMAPI.Services
         // InspectWalk finds the walk the game's own pathfinder would take and
         // scans its cells. The game's danger scale is the temperature of the
         // rooms the walk crosses (Region.DangerFor), so fire, toxic waste and
-        // tox gas read "none" there; they are named here at the level each
-        // costs: fire is deadly, polluted ground and tox gas some.
+        // the gases read "none" there; they are named here at the level each
+        // costs (GasHazard.All): fire is deadly, polluted ground, tox gas and
+        // rot stink some, blind smoke and deadlife dust none.
         private static WalkReport InspectWalk(Pawn pawn, LocalTargetInfo dest)
         {
             WalkReport report = new WalkReport();
@@ -378,6 +379,10 @@ namespace RIMAPI.Services
                 if (!path.Found) return report;
                 report.Cells = path.NodesLeftCount;
                 List<IntVec3> nodes = path.NodesReversed;
+                // Which gases matter is a property of the pawn, not of the
+                // cell, so it is asked once for the whole walk.
+                bool lungRot = CanCatchLungRot(pawn);
+                bool anomaly = ModsConfig.AnomalyActive;
                 for (int i = 0; i < nodes.Count; i++)
                 {
                     IntVec3 cell = nodes[i];
@@ -395,12 +400,18 @@ namespace RIMAPI.Services
                     }
                     // Gas is not part of the pollution grid: the game keeps a
                     // separate GasGrid with one density byte (0-255) per gas
-                    // and cell, and PawnGasEffectsTickInterval starts toxic
-                    // buildup on any density above zero (ticket #3248), so
-                    // every gassed cell counts, not only a thick cloud.
-                    if (GasUtility.GasDensity(cell, pawn.Map, GasType.ToxGas) > 0)
+                    // and cell, and PawnGasEffectsTickInterval reacts to any
+                    // density above zero, so every gassed cell counts, not
+                    // only a thick cloud. All four gases share that grid and
+                    // each costs something else (ticket #3248, #3283).
+                    for (int g = 0; g < GasHazard.All.Length; g++)
                     {
-                        report.Add("tox gas", Danger.Some);
+                        GasHazard gas = GasHazard.All[g];
+                        if (!gas.AppliesTo(lungRot, anomaly)) continue;
+                        if (GasUtility.GasDensity(cell, pawn.Map, gas.GasType) > 0)
+                        {
+                            report.Add(gas.Label, gas.Danger);
+                        }
                     }
                     Danger heat = cell.GetDangerFor(pawn, pawn.Map);
                     if (heat == Danger.Deadly)
@@ -418,6 +429,18 @@ namespace RIMAPI.Services
                 path.ReleaseToPool();
             }
             return report;
+        }
+
+        // CanCatchLungRot answers whether rot stink can harm this pawn: the game
+        // adds lung rot exposure only to animals and humanlikes that are not
+        // immune and still have a lung without a rot-protecting hediff on it
+        // (GasUtility.PawnGasEffectsTickInterval), so a mechanoid walking
+        // through a corpse pile is not warned about it.
+        private static bool CanCatchLungRot(Pawn pawn)
+        {
+            if (!pawn.RaceProps.Animal && !pawn.RaceProps.Humanlike) return false;
+            if (pawn.RaceProps.isImmuneToInfections) return false;
+            return GasUtility.GetLungRotAffectedBodyParts(pawn).Any();
         }
 
         // ReachRefusal answers why the pawn cannot walk there at the tolerated
