@@ -363,6 +363,149 @@ namespace RIMAPI.Services
             }
         }
 
+        // Hauling one named thing: the job the game's own haul work giver would
+        // queue, but for the thing and the destination the caller names. Without
+        // a destination the game picks the best store itself, which is what
+        // makes a burial work: a grave is a Building_Storage whose filter takes
+        // corpses, so the game's own job builder finds it. A corpse that stayed
+        // unburied for six days while Hauling ran at 1 had no lever at all
+        // (ticket #3136).
+        public ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null)
+                {
+                    return ApiResult.Fail($"Map with ID={mapId} not found");
+                }
+
+                Thing thing = map
+                    .listerThings.AllThings.FirstOrDefault(t => t.thingIDNumber == itemId);
+                if (thing == null)
+                {
+                    return ApiResult.Fail($"Thing with ID={itemId} not found");
+                }
+                if (!thing.Spawned)
+                {
+                    return ApiResult.Fail(
+                        $"Thing {itemId} ({thing.def.defName}) is not on the map"
+                    );
+                }
+
+                Pawn pawn;
+                if (pawnId > 0)
+                {
+                    pawn = map
+                        .listerThings.AllThings.OfType<Pawn>()
+                        .FirstOrDefault(p => p.thingIDNumber == pawnId);
+                    if (pawn == null)
+                    {
+                        return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                    }
+                }
+                else
+                {
+                    pawn = map.mapPawns.FreeColonists.FirstOrDefault(p =>
+                        !p.Downed && !p.Dead && p.jobs != null && !p.WorkTypeIsDisabled(WorkTypeDefOf.Hauling)
+                    );
+                    if (pawn == null)
+                    {
+                        return ApiResult.Fail(
+                            "No colonist can haul right now: none is up and able to do the Hauling work"
+                        );
+                    }
+                }
+                if (pawn.WorkTypeIsDisabled(WorkTypeDefOf.Hauling))
+                {
+                    return ApiResult.Fail(
+                        $"Pawn {pawn.thingIDNumber} cannot haul: the Hauling work type is switched off or the pawn is incapable"
+                    );
+                }
+
+                Job job;
+                if (destId > 0)
+                {
+                    Thing dest = map.listerThings.AllThings.FirstOrDefault(t =>
+                        t.thingIDNumber == destId
+                    );
+                    if (dest == null)
+                    {
+                        return ApiResult.Fail($"Destination with ID={destId} not found");
+                    }
+                    Building_Storage storage = dest as Building_Storage;
+                    if (storage == null)
+                    {
+                        return ApiResult.Fail(
+                            $"Thing {destId} is {dest.def.defName}, not a storage building; a destination is a grave, a shelf or another building that holds things"
+                        );
+                    }
+                    if (!storage.GetStoreSettings().AllowedToAccept(thing))
+                    {
+                        return ApiResult.Fail(
+                            $"{storage.LabelShort} does not accept {thing.LabelShort}: the storage filter or the item's own settings say no"
+                        );
+                    }
+                    try
+                    {
+                        job = HaulAIUtility.HaulToContainerJob(pawn, thing, storage);
+                    }
+                    catch (Exception ex)
+                    {
+                        return ApiResult.Fail(
+                            $"Failed to build the haul job for thing {itemId} into {destId}: "
+                                + $"{ex.GetType().Name}: {ex.Message}"
+                        );
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        job = HaulAIUtility.HaulToStorageJob(pawn, thing, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        return ApiResult.Fail(
+                            $"Failed to build the haul job for thing {itemId}: "
+                                + $"{ex.GetType().Name}: {ex.Message}"
+                        );
+                    }
+                    if (job == null)
+                    {
+                        return ApiResult.Fail(
+                            $"No storage on the map accepts {thing.LabelShort} ({thing.def.defName}), so the game has nowhere to haul it"
+                        );
+                    }
+                }
+
+                // playerForced is what makes the haul go through for a thing a
+                // colonist would otherwise leave alone: a forbidden corpse, or a
+                // store the colony would not pick by itself.
+                job.playerForced = true;
+                if (!pawn.jobs.TryTakeOrderedJob(job))
+                {
+                    return ApiResult.Fail($"Failed to assign job to pawn: {pawn.thingIDNumber}");
+                }
+                return ApiResult.Ok(
+                    new
+                    {
+                        pawn_id = pawn.thingIDNumber,
+                        pawn_label = pawn.LabelShort,
+                        item_id = thing.thingIDNumber,
+                        def_name = thing.def.defName,
+                        label = thing.LabelShort,
+                        dest_id = destId > 0 ? destId : 0,
+                        job = job.def.defName,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResult.Fail(ex.Message);
+            }
+        }
+
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
         {
             try

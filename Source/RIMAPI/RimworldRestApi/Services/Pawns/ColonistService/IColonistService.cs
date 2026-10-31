@@ -28,6 +28,8 @@ namespace RIMAPI.Services
 
         ApiResult MakeJobTend(int mapId, int pawnId, int patientId, int medicineId);
 
+        ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId);
+
         ApiResult<List<OutfitDto>> GetOutfits();
         ApiResult<ImageDto> GetPawnPortraitImage(
             int pawnId,

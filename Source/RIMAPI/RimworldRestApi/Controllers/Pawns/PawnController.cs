@@ -241,5 +241,25 @@ namespace RIMAPI.Controllers
             var result = _colonistService.MakeJobTend(mapId, pawnId, patientId, medicineId);
             await context.SendJsonResponse(result);
         }
+
+        // Hauling one named thing to one named place: item_id is the thing to
+        // carry, dest_id the storage building it goes into, pawn_id the hauler
+        // (0 or absent lets the mod pick a colonist that can haul). A corpse
+        // into a grave is the case this exists for (ticket #3136).
+        [Post("/api/v1/jobs/make/haul")]
+        [EndpointMetadata("Queue the game's own haul job for one thing and one destination")]
+        public async Task MakeJobHaul(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.HasParameter(context, "pawn_id")
+                ? RequestParser.GetIntParameter(context, "pawn_id")
+                : 0;
+            var itemId = RequestParser.GetIntParameter(context, "item_id");
+            var destId = RequestParser.HasParameter(context, "dest_id")
+                ? RequestParser.GetIntParameter(context, "dest_id")
+                : 0;
+            var result = _colonistService.MakeJobHaul(mapId, pawnId, itemId, destId);
+            await context.SendJsonResponse(result);
+        }
     }
 }
