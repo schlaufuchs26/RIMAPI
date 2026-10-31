@@ -29,6 +29,20 @@ namespace RIMAPI.Models
         public int Rotation { get; set; }
         public PositionDto Size { get; set; }
         public string Type { get; set; }
+
+        // Bed carries the settings of a humanlike bed and is null for every
+        // other building (ticket #3183): without it a caller cannot tell a
+        // prisoner bed from a colonist bed, which is the difference between an
+        // arrest that lands and one that is refused for "no prisoner bed".
+        public BedDto Bed { get; set; }
+    }
+
+    public class BedDto
+    {
+        public bool ForPrisoners { get; set; }
+        public bool ForSlaves { get; set; }
+        public bool Medical { get; set; }
+        public string Owner { get; set; }
     }
 
     public class PowerGeneratorInfoDto : BuildingDto

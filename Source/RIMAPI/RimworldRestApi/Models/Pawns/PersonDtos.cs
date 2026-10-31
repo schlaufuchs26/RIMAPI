@@ -56,6 +56,22 @@ namespace RIMAPI.Models
         public bool Drafted { get; set; }
     }
 
+    // What a rescue order did: the job the game got, the bed it carries the
+    // pawn to, and whether the pawn is a guest of the colony afterwards (a
+    // rescued pod survivor becomes one, a rescued colonist stays a colonist).
+    public class RescueResultDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public int RescuerId { get; set; }
+        public string Rescuer { get; set; }
+        public string Job { get; set; }
+        public int BedId { get; set; }
+        public string Bed { get; set; }
+        public bool BedForPrisoners { get; set; }
+        public bool Guest { get; set; }
+    }
+
     // The prisoner's interaction mode after the change, with the numbers a
     // recruit attempt works against.
     public class PrisonerModeResultDto

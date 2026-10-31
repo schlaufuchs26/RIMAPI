@@ -291,6 +291,23 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Rescue: the game's own job carries a downed non-enemy to a free bed,
+        // which is how a crashed pod survivor joins the colony (ticket #3183).
+        // rescuer_id is optional; without it the mod takes the nearest colonist
+        // who can reach him.
+        [Post("/api/v1/jobs/make/rescue")]
+        [EndpointMetadata("Queue the game's own rescue job: carry a downed pawn to a free bed")]
+        public async Task MakeJobRescue(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var rescuerId = RequestParser.HasParameter(context, "rescuer_id")
+                ? RequestParser.GetIntParameter(context, "rescuer_id")
+                : 0;
+            var result = _colonistService.MakeJobRescue(mapId, pawnId, rescuerId);
+            await context.SendJsonResponse(result);
+        }
+
         // The prisoner tab's interaction setting: recruit, reduce resistance,
         // release, maintain. mode takes the defName (AttemptRecruit) or the
         // label the game shows (recruit).

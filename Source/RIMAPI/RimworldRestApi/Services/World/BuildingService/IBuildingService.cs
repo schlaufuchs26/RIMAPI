@@ -7,5 +7,6 @@ namespace RIMAPI.Services
     {
         ApiResult<BuildingDto> GetBuildingInfo(int buildingId);
         ApiResult SetBuildingPower(int buildingId, bool powerOn);
+        ApiResult<BedDto> SetBedForPrisoners(int buildingId, bool forPrisoners);
     }
 }

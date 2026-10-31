@@ -22,6 +22,23 @@ namespace RIMAPI.Helpers
                     Z = building.Position.z,
                 },
                 Type = building.GetType().Name,
+                Bed = BedDtoOf(building),
+            };
+        }
+
+        // BedDtoOf describes a humanlike bed's settings and answers null for
+        // every other building, so a read can mark the beds that take a
+        // prisoner (ticket #3183).
+        public static BedDto BedDtoOf(Building building)
+        {
+            Building_Bed bed = building as Building_Bed;
+            if (bed == null || bed.def?.building == null || !bed.def.building.bed_humanlike) return null;
+            return new BedDto
+            {
+                ForPrisoners = bed.ForPrisoners,
+                ForSlaves = bed.ForSlaves,
+                Medical = bed.Medical,
+                Owner = bed.OwnersForReading?.FirstOrDefault()?.LabelShort,
             };
         }
 

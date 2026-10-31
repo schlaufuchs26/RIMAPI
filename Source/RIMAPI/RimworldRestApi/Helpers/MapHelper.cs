@@ -649,6 +649,7 @@ namespace RIMAPI.Helpers
                             Z = building.def.size.z
                         },
                         Type = building.GetType().Name,
+                        Bed = BuildingHelper.BedDtoOf(building),
                     }
                 );
             }

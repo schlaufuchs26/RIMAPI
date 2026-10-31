@@ -241,6 +241,18 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // A humanlike bed's "Set for prisoners" toggle: an arrest or a capture
+        // needs a bed with that flag, and nothing could set it (ticket #3183).
+        [Post("/api/v1/map/building/bed-for-prisoners")]
+        [EndpointMetadata("Set a humanlike bed for prisoners (the bed's own toggle)")]
+        public async Task SetBedForPrisoners(HttpListenerContext context)
+        {
+            var buildingId = RequestParser.GetIntParameter(context, "buildingId");
+            var forPrisoners = RequestParser.GetBooleanParameter(context, "forPrisoners");
+            var result = _buildingService.SetBedForPrisoners(buildingId, forPrisoners);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/weather/change")]
         [EndpointMetadata("Set weather on the map")]
         public async Task SetWeather(HttpListenerContext context)
