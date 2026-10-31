@@ -31,6 +31,26 @@ namespace RIMAPI.Helpers
                     .FirstOrDefault(p => p.ThingID.Equals(id.ToString()) || p.thingIDNumber == id);
         }
 
+        // RefusalStateOf collects the game's own state of one pawn for
+        // CombatRefusal, which stays free of game types so a test can state
+        // the rule (ticket #3433).
+        public static CombatRefusal.PawnState RefusalStateOf(Pawn pawn)
+        {
+            MentalStateDef mental = pawn.MentalStateDef;
+            return new CombatRefusal.PawnState
+            {
+                Dead = pawn.Dead,
+                Spawned = pawn.Spawned,
+                CarriedBy = pawn.CarriedBy != null ? pawn.CarriedBy.LabelShort : "",
+                Colonist = pawn.IsColonist,
+                MentalState = mental == null
+                    ? ""
+                    : CombatRefusal.MentalStateName(mental.label, mental.defName),
+                Downed = pawn.Downed,
+                HasDrafter = pawn.drafter != null,
+            };
+        }
+
         public static PawnDto PawnToDto(Pawn pawn)
         {
             return new PawnDto

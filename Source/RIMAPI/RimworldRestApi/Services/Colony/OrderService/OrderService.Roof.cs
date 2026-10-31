@@ -265,14 +265,13 @@ public partial class OrderService
                 refusal = $"Pawn with ID={pawnId} not found";
                 return new List<Pawn>();
             }
-            if (!pawn.IsColonistPlayerControlled)
+            // IsColonistPlayerControlled is false for a colonist in a mental
+            // state, so the membership test alone refused a builder with
+            // "not one of the colony's colonists" (ticket #3433).
+            string state = CombatRefusal.StateOf(PawnHelper.RefusalStateOf(pawn));
+            if (state != null)
             {
-                refusal = $"{pawn.LabelShort} is not one of the colony's colonists";
-                return new List<Pawn>();
-            }
-            if (pawn.Downed)
-            {
-                refusal = $"{pawn.LabelShort} is downed and cannot build";
+                refusal = $"{pawn.LabelShort} is {state}, so he cannot build";
                 return new List<Pawn>();
             }
             if (pawn.WorkTagIsDisabled(WorkTags.Constructing))

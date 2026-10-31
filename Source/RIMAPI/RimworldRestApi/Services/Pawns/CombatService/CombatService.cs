@@ -41,7 +41,11 @@ namespace RIMAPI.Services
                 foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
                 {
                     if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned) continue;
-                    bool colonist = pawn.IsColonistPlayerControlled;
+                    // IsColonist rather than IsColonistPlayerControlled: a
+                    // colonist in a mental state belongs to this list too, and
+                    // the game's player-controlled flag is false for him
+                    // (ticket #3433).
+                    bool colonist = pawn.IsColonist;
                     bool hostile = !colonist && IsHostile(pawn);
                     if (!colonist && !hostile) continue;
                     CombatantDto dto = CombatantOf(pawn, colonist ? "colonist" : KindOf(pawn), hostile);
@@ -92,21 +96,13 @@ namespace RIMAPI.Services
                         continue;
                     }
                     dto.Name = pawn.LabelShort;
-                    if (!pawn.IsColonistPlayerControlled)
+                    // The game's own IsColonistPlayerControlled also fails for
+                    // a colonist in a mental state or off the map, so each
+                    // condition is named instead (ticket #3433).
+                    string refusal = CombatRefusal.DraftNote(PawnHelper.RefusalStateOf(pawn));
+                    if (refusal != null)
                     {
-                        dto.Note = "not one of the colony's colonists";
-                        results.Add(dto);
-                        continue;
-                    }
-                    if (pawn.Downed || pawn.Dead)
-                    {
-                        dto.Note = "downed or dead, so he cannot be drafted";
-                        results.Add(dto);
-                        continue;
-                    }
-                    if (pawn.drafter == null)
-                    {
-                        dto.Note = "this pawn has no draft controller";
+                        dto.Note = refusal;
                         results.Add(dto);
                         continue;
                     }
@@ -139,18 +135,8 @@ namespace RIMAPI.Services
                 if (request == null) return ApiResult<OrderResultDto>.Fail("no order body");
                 Pawn pawn = PawnHelper.FindPawnById(request.PawnId);
                 if (pawn == null) return ApiResult<OrderResultDto>.Fail($"no pawn with id {request.PawnId}");
-                if (!pawn.IsColonistPlayerControlled)
-                {
-                    return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} is not one of the colony's colonists");
-                }
-                if (pawn.Downed || pawn.Dead)
-                {
-                    return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} is downed or dead, so he cannot act");
-                }
-                if (pawn.drafter == null)
-                {
-                    return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} has no draft controller");
-                }
+                string refusal = CombatRefusal.OrderRefusal(pawn.LabelShort, PawnHelper.RefusalStateOf(pawn));
+                if (refusal != null) return ApiResult<OrderResultDto>.Fail(refusal);
                 if (!pawn.Drafted)
                 {
                     return ApiResult<OrderResultDto>.Fail(
@@ -278,9 +264,18 @@ namespace RIMAPI.Services
             {
                 return ApiResult<OrderResultDto>.Fail($"{target.LabelShort} is dead or gone");
             }
-            if (target.IsColonistPlayerControlled)
+            // A colonist in a mental state is still a colonist (ticket #3433):
+            // the game's IsColonistPlayerControlled is false for him, and a
+            // berserk colonist is hostile to everyone, so this test must not
+            // fall through to the hostility check below.
+            if (target.IsColonist)
             {
-                return ApiResult<OrderResultDto>.Fail($"{target.LabelShort} is a colonist; the tool does not order friendly fire");
+                MentalStateDef state = target.MentalStateDef;
+                string mental = state == null
+                    ? ""
+                    : $" (in a mental state: {CombatRefusal.MentalStateName(state.label, state.defName)})";
+                return ApiResult<OrderResultDto>.Fail(
+                    $"{target.LabelShort} is a colonist{mental}; the tool does not order friendly fire");
             }
             if (!target.HostileTo(Faction.OfPlayer) && !IsManhunter(target))
             {
