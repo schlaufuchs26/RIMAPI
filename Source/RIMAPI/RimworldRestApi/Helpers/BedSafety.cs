@@ -14,8 +14,9 @@ namespace RIMAPI.Helpers
     {
         /// <summary>
         /// The room temperature at which a bed is no destination for a carried
-        /// patient; the same threshold the fox's digest uses for a hot room
-        /// (core/rimworld/digest.go, HotRoomC).
+        /// patient (fox ticket #3383). The fox's digest calls a room a danger at
+        /// 40 C already (core/rimworld/digest.go, HotRoomC); a bed is stricter
+        /// because the patient cannot walk out of it.
         /// </summary>
         public const float TooHotC = 50f;
 
