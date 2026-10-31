@@ -106,6 +106,13 @@ namespace RIMAPI.Models
         // without this the state is a fact with no cause.
         public string DownedReason { get; set; }
 
+        // MentalState names the mental state the pawn is in (fox, #3513):
+        // "tantrum", "berserk", "daze". Such a pawn cannot take a tend job, and
+        // the detailed read carried no flag for it, so the fox's doctor search
+        // offered him as a carer. Empty when he is in none; a state without a
+        // label reads by its defName.
+        public string MentalState { get; set; }
+
         // Capacities (0.0 to 1.0+)
         public float Consciousness { get; set; }
         public float Moving { get; set; }

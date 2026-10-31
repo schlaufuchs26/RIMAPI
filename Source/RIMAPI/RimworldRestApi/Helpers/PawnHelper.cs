@@ -192,6 +192,7 @@ namespace RIMAPI.Helpers
                         IsDead = pawn.Dead,
                         IsDowned = pawn.Downed,
                         DownedReason = DownedReason(pawn),
+                        MentalState = MentalStateOf(pawn),
                         Consciousness = CapacityOrZero(pawn, PawnCapacityDefOf.Consciousness),
                         Moving = CapacityOrZero(pawn, PawnCapacityDefOf.Moving),
                         Health = pawn.health?.summaryHealth?.SummaryHealthPercent ?? 1f,
@@ -271,6 +272,19 @@ namespace RIMAPI.Helpers
                 Core.LogApi.Error($"Error reading the downed reason of {pawn} - {ex}");
                 return "";
             }
+        }
+
+        // MentalStateOf names the mental state a pawn is in (fox, #3513): a
+        // colonist in a tantrum cannot take a tend job, so the fox's doctor
+        // search needs the flag. Empty for a pawn in no state, and the label
+        // reads ("tantrum") where the state has one.
+        public static string MentalStateOf(Pawn pawn)
+        {
+            if (pawn == null)
+                return "";
+
+            MentalStateDef state = pawn.MentalStateDef;
+            return state == null ? "" : CombatRefusal.MentalStateName(state.label, state.defName);
         }
 
         // DownedCause names the hediffs, genes or body parts that pull a
