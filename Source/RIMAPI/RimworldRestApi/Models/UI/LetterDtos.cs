@@ -14,6 +14,15 @@ namespace RIMAPI.Models
         // The first line of the letter's own body, so a caller can tell a raid
         // from a trade caravan without opening it.
         public string Text { get; set; }
+        // The whole body the game shows when the letter is opened: a
+        // paragraph or two. A wait that ends on a letter hands the run the
+        // offer itself, so deciding on it costs no second read (ticket #3491).
+        public string Body { get; set; }
+        // The labels the letter's dialog draws, in the order it draws them: a
+        // joiner offers Accept and Reject. Empty for a letter without a
+        // choice, so a caller reads the list, not the letter's type
+        // (ticket #3491).
+        public List<string> Options { get; set; } = new List<string>();
         // LetterDef defName: ThreatBig, ThreatSmall, PositiveEvent, NegativeEvent,
         // Quest, Event, ... A caller groups by this.
         public string Def { get; set; }

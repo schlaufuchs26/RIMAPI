@@ -88,6 +88,36 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryLetterFieldKeepsTheKeyTheToolReads()
+        {
+            // A wait that ends on a letter hands the run the whole letter, so
+            // the body and the choices a dialog offers are part of the
+            // contract the fox reads (ticket #3491). Renaming one has to be a
+            // deliberate edit of this list.
+            var expected = new[]
+            {
+                "body", "can_dismiss", "def", "id", "label", "new", "options",
+                "pauses", "quest_id", "text", "tick",
+            };
+
+            JObject json = Json(new LetterDto
+            {
+                Id = 3,
+                Label = "Visitors",
+                Text = "A group arrived.",
+                Body = "A group arrived.\n\nThey will stay for a few days.",
+                Def = "PositiveEvent",
+                Tick = 900,
+                CanDismiss = true,
+                Options = new List<string> { "Accept", "Reject" },
+            });
+
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal("A group arrived.\n\nThey will stay for a few days.", (string)json["body"]);
+            Assert.Equal(new[] { "Accept", "Reject" }, json["options"].Select(o => (string)o));
+        }
+
+        [Fact]
         public void EveryBillFieldKeepsTheKeyTheToolReads()
         {
             // A bill line the fox prints reads these keys. Adding or renaming a

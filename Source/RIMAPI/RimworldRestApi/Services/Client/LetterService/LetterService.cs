@@ -23,6 +23,9 @@ namespace RIMAPI.Services
         // answering the whole colony history over the bridge.
         private const int MaxArchivedLetters = 200;
         private const int DefaultArchivedLetters = 25;
+        // MaxBodyChars caps the body one letter answers with, so a long
+        // narrative letter cannot fill a wait report (ticket #3491).
+        private const int MaxBodyChars = 4000;
 
         public ApiResult<List<LetterDto>> ListLetters(bool markSeen)
         {
@@ -388,12 +391,41 @@ namespace RIMAPI.Services
                 Id = letter.ID,
                 Label = ArchiveText.FirstLine(letter.Label),
                 Text = ArchiveText.FirstLine(ArchiveText.LetterBody(letter)),
+                Body = BodyText(letter),
+                Options = ChoicesOf(letter),
                 Def = letter.def != null ? letter.def.defName : "",
                 Tick = letter.arrivalTick,
                 CanDismiss = letter.CanDismissWithRightClick,
                 QuestId = QuestIdOf(letter),
                 Pauses = PausesGame(letter),
             };
+        }
+
+        // BodyText is the whole body, not the first line: the wait report
+        // hands a run the letter it arrived on, and a first line of a quest
+        // offer says nothing about the reward (ticket #3491). A cap keeps a
+        // long narrative letter from dominating an answer.
+        private static string BodyText(Letter letter)
+        {
+            var body = ArchiveText.LetterBody(letter);
+            if (string.IsNullOrEmpty(body))
+                return "";
+            body = body.Replace("\r", "").Trim();
+            if (body.Length > MaxBodyChars)
+                body = body.Substring(0, MaxBodyChars) + "...";
+            return body;
+        }
+
+        // ChoicesOf is the options the letter's dialog would draw, read from
+        // the letter itself: opening a letter to look at it can throw the
+        // offer away (NewQuestLetter switches to the Quests tab), so this must
+        // not open anything (ticket #3491, see AnswerLetter).
+        private static List<string> ChoicesOf(Letter letter)
+        {
+            var choice = letter as ChoiceLetter;
+            if (choice == null || choice.Choices == null)
+                return new List<string>();
+            return OptionLabels(choice.Choices.Where(o => o != null).ToList());
         }
 
         // PausesGame is the game's own auto-pause rule for a letter, the test
