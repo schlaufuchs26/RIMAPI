@@ -321,6 +321,13 @@ namespace RIMAPI.Helpers
         // blighted or ready (fox ticket #3277). The cell counts are what tells
         // "nothing was ever sown here" from "it was sown and died" from "the
         // sowing work exists and nobody walks there".
+        //
+        // HarvestableCells is HarvestableNow, which starts at the plant's own
+        // harvestMinGrowth (0.65 for rice), while the game's growing-zone
+        // harvest (WorkGiver_GrowerHarvest) takes a plant only at
+        // PlantLifeStage.Mature, growth above 0.999 (fox ticket #3396). A field
+        // of rice at 0.73 therefore read "19 ready" and nobody touched it, so
+        // the zone also reports the mature count and the ripest plant.
         public static ZoneGrowingDto GetZoneGrowing(Zone_Growing zone, Map map)
         {
             if (zone == null)
@@ -357,6 +364,16 @@ namespace RIMAPI.Helpers
                 if (plant.HarvestableNow)
                 {
                     dto.HarvestableCells++;
+                }
+                // Mature is the game's own stage, not a growth threshold of
+                // ours: the zone harvest asks plant.LifeStage == Mature.
+                if (plant.LifeStage == PlantLifeStage.Mature)
+                {
+                    dto.MatureCells++;
+                }
+                if (plant.Growth > dto.MaxGrowth)
+                {
+                    dto.MaxGrowth = plant.Growth;
                 }
             }
 

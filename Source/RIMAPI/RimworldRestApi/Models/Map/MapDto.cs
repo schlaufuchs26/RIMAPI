@@ -162,6 +162,13 @@ namespace RIMAPI.Models
         public int DyingCells { get; set; }
         public int BlightedCells { get; set; }
         public int HarvestableCells { get; set; }
+        // MatureCells and MaxGrowth answer the question HarvestableCells
+        // cannot: whether the game will harvest this field now (fox ticket
+        // #3396). A growing zone is harvested only at PlantLifeStage.Mature,
+        // which starts above 0.999 growth, while HarvestableNow already counts
+        // a plant from its harvestMinGrowth (0.65 for rice).
+        public int MatureCells { get; set; }
+        public float MaxGrowth { get; set; }
     }
 
     // PlantDto is one plant on a rectangle (fox ticket #3277): the read a field
