@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
@@ -244,6 +245,19 @@ namespace RIMAPI.Services
 
                     if (thing == null)
                     {
+                        // The stored read lists a container's contents too, so an
+                        // id from it can name a corpse that sits in a grave
+                        // already or the wood delivered into a frame. Those
+                        // things are despawned, so a success here would claim a
+                        // flag changed that no one can see (ticket #3169).
+                        Thing holder = ThingHolderHelper.FindContainerHolding(map, thingId);
+                        if (holder != null)
+                        {
+                            warnings.Add(
+                                $"Thing {thingId} is inside {holder.def.defName} #{holder.thingIDNumber} ({holder.LabelShort}), not on the map, so its forbidden flag cannot be changed"
+                            );
+                            continue;
+                        }
                         warnings.Add($"Thing {thingId} not found");
                         continue;
                     }

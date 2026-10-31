@@ -392,7 +392,7 @@ namespace RIMAPI.Services
                     // the wood delivered into a frame. Those things are despawned
                     // and no haul can take them; say which container holds the
                     // thing instead of answering "not found" (ticket #3150).
-                    Thing holder = FindContainerHolding(map, itemId);
+                    Thing holder = ThingHolderHelper.FindContainerHolding(map, itemId);
                     if (holder != null)
                     {
                         return ApiResult.Fail(
@@ -641,52 +641,6 @@ namespace RIMAPI.Services
             {
                 return null;
             }
-        }
-
-        // FindContainerHolding is the container a despawned thing sits in: a
-        // grave's corpse, a frame's delivered wood, a shelf's inner owner. The
-        // stored read lists those things, so a write that takes an id from it
-        // has to name the container instead of answering "not found".
-        private static Thing FindContainerHolding(Map map, int thingId)
-        {
-            foreach (Building building in map.listerBuildings.allBuildingsColonist)
-            {
-                if (!(building is IThingHolder holder) || building is ISlotGroupParent)
-                {
-                    continue;
-                }
-                if (HoldsThing(holder, thingId, 0))
-                {
-                    return building;
-                }
-            }
-            return null;
-        }
-
-        private static bool HoldsThing(IThingHolder holder, int thingId, int depth)
-        {
-            if (depth > 4)
-            {
-                return false;
-            }
-            ThingOwner owner = holder.GetDirectlyHeldThings();
-            if (owner == null)
-            {
-                return false;
-            }
-            for (int i = 0; i < owner.Count; i++)
-            {
-                Thing held = owner[i];
-                if (held.thingIDNumber == thingId)
-                {
-                    return true;
-                }
-                if (held is IThingHolder nested && HoldsThing(nested, thingId, depth + 1))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
