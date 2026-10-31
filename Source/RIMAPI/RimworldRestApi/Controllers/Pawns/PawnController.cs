@@ -225,11 +225,13 @@ namespace RIMAPI.Controllers
         }
 
         // Tending a patient: pawn_id is the doctor, patient_id the colonist to
-        // treat, medicine_id optional (0 or absent means no medicine). The
-        // parameter is optional, and GetIntParameter throws on a missing one, so
-        // it is only read when the caller sent it (ticket #3117).
+        // treat, medicine_id optional (0 or absent means no medicine). The same
+        // id in both is self-tend, which the pawn's Health tab option allows
+        // (ticket #3247). The medicine parameter is optional, and
+        // GetIntParameter throws on a missing one, so it is only read when the
+        // caller sent it (ticket #3117).
         [Post("/api/v1/jobs/make/tend")]
-        [EndpointMetadata("Queue the game's own tend job: a doctor treats a patient")]
+        [EndpointMetadata("Queue the game's own tend job: a doctor treats a patient, or a pawn itself when its Self-tend option is on")]
         public async Task MakeJobTend(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);

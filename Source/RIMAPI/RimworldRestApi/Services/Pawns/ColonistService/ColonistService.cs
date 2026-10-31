@@ -300,23 +300,72 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail($"Patient with ID={patientId} not found");
                 }
-                if (patient == doctor)
+                // A pawn ordered to tend itself is the game's own self-tend:
+                // the Health tab's Self-tend option is what WorkGiver_TendSelf
+                // reads before it hands the job out, and JobDriver_TendPatient
+                // ends the job when the option is off. The tool refused this
+                // outright, so a colony of one watched a bleeding pawn die next
+                // to a shelf of medicine (ticket #3247).
+                bool selfTend = patient == doctor;
+                if (selfTend)
                 {
-                    return ApiResult.Fail(
-                        $"Pawn {pawnId} cannot be ordered to tend itself; self-tending is a trait, not a job"
-                    );
+                    if (doctor.playerSettings == null || !doctor.playerSettings.selfTend)
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot tend itself: the Self-tend option on its Health tab is off"
+                        );
+                    }
+                    if (!doctor.RaceProps.Humanlike)
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot tend itself: only humanlikes have a Self-tend option"
+                        );
+                    }
+                    if (!doctor.health.HasHediffsNeedingTend(false))
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} has nothing to tend: no hediff needs treatment right now"
+                        );
+                    }
+                    if (!doctor.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot tend itself: its Manipulation capacity is too low"
+                        );
+                    }
+                    if (doctor.InAggroMentalState)
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot tend itself while in an aggressive mental state"
+                        );
+                    }
+                    if (doctor.IsColonist && doctor.WorkTypeIsDisabled(WorkTypeDefOf.Doctor))
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot self-tend: the Doctor work type is switched off or the pawn is incapable"
+                        );
+                    }
+                    if (!map.reservationManager.CanReserve(doctor, doctor))
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot tend itself: its own reservation is held by something else"
+                        );
+                    }
                 }
-                if (doctor.WorkTypeIsDisabled(WorkTypeDefOf.Doctor))
+                else
                 {
-                    return ApiResult.Fail(
-                        $"Pawn {pawnId} cannot doctor: the Doctor work type is switched off or the pawn is incapable"
-                    );
-                }
-                if (!patient.health.HasHediffsNeedingTend(false))
-                {
-                    return ApiResult.Fail(
-                        $"Patient {patientId} has nothing to tend: no hediff needs treatment right now"
-                    );
+                    if (doctor.WorkTypeIsDisabled(WorkTypeDefOf.Doctor))
+                    {
+                        return ApiResult.Fail(
+                            $"Pawn {pawnId} cannot doctor: the Doctor work type is switched off or the pawn is incapable"
+                        );
+                    }
+                    if (!patient.health.HasHediffsNeedingTend(false))
+                    {
+                        return ApiResult.Fail(
+                            $"Patient {patientId} has nothing to tend: no hediff needs treatment right now"
+                        );
+                    }
                 }
 
                 Thing medicine = null;
