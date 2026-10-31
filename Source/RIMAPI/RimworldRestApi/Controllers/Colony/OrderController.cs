@@ -34,6 +34,19 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Fighting a named fire (fox ticket #3444): one colonist goes to one
+        // burning cell, or to the fires inside the Home area, through the game's
+        // own BeatFire job, instead of the Firefighter work priority that sends
+        // him to whatever fire the game picks.
+        [Post("/api/v1/order/firefight")]
+        [EndpointMetadata("Put a colonist on a named burning cell or on the fires inside the Home area through the game's own BeatFire job")]
+        public async Task Firefight(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<FirefightRequestDto>();
+            var result = _orderService.Firefight(body);
+            await context.SendJsonResponse(result);
+        }
+
         // Roofing a rectangle (fox ticket #3418): a sealed room stays at the
         // outside temperature until a constructor builds the roof, so the order
         // marks the Build roof area and queues the game's own build-roof job.

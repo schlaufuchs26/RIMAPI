@@ -47,6 +47,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TerrainRect.cs" Link="Linked\TerrainRect.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RoofTiling.cs" Link="Linked\RoofTiling.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FirefightPlan.cs" Link="Linked\FirefightPlan.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogState.cs" Link="Linked\JobLogState.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\IdeoDtos.cs" Link="Linked\IdeoDtos.cs" />
