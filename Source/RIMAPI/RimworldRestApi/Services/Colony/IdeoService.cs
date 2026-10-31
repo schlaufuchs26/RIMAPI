@@ -278,26 +278,67 @@ namespace RIMAPI.Services
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
-                // The assignments are built exactly as the Begin dialog builds
-                // them, with no selected pawn: the dialog opened from the
-                // ideoligion window has none either, and a selected pawn that
-                // does not fit any role makes the game's Setup throw.
-                RitualRoleAssignments assignments = Dialog_BeginRitual.CreateRitualRoleAssignments(
-                    ritual, target, map, null, null, null, null);
-                List<RitualRole> roles = ritual.behavior.def != null ? ritual.behavior.def.roles : null;
-                bool hasRoles = roles != null && roles.Count > 0;
+                // The roster has to be the Begin dialog's own: CreateRitualRoleAssignments
+                // only lists the candidates, and FillPawns (which the dialog calls
+                // from PostOpen) is what assigns them. Without that second call the
+                // speech's required "speaker" role stays empty, and the game's own
+                // CreateLordJob reads it with First() and throws a bare LINQ error
+                // instead of starting (ticket #3290).
+                RitualStartProbe probe;
+                try
+                {
+                    probe = ProbeRitual(ritual, target, map, organizer, obligation);
+                }
+                catch (Exception ex)
+                {
+                    result.Reason = $"{ritual.Label} did not start: the game could not assemble its "
+                        + $"roles at that place ({ex.Message}).";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+                RitualRoleAssignments assignments = probe.Roster;
                 if (assignments == null)
                 {
                     result.Reason = "the game could not assemble the ritual's roles";
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
-                if (assignments == null)
+                // The dialog's own verdict, in its own words: a missing required
+                // role, no spectator, a participant who cannot come. These are
+                // what the Begin button would name instead of letting the start
+                // run into the behavior worker.
+                List<string> issues = probe.Issues();
+                if (issues.Count > 0)
                 {
-                    result.Reason = "the game could not assemble the ritual's roles";
+                    result.Reason = string.Join(" ", issues);
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+                // TryExecuteOn repeats these two checks and gives up silently;
+                // asking them first turns that silence into a reason.
+                string blocked = ritual.behavior.CanStartRitualNow(
+                    target, ritual, null, assignments.ForcedRolesForReading);
+                if (string.IsNullOrEmpty(blocked) && !ritual.behavior.CanExecuteOn(target, obligation))
+                {
+                    blocked = "the ritual's target filter does not accept this place for its obligation";
+                }
+                if (!string.IsNullOrEmpty(blocked))
+                {
+                    result.Reason = blocked;
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
-                ritual.behavior.TryExecuteOn(target, organizer, ritual, obligation, assignments, true);
+                List<RitualRole> roles = ritual.behavior.def != null ? ritual.behavior.def.roles : null;
+                try
+                {
+                    ritual.behavior.TryExecuteOn(target, organizer, ritual, obligation, assignments, true);
+                }
+                catch (Exception ex)
+                {
+                    // Last resort: the roster was filled and the dialog named no
+                    // blocking issue, so the behavior worker itself failed. Say
+                    // that instead of answering with a bare .NET stack.
+                    result.Reason = $"{ritual.Label} did not start: the game threw while beginning it "
+                        + $"({ex.Message}); the dialog named no missing role or place.";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
 
                 // TryExecuteOn returns nothing and gives up silently, so the
                 // answer comes from the game state: a LordJob_Ritual of this
@@ -336,6 +377,52 @@ namespace RIMAPI.Services
             {
                 return ApiResult<RitualStartResultDto>.Fail(ex.ToString());
             }
+        }
+
+        // RitualStartProbe is the Begin dialog used headless: its constructor
+        // builds the roster with the game's own CreateRitualRoleAssignments,
+        // PostOpen runs FillPawns exactly as opening the dialog does, and
+        // BlockingIssues names in the dialog's own words what still stands in
+        // the way (no spectator, a required role without a pawn, a participant
+        // who cannot come). TryExecuteOn with an unfilled roster is what threw
+        // "Sequence contains no elements" for the leader's speech (ticket #3290).
+        private sealed class RitualStartProbe : Dialog_BeginRitual
+        {
+            public RitualStartProbe(
+                Precept_Ritual ritual, TargetInfo target, Map map, Pawn organizer, RitualObligation obligation)
+                : base(ritual.Label, ritual, target, map, null, organizer, obligation)
+            {
+            }
+
+            public RitualRoleAssignments Roster => assignments;
+
+            public List<string> Issues()
+            {
+                try
+                {
+                    return BlockingIssues().ToList();
+                }
+                catch (Exception ex)
+                {
+                    // A third-party outcome comp or target filter may throw on a
+                    // roster it did not expect; the start still gets a sentence.
+                    return new List<string>
+                    {
+                        "the game could not judge this ritual's requirements: " + ex.Message,
+                    };
+                }
+            }
+        }
+
+        // ProbeRitual builds the roster and the blocking issues for a start at
+        // target. PostOpen is what the dialog itself calls when it opens, and it
+        // is the only place FillPawns runs.
+        private static RitualStartProbe ProbeRitual(
+            Precept_Ritual ritual, TargetInfo target, Map map, Pawn organizer, RitualObligation obligation)
+        {
+            RitualStartProbe probe = new RitualStartProbe(ritual, target, map, organizer, obligation);
+            probe.PostOpen();
+            return probe;
         }
 
         // Rituals are precepts of the ideoligion; there is no separate list.
@@ -449,6 +536,22 @@ namespace RIMAPI.Services
                 // A third-party behavior worker can throw on a target it did not
                 // expect; the read still lists the ritual, with that reason.
                 why = "the game could not judge this ritual at that target: " + ex.Message;
+            }
+            // The read has to agree with what a start then does: the dialog's
+            // blocking issues (no spectator, a required role the roster could
+            // not fill, a participant who cannot come) are what stops the
+            // start, so they are what the entry reports (ticket #3290).
+            if (string.IsNullOrEmpty(why) && map != null && ritual.behavior?.def != null)
+            {
+                try
+                {
+                    List<string> issues = ProbeRitual(ritual, target, map, organizer, first).Issues();
+                    if (issues.Count > 0) why = string.Join(" ", issues);
+                }
+                catch (Exception ex)
+                {
+                    why = "the game could not assemble this ritual's roles at that place: " + ex.Message;
+                }
             }
             dto.Ready = string.IsNullOrEmpty(why);
             dto.Reason = why ?? "";
