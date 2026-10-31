@@ -364,9 +364,9 @@ namespace RIMAPI.Services
 
         // InspectWalk finds the walk the game's own pathfinder would take and
         // scans its cells. The game's danger scale is the temperature of the
-        // rooms the walk crosses (Region.DangerFor), so fire and toxic waste
-        // read "none" there; they are named here at the level each costs: fire
-        // is deadly, polluted ground some.
+        // rooms the walk crosses (Region.DangerFor), so fire, toxic waste and
+        // tox gas read "none" there; they are named here at the level each
+        // costs: fire is deadly, polluted ground and tox gas some.
         private static WalkReport InspectWalk(Pawn pawn, LocalTargetInfo dest)
         {
             WalkReport report = new WalkReport();
@@ -391,6 +391,15 @@ namespace RIMAPI.Services
                     if (pawn.Map.pollutionGrid.IsPolluted(cell))
                     {
                         report.Add("toxic waste", Danger.Some);
+                    }
+                    // Gas is not part of the pollution grid: the game keeps a
+                    // separate GasGrid with one density byte (0-255) per gas
+                    // and cell, and PawnGasEffectsTickInterval starts toxic
+                    // buildup on any density above zero (ticket #3248), so
+                    // every gassed cell counts, not only a thick cloud.
+                    if (GasUtility.GasDensity(cell, pawn.Map, GasType.ToxGas) > 0)
+                    {
+                        report.Add("tox gas", Danger.Some);
                     }
                     Danger heat = cell.GetDangerFor(pawn, pawn.Map);
                     if (heat == Danger.Deadly)
