@@ -166,6 +166,19 @@ namespace RIMAPI.Services
             }
         }
 
+        /// <summary>
+        /// One line for a failure inside a single cell: the exception's type and
+        /// message plus the method that threw it, which is what names the null
+        /// field a bare "Object reference not set" hides (fox ticket #3178).
+        /// </summary>
+        private static string Describe(string step, Exception ex)
+        {
+            string where = ex.TargetSite != null
+                ? $" in {ex.TargetSite.DeclaringType?.Name}.{ex.TargetSite.Name}"
+                : "";
+            return $"Exception during {step}: {ex.GetType().Name}: {ex.Message}{where}";
+        }
+
         public ApiResult<PlaceResultDto> PlaceBlueprints(PasteAreaRequestDto request)
         {            try
             {
