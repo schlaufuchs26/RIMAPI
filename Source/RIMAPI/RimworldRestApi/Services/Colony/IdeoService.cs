@@ -242,6 +242,9 @@ namespace RIMAPI.Services
                 // target it was created for is the one that pays it off.
                 RitualObligation obligation = PickObligation(ritual, target, targetGiven);
                 if (obligation != null && !targetGiven) target = obligation.FirstValidTarget;
+                // Without a named place, ask the ritual's own target filter, the
+                // same call the ideo window makes when it opens the Begin dialog.
+                if (!target.IsValid) target = BestTarget(ritual, organizer ?? RoleHolder(ritual));
 
                 RitualStartResultDto result = new RitualStartResultDto
                 {
@@ -257,16 +260,16 @@ namespace RIMAPI.Services
                     result.OrganizerId = organizer.thingIDNumber;
                 }
 
-                string why = ritual.behavior.CanStartRitualNow(target, ritual, null, null);
-                if (!string.IsNullOrEmpty(why))
-                {
-                    result.Reason = why;
-                    return ApiResult<RitualStartResultDto>.Ok(result);
-                }
                 if (!target.IsValid)
                 {
                     result.Reason = "no target: pass the cell the ritual is held at (x1/z1) or the building "
                         + "or spot (target_id), as the Begin dialog asks";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+                string why = ritual.behavior.CanStartRitualNow(target, ritual, null, null);
+                if (!string.IsNullOrEmpty(why))
+                {
+                    result.Reason = why;
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
@@ -378,7 +381,28 @@ namespace RIMAPI.Services
                 : BestTarget(ritual, RoleHolder(ritual) ?? colonists.FirstOrDefault());
             dto.Target = TargetRef(target);
 
-            string why = ritual.behavior?.CanStartRitualNow(target, ritual, null, null);
+            // CanStartRitualNow is not safe without a target: the speech worker
+            // dereferences it, and the game's own ideo window only asks once the
+            // player picked a place. So a ritual without a target reads as not
+            // ready and says which field supplies the place.
+            if (!target.IsValid)
+            {
+                dto.Ready = false;
+                dto.Reason = "no target yet: the game picks the place at Begin, so pass the cell (x1/z1) "
+                    + "or the thing (target_id) the ritual is held at";
+                return dto;
+            }
+            string why = null;
+            try
+            {
+                why = ritual.behavior?.CanStartRitualNow(target, ritual, null, null);
+            }
+            catch (Exception ex)
+            {
+                // A third-party behavior worker can throw on a target it did not
+                // expect; the read still lists the ritual, with that reason.
+                why = "the game could not judge this ritual at that target: " + ex.Message;
+            }
             dto.Ready = string.IsNullOrEmpty(why);
             dto.Reason = why ?? "";
             return dto;
