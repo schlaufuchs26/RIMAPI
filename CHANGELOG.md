@@ -2,7 +2,7 @@
 ## [Unreleased]
 
 ### Fixed
-- **Error log:** `LogApi` now writes every ERROR and CRITICAL to `Player.log` whatever the settings say; `IsLogging` (off by default) only gates the chatty DEBUG/INFO/WARNING levels. Before this, a service's catch block logged nothing at all, so a NullReferenceException left no trace and the API answer's `ex.Message` was the only hint. Error sites now log the whole exception (`{ex}`, with stack trace) instead of `ex.Message`, and one catch block in `MapHelper` no longer logs the same failure twice.
+- **Error log:** `LogApi` now writes every ERROR and CRITICAL to `Player.log` whatever the settings say; `IsLogging` (off by default) only gates the chatty DEBUG/INFO/WARNING levels. Before this, a service's catch block logged nothing at all, so a NullReferenceException left no trace and the API answer's `ex.Message` was the only hint. Error sites now log the whole exception (`{ex}`, with stack trace) instead of `ex.Message`, one catch block in `MapHelper` no longer logs the same failure twice, and the object overload writes the same `[RIMAPI | LEVEL]` prefix as the string one, so every error line is greppable as `[RIMAPI | ERROR]`.
 - **Farm summary growth:** `growth_progress_average` is now the mean of the plants' growth (0..1, the game's own scale). It used to be the sum over every plant divided by the number of crop types, so a half-grown field reported 116 %. Each crop's `growth_progress_average` and `days_until_harvest` were wrong the same way (the latter divided the missing growth by `growDays` instead of multiplying). New fields: `max_growth_progress`, `total_harvestable_plants` and `days_until_next_harvest` on the summary, `max_growth_progress` per crop.
 
 ## v1.10.0

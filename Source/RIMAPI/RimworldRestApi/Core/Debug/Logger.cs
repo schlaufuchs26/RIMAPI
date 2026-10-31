@@ -147,32 +147,13 @@ namespace RIMAPI.Core
 
         /// <summary>
         /// Core logging method for object input.
-        /// Converts object to string and applies the same severity filtering as the string overload.
+        /// Converts the object to text and hands it to the string overload, so both
+        /// paths write the same "[RIMAPI | LEVEL] ..." prefix (an exception's
+        /// ToString carries its type and stack trace).
         /// </summary>
         public static void Message(object text, LoggingLevels messageLevel = LoggingLevels.INFO)
         {
-            if (!ShouldWrite(messageLevel))
-                return;
-
-            string message = "[RIMAPI] " + text.ToString();
-
-            // Route to appropriate Verse.Log method
-            switch (messageLevel)
-            {
-                case LoggingLevels.DEBUG:
-                case LoggingLevels.INFO:
-                    Log.Message(message);
-                    break;
-
-                case LoggingLevels.WARNING:
-                    Log.Warning(message);
-                    break;
-
-                case LoggingLevels.ERROR:
-                case LoggingLevels.CRITICAL:
-                    Log.Error(message);
-                    break;
-            }
+            Message(text == null ? "null" : text.ToString(), messageLevel);
         }
     }
 }
