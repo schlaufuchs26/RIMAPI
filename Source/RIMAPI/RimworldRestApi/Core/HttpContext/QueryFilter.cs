@@ -18,6 +18,12 @@ namespace RIMAPI.Core
         /// <summary>
         /// Applies filters from the query string to the provided collection.
         /// </summary>
+        /// <remarks>
+        /// The filter shares the query string with the routes, so a parameter the
+        /// route itself reads (limit, since, archive, ...) names no field of T and
+        /// is not a filter: applying it would drop every item and answer an empty
+        /// list (ticket #3439, the archive reads answered nothing with a limit).
+        /// </remarks>
         public static IEnumerable<T> Apply<T>(IEnumerable<T> items, NameValueCollection query)
         {
             if (items == null || query == null || query.Count == 0)
@@ -29,12 +35,28 @@ namespace RIMAPI.Core
             {
                 if (string.IsNullOrEmpty(key) || IsReservedKey(key))
                     continue;
+                if (!AddressesAField(typeof(T), key))
+                    continue;
 
                 var value = query[key];
                 filteredItems = filteredItems.Where(item => Matches(item, key, value)).ToList();
             }
 
             return filteredItems;
+        }
+
+        /// <summary>
+        /// Says whether a query key names a field of the item type. For a nested
+        /// key the part before the first dot decides (stat_base.market_value),
+        /// because that is the property Matches walks into.
+        /// </summary>
+        private static bool AddressesAField(Type itemType, string key)
+        {
+            if (itemType == null || string.IsNullOrEmpty(key))
+                return false;
+            var dot = key.IndexOf('.');
+            var head = dot >= 0 ? key.Substring(0, dot) : key;
+            return GetPropertyByJsonName(itemType, head) != null;
         }
 
         /// <summary>
@@ -182,7 +204,14 @@ namespace RIMAPI.Core
 
         private static PropertyInfo GetPropertyByJsonName(object item, string jsonName)
         {
-            var properties = item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            if (item == null)
+                return null;
+            return GetPropertyByJsonName(item.GetType(), jsonName);
+        }
+
+        private static PropertyInfo GetPropertyByJsonName(Type itemType, string jsonName)
+        {
+            var properties = itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             
             // Try exact snake_case match first
             foreach (var prop in properties)

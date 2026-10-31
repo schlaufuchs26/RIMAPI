@@ -60,6 +60,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\SnakeCaseContractResolver.cs" Link="Linked\SnakeCaseContractResolver.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\QueryFilter.cs" Link="Linked\QueryFilter.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Common\PositionDto.cs" Link="Linked\PositionDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BillDto.cs" Link="Linked\BillDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BuildingDto.cs" Link="Linked\BuildingDto.cs" />
