@@ -212,8 +212,11 @@ namespace RIMAPI.Services
                 // Every cell is asked first and only a cell the game accepts gets
                 // a blueprint. PlaceBlueprintForBuild itself does not check, so a
                 // marsh cell, a cell holding a wall or a cell outside the map
-                // used to be dropped without a word (fox ticket #3089).
-                void Refuse(BuildableDef buildable, IntVec3 pos, string reason)
+                // used to be dropped without a word (fox ticket #3089). The
+                // source says which step refused, because a caller that adds a
+                // ground hint to every refusal sends the reader at the wrong
+                // thing when the def has no blueprint at all (fox ticket #3264).
+                void Refuse(BuildableDef buildable, IntVec3 pos, string reason, string source)
                 {
                     result.Dropped.Add(new PlaceRefusalDto
                     {
@@ -221,6 +224,7 @@ namespace RIMAPI.Services
                         X = pos.x,
                         Z = pos.z,
                         Reason = reason,
+                        Source = source,
                     });
                 }
 
@@ -241,12 +245,12 @@ namespace RIMAPI.Services
                     }
                     catch (Exception ex)
                     {
-                        Refuse(buildable, pos, Describe("the placement check", ex));
+                        Refuse(buildable, pos, Describe("the placement check", ex), "exception");
                         return;
                     }
                     if (!report.Accepted)
                     {
-                        Refuse(buildable, pos, report.Reason);
+                        Refuse(buildable, pos, report.Reason, "placement");
                         return;
                     }
 
@@ -257,7 +261,7 @@ namespace RIMAPI.Services
                     }
                     catch (Exception ex)
                     {
-                        Refuse(buildable, pos, Describe("placing the blueprint", ex));
+                        Refuse(buildable, pos, Describe("placing the blueprint", ex), "exception");
                     }
                 }
 
@@ -273,6 +277,7 @@ namespace RIMAPI.Services
                             X = pos.x,
                             Z = pos.z,
                             Reason = "OutOfBounds",
+                            Source = "bounds",
                         });
                         continue;
                     }
@@ -286,13 +291,14 @@ namespace RIMAPI.Services
                             X = pos.x,
                             Z = pos.z,
                             Reason = "UnknownTerrainDef",
+                            Source = "unknown_def",
                         });
                         continue;
                     }
 
                     if (terrainDef.blueprintDef == null)
                     {
-                        Refuse(terrainDef, pos, NoBlueprintReason(terrainDef));
+                        Refuse(terrainDef, pos, NoBlueprintReason(terrainDef), "no_blueprint");
                         continue;
                     }
 
@@ -313,6 +319,7 @@ namespace RIMAPI.Services
                             X = pos.x,
                             Z = pos.z,
                             Reason = "OutOfBounds",
+                            Source = "bounds",
                         });
                         continue;
                     }
@@ -327,6 +334,7 @@ namespace RIMAPI.Services
                             X = pos.x,
                             Z = pos.z,
                             Reason = "UnknownThingDef",
+                            Source = "unknown_def",
                         });
                         continue;
                     }
@@ -339,7 +347,7 @@ namespace RIMAPI.Services
 
                     if (thingDef.blueprintDef == null)
                     {
-                        Refuse(thingDef, pos, NoBlueprintReason(thingDef));
+                        Refuse(thingDef, pos, NoBlueprintReason(thingDef), "no_blueprint");
                         continue;
                     }
 

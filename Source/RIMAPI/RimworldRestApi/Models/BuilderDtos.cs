@@ -76,6 +76,17 @@ namespace RIMAPI.Models
 
         /// <summary>The game's own acceptance reason, e.g. "CannotPlaceOnTerrain".</summary>
         public string Reason { get; set; }
+
+        /// <summary>
+        /// Where the refusal came from, so a caller can tell the game's own
+        /// placement verdict from a def-level refusal (fox ticket #3264):
+        /// "placement" (GenConstruct.CanPlaceBlueprintAt refused the cell),
+        /// "no_blueprint" (the def has no blueprint at all, e.g. a sculpture),
+        /// "bounds" (the cell lies outside the map), "unknown_def" (the name
+        /// resolves to nothing) or "exception" (a step threw). Empty in a cancel
+        /// answer, where nothing was placed to begin with.
+        /// </summary>
+        public string Source { get; set; }
     }
 
     /// <summary>
