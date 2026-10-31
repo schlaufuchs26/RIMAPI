@@ -163,6 +163,11 @@ namespace RIMAPI.Helpers
                     MoodInfo = GetMoodInfo(pawn),
                     MedicalInfo = new MedicalInfoDto
                     {
+                        IsDead = pawn.Dead,
+                        IsDowned = pawn.Downed,
+                        DownedReason = DownedReason(pawn),
+                        Consciousness = CapacityOrZero(pawn, PawnCapacityDefOf.Consciousness),
+                        Moving = CapacityOrZero(pawn, PawnCapacityDefOf.Moving),
                         Health = pawn.health?.summaryHealth?.SummaryHealthPercent ?? 1f,
                         Hediffs = GetHediffs(pawn),
                         MedicalPolicyId = (int)(
@@ -178,6 +183,113 @@ namespace RIMAPI.Helpers
                 Core.LogApi.Error($"Error converting pawn to DTO - {ex}");
                 return null;
             }
+        }
+
+        // DownedReason says why a downed pawn is down (ticket #3288). The state
+        // itself is only Verse.Pawn_HealthTracker.healthState, so a colonist
+        // who lies in bed at 100% summary health reads as "DOWNED" with no
+        // cause; this names the condition behind it. The checks follow
+        // ShouldBeDowned (no consciousness to stay awake, no Moving capacity,
+        // pain shock, a life stage that is always downed) plus the two
+        // force-downed states the game sets itself (deathrest, a mental
+        // state). Empty for a pawn that is not downed.
+        public static string DownedReason(Pawn pawn)
+        {
+            if (pawn == null || pawn.Dead || pawn.health == null || !pawn.Downed)
+                return "";
+
+            try
+            {
+                var parts = new List<string>();
+                if (pawn.InMentalState && pawn.MentalStateDef != null)
+                    parts.Add("mental state " + pawn.MentalStateDef.defName);
+
+                if (ModsConfig.BiotechActive && pawn.health.hediffSet.HasHediff(HediffDefOf.Deathrest))
+                    parts.Add("deathrest");
+
+                Hediff malnutrition = pawn.health.hediffSet.GetFirstHediffOfDef(HediffDefOf.Malnutrition);
+                if (malnutrition != null)
+                    parts.Add("malnutrition severity " + malnutrition.Severity.ToString("0.00"));
+
+                float consciousness = CapacityOrZero(pawn, PawnCapacityDefOf.Consciousness);
+                if (consciousness < 0.3f)
+                    parts.Add(
+                        $"consciousness {Percent(consciousness)}{DownedCause(pawn, PawnCapacityDefOf.Consciousness)}"
+                    );
+                else if (
+                    !pawn.RaceProps.doesntMove
+                    && !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Moving)
+                )
+                    parts.Add(
+                        $"cannot move, Moving {Percent(CapacityOrZero(pawn, PawnCapacityDefOf.Moving))}"
+                            + DownedCause(pawn, PawnCapacityDefOf.Moving)
+                    );
+
+                if (pawn.health.InPainShock)
+                    parts.Add(
+                        $"pain shock, pain {Percent(pawn.health.hediffSet.PainTotal)} at or over "
+                            + Percent(pawn.GetStatValue(StatDefOf.PainShockThreshold))
+                    );
+
+                var stage = pawn.ageTracker?.CurLifeStage;
+                if (stage != null && stage.alwaysDowned)
+                    parts.Add("life stage " + stage.defName + " is always downed");
+
+                if (parts.Count == 0)
+                    parts.Add("the game calls it downed with no capacity under its cap");
+                return string.Join("; ", parts);
+            }
+            catch (Exception ex)
+            {
+                Core.LogApi.Error($"Error reading the downed reason of {pawn} - {ex}");
+                return "";
+            }
+        }
+
+        // DownedCause names the hediffs, genes or body parts that pull a
+        // capacity down, using the game's own impactor list rather than a guess
+        // about which hediff class does it.
+        private static string DownedCause(Pawn pawn, PawnCapacityDef capacity)
+        {
+            try
+            {
+                var impactors = new List<PawnCapacityUtility.CapacityImpactor>();
+                PawnCapacityUtility.CalculateCapacityLevel(pawn.health.hediffSet, capacity, impactors);
+                var names = impactors
+                    .Where(i => i.IsDirect)
+                    .Select(i => i.Readable(pawn))
+                    .Where(s => !s.NullOrEmpty())
+                    .Distinct()
+                    .ToList();
+                if (names.Count == 0)
+                    names = impactors
+                        .Select(i => i.Readable(pawn))
+                        .Where(s => !s.NullOrEmpty())
+                        .Distinct()
+                        .ToList();
+                return names.Count == 0 ? "" : " from " + string.Join(", ", names);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private static float CapacityOrZero(Pawn pawn, PawnCapacityDef capacity)
+        {
+            try
+            {
+                return pawn.health?.capacities?.GetLevel(capacity) ?? 0f;
+            }
+            catch
+            {
+                return 0f;
+            }
+        }
+
+        private static string Percent(float fraction)
+        {
+            return (fraction * 100f).ToString("F0") + "%";
         }
 
         public static SocialInfoDto CreatePawnSocialInfoDto(Pawn pawn)

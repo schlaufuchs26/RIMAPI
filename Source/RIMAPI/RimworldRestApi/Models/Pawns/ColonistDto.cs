@@ -88,6 +88,13 @@ namespace RIMAPI.Models
         public bool IsDead { get; set; }
         public bool IsDowned { get; set; } // True if crawling or incapacitated
 
+        // DownedReason says why a downed pawn is down (ticket #3288): the
+        // condition behind the state, e.g. "consciousness 0% from Malnutrition;
+        // malnutrition severity 0.62". Empty for a pawn that is not downed. A
+        // pawn can lie in bed at 100% summary health with nothing to tend, and
+        // without this the state is a fact with no cause.
+        public string DownedReason { get; set; }
+
         // Capacities (0.0 to 1.0+)
         public float Consciousness { get; set; }
         public float Moving { get; set; }

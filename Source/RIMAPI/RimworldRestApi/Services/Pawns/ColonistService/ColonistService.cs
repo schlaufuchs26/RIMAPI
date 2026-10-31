@@ -249,6 +249,16 @@ namespace RIMAPI.Services
             }
         }
 
+        // DownedNote repeats the downing reason on a refusal (ticket #3288): a
+        // patient with nothing to tend can still be down for a reason a run
+        // must know, and "nothing to tend" alone sent a play run hunting
+        // through the in-game health panel for five game days.
+        private static string DownedNote(Pawn pawn)
+        {
+            string reason = PawnHelper.DownedReason(pawn);
+            return reason == "" ? "" : $" (downed: {reason})";
+        }
+
         // StoredWorkPriorities reads the levels the pawn keeps. The game holds
         // them in a private DefMap and GetPriority collapses every active type
         // to 3 while manual priorities are off, so the numbers behind the work
@@ -325,6 +335,7 @@ namespace RIMAPI.Services
                     {
                         return ApiResult.Fail(
                             $"Pawn {pawnId} has nothing to tend: no hediff needs treatment right now"
+                                + DownedNote(doctor)
                         );
                     }
                     if (!doctor.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
@@ -364,6 +375,7 @@ namespace RIMAPI.Services
                     {
                         return ApiResult.Fail(
                             $"Patient {patientId} has nothing to tend: no hediff needs treatment right now"
+                                + DownedNote(patient)
                         );
                     }
                 }
