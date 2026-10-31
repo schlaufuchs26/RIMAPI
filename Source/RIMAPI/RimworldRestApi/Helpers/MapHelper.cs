@@ -207,20 +207,14 @@ namespace RIMAPI.Helpers
 
                 animals = map
                     .mapPawns.AllPawns.Where(p => p.RaceProps?.Animal == true)
-                    .Select(p => new AnimalDto
-                    {
-                        Id = p.thingIDNumber,
-                        Name = p.LabelShortCap,
-                        Def = p.def?.defName,
-                        Faction = p.Faction?.ToString(),
-                        Position = new PositionDto { X = p.Position.x, Y = p.Position.z },
-                        Trainer = p
-                            .relations?.DirectRelations.Where(r => r.def == PawnRelationDefOf.Bond)
-                            .Select(r => r.otherPawn?.thingIDNumber)
-                            .FirstOrDefault(),
-                        Pregnant = p.health?.hediffSet?.HasHediff(HediffDefOf.Pregnant) ?? false,
-                    })
+                    .Where(p => p != null && !p.Dead && !p.Destroyed && p.Spawned)
+                    .Select(p => AnimalDtoOf(map, p))
                     .ToList();
+
+                // The order a run decides on first: the herd that attacks on
+                // sight, then the wild animals it could tame or hunt, then its
+                // own (fox ticket #3467).
+                AnimalRules.Sort(animals);
 
                 return animals;
             }
@@ -229,6 +223,34 @@ namespace RIMAPI.Helpers
                 Core.LogApi.Error($"Error - {ex}");
                 return new List<AnimalDto>();
             }
+        }
+
+        private static AnimalDto AnimalDtoOf(Map map, Pawn p)
+        {
+            return new AnimalDto
+            {
+                Id = p.thingIDNumber,
+                Name = p.LabelShortCap,
+                Def = p.def?.defName,
+                Label = p.LabelShort,
+                Faction = p.Faction?.ToString(),
+                Side = AnimalRules.Side(p.Faction == Faction.OfPlayer, p.Faction?.Name),
+                Sex = p.gender.ToString().ToLowerInvariant(),
+                LifeStage = p.ageTracker?.CurLifeStage?.label,
+                Health = p.health?.summaryHealth?.SummaryHealthPercent ?? 1f,
+                Downed = p.Downed,
+                Tameable = TameUtility.CanTame(p),
+                TameDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null,
+                HuntDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null,
+                Manhunter = Hostility.IsManhunter(p),
+                Predator = p.RaceProps.predator,
+                Position = new PositionDto { X = p.Position.x, Y = p.Position.z },
+                Trainer = p
+                    .relations?.DirectRelations.Where(r => r.def == PawnRelationDefOf.Bond)
+                    .Select(r => r.otherPawn?.thingIDNumber)
+                    .FirstOrDefault(),
+                Pregnant = p.health?.hediffSet?.HasHediff(HediffDefOf.Pregnant) ?? false,
+            };
         }
 
         public static List<ThingDto> GetMapThings(int mapId)

@@ -38,17 +38,6 @@ namespace RIMAPI.Models
         public string Datetime { get; set; }
     }
 
-    public class AnimalDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Def { get; set; }
-        public string Faction { get; set; }
-        public PositionDto Position { get; set; }
-        public int? Trainer { get; set; }
-        public bool Pregnant { get; set; }
-    }
-
     public class MapCreaturesSummaryDto
     {
         public int ColonistsCount { get; set; }

@@ -154,7 +154,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/animals")]
-        [EndpointMetadata("Get animals on the map")]
+        [EndpointMetadata("Get animals on the map: id, race, name, side (wild or tame), sex, life stage, health, the tame and hunt designations, and whether it is a manhunter or a predator")]
         public async Task GetMapAnimals(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
