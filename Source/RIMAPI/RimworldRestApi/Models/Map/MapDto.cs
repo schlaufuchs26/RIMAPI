@@ -144,11 +144,16 @@ namespace RIMAPI.Models
 
     // UnwantedFoodDto is the answer to "which edible things lie on the ground
     // with nowhere to go": the loose food no stockpile or storage building
-    // accepts, plus how many storages were asked (fox ticket #3181).
+    // accepts, the loose food a filter takes but no cell can hold (a full
+    // shelf), and how many storages were asked (fox tickets #3181, #3207).
+    // CapacityChecked says whether the second question could be asked at all:
+    // it needs a colonist who can haul, and no hauler means no answer.
     public class UnwantedFoodDto
     {
         public List<ThingDto> Things { get; set; }
+        public List<ThingDto> NoRoomThings { get; set; }
         public int StorageCount { get; set; }
+        public bool CapacityChecked { get; set; }
     }
 
     public class RoomDto

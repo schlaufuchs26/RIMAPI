@@ -7,6 +7,7 @@ using RIMAPI.Models.Map;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace RIMAPI.Helpers
 {
@@ -341,7 +342,10 @@ namespace RIMAPI.Helpers
         // GetUnwantedFood lists the edible things that lie on the map with no
         // storage that takes them (ticket #3181): a colony starved next to 267
         // rice because no stockpile's filter allowed RawRice, and neither the
-        // stock nor the zone read could say it.
+        // stock nor the zone read could say it. The filter alone is only half
+        // the answer (ticket #3207): a shelf whose filter takes rice but whose
+        // cells are full also leaves the rice on the ground, and the two states
+        // need different fixes, so they come back in separate lists.
         public static UnwantedFoodDto GetUnwantedFood(int mapId)
         {
             Map map = GetMapByID(mapId);
@@ -351,22 +355,87 @@ namespace RIMAPI.Helpers
             }
 
             List<ThingFilter> filters = StorageFilters(map);
+            Pawn hauler = FindHauler(map);
             var accepted = new Dictionary<string, bool>();
             var things = new List<ThingDto>();
+            var noRoom = new List<ThingDto>();
             foreach (Thing thing in map.listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver))
             {
                 if (thing == null || !thing.Spawned || !IsFoodDef(thing.def))
                 {
                     continue;
                 }
-                if (AcceptedByAny(filters, thing.def, accepted))
+                if (IsStoredWhereItBelongs(map, thing))
                 {
                     continue;
                 }
-                things.Add(ResourcesHelper.ThingToDto(thing));
+                if (!AcceptedByAny(filters, thing.def, accepted))
+                {
+                    things.Add(ResourcesHelper.ThingToDto(thing));
+                    continue;
+                }
+                if (hauler != null && !HasHaulDestination(hauler, thing))
+                {
+                    noRoom.Add(ResourcesHelper.ThingToDto(thing));
+                }
             }
             things.Sort((a, b) => a.ThingId.CompareTo(b.ThingId));
-            return new UnwantedFoodDto { Things = things, StorageCount = filters.Count };
+            noRoom.Sort((a, b) => a.ThingId.CompareTo(b.ThingId));
+            return new UnwantedFoodDto
+            {
+                Things = things,
+                NoRoomThings = noRoom,
+                StorageCount = filters.Count,
+                CapacityChecked = hauler != null,
+            };
+        }
+
+        // IsStoredWhereItBelongs says whether the thing already lies in a
+        // storage whose filter takes it: such food is not rotting on the
+        // ground, and a full shelf must not report the rice it holds.
+        private static bool IsStoredWhereItBelongs(Map map, Thing thing)
+        {
+            SlotGroup group = map.haulDestinationManager.SlotGroupAt(thing.Position);
+            if (group == null || group.Settings == null || group.Settings.filter == null)
+            {
+                return false;
+            }
+            return group.Settings.filter.Allows(thing);
+        }
+
+        // FindHauler is the pawn the capacity question needs: the game's own
+        // store search takes a carrier. One colonist that can haul is enough,
+        // and the search never moves him. Null means the question cannot be
+        // asked right now, which the caller reports instead of guessing.
+        private static Pawn FindHauler(Map map)
+        {
+            return map.mapPawns.FreeColonists.FirstOrDefault(p =>
+                p != null
+                && !p.Downed
+                && !p.Dead
+                && p.jobs != null
+                && p.Spawned
+                && !p.WorkTypeIsDisabled(WorkTypeDefOf.Hauling)
+            );
+        }
+
+        // HasHaulDestination asks the game's own store search whether a hauler
+        // could put the thing anywhere: it honours every filter, the free
+        // cells, stacking, reservations and the carrier's reach. A null job is
+        // the game saying "no destination", which is what makes the food rot.
+        private static bool HasHaulDestination(Pawn hauler, Thing thing)
+        {
+            try
+            {
+                return HaulAIUtility.HaulToStorageJob(hauler, thing, forced: true) != null;
+            }
+            catch (Exception ex)
+            {
+                Core.LogApi.Error(
+                    $"Error - haul destination for thing {thing.thingIDNumber}: {ex.Message}"
+                );
+                return true;
+            }
         }
 
         // StorageFilters collects the filters of everything that could take a
