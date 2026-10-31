@@ -21,6 +21,15 @@ namespace RIMAPI.Models
         public bool IsLoading { get; set; } // a long event is running: reading a save, generating a world
         public string ColonyName { get; set; } // the player faction's name, the one the game shows
 
+        // Why the clock stands still (fox ticket #3490). Paused is one boolean
+        // over several causes: TimeSpeed is the game's own speed switch
+        // ("Paused", "Normal", "Fast", ...), and PauseSource names the hold
+        // that forced the pause while the switch is not Paused
+        // (Helpers/PauseSource.cs). Both are empty when nothing holds it, so a
+        // caller can tell "a save is running" from "a letter paused the game".
+        public string TimeSpeed { get; set; }
+        public string PauseSource { get; set; }
+
         // The current map's clock offset in ticks (fox ticket #3412): the game
         // adds the tile's whole-hour time zone to its own start tick, so a
         // second settlement on another longitude reads hours off from the

@@ -187,6 +187,26 @@ namespace RIMAPI.Helpers
                 state.IsPaused = true;
             }
 
+            // Why the clock stands still, from the game's own flags (fox ticket
+            // #3490): the speed switch and the holds of TickManager.ForcePaused,
+            // so a caller that sees a pause names it instead of guessing "an
+            // alert, a modal or a save". The naming rule is PauseSource.Describe,
+            // which carries the unit tests.
+            try
+            {
+                state.TimeSpeed = Find.TickManager != null ? Find.TickManager.CurTimeSpeed.ToString() : "";
+                bool longEvent = LongEventHandler.ForcePause;
+                bool window = Find.WindowStack != null && Find.WindowStack.WindowsForcePause;
+                bool tilePicker = Find.TilePicker != null && Find.TilePicker.Active;
+                bool forcePaused = Find.TickManager != null && Find.TickManager.ForcePaused;
+                state.PauseSource = PauseSource.Describe(longEvent, window, tilePicker, MapGenerator.debugMode, forcePaused);
+            }
+            catch (Exception)
+            {
+                state.TimeSpeed = "";
+                state.PauseSource = "";
+            }
+
             // Check for open windows
             if (Find.WindowStack != null)
             {
