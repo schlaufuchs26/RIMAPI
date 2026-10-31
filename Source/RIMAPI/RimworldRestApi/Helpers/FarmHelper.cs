@@ -232,25 +232,54 @@ namespace RIMAPI.Helpers
                 return null;
             }
 
+            var growingZones = map.zoneManager.AllZones.OfType<Zone_Growing>().ToList();
+            var plan = GrowingZoneMerge.Decide(
+                cells.Select(cell => new GrowingZoneMerge.Cell(cell.x, cell.z)).ToList(),
+                cell => new IntVec3(cell.X, 0, cell.Z).InBounds(map),
+                growingZones
+                    .Select(growing => new GrowingZoneMerge.Zone
+                    {
+                        Id = growing.ID,
+                        Cells = growing.Cells
+                            .Select(cell => new GrowingZoneMerge.Cell(cell.x, cell.z))
+                            .ToList(),
+                    })
+                    .ToList());
+
+            if (plan.TargetZoneId.HasValue)
+            {
+                Zone_Growing target = growingZones.First(z => z.ID == plan.TargetZoneId.Value);
+                foreach (GrowingZoneMerge.Cell cell in plan.NewCells)
+                {
+                    target.AddCell(new IntVec3(cell.X, 0, cell.Z));
+                }
+
+                ThingDef current = target.GetPlantDefToGrow();
+                bool plantChanged = current == null || current.defName != plantDef.defName;
+                if (plantChanged)
+                {
+                    target.SetPlantDefToGrow(plantDef);
+                }
+
+                // A zone whose sowing was switched off carries the plant and
+                // never sows; a grow call is the order to sow, so it goes on.
+                target.allowSow = true;
+
+                GrowingZoneDto extended = GetGrowingZoneById(map, target.ID);
+                extended.Mode = "extended";
+                extended.PlantChanged = plantChanged;
+                extended.CellsAdded = plan.NewCells.Count;
+                extended.CellsInTarget = plan.AlreadyInTarget;
+                extended.CellsInOtherZone = plan.InOtherZone;
+                extended.CellsOutOfBounds = plan.OutOfBounds;
+                return extended;
+            }
+
             var zone = new Zone_Growing(map.zoneManager);
             map.zoneManager.RegisterZone(zone);
-
-            int requested = cells.Count;
-            int skippedOutOfBounds = 0;
-            int skippedOccupied = 0;
-            foreach (var cell in cells)
+            foreach (GrowingZoneMerge.Cell cell in plan.NewCells)
             {
-                if (!cell.InBounds(map))
-                {
-                    skippedOutOfBounds++;
-                    continue;
-                }
-                if (map.zoneManager.ZoneAt(cell) != null)
-                {
-                    skippedOccupied++;
-                    continue;
-                }
-                zone.AddCell(cell);
+                zone.AddCell(new IntVec3(cell.X, 0, cell.Z));
             }
 
             // No valid cells added — remove the empty zone and report WHY.
@@ -258,16 +287,21 @@ namespace RIMAPI.Helpers
             {
                 zone.Delete();
                 error =
-                    $"No free cells in the requested {requested}-cell rectangle " +
-                    $"({skippedOccupied} already belong to another zone, " +
-                    $"{skippedOutOfBounds} out of bounds). " +
-                    $"The area likely overlaps an existing zone — a zone for " +
-                    $"'{plantDef.defName}' may already exist here.";
+                    $"No free cells in the requested {cells.Count}-cell rectangle " +
+                    $"({plan.InOtherZone} already belong to another zone, " +
+                    $"{plan.OutOfBounds} out of bounds). " +
+                    "The area likely overlaps a stockpile or another kind of zone.";
                 return null;
             }
 
             zone.SetPlantDefToGrow(plantDef);
-            return GetGrowingZoneById(map, zone.ID);
+            GrowingZoneDto created = GetGrowingZoneById(map, zone.ID);
+            created.Mode = "created";
+            created.CellsAdded = plan.NewCells.Count;
+            created.CellsInTarget = plan.AlreadyInTarget;
+            created.CellsInOtherZone = plan.InOtherZone;
+            created.CellsOutOfBounds = plan.OutOfBounds;
+            return created;
         }
 
         // Helper methods

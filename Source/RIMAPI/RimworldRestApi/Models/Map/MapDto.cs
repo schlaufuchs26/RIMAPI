@@ -108,6 +108,18 @@ namespace RIMAPI.Models
         public bool HasDying { get; set; }
         public bool HasDyingFromPollution { get; set; }
         public bool HasDyingFromNoPollution { get; set; }
+
+        // What a grow call did with the rectangle (fox ticket #3388): a
+        // rectangle over an existing growing zone joins it instead of making a
+        // stray one-cell zone beside it, so the answer has to say which of the
+        // two happened and how many cells it left alone.
+        // Mode is "created" or "extended".
+        public string Mode { get; set; }
+        public bool PlantChanged { get; set; }
+        public int CellsAdded { get; set; }
+        public int CellsInTarget { get; set; }
+        public int CellsInOtherZone { get; set; }
+        public int CellsOutOfBounds { get; set; }
     }
 
     public class MapZonesDto
