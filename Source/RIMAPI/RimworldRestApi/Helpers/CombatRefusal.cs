@@ -69,6 +69,21 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// The note a failed job assignment carries, empty when nothing in the
+        /// pawn's state explains it (fox ticket #3548): the game's
+        /// TryTakeOrderedJob answers false for a pawn in a tantrum or on the
+        /// floor, and "Failed to assign job" alone names nothing a caller can
+        /// act on.
+        /// </summary>
+        public static string NoJobReason(bool downed, string mentalState)
+        {
+            if (downed) return " (downed)";
+            return string.IsNullOrEmpty(mentalState)
+                ? ""
+                : " (in a mental state: " + mentalState + ")";
+        }
+
+        /// <summary>
         /// The whole sentence a work order is refused with because of the pawn
         /// who would carry it out, or null when he can take it. The verb names
         /// the order, so a run learns which order failed as well as why

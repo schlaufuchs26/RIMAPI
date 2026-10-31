@@ -287,6 +287,19 @@ namespace RIMAPI.Helpers
             return state == null ? "" : CombatRefusal.MentalStateName(state.label, state.defName);
         }
 
+        // NoJobReason names why the game would take no ordered job from this
+        // pawn, in the shape a refusal sentence can carry (" (downed)",
+        // " (in a mental state: tantrum)"), empty when nothing is in the way
+        // (fox, #3548). A failed TryTakeOrderedJob answers with nothing else,
+        // so the reason is the only part a caller can act on.
+        public static string NoJobReason(Pawn pawn)
+        {
+            if (pawn == null)
+                return "";
+
+            return CombatRefusal.NoJobReason(pawn.Downed, MentalStateOf(pawn));
+        }
+
         // DownedCause names the hediffs, genes or body parts that pull a
         // capacity down, using the game's own impactor list rather than a guess
         // about which hediff class does it.

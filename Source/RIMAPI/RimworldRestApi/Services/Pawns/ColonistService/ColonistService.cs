@@ -419,7 +419,13 @@ namespace RIMAPI.Services
 
                 if (!doctor.jobs.TryTakeOrderedJob(job))
                 {
-                    return ApiResult.Fail($"Failed to assign job to pawn: {doctor.thingIDNumber}");
+                    // "Failed to assign job" alone names nothing a caller can
+                    // act on; a pawn in a tantrum or on the floor is the usual
+                    // reason the game takes no ordered job (fox, #3548).
+                    return ApiResult.Fail(
+                        $"Failed to assign job to pawn: {doctor.thingIDNumber}"
+                            + PawnHelper.NoJobReason(doctor)
+                    );
                 }
                 return ApiResult.Ok();
             }

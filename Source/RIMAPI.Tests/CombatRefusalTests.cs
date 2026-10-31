@@ -52,6 +52,16 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void A_failed_job_assignment_names_the_state_that_caused_it()
+        {
+            Assert.Equal(" (in a mental state: tantrum)", CombatRefusal.NoJobReason(false, "tantrum"));
+            Assert.Equal(" (downed)", CombatRefusal.NoJobReason(true, "tantrum"));
+            Assert.Equal(" (downed)", CombatRefusal.NoJobReason(true, ""));
+            Assert.Equal("", CombatRefusal.NoJobReason(false, ""));
+            Assert.Equal("", CombatRefusal.NoJobReason(false, null));
+        }
+
+        [Fact]
         public void A_carried_colonist_names_the_carrier()
         {
             CombatRefusal.PawnState pawn = Colonist();
