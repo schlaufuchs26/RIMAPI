@@ -22,9 +22,19 @@ namespace RIMAPI.Services
         {
             try
             {
-                var letters = new List<LetterDto>();
-                foreach (var letter in StackLetters())
-                    letters.Add(ToDto(letter));
+                var standing = StackLetters();
+                // The game keeps no read flag, so the bridge remembers what it
+                // has reported: this call answers "new" for the letters no
+                // earlier read showed and marks the whole stack seen
+                // (ticket #3156).
+                var fresh = LetterSeen.Report(standing.Select(l => l.ID));
+                var letters = new List<LetterDto>(standing.Count);
+                foreach (var letter in standing)
+                {
+                    var dto = ToDto(letter);
+                    dto.New = fresh.Contains(letter.ID);
+                    letters.Add(dto);
+                }
                 return ApiResult<List<LetterDto>>.Ok(letters);
             }
             catch (Exception ex)

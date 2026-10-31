@@ -23,6 +23,11 @@ namespace RIMAPI.Models
         // needs an answer (a quest offer, a choice) refuses it and shows a
         // popup instead, which holds the clock.
         public bool CanDismiss { get; set; }
+        // Whether this read is the first to report the letter. The game keeps
+        // no read flag on a letter, so the bridge remembers what it has shown
+        // and what the player opened, and marks the stack seen as it reports it
+        // (ticket #3156).
+        public bool New { get; set; }
     }
 
     // Dismiss one letter by the id the letters read prints.

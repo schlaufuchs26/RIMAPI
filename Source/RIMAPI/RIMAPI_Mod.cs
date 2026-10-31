@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using HarmonyLib;
 using RIMAPI.Core;
+using RimworldRestApi.Hooks;
 using UnityEngine;
 using Verse;
 
@@ -55,6 +56,7 @@ namespace RIMAPI
             {
                 _harmony = new Harmony("RIMAPI.Harmony");
                 _harmony.PatchAll();
+                LetterOpenHook.Apply(_harmony);
                 LogApi.Info("Harmony patches applied successfully");
             }
             catch (System.Exception ex)

@@ -63,7 +63,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
-        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether unread, and whether the game's own dismiss applies.")]
+        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether this read is the first to report it, and whether the game's own dismiss applies. The read marks the stack seen.")]
         public async Task ListLetters(HttpListenerContext context)
         {
             var result = _letterService.ListLetters();
