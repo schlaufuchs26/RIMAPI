@@ -140,6 +140,18 @@ namespace RIMAPI.Models
         public bool AcceptsRawFood { get; set; }
         public bool AcceptsMeals { get; set; }
         public int AllowedDefCount { get; set; }
+
+        // AllowedFoodCategories answers the storage tab's food checkboxes
+        // instead of its food-type words (fox ticket #3231): the five categories
+        // the tool names (Foods, FoodMeals, FoodRaw, PlantFoodRaw, MeatRaw), in
+        // that order, whichever of them the filter still allows a def of.
+        public List<string> AllowedFoodCategories { get; set; }
+
+        // AllowedMealDefs names the meal-flagged defs the filter allows. Pemmican
+        // and BabyFood carry the game's Meal food type but sit in Foods rather
+        // than FoodMeals, so a player who unticks "meals" still stores meals and
+        // the food-type answer reads as the opposite of the click.
+        public List<string> AllowedMealDefs { get; set; }
     }
 
     // UnwantedFoodDto is the answer to "which edible things lie on the ground

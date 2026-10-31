@@ -335,7 +335,64 @@ namespace RIMAPI.Helpers
                 AcceptsMeals = FilterAllowsAny(filter, IsMealDef),
                 AcceptsRawFood = FilterAllowsAny(filter, def => IsFoodDef(def) && !IsMealDef(def)),
                 AllowedDefCount = filter.AllowedThingDefs.Count(),
+                AllowedFoodCategories = FoodCategoriesAllowed(filter),
+                AllowedMealDefs = AllowedMealDefs(filter),
             };
+        }
+
+        // FoodCategoryNames is the storage tab's food subtree in the tab's own
+        // order, the five names the tool's refusal text offers (fox ticket #3231).
+        private static readonly string[] FoodCategoryNames =
+        {
+            "Foods",
+            "FoodMeals",
+            "FoodRaw",
+            "PlantFoodRaw",
+            "MeatRaw",
+        };
+
+        // FoodCategoriesAllowed answers the question a player actually clicks
+        // (fox ticket #3231): which of the food checkboxes the filter still
+        // allows a def of. The food-type flags above are the game's own
+        // def-level question, and the two disagree wherever a def sits outside
+        // the category its food type suggests.
+        private static List<string> FoodCategoriesAllowed(ThingFilter filter)
+        {
+            var allowed = new List<string>();
+            foreach (string name in FoodCategoryNames)
+            {
+                ThingCategoryDef category = DefDatabase<ThingCategoryDef>.GetNamedSilentFail(name);
+                if (category == null)
+                {
+                    continue;
+                }
+                foreach (ThingDef def in category.DescendantThingDefs)
+                {
+                    if (filter.Allows(def))
+                    {
+                        allowed.Add(name);
+                        break;
+                    }
+                }
+            }
+            return allowed;
+        }
+
+        // AllowedMealDefs names what keeps accepts_meals true, so a read can say
+        // that a meal comes in through Pemmican or BabyFood and not through the
+        // FoodMeals category the player denied.
+        private static List<string> AllowedMealDefs(ThingFilter filter)
+        {
+            var names = new List<string>();
+            foreach (ThingDef def in filter.AllowedThingDefs)
+            {
+                if (IsMealDef(def))
+                {
+                    names.Add(def.defName);
+                }
+            }
+            names.Sort(StringComparer.Ordinal);
+            return names;
         }
 
         // GetUnwantedFood lists the edible things that lie on the map with no
