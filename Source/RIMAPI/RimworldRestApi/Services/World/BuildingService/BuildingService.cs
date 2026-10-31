@@ -55,6 +55,16 @@ namespace RIMAPI.Services
                             + "; only a built building on the map has a power switch"
                     );
                 }
+                // A stored building has no power switch either, but "not found"
+                // hides the fix: it has to be installed first (ticket #3235).
+                MinifiedThing minified = ThingHolderHelper.FindMinifiedAcrossMaps(buildingId);
+                if (minified != null)
+                {
+                    return ApiResult.Fail(
+                        ThingHolderHelper.DescribeMinified(buildingId, minified)
+                            + "; install it first, only a built building on the map has a power switch"
+                    );
+                }
                 return ApiResult.Fail($"Building not found: {buildingId}");
             }
 

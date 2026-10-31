@@ -53,6 +53,50 @@ namespace RIMAPI.Helpers
             return $"Thing {thingId} is inside {holder.def.defName} #{holder.thingIDNumber} ({holder.LabelShort}), not on the map";
         }
 
+        // A building taken apart and carried to storage is a MinifiedThing lying
+        // in a stockpile: it is in the map's thing list, not in
+        // allBuildingsColonist, so FindBuildingByID misses it and a write
+        // answered a bare "not found" (ticket #3235). The stored read lists the
+        // minified thing by its own id, so both that id and the id of the
+        // building packed inside it match.
+        public static MinifiedThing FindMinifiedAcrossMaps(int thingId)
+        {
+            foreach (Map map in Find.Maps)
+            {
+                foreach (Thing thing in map.listerThings.AllThings)
+                {
+                    MinifiedThing minified = thing as MinifiedThing;
+                    if (minified == null)
+                    {
+                        continue;
+                    }
+                    if (
+                        minified.thingIDNumber == thingId
+                        || (
+                            minified.InnerThing != null
+                            && minified.InnerThing.thingIDNumber == thingId
+                        )
+                    )
+                    {
+                        return minified;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // What a write answers for a stored building: the def it would have once
+        // installed, the minified thing's id and cell, and the step that is
+        // missing. Same shape as DescribeHeld, so a run reads one wording.
+        public static string DescribeMinified(int thingId, MinifiedThing minified)
+        {
+            Thing inner = minified.InnerThing;
+            string def = inner != null ? inner.def.defName : minified.def.defName;
+            return $"Thing {thingId} is a {def} packed up as {minified.def.defName} "
+                + $"#{minified.thingIDNumber} at ({minified.Position.x}, {minified.Position.z}), "
+                + "not built on the map";
+        }
+
         private static bool HoldsThing(IThingHolder holder, int thingId, int depth)
         {
             if (depth > 4)
