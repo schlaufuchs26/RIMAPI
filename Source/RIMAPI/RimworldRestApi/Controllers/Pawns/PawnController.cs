@@ -325,6 +325,22 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Chat: the game's own social interaction with a stranger who wants to
+        // be talked into joining (ticket #3275). chatter_id is optional; without
+        // it the mod takes the nearest colonist who can reach him and talk.
+        [Post("/api/v1/jobs/make/chat")]
+        [EndpointMetadata("Queue the game's own chat with a visitor who wants to join")]
+        public async Task MakeJobChat(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var chatterId = RequestParser.HasParameter(context, "chatter_id")
+                ? RequestParser.GetIntParameter(context, "chatter_id")
+                : 0;
+            var result = _colonistService.MakeJobChat(mapId, pawnId, chatterId);
+            await context.SendJsonResponse(result);
+        }
+
         // The prisoner tab's interaction setting: recruit, reduce resistance,
         // release, maintain. mode takes the defName (AttemptRecruit) or the
         // label the game shows (recruit).

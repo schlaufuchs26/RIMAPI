@@ -27,6 +27,26 @@ namespace RIMAPI.Models
         public bool Recruitable { get; set; }
         public string InteractionMode { get; set; }
         public PositionDto Position { get; set; }
+
+        // A stranger who arrived to be talked into joining (the Anomaly creep
+        // joiner behind the "Lone genius" letter, ticket #3275). Chattable is
+        // the game's own offer: he still stands on his entry lord, so a colonist
+        // can chat with him now; after the talk the offer letter decides.
+        public bool CreepJoiner { get; set; }
+        public bool Chattable { get; set; }
+    }
+
+    // What a chat order did: the colonist who walks over to talk, or that no
+    // colonist could take it now (ticket #3275).
+    public class ChatResultDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public int ChatterId { get; set; }
+        public string Chatter { get; set; }
+        public string Job { get; set; }
+        public bool Queued { get; set; }
+        public string Note { get; set; }
     }
 
     // What a tame order did: which handler took it, or that the designation

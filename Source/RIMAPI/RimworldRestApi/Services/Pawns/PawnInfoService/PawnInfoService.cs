@@ -112,6 +112,11 @@ namespace RIMAPI.Services
                 Tameable = TameUtility.CanTame(pawn),
                 Position = new PositionDto { X = pawn.Position.x, Y = pawn.Position.y, Z = pawn.Position.z },
             };
+            if (pawn.creepjoiner != null)
+            {
+                dto.CreepJoiner = true;
+                dto.Chattable = !pawn.creepjoiner.Disabled && pawn.creepjoiner.IsOnEntryLord;
+            }
             if (pawn.guest != null)
             {
                 dto.Resistance = pawn.guest.Resistance;
