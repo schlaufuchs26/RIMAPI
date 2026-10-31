@@ -167,8 +167,7 @@ namespace RIMAPI.Services
         }
 
         public ApiResult<PlaceResultDto> PlaceBlueprints(PasteAreaRequestDto request)
-        {
-            try
+        {            try
             {
                 if (request.Blueprint == null) return ApiResult<PlaceResultDto>.Fail("Blueprint is null");
 
@@ -183,23 +182,52 @@ namespace RIMAPI.Services
                 // a blueprint. PlaceBlueprintForBuild itself does not check, so a
                 // marsh cell, a cell holding a wall or a cell outside the map
                 // used to be dropped without a word (fox ticket #3089).
+                void Refuse(BuildableDef buildable, IntVec3 pos, string reason)
+                {
+                    result.Dropped.Add(new PlaceRefusalDto
+                    {
+                        DefName = buildable.defName,
+                        X = pos.x,
+                        Z = pos.z,
+                        Reason = reason,
+                    });
+                }
+
+                // One cell's own failure must not sink the whole call. The stock
+                // code let a NullReferenceException out of a single def (a
+                // sculpture, fox ticket #3178) turn into an HTTP 500 that named
+                // neither the def nor the cell, so the caller could not even
+                // tell what had gone wrong. Each cell now answers on its own,
+                // and a thrown exception arrives as a refusal carrying its type,
+                // message and the method that threw, which is the read that
+                // names the null field.
                 void TryPlace(BuildableDef buildable, IntVec3 pos, Rot4 rot, ThingDef stuffDef)
                 {
-                    var report = GenConstruct.CanPlaceBlueprintAt(buildable, pos, rot, map, false, null, null, stuffDef);
+                    AcceptanceReport report;
+                    try
+                    {
+                        report = GenConstruct.CanPlaceBlueprintAt(buildable, pos, rot, map, false, null, null, stuffDef);
+                    }
+                    catch (Exception ex)
+                    {
+                        Refuse(buildable, pos, Describe("the placement check", ex));
+                        return;
+                    }
                     if (!report.Accepted)
                     {
-                        result.Dropped.Add(new PlaceRefusalDto
-                        {
-                            DefName = buildable.defName,
-                            X = pos.x,
-                            Z = pos.z,
-                            Reason = report.Reason,
-                        });
+                        Refuse(buildable, pos, report.Reason);
                         return;
                     }
 
-                    GenConstruct.PlaceBlueprintForBuild(buildable, pos, map, rot, Faction.OfPlayer, stuffDef);
-                    result.Placed++;
+                    try
+                    {
+                        GenConstruct.PlaceBlueprintForBuild(buildable, pos, map, rot, Faction.OfPlayer, stuffDef);
+                        result.Placed++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Refuse(buildable, pos, Describe("placing the blueprint", ex));
+                    }
                 }
 
                 // 1. Place Floor Blueprints
