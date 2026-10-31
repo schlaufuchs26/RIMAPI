@@ -63,6 +63,24 @@ namespace RIMAPI.Models
         public int NegotiatorId { get; set; }
         public string Negotiator { get; set; }
         public List<TraderStockDto> Stock { get; set; }
+        // The colony's side of the deal (fox ticket #3541): the silver the
+        // deal with this trader would count, which is not the map's silver
+        // total. Null when no colonist can trade right now, because the game
+        // builds that list for a negotiator.
+        public int? ColonySilver { get; set; }
+        // Every orbital trade beacon on the map, so a run can build or move
+        // one before an orbital purchase is refused. Empty for a caravan
+        // visitor, whose rule never asks for a beacon.
+        public List<TradeBeaconDto> Beacons { get; set; }
+    }
+
+    // One orbital trade beacon: the cell it stands on and whether it has
+    // power. Only a powered one carries goods for an orbital trade.
+    public class TradeBeaconDto
+    {
+        public int X { get; set; }
+        public int Z { get; set; }
+        public bool Powered { get; set; }
     }
 
     // One line of a trader's stock, grouped by def and material. MarketValue is

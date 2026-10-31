@@ -175,7 +175,7 @@ namespace RIMAPI.Services
                     TradeShip tradeShip = ship as TradeShip;
                     if (tradeShip == null) continue;
                     shipIndex++;
-                    traders.Add(TraderOf(tradeShip, -shipIndex, tradeShip.CanTradeNow, negotiator));
+                    traders.Add(TraderOf(map, tradeShip, -shipIndex, tradeShip.CanTradeNow, negotiator));
                 }
 
                 foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
@@ -183,7 +183,7 @@ namespace RIMAPI.Services
                     if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned) continue;
                     if (pawn.TraderKind == null || pawn.trader == null) continue;
                     if (pawn.Faction != null && pawn.Faction == Faction.OfPlayer) continue;
-                    traders.Add(TraderOf(pawn, pawn.thingIDNumber, pawn.CanTradeNow, negotiator));
+                    traders.Add(TraderOf(map, pawn, pawn.thingIDNumber, pawn.CanTradeNow, negotiator));
                 }
 
                 traders.Sort((a, b) => a.Id.CompareTo(b.Id));
@@ -371,8 +371,10 @@ namespace RIMAPI.Services
         }
 
         // TraderOf turns one live trader into the read's shape. Silver is what
-        // the trader holds, so a sale can tell whether it can pay at all.
-        private static TraderDto TraderOf(ITrader trader, int id, bool canTradeNow, Pawn negotiator)
+        // the trader holds, so a sale can tell whether it can pay at all;
+        // ColonySilver and Beacons are the colony's side, so a run can see that
+        // its silver is outside the deal before it tries to buy (ticket #3541).
+        private static TraderDto TraderOf(Map map, ITrader trader, int id, bool canTradeNow, Pawn negotiator)
         {
             TraderDto dto = new TraderDto
             {
@@ -387,6 +389,8 @@ namespace RIMAPI.Services
                 NegotiatorId = negotiator == null ? 0 : negotiator.thingIDNumber,
                 Negotiator = negotiator == null ? null : negotiator.LabelShort,
                 Stock = new List<TraderStockDto>(),
+                ColonySilver = ColonySilverOf(trader, negotiator),
+                Beacons = trader is TradeShip ? BeaconsOf(map) : new List<TradeBeaconDto>(),
             };
 
             // One stock line per def and material: a caravan carries the same
@@ -424,6 +428,63 @@ namespace RIMAPI.Services
                 dto.Stock.Add(lines[key]);
             }
             return dto;
+        }
+
+        // ColonySilverOf is the silver the deal with this trader would count,
+        // which is the game's own list and not the map's silver total: a ship
+        // counts only goods on the cells of a powered orbital trade beacon, a
+        // caravan only goods in the home area or in storage. Null without a
+        // negotiator, because the game builds that list for one and no deal is
+        // possible then (ticket #3541).
+        private static int? ColonySilverOf(ITrader trader, Pawn negotiator)
+        {
+            if (trader == null || negotiator == null)
+            {
+                return null;
+            }
+            int silver = 0;
+            foreach (Thing thing in trader.ColonyThingsWillingToBuy(negotiator))
+            {
+                if (thing != null && thing.def == ThingDefOf.Silver)
+                {
+                    silver += thing.stackCount;
+                }
+            }
+            return silver;
+        }
+
+        // BeaconsOf names every orbital trade beacon on the map with its cell
+        // and whether it has power, so a run can build one or move the silver
+        // onto one before an orbital purchase is refused. AllPowered is the
+        // game's own test for a beacon that carries goods, so the flag says
+        // what a trade would count.
+        private static List<TradeBeaconDto> BeaconsOf(Map map)
+        {
+            HashSet<int> powered = new HashSet<int>();
+            foreach (Building_OrbitalTradeBeacon beacon in Building_OrbitalTradeBeacon.AllPowered(map))
+            {
+                if (beacon != null)
+                {
+                    powered.Add(beacon.thingIDNumber);
+                }
+            }
+            List<TradeBeaconDto> beacons = new List<TradeBeaconDto>();
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                Building_OrbitalTradeBeacon beacon = building as Building_OrbitalTradeBeacon;
+                if (beacon == null)
+                {
+                    continue;
+                }
+                beacons.Add(new TradeBeaconDto
+                {
+                    X = beacon.Position.x,
+                    Z = beacon.Position.z,
+                    Powered = powered.Contains(beacon.thingIDNumber),
+                });
+            }
+            beacons.Sort((a, b) => a.X != b.X ? a.X.CompareTo(b.X) : a.Z.CompareTo(b.Z));
+            return beacons;
         }
 
         // FindTrader takes the id the read prints: a pawn's thing id, or a
