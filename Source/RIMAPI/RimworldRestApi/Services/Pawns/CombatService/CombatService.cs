@@ -286,15 +286,17 @@ namespace RIMAPI.Services
 
         // PathText measures the walk the game's own pathfinder would take, in
         // cells, so an order's answer carries the distance it checked instead
-        // of a bare "reachable". Empty when no path is found, which the
-        // reachability check has already refused.
+        // of a bare "reachable". The node count is the number of cells to walk;
+        // TotalCost is the cost function's sum (terrain multipliers, door
+        // penalties), which reads like a much longer walk than it is. Empty
+        // when no path is found, which the reachability check has refused.
         private static string PathText(Pawn pawn, LocalTargetInfo dest)
         {
             PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, dest, pawn);
             if (path == null) return "";
             try
             {
-                return path.Found ? $"{path.TotalCost:0} cells of path" : "";
+                return path.Found ? $"{path.NodesLeftCount} cells of path" : "";
             }
             finally
             {
