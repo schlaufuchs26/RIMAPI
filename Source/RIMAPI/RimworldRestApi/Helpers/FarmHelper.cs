@@ -19,7 +19,13 @@ namespace RIMAPI.Helpers
 
             var cropTypes = new Dictionary<string, CropTypeDto>();
             var allPlants = new List<Plant>();
-            float totalDaysUntilHarvest = 0f;
+            // The averages are accumulated here and not in the DTO: a DTO field
+            // that carries a running sum is the shape that made the old
+            // growth_progress_average a sum over every plant divided by the
+            // number of crop types, so a half-grown field read 116 %.
+            var growthSum = new Dictionary<string, float>();
+            var maxGrowth = new Dictionary<string, float>();
+            var daysUntilHarvest = new Dictionary<string, float>();
 
             foreach (Zone_Growing zone in growingZones)
             {
@@ -61,7 +67,11 @@ namespace RIMAPI.Helpers
 
                     var crop = cropTypes[defName];
                     crop.TotalPlants++;
-                    crop.GrowthProgressAverage += plant.Growth;
+                    growthSum[defName] = (growthSum.ContainsKey(defName) ? growthSum[defName] : 0f) + plant.Growth;
+                    maxGrowth[defName] = Math.Max(
+                        maxGrowth.ContainsKey(defName) ? maxGrowth[defName] : 0f,
+                        plant.Growth
+                    );
 
                     if (plant.IsCrop && plant.HarvestableNow)
                     {
@@ -81,25 +91,45 @@ namespace RIMAPI.Helpers
                         crop.IsFullyGrown = true;
                     }
 
-                    totalDaysUntilHarvest += CalculateDaysUntilHarvest(plant);
+                    float days = CalculateDaysUntilHarvest(plant);
+                    if (
+                        !daysUntilHarvest.ContainsKey(defName)
+                        || days < daysUntilHarvest[defName]
+                    )
+                    {
+                        daysUntilHarvest[defName] = days;
+                    }
                 }
             }
 
             // Calculate averages and finalize crop types
+            float totalGrowth = 0f;
+            float nextHarvest = -1f;
             foreach (var crop in cropTypes.Values)
             {
                 if (crop.TotalPlants > 0)
                 {
-                    crop.DaysUntilHarvest = totalDaysUntilHarvest / crop.TotalPlants;
+                    crop.GrowthProgressAverage = growthSum[crop.PlantDefName] / crop.TotalPlants;
+                    crop.MaxGrowthProgress = maxGrowth[crop.PlantDefName];
+                    crop.DaysUntilHarvest = daysUntilHarvest[crop.PlantDefName];
+                    totalGrowth += growthSum[crop.PlantDefName];
+                    if (nextHarvest < 0f || crop.DaysUntilHarvest < nextHarvest)
+                    {
+                        nextHarvest = crop.DaysUntilHarvest;
+                    }
                 }
                 summary.TotalPlants += crop.TotalPlants;
                 summary.TotalExpectedYield += crop.ExpectedYield;
-                summary.GrowthProgressAverage += crop.GrowthProgressAverage;
+                summary.TotalHarvestablePlants += crop.HarvestablePlants;
             }
 
-            if (cropTypes.Count > 0)
+            // Averaged over the plants, not over the crop types: a zone of 200
+            // rice plants and a zone of 2 corn plants must not weigh the same.
+            if (summary.TotalPlants > 0)
             {
-                summary.GrowthProgressAverage /= cropTypes.Count;
+                summary.GrowthProgressAverage = totalGrowth / summary.TotalPlants;
+                summary.MaxGrowthProgress = maxGrowth.Values.Count > 0 ? maxGrowth.Values.Max() : 0f;
+                summary.DaysUntilNextHarvest = nextHarvest < 0f ? 0f : nextHarvest;
             }
 
             summary.CropTypes = cropTypes.Values.OrderByDescending(c => c.TotalPlants).ToList();
@@ -271,16 +301,27 @@ namespace RIMAPI.Helpers
             return "Other";
         }
 
+        /// <summary>
+        /// Days until the plant can be harvested, assuming ideal light and
+        /// fertility: growth advances 1/growDays per day at full speed, so the
+        /// missing growth times growDays is the answer. The old code divided
+        /// the missing growth by growDays, which is the reciprocal, and it
+        /// summed the result over every plant before dividing by one crop's
+        /// plant count.
+        /// </summary>
         public static float CalculateDaysUntilHarvest(Plant plant)
         {
-            if (plant.Growth >= plant.def.plant.harvestMinGrowth)
+            float minGrowth = plant.def.plant.harvestMinGrowth;
+            if (plant.Growth >= minGrowth)
             {
                 return 0f; // Already harvestable
             }
-
-            float remainingGrowth = plant.def.plant.harvestMinGrowth - plant.Growth;
-            int ticksUntilHarvest = (int)(remainingGrowth / plant.def.plant.growDays);
-            return ticksUntilHarvest; // Convert ticks to days
+            float growDays = plant.def.plant.growDays;
+            if (growDays <= 0f)
+            {
+                return 0f;
+            }
+            return (minGrowth - plant.Growth) * growDays;
         }
 
         public static bool IsPlantResting(Plant plant)

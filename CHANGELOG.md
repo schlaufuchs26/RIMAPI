@@ -1,6 +1,9 @@
 # Changelog
 ## [Unreleased]
 
+### Fixed
+- **Farm summary growth:** `growth_progress_average` is now the mean of the plants' growth (0..1, the game's own scale). It used to be the sum over every plant divided by the number of crop types, so a half-grown field reported 116 %. Each crop's `growth_progress_average` and `days_until_harvest` were wrong the same way (the latter divided the missing growth by `growDays` instead of multiplying). New fields: `max_growth_progress`, `total_harvestable_plants` and `days_until_next_harvest` on the summary, `max_growth_progress` per crop.
+
 ## v1.10.0
 
 ### Added

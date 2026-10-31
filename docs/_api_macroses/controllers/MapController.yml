@@ -686,6 +686,9 @@ desc: |-
             "total_expected_yield": 0,
             "total_infected_plants": 0,
             "growth_progress_average": 0.0,
+            "max_growth_progress": 0.0,
+            "total_harvestable_plants": 0,
+            "days_until_next_harvest": 0.0,
             "crop_types": []
         },
         "errors": [],

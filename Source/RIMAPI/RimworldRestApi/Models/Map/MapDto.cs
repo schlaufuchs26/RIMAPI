@@ -65,7 +65,14 @@ namespace RIMAPI.Models
         public int TotalPlants { get; set; }
         public int TotalExpectedYield { get; set; }
         public int TotalInfectedPlants { get; set; }
+        // GrowthProgressAverage is a 0..1 fraction averaged over the plants,
+        // the same scale the game's Plant.Growth uses. MaxGrowthProgress is
+        // the ripest plant's, so a field reads as ready even when the average
+        // still sits low.
         public float GrowthProgressAverage { get; set; }
+        public float MaxGrowthProgress { get; set; }
+        public int TotalHarvestablePlants { get; set; }
+        public float DaysUntilNextHarvest { get; set; }
         public List<CropTypeDto> CropTypes { get; set; } = new List<CropTypeDto>();
     }
 
@@ -79,6 +86,7 @@ namespace RIMAPI.Models
         public int ExpectedYield { get; set; }
         public int InfectedCount { get; set; }
         public float GrowthProgressAverage { get; set; }
+        public float MaxGrowthProgress { get; set; }
         public float DaysUntilHarvest { get; set; }
         public bool IsFullyGrown { get; set; }
         public bool IsHarvestable { get; set; }
