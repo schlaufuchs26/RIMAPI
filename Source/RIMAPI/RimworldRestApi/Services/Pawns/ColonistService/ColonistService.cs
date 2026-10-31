@@ -211,12 +211,17 @@ namespace RIMAPI.Services
                     );
                 }
 
+                var readiness = WorkSettingsRules.Of(
+                    hasWorkSettings: pawn.workSettings != null,
+                    everWork: pawn.workSettings != null && pawn.workSettings.EverWork
+                );
+
                 var result = new ColonistWorkPrioritiesDto
                 {
                     PawnId = pawn.thingIDNumber,
                     PawnName = pawn.LabelShortCap,
                     ManualPriorities = Find.PlaySettings?.useWorkPriorities ?? false,
-                    Initialized = pawn.workSettings != null && pawn.workSettings.EverWork,
+                    Initialized = readiness == WorkSettingsRules.Readiness.Ready,
                 };
 
                 if (!result.Initialized)
@@ -860,12 +865,24 @@ namespace RIMAPI.Services
                     return ApiResult.Fail($"Could not find WorkTypeDef with defName {body.Work}");
                 }
 
-                // Check if pawn has work settings initialized
-                if (pawn.workSettings == null || !pawn.workSettings.EverWork)
+                // A pawn whose priorities were never created used to be refused
+                // here, so the doctor line could name a candidate whose fix the
+                // write then would not carry out (#3566). The game creates the
+                // defaults lazily on the first write
+                // (EnableAndInitializeIfNotAlreadyInitialized), so the mod does
+                // the same and the level lands. Only a pawn without the
+                // settings component at all is a refusal.
+                var readiness = WorkSettingsRules.Of(
+                    hasWorkSettings: pawn.workSettings != null,
+                    everWork: pawn.workSettings != null && pawn.workSettings.EverWork
+                );
+                if (readiness == WorkSettingsRules.Readiness.NoSettings)
                 {
-                    return ApiResult.Fail(
-                        $"Pawn {pawn.LabelShort} does not have work settings initialized"
-                    );
+                    return ApiResult.Fail(WorkSettingsRules.NoSettingsRefusal(pawn.LabelShort));
+                }
+                if (readiness == WorkSettingsRules.Readiness.NeedsInitialization)
+                {
+                    pawn.workSettings.EnableAndInitializeIfNotAlreadyInitialized();
                 }
 
                 // Check if the work type is disabled for this pawn
