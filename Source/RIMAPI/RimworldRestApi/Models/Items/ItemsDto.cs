@@ -34,7 +34,6 @@ namespace RIMAPI.Models
         public string TechLevel { get; set; }
         public List<string> TradeTags { get; set; }
         public List<string> StuffCategories { get; set; }
-        public float MaxHealth { get; set; }
         public float ArmorRatingSharp { get; set; }
         public float ArmorRatingBlunt { get; set; }
         public float ArmorRatingHeat { get; set; }
@@ -75,6 +74,17 @@ namespace RIMAPI.Models
                 WorkToMake = thing.GetStatValueAbstract(StatDefOf.WorkToMake),
                 WorkToBuild = thing.GetStatValueAbstract(StatDefOf.WorkToBuild),
                 Beauty = thing.GetStatValueAbstract(StatDefOf.Beauty),
+                TechLevel = thing.techLevel.ToString(),
+                TradeTags = thing.tradeTags?.ToList(),
+                StuffCategories = thing.stuffCategories?.Select(c => c.defName).ToList(),
+                // The armor and insulation stats resolve the def's statBases
+                // against its default material, so an apparel that sets none
+                // answers the game's 0 instead of an unset field (ticket #3442).
+                ArmorRatingSharp = thing.GetStatValueAbstract(StatDefOf.ArmorRating_Sharp),
+                ArmorRatingBlunt = thing.GetStatValueAbstract(StatDefOf.ArmorRating_Blunt),
+                ArmorRatingHeat = thing.GetStatValueAbstract(StatDefOf.ArmorRating_Heat),
+                InsulationCold = thing.GetStatValueAbstract(StatDefOf.Insulation_Cold),
+                InsulationHeat = thing.GetStatValueAbstract(StatDefOf.Insulation_Heat),
             };
         }
     }
