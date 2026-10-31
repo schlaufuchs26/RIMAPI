@@ -233,6 +233,16 @@ namespace RIMAPI.Models
         public int Priority { get; set; }
         public bool Success { get; set; }
         public string Message { get; set; }
+
+        // A filter write answers what it applied and what it could not resolve
+        // (fox ticket #3206): AppliedDefs and AppliedCategories name the names
+        // that changed the filter, Unknown the ones neither the thing defs nor
+        // the thing categories know, and Filter is the stockpile's filter after
+        // the write, in the same terms the zones read prints.
+        public List<string> AppliedDefs { get; set; }
+        public List<string> AppliedCategories { get; set; }
+        public List<string> Unknown { get; set; }
+        public StockpileFilterDto Filter { get; set; }
     }
 
     public class UpdateStockpileRequestDto

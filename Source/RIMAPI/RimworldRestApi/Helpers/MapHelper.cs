@@ -1079,51 +1079,43 @@ namespace RIMAPI.Helpers
                     stockpile.label = request.Name;
                 }
 
-                // Set priority BEFORE registering
-                int priorityValue = request.Priority ?? 0; // Default to High (0)
-                priorityValue = Mathf.Clamp(priorityValue, -1, 2);
-                stockpile.settings.Priority = (StoragePriority)priorityValue;
+                // Set priority BEFORE registering. Only a priority the caller
+                // named overrides the preset (fox ticket #3206): the old
+                // "request.Priority ?? 0" made every stockpile this endpoint
+                // created "Unstored", a value the storage tab never offers, and
+                // the clamp to 2 turned a requested Critical into Low.
+                if (request.Priority.HasValue)
+                {
+                    int priorityValue = request.Priority.Value;
+                    if (priorityValue < 0 || priorityValue > 5)
+                    {
+                        return new StockpileResponseDto
+                        {
+                            Success = false,
+                            Message = $"Priority {priorityValue} is out of range: 0 unstored, 1 low, 2 normal, 3 preferred, 4 important, 5 critical."
+                        };
+                    }
+                    stockpile.settings.Priority = (StoragePriority)priorityValue;
+                }
 
                 // Configure storage settings (filtration)
                 bool hasItemDefs = request.AllowedItemDefs != null && request.AllowedItemDefs.Count > 0;
                 bool hasCategories = request.AllowedItemCategories != null && request.AllowedItemCategories.Count > 0;
+                var appliedDefs = new List<string>();
+                var appliedCategories = new List<string>();
+                var unknown = new List<string>();
 
                 if (hasItemDefs || hasCategories)
                 {
-                    // Disallow all first
+                    // Disallow all first: the preset allows everything, and a
+                    // list of allowed names narrows it rather than adding to it.
                     foreach (ThingDef thingDef in DefDatabase<ThingDef>.AllDefs)
                     {
                         stockpile.settings.filter.SetAllow(thingDef, false);
                     }
 
-                    // Allow specified item defs
-                    if (hasItemDefs)
-                    {
-                        foreach (var defName in request.AllowedItemDefs)
-                        {
-                            ThingDef thingDef = DefDatabase<ThingDef>.GetNamed(defName, false);
-                            if (thingDef != null)
-                            {
-                                stockpile.settings.filter.SetAllow(thingDef, true);
-                            }
-                        }
-                    }
-
-                    // Allow items from specified categories
-                    if (hasCategories)
-                    {
-                        foreach (var categoryName in request.AllowedItemCategories)
-                        {
-                            ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.GetNamed(categoryName, false);
-                            if (categoryDef != null)
-                            {
-                                foreach (ThingDef thingDef in categoryDef.DescendantThingDefs)
-                                {
-                                    stockpile.settings.filter.SetAllow(thingDef, true);
-                                }
-                            }
-                        }
-                    }
+                    ApplyFilterNames(stockpile.settings.filter, request.AllowedItemDefs, true, appliedDefs, appliedCategories, unknown);
+                    ApplyFilterNames(stockpile.settings.filter, request.AllowedItemCategories, true, appliedDefs, appliedCategories, unknown);
                 }
                 else
                 {
@@ -1196,7 +1188,11 @@ namespace RIMAPI.Helpers
                     Name = stockpile.label,
                     CellsCount = cellCount,
                     Priority = (int)stockpile.settings.Priority,
-                    Message = $"Stockpile '{stockpile.label}' created successfully with {cellCount} cells."
+                    Message = $"Stockpile '{stockpile.label}' created successfully with {cellCount} cells.",
+                    AppliedDefs = appliedDefs,
+                    AppliedCategories = appliedCategories,
+                    Unknown = unknown,
+                    Filter = GetStockpileFilter(stockpile)
                 };
             }
             catch (Exception ex)
@@ -1377,6 +1373,77 @@ namespace RIMAPI.Helpers
             }
         }
 
+        // ApplyFilterNames sets the allow state of each name on a stockpile's
+        // filter (fox ticket #3206). A name is a thing def first and a thing
+        // category second, because both are what the storage tab lists
+        // ("RawRice" is a def, "Foods" a category); an exact defName wins, and
+        // a case-insensitive defName or label match is the fallback. A name
+        // that matches neither goes into unknown, which the answer names
+        // instead of reporting a filter change that never happened.
+        private static void ApplyFilterNames(
+            ThingFilter filter,
+            List<string> names,
+            bool allow,
+            List<string> appliedDefs,
+            List<string> appliedCategories,
+            List<string> unknown
+        )
+        {
+            if (names == null)
+            {
+                return;
+            }
+            foreach (string raw in names)
+            {
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    continue;
+                }
+                string name = raw.Trim();
+
+                ThingDef thingDef = DefDatabase<ThingDef>.GetNamedSilentFail(name);
+                if (thingDef == null)
+                {
+                    thingDef = DefDatabase<ThingDef>.AllDefsListForReading.FirstOrDefault(d =>
+                        string.Equals(d.defName, name, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(d.label, name, StringComparison.OrdinalIgnoreCase)
+                    );
+                }
+                if (thingDef != null)
+                {
+                    filter.SetAllow(thingDef, allow);
+                    if (!appliedDefs.Contains(thingDef.defName))
+                    {
+                        appliedDefs.Add(thingDef.defName);
+                    }
+                    continue;
+                }
+
+                ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.GetNamedSilentFail(name);
+                if (categoryDef == null)
+                {
+                    categoryDef = DefDatabase<ThingCategoryDef>.AllDefsListForReading.FirstOrDefault(d =>
+                        string.Equals(d.defName, name, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(d.label, name, StringComparison.OrdinalIgnoreCase)
+                    );
+                }
+                if (categoryDef != null)
+                {
+                    // The game's own category setter, the call the storage tab
+                    // makes: it walks the descendant defs and the category's
+                    // special filters, which a plain def loop would miss.
+                    filter.SetAllow(categoryDef, allow);
+                    if (!appliedCategories.Contains(categoryDef.defName))
+                    {
+                        appliedCategories.Add(categoryDef.defName);
+                    }
+                    continue;
+                }
+
+                unknown.Add(name);
+            }
+        }
+
         public static ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request)
         {
             try
@@ -1390,10 +1457,19 @@ namespace RIMAPI.Helpers
 
                 if (stockpile == null)
                 {
-                    return ApiResult<StockpileResponseDto>.Fail($"Stockpile with ID {request.ZoneId} not found.");
+                    return ApiResult<StockpileResponseDto>.Fail(
+                        $"No stockpile with ID {request.ZoneId}: the `zones` read prints the stockpiles with their ids, and a growing zone has no filter."
+                    );
                 }
 
-                bool filterWasModified = false;
+                // A filter write answers what it applied and what it could not
+                // resolve (fox ticket #3206): a name the def database does not
+                // know used to be dropped while the call still answered
+                // success, so a stockpile the player believed widened took
+                // nothing.
+                var appliedDefs = new List<string>();
+                var appliedCategories = new List<string>();
+                var unknown = new List<string>();
 
                 if (!string.IsNullOrEmpty(request.Name))
                 {
@@ -1402,7 +1478,13 @@ namespace RIMAPI.Helpers
 
                 if (request.Priority.HasValue)
                 {
-                    int priorityValue = Mathf.Clamp(request.Priority.Value, 0, 5);
+                    int priorityValue = request.Priority.Value;
+                    if (priorityValue < 0 || priorityValue > 5)
+                    {
+                        return ApiResult<StockpileResponseDto>.Fail(
+                            $"Priority {priorityValue} is out of range: 0 unstored, 1 low, 2 normal, 3 preferred, 4 important, 5 critical."
+                        );
+                    }
                     stockpile.settings.Priority = (StoragePriority)priorityValue;
                 }
 
@@ -1416,7 +1498,6 @@ namespace RIMAPI.Helpers
                     
                     stockpile.settings.filter.AllowedHitPointsPercents = new Verse.FloatRange(minHp, maxHp);
                     stockpile.settings.filter.allowedHitPointsConfigurable = true;
-                    filterWasModified = true;
                 }
 
                 if (!string.IsNullOrEmpty(request.MinQuality) || !string.IsNullOrEmpty(request.MaxQuality))
@@ -1442,80 +1523,19 @@ namespace RIMAPI.Helpers
 
                     stockpile.settings.filter.AllowedQualityLevels = new QualityRange(minQuality, maxQuality);
                     stockpile.settings.filter.allowedQualitiesConfigurable = true;
-                    filterWasModified = true;
                 }
 
-                if (request.RemoveItemDefs != null && request.RemoveItemDefs.Count > 0)
-                {
-                    foreach (var defName in request.RemoveItemDefs)
-                    {
-                        ThingDef thingDef = DefDatabase<ThingDef>.GetNamed(defName, false);
-                        if (thingDef != null)
-                        {
-                            stockpile.settings.filter.SetAllow(thingDef, false);
-                            filterWasModified = true;
-                        }
-                    }
-                }
+                ApplyFilterNames(stockpile.settings.filter, request.RemoveItemDefs, false, appliedDefs, appliedCategories, unknown);
+                ApplyFilterNames(stockpile.settings.filter, request.AddItemDefs, true, appliedDefs, appliedCategories, unknown);
+                ApplyFilterNames(stockpile.settings.filter, request.RemoveItemCategories, false, appliedDefs, appliedCategories, unknown);
+                ApplyFilterNames(stockpile.settings.filter, request.AddItemCategories, true, appliedDefs, appliedCategories, unknown);
 
-                if (request.RemoveItemCategories != null && request.RemoveItemCategories.Count > 0)
-                {
-                    foreach (var categoryName in request.RemoveItemCategories)
-                    {
-                        ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.GetNamed(categoryName, false);
-                        if (categoryDef != null)
-                        {
-                            foreach (ThingDef thingDef in categoryDef.DescendantThingDefs)
-                            {
-                                stockpile.settings.filter.SetAllow(thingDef, false);
-                                filterWasModified = true;
-                            }
-                        }
-                    }
-                }
-
-                if (request.AddItemDefs != null && request.AddItemDefs.Count > 0)
-                {
-                    foreach (var defName in request.AddItemDefs)
-                    {
-                        ThingDef thingDef = DefDatabase<ThingDef>.GetNamed(defName, false);
-                        if (thingDef != null)
-                        {
-                            stockpile.settings.filter.SetAllow(thingDef, true);
-                            filterWasModified = true;
-                        }
-                    }
-                }
-
-                if (request.AddItemCategories != null && request.AddItemCategories.Count > 0)
-                {
-                    foreach (var categoryName in request.AddItemCategories)
-                    {
-                        ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.GetNamed(categoryName, false);
-                        if (categoryDef != null)
-                        {
-                            foreach (ThingDef thingDef in categoryDef.DescendantThingDefs)
-                            {
-                                stockpile.settings.filter.SetAllow(thingDef, true);
-                                filterWasModified = true;
-                            }
-                        }
-                    }
-                }
-
-                // If filter was modified, resolve references to apply changes
-                if (filterWasModified)
-                {
-                    try
-                    {
-                        stockpile.settings.filter.ResolveReferences();
-                        LogApi.Info($"Applied filter changes to stockpile '{stockpile.label}'");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogApi.Error($"Failed to apply filter changes: {ex}");
-                    }
-                }
+                // No ResolveReferences here: that is the load-time fixup. The
+                // game's own setters already tell the zone its settings moved
+                // (StorageSettings builds the filter with TryNotifyChanged, and
+                // Zone_Stockpile.Notify_SettingsChanged marks the slot group
+                // dirty in ListerHaulables), which is what makes a widened
+                // filter a haul job on the next tick.
 
                 LogApi.Info($"Updated stockpile '{stockpile.label}' (ID: {request.ZoneId})");
 
@@ -1526,7 +1546,11 @@ namespace RIMAPI.Helpers
                     Name = stockpile.label,
                     CellsCount = stockpile.CellCount,
                     Priority = (int)stockpile.settings.Priority,
-                    Message = $"Stockpile '{stockpile.label}' updated successfully."
+                    Message = $"Stockpile '{stockpile.label}' updated successfully.",
+                    AppliedDefs = appliedDefs,
+                    AppliedCategories = appliedCategories,
+                    Unknown = unknown,
+                    Filter = GetStockpileFilter(stockpile),
                 });
             }
             catch (Exception ex)
