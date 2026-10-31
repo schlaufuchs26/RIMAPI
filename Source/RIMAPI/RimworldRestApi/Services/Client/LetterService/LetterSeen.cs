@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using RIMAPI.Core;
 using Verse;
 
 namespace RIMAPI.Services
@@ -182,7 +181,9 @@ namespace RIMAPI.Services
                 var text = "world=" + loadedWorld + "\nseen=" +
                            string.Join(",", Seen.OrderBy(i => i)) + "\n";
                 var temp = path + ".tmp";
-                File.WriteAllText(temp, text, Encoding.UTF8);
+                // No BOM: the file is a two-line key/value store, and a leading
+                // byte-order mark only confuses a reader that opens it by hand.
+                File.WriteAllText(temp, text, new UTF8Encoding(false));
                 if (File.Exists(path))
                     File.Replace(temp, path, null);
                 else
