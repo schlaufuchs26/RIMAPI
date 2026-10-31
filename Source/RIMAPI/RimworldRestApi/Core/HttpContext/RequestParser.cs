@@ -25,6 +25,20 @@ namespace RIMAPI.Http
         }
 
         /// <summary>
+        /// Gets the zone ID from the request query parameters.
+        /// </summary>
+        /// <param name="context">The HTTP listener context.</param>
+        /// <returns>The parsed zone ID.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        public static int GetZoneId(HttpListenerContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            return GetIntParameter(context, "zone_id");
+        }
+
+        /// <summary>
         /// Gets an integer parameter from the request query string.
         /// </summary>
         /// <param name="context">The HTTP listener context.</param>

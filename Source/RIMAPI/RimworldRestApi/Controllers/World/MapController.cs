@@ -182,7 +182,7 @@ namespace RIMAPI.Controllers
         public async Task GetMapGrowingZoneById(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
-            var zoneId = RequestParser.GetMapId(context);
+            var zoneId = RequestParser.GetZoneId(context);
             var result = _mapService.GetGrowingZoneById(mapId, zoneId);
             await context.SendJsonResponse(result);
         }
@@ -405,7 +405,7 @@ namespace RIMAPI.Controllers
         [EndpointMetadata("Delete a stockpile zone by zone ID")]
         public async Task DeleteStockpile(HttpListenerContext context)
         {
-            var zoneId = RequestParser.GetIntParameter(context, "zone_id");
+            var zoneId = RequestParser.GetZoneId(context);
             var result = _mapService.DeleteStockpile(zoneId);
             await context.SendJsonResponse(result);
         }
@@ -414,7 +414,7 @@ namespace RIMAPI.Controllers
         [EndpointMetadata("Delete any zone (stockpile or growing) by zone ID")]
         public async Task DeleteZone(HttpListenerContext context)
         {
-            var zoneId = RequestParser.GetIntParameter(context, "zone_id");
+            var zoneId = RequestParser.GetZoneId(context);
             var result = _mapService.DeleteZone(zoneId);
             await context.SendJsonResponse(result);
         }
