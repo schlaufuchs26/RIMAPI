@@ -11,11 +11,13 @@ namespace RIMAPI.BaseControllers
     {
         private readonly IUIService _uiService;
         private readonly IWindowService _windowService;
+        private readonly ILetterService _letterService;
 
-        public UIController(IUIService uiService, IWindowService windowService)
+        public UIController(IUIService uiService, IWindowService windowService, ILetterService letterService)
         {
             _uiService = uiService;
             _windowService = windowService;
+            _letterService = letterService;
         }
 
         [Get("/api/v1/ui/alerts")]
@@ -57,6 +59,23 @@ namespace RIMAPI.BaseControllers
         {
             var body = await context.Request.ReadBodyAsync<WindowAcceptRequestDto>();
             var result = _windowService.AcceptWindows(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Get("/api/v1/ui/letters")]
+        [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether unread, and whether the game's own dismiss applies.")]
+        public async Task ListLetters(HttpListenerContext context)
+        {
+            var result = _letterService.ListLetters();
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/ui/letter/dismiss")]
+        [EndpointMetadata("Dismiss one letter by id through the game's own dismiss, so a letter that was read stops covering the map. Body: {id}. A letter that needs an answer is refused with the reason.")]
+        public async Task DismissLetter(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<LetterDismissRequestDto>();
+            var result = _letterService.DismissLetter(body);
             await context.SendJsonResponse(result);
         }
 
