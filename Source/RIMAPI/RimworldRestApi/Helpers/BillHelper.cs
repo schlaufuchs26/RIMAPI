@@ -126,6 +126,45 @@ namespace RIMAPI.Helpers
             BillStateReason.State state = BillStateReason.Describe(facts);
             dto.State = state.Name;
             dto.StateReason = state.Reason;
+
+            // The recipe's work skill is what a slow worker shows up in, and it
+            // is not the same thing as a skill requirement: a simple meal needs
+            // no level at all, which is exactly the case a colony of level-0
+            // cooks starves in (ticket #3371).
+            ApplyBestSkill(dto, recipe, map, workTypes);
+        }
+
+        // ApplyBestSkill names the colonist a caller would expect to do the
+        // work, with his level in the recipe's own work skill. Empty when the
+        // recipe has no work skill (nothing to be slow at) or no colonist has
+        // that skill record.
+        private static void ApplyBestSkill(BillDto dto, RecipeDef recipe, Map map, List<WorkTypeDef> workTypes)
+        {
+            SkillDef workSkill = recipe.workSkill;
+            if (workSkill == null)
+                return;
+            if (string.IsNullOrEmpty(dto.WorkSkill))
+                dto.WorkSkill = workSkill.label;
+
+            var candidates = new List<SkillPicker.Candidate>();
+            foreach (Pawn pawn in map.mapPawns.FreeColonists)
+            {
+                SkillRecord record = pawn.skills?.GetSkill(workSkill);
+                if (record == null)
+                    continue;
+                bool works = workTypes.Count == 0;
+                if (!works && pawn.workSettings != null)
+                    works = workTypes.Any(w => pawn.workSettings.WorkIsActive(w));
+                candidates.Add(new SkillPicker.Candidate
+                {
+                    Name = pawn.LabelShort ?? pawn.Name?.ToStringShort,
+                    Level = record.Level,
+                    Works = works,
+                });
+            }
+            SkillPicker.Best best = SkillPicker.Pick(candidates);
+            dto.BestSkill = best.Level;
+            dto.BestSkillPawn = best.Name;
         }
 
         // BenchWorkTypes is the work type (or types) that can run this bench,

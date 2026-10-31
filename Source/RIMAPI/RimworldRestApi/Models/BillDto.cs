@@ -57,6 +57,14 @@ namespace RIMAPI.Models
         public string WorkSkill { get; set; }
         public int MinSkill { get; set; }
         public int SkilledColonists { get; set; }
+        // BestSkill is the highest level any free colonist has in the recipe's
+        // work skill (Cooking for a meal bill), and BestSkillPawn the colonist
+        // holding it, among those whose work settings include the bench's work
+        // type. A cook bill that runs while the colony has no meals is either a
+        // broken kitchen or a slow cook, and "the best cook has Cooking 0" is
+        // the number that tells them apart (ticket #3371).
+        public int BestSkill { get; set; }
+        public string BestSkillPawn { get; set; }
         public List<string> WorkTypes { get; set; } = new List<string>();
     }
 

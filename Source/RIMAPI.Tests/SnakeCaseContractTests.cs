@@ -98,6 +98,8 @@ namespace RIMAPI.Tests
                 "allowed_materials",
                 "allowed_skill_range",
                 "available_materials",
+                "best_skill",
+                "best_skill_pawn",
                 "hp_range",
                 "include_equipped",
                 "include_tainted",
