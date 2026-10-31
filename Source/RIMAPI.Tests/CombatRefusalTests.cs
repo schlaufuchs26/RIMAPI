@@ -111,6 +111,37 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void A_colonist_in_a_mental_state_cannot_arrest_and_the_answer_says_so()
+        {
+            CombatRefusal.PawnState pawn = Colonist();
+            pawn.MentalState = "tantrum";
+
+            Assert.Equal(
+                "Gray (id 628) is in a mental state (tantrum), so he cannot arrest",
+                CombatRefusal.ActorRefusal("Gray (id 628)", "arrest", pawn));
+            Assert.DoesNotContain(
+                "not one of the colony's colonists",
+                CombatRefusal.ActorRefusal("Gray (id 628)", "arrest", pawn));
+        }
+
+        [Fact]
+        public void A_sane_colonist_is_not_refused_as_an_actor()
+        {
+            Assert.Null(CombatRefusal.ActorRefusal("Gray", "rescue", Colonist()));
+        }
+
+        [Fact]
+        public void An_actor_who_is_no_colonist_is_still_named_one()
+        {
+            CombatRefusal.PawnState pawn = Colonist();
+            pawn.Colonist = false;
+
+            Assert.Equal(
+                "Gray is not one of the colony's colonists, so he cannot feed",
+                CombatRefusal.ActorRefusal("Gray", "feed", pawn));
+        }
+
+        [Fact]
         public void A_state_without_a_label_falls_back_to_its_defname()
         {
             Assert.Equal("tantrum", CombatRefusal.MentalStateName("tantrum", "Tantrum"));

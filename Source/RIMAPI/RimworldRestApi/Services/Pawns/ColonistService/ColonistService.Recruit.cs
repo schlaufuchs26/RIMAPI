@@ -112,10 +112,12 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail($"Pawn {pawnId} cannot arrest itself");
                 }
-                if (arrestor.Faction != Faction.OfPlayer || !arrestor.IsColonistPlayerControlled)
-                {
-                    return ApiResult.Fail($"{Describe(arrestor)} is not one of the colony's colonists");
-                }
+                // IsColonistPlayerControlled is false for a colonist in a mental
+                // state or a downed one, so the membership test alone called him
+                // a foreigner (ticket #3469); the state is named instead.
+                string refusal = CombatRefusal.ActorRefusal(
+                    Describe(arrestor), "arrest", PawnHelper.RefusalStateOf(arrestor));
+                if (refusal != null) return ApiResult.Fail(refusal);
 
                 bool capture = target.Downed && target.CanBeCaptured();
                 if (!capture && !target.CanBeArrestedBy(arrestor))

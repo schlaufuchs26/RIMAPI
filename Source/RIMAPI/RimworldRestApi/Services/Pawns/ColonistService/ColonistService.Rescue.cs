@@ -52,10 +52,13 @@ namespace RIMAPI.Services
                         + "state or cannot reach the pawn");
                 }
                 if (rescuer == target) return ApiResult.Fail($"Pawn {pawnId} cannot rescue itself");
-                if (rescuer.Faction != Faction.OfPlayer || !rescuer.IsColonistPlayerControlled)
-                {
-                    return ApiResult.Fail($"{Describe(rescuer)} is not one of the colony's colonists");
-                }
+                // The game's IsColonistPlayerControlled is false for a colonist
+                // in a mental state or a downed one, so the membership test alone
+                // refused a colonist the colony plainly has with "not one of the
+                // colony's colonists" (ticket #3469); the state is named instead.
+                string refusal = CombatRefusal.ActorRefusal(
+                    Describe(rescuer), "rescue", PawnHelper.RefusalStateOf(rescuer));
+                if (refusal != null) return ApiResult.Fail(refusal);
 
                 WorkGiver_RescueDowned giver = new WorkGiver_RescueDowned();
                 if (!giver.HasJobOnThing(rescuer, target, true))

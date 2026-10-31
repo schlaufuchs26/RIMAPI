@@ -52,10 +52,12 @@ namespace RIMAPI.Services
                         + "state or cannot reach the patient");
                 }
                 if (feeder == patient) return ApiResult.Fail($"Pawn {pawnId} cannot feed itself");
-                if (feeder.Faction != Faction.OfPlayer || !feeder.IsColonistPlayerControlled)
-                {
-                    return ApiResult.Fail($"{Describe(feeder)} is not one of the colony's colonists");
-                }
+                // IsColonistPlayerControlled is false for a colonist in a mental
+                // state or a downed one, so the membership test alone called him
+                // a foreigner (ticket #3469); the state is named instead.
+                string refusal = CombatRefusal.ActorRefusal(
+                    Describe(feeder), "feed", PawnHelper.RefusalStateOf(feeder));
+                if (refusal != null) return ApiResult.Fail(refusal);
 
                 Job job;
                 if (mealId > 0)

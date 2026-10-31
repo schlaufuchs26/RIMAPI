@@ -69,6 +69,22 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// The whole sentence a work order is refused with because of the pawn
+        /// who would carry it out, or null when he can take it. The verb names
+        /// the order, so a run learns which order failed as well as why
+        /// (ticket #3469: arrest, rescue and feed checked
+        /// IsColonistPlayerControlled, which is false for a colonist in a
+        /// mental state, and answered "not one of the colony's colonists" for a
+        /// pawn the colony plainly has).
+        /// </summary>
+        public static string ActorRefusal(string name, string verb, PawnState pawn)
+        {
+            string state = StateOf(pawn);
+            if (state != null) return name + " is " + state + ", so he cannot " + verb;
+            return null;
+        }
+
+        /// <summary>
         /// The state's own name: its label when it has one ("tantrum") and its
         /// defName otherwise ("Berserk"), so a state without a label still
         /// reads.
