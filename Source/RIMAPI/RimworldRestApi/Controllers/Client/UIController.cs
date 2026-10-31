@@ -79,8 +79,16 @@ namespace RIMAPI.BaseControllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/ui/window/close")]
-        [EndpointMetadata("Close open windows by type name, or (default) every force-pause window — used to auto-dismiss the colony-name and debug-log popups during unattended runs.")]
+        [Post("/api/v1/ui/letter/answer")]
+        [EndpointMetadata("Open a choice letter (a joiner, a quest offer, a ritual choice) and press the option named in the body, the same code the game's own button runs. Body: {id, option}, where option is a word from the dialog's label (accept, reject); an option that matches none is refused with the labels the dialog offers.")]
+        public async Task AnswerLetter(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<LetterAnswerRequestDto>();
+            var result = _letterService.AnswerLetter(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/ui/window/close")]        [EndpointMetadata("Close open windows by type name, or (default) every force-pause window — used to auto-dismiss the colony-name and debug-log popups during unattended runs.")]
         public async Task CloseWindows(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<WindowCloseRequestDto>();

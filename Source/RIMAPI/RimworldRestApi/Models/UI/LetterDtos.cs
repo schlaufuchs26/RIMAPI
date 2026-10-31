@@ -45,4 +45,36 @@ namespace RIMAPI.Models
         // How many letters stand afterwards.
         public int Remaining { get; set; }
     }
+
+    // Answer a choice letter (a joiner, a quest offer, a ritual choice): the id
+    // the letters read prints, and the option to press, matched against the
+    // label the dialog draws. A word is enough ("accept", "reject"), and the
+    // answer names the options when it matches none (ticket #3188).
+    public class LetterAnswerRequestDto
+    {
+        public int Id { get; set; }
+        public string Option { get; set; }
+    }
+
+    public class LetterAnswerResultDto
+    {
+        // True when the option was pressed; a letter that offers no dialog, or
+        // an option that matches none, answers false with a reason instead.
+        public bool Answered { get; set; }
+        public string Label { get; set; }
+        // Pressed is the label of the option that was run, the game's own text.
+        public string Pressed { get; set; }
+        // Options are the choices the dialog drew, so a caller that matched
+        // nothing learns what it can say.
+        public List<string> Options { get; set; } = new List<string>();
+        // Why nothing was pressed, empty on success.
+        public string Reason { get; set; }
+        // How many letters stand afterwards.
+        public int Remaining { get; set; }
+        // StillOpen says a dialog holds the clock after the press: a choice
+        // that leads to a second node is answered again with the options it
+        // now offers.
+        public bool StillOpen { get; set; }
+        public string OpenWindow { get; set; }
+    }
 }

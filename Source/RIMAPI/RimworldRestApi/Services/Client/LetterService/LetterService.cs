@@ -82,6 +82,214 @@ namespace RIMAPI.Services
             }
         }
 
+        // AnswerLetter opens a choice letter's dialog and presses the option the
+        // caller names, the same code the game's own button runs, so the
+        // letter's action happens (a joiner joins, a quest is taken) instead of
+        // the window being pulled off the stack (ticket #3188). A letter that
+        // offers no dialog is refused with its type name, and an option that
+        // matches none closes the dialog again and names the options, so a
+        // wrong word costs one call and no stuck popup.
+        public ApiResult<LetterAnswerResultDto> AnswerLetter(LetterAnswerRequestDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return ApiResult<LetterAnswerResultDto>.Fail(
+                        "the request needs the letter's id and the option to press");
+                var stack = Find.LetterStack;
+                if (stack == null)
+                    return ApiResult<LetterAnswerResultDto>.Fail("no letter stack: no colony is loaded");
+                var letter = StackLetters().FirstOrDefault(l => l.ID == request.Id);
+                if (letter == null)
+                    return ApiResult<LetterAnswerResultDto>.Fail(
+                        $"no letter with id {request.Id} stands; the letters read prints the ids");
+
+                var result = new LetterAnswerResultDto { Label = letter.Label };
+                var tree = OpenChoiceDialog(letter);
+                if (tree == null)
+                {
+                    result.Reason =
+                        $"{letter.GetType().Name} opens no choice dialog, so there is no option to press";
+                    result.Remaining = StackLetters().Count;
+                    return ApiResult<LetterAnswerResultDto>.Ok(result);
+                }
+
+                var node = Read(tree, "curNode") as DiaNode;
+                var options = node != null && node.options != null ? node.options : new List<DiaOption>();
+                result.Options = OptionLabels(options);
+                var option = MatchOption(options, request.Option);
+                if (option == null)
+                {
+                    result.Reason = $"the dialog offers no option matching {Quote(request.Option)}";
+                    result.Remaining = StackLetters().Count;
+                    // The dialog was opened by this call, so it goes away
+                    // again: a wrong word must not leave the clock held.
+                    Find.WindowStack?.TryRemove(tree, doCloseSound: false);
+                    return ApiResult<LetterAnswerResultDto>.Ok(result);
+                }
+
+                var activate = option.GetType().GetMethod("Activate",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (activate == null)
+                    return ApiResult<LetterAnswerResultDto>.Fail(
+                        "DiaOption.Activate was not found in this game build");
+
+                result.Pressed = OptionText(option);
+                activate.Invoke(option, null);
+                result.Answered = true;
+                LogApi.Info($"[LetterService] Answered letter {letter.ID} {letter.Label}: {result.Pressed}");
+
+                // The read after the press is the proof: a choice that leads to
+                // a second node keeps its dialog open, and a joiner's letter
+                // leaves the stack.
+                var rest = OpenDialogOf(tree);
+                if (rest != null)
+                {
+                    result.StillOpen = true;
+                    result.OpenWindow = rest.GetType().Name;
+                    var next = Read(rest, "curNode") as DiaNode;
+                    result.Options = OptionLabels(next != null ? next.options : null);
+                }
+                result.Remaining = StackLetters().Count;
+                return ApiResult<LetterAnswerResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<LetterAnswerResultDto>.Fail(ex.Message);
+            }
+        }
+
+        // OpenChoiceDialog returns the letter's open dialog, opening the letter
+        // when none is. Opening runs Letter.OpenLetter, the code a click on the
+        // stack runs, so the choices are the game's own; the new window is the
+        // one that was not on the stack before the call.
+        private static Dialog_NodeTree OpenChoiceDialog(Letter letter)
+        {
+            var windows = Find.WindowStack?.Windows;
+            if (windows == null)
+                return null;
+            var before = windows.ToList();
+            // A letter opened by a click keeps its dialog on the stack; that
+            // one is used instead of stacking a second copy.
+            foreach (var w in before.OfType<Dialog_NodeTree>())
+            {
+                if (TitledFor(w, letter))
+                    return w;
+            }
+            Call(letter, "OpenLetter");
+            return windows.OfType<Dialog_NodeTree>().FirstOrDefault(w => !before.Contains(w));
+        }
+
+        // TitledFor says whether a dialog is this letter's: a choice letter
+        // titles its window with its own label (Dialog_NodeTree's protected
+        // title field, which the faction-info subclass fills).
+        private static bool TitledFor(Dialog_NodeTree tree, Letter letter)
+        {
+            var own = Read(tree, "title") as string;
+            var label = letter.Label.ToString();
+            if (string.IsNullOrEmpty(own) || string.IsNullOrEmpty(label))
+                return false;
+            return own.IndexOf(label, StringComparison.OrdinalIgnoreCase) >= 0
+                || label.IndexOf(own, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // OpenDialogOf returns the window if it is still on the stack.
+        private static Dialog_NodeTree OpenDialogOf(Dialog_NodeTree tree)
+        {
+            var windows = Find.WindowStack?.Windows;
+            if (windows == null)
+                return null;
+            return windows.OfType<Dialog_NodeTree>().FirstOrDefault(w => w == tree);
+        }
+
+        // MatchOption finds the option a caller named: an exact label first,
+        // then a label that contains the word, and never a disabled one. The
+        // labels are translated, so the usual words are tried against the
+        // game's own translation keys as well ("decline" has to reach "Reject").
+        private static DiaOption MatchOption(List<DiaOption> options, string wanted)
+        {
+            if (options == null || options.Count == 0)
+                return null;
+            foreach (var alias in Aliases(wanted))
+            {
+                var exact = options.FirstOrDefault(o =>
+                    o != null && !IsDisabled(o) &&
+                    string.Equals(OptionText(o).Trim(), alias, StringComparison.OrdinalIgnoreCase));
+                if (exact != null)
+                    return exact;
+            }
+            foreach (var alias in Aliases(wanted))
+            {
+                var partial = options.FirstOrDefault(o =>
+                    o != null && !IsDisabled(o) &&
+                    OptionText(o).IndexOf(alias, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (partial != null)
+                    return partial;
+            }
+            return null;
+        }
+
+        // Aliases is the word the caller gave plus the label the game draws for
+        // the usual choices.
+        private static List<string> Aliases(string option)
+        {
+            var word = (option ?? "").Trim();
+            var list = new List<string>();
+            if (word.Length == 0)
+                return list;
+            list.Add(word);
+            switch (word.ToLowerInvariant())
+            {
+                case "accept":
+                    list.Add("AcceptButton".Translate());
+                    break;
+                case "reject":
+                case "decline":
+                    list.Add("RejectLetter".Translate());
+                    break;
+                case "postpone":
+                case "later":
+                    list.Add("PostponeLetter".Translate());
+                    break;
+                case "close":
+                    list.Add("Close".Translate());
+                    break;
+            }
+            return list;
+        }
+
+        private static List<string> OptionLabels(List<DiaOption> options)
+        {
+            var labels = new List<string>();
+            if (options == null)
+                return labels;
+            foreach (var option in options)
+            {
+                if (option == null)
+                    continue;
+                var label = OptionText(option);
+                if (IsDisabled(option))
+                    label += " (disabled)";
+                labels.Add(label);
+            }
+            return labels;
+        }
+
+        private static string OptionText(DiaOption option)
+        {
+            return Text(Read(option, "text"));
+        }
+
+        private static bool IsDisabled(DiaOption option)
+        {
+            return Read(option, "disabled") is bool disabled && disabled;
+        }
+
+        private static string Quote(string s)
+        {
+            return "\"" + (s ?? "") + "\"";
+        }
+
         private static List<Letter> StackLetters()
         {
             var stack = Find.LetterStack;

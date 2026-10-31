@@ -8,5 +8,6 @@ namespace RIMAPI.Services
     {
         ApiResult<List<LetterDto>> ListLetters();
         ApiResult<LetterDismissResultDto> DismissLetter(LetterDismissRequestDto request);
+        ApiResult<LetterAnswerResultDto> AnswerLetter(LetterAnswerRequestDto request);
     }
 }
