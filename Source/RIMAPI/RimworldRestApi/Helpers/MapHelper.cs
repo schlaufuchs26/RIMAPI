@@ -298,6 +298,7 @@ namespace RIMAPI.Helpers
 
                 foreach (Zone zone in map.zoneManager.AllZones)
                 {
+                    Zone_Stockpile stockpile = zone as Zone_Stockpile;
                     zones.Add(
                         new ZoneDto
                         {
@@ -306,6 +307,7 @@ namespace RIMAPI.Helpers
                             Label = zone.label,
                             BaseLabel = zone.BaseLabel,
                             Type = zone.GetType().Name,
+                            Storage = stockpile == null ? null : GetStockpileFilter(stockpile),
                         }
                     );
                 }
@@ -317,6 +319,114 @@ namespace RIMAPI.Helpers
                 throw;
             }
         }
+
+        // GetStockpileFilter describes one stockpile's filter the way a player
+        // reads it off the storage tab (ticket #3181): the priority, and whether
+        // it takes food, raw food and meals. The filter is a def list, so the
+        // question is asked of the game's own def database: does it allow any def
+        // that gives nutrition, any meal, any raw food.
+        public static StockpileFilterDto GetStockpileFilter(Zone_Stockpile stockpile)
+        {
+            ThingFilter filter = stockpile.settings.filter;
+            return new StockpileFilterDto
+            {
+                Priority = stockpile.settings.Priority.ToString(),
+                AcceptsFood = FilterAllowsAny(filter, IsFoodDef),
+                AcceptsMeals = FilterAllowsAny(filter, IsMealDef),
+                AcceptsRawFood = FilterAllowsAny(filter, def => IsFoodDef(def) && !IsMealDef(def)),
+                AllowedDefCount = filter.AllowedThingDefs.Count(),
+            };
+        }
+
+        // GetUnwantedFood lists the edible things that lie on the map with no
+        // storage that takes them (ticket #3181): a colony starved next to 267
+        // rice because no stockpile's filter allowed RawRice, and neither the
+        // stock nor the zone read could say it.
+        public static UnwantedFoodDto GetUnwantedFood(int mapId)
+        {
+            Map map = GetMapByID(mapId);
+            if (map == null)
+            {
+                throw new Exception("Map with this id wasn't found");
+            }
+
+            List<ThingFilter> filters = StorageFilters(map);
+            var accepted = new Dictionary<string, bool>();
+            var things = new List<ThingDto>();
+            foreach (Thing thing in map.listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver))
+            {
+                if (thing == null || !thing.Spawned || !IsFoodDef(thing.def))
+                {
+                    continue;
+                }
+                if (AcceptedByAny(filters, thing.def, accepted))
+                {
+                    continue;
+                }
+                things.Add(ResourcesHelper.ThingToDto(thing));
+            }
+            things.Sort((a, b) => a.ThingId.CompareTo(b.ThingId));
+            return new UnwantedFoodDto { Things = things, StorageCount = filters.Count };
+        }
+
+        // StorageFilters collects the filters of everything that could take a
+        // hauled thing: the stockpiles and the storage buildings (a shelf, a
+        // grave). Capacity is not asked, only the filter, which is the question
+        // this read answers.
+        private static List<ThingFilter> StorageFilters(Map map)
+        {
+            var filters = new List<ThingFilter>();
+            foreach (Zone zone in map.zoneManager.AllZones)
+            {
+                Zone_Stockpile stockpile = zone as Zone_Stockpile;
+                if (stockpile != null && stockpile.settings.filter != null)
+                {
+                    filters.Add(stockpile.settings.filter);
+                }
+            }
+            foreach (Building_Storage storage in map.listerBuildings.AllBuildingsColonistOfClass<Building_Storage>())
+            {
+                if (storage.settings != null && storage.settings.filter != null)
+                {
+                    filters.Add(storage.settings.filter);
+                }
+            }
+            return filters;
+        }
+
+        private static bool AcceptedByAny(
+            List<ThingFilter> filters,
+            ThingDef def,
+            Dictionary<string, bool> cache
+        )
+        {
+            if (cache.TryGetValue(def.defName, out bool known))
+            {
+                return known;
+            }
+            bool accepted = filters.Any(f => f.Allows(def));
+            cache[def.defName] = accepted;
+            return accepted;
+        }
+
+        private static bool FilterAllowsAny(ThingFilter filter, Func<ThingDef, bool> predicate)
+        {
+            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+            {
+                if (predicate(def) && filter.Allows(def))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsFoodDef(ThingDef def) => def != null && def.IsNutritionGivingIngestible;
+
+        private static bool IsMealDef(ThingDef def) =>
+            IsFoodDef(def)
+            && def.ingestible != null
+            && def.ingestible.foodType.HasFlag(FoodTypeFlags.Meal);
 
         public static List<ZoneDto> GetMapAreas(int mapId)
         {

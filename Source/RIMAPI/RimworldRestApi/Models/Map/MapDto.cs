@@ -123,6 +123,32 @@ namespace RIMAPI.Models
         public string Label { get; set; }
         public string BaseLabel { get; set; }
         public string Type { get; set; }
+
+        // Null for anything that is not a stockpile: a growing zone or an area
+        // has no storage filter.
+        public StockpileFilterDto Storage { get; set; }
+    }
+
+    // StockpileFilterDto is one stockpile's filter in the terms the storage tab
+    // shows: the priority, whether the filter takes food at all, and whether it
+    // takes raw food or meals (fox ticket #3181). A colony starved with 267 rice
+    // on the field because no stockpile took RawRice, and no read said so.
+    public class StockpileFilterDto
+    {
+        public string Priority { get; set; }
+        public bool AcceptsFood { get; set; }
+        public bool AcceptsRawFood { get; set; }
+        public bool AcceptsMeals { get; set; }
+        public int AllowedDefCount { get; set; }
+    }
+
+    // UnwantedFoodDto is the answer to "which edible things lie on the ground
+    // with nowhere to go": the loose food no stockpile or storage building
+    // accepts, plus how many storages were asked (fox ticket #3181).
+    public class UnwantedFoodDto
+    {
+        public List<ThingDto> Things { get; set; }
+        public int StorageCount { get; set; }
     }
 
     public class RoomDto

@@ -267,6 +267,16 @@ namespace RIMAPI.Services
             return ApiResult<MapZonesDto>.Ok(mapZones);
         }
 
+        public ApiResult<UnwantedFoodDto> GetUnwantedFood(int mapId)
+        {
+            var map = MapHelper.GetMapByID(mapId);
+            if (map == null)
+            {
+                return ApiResult<UnwantedFoodDto>.Fail($"Map not found: {mapId}");
+            }
+            return ApiResult<UnwantedFoodDto>.Ok(MapHelper.GetUnwantedFood(mapId));
+        }
+
         /// <summary>
         /// One area and its cells (fox ticket #3095). The Home area is the one
         /// that decides where colonists haul, so a build order outside it never

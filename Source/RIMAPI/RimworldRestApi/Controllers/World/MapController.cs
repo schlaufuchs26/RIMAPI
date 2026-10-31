@@ -181,6 +181,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/storage/unwanted")]
+        [EndpointMetadata("Get the edible things no storage on the map accepts")]
+        public async Task GetUnwantedFood(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var result = _mapService.GetUnwantedFood(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/rooms")]
         public async Task GetMapRooms(HttpListenerContext context)
         {
