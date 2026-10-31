@@ -91,9 +91,9 @@ namespace RIMAPI.Services
             return ApiResult<MapRoomsDto>.Ok(result);
         }
 
-        public ApiResult<MapTerrainDto> GetMapTerrain(int mapId)
+        public ApiResult<MapTerrainDto> GetMapTerrain(int mapId, TerrainRect.Box? box)
         {
-            var result = MapHelper.GetMapTerrain(mapId);
+            var result = MapHelper.GetMapTerrain(mapId, box);
             return ApiResult<MapTerrainDto>.Ok(result);
         }
 

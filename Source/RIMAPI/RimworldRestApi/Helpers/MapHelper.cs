@@ -933,15 +933,45 @@ namespace RIMAPI.Helpers
             };
         }
 
-        public static MapTerrainDto GetMapTerrain(int mapId)
+        // GetMapTerrain reads the natural terrain and the constructed floors as
+        // a run-length grid. A rectangle narrows the answer to that box (fox
+        // ticket #3381): the whole map is about 30 kB even encoded, while a
+        // fire read needs the ground under a handful of cells.
+        public static MapTerrainDto GetMapTerrain(int mapId, TerrainRect.Box? box = null)
         {
             var map = GetMapByID(mapId);
             if (map == null) return new MapTerrainDto();
 
             var terrainGrid = map.terrainGrid;
             var size = map.Size;
-            int width = size.x;
-            int height = size.z;
+
+            TerrainRect.Box area;
+            if (box.HasValue)
+            {
+                if (
+                    !TerrainRect.Clip(
+                        size.x,
+                        size.z,
+                        box.Value.X1,
+                        box.Value.Z1,
+                        box.Value.X2,
+                        box.Value.Z2,
+                        out area
+                    )
+                )
+                {
+                    throw new Exception(
+                        $"The rectangle {box.Value} misses the map, which is {size.x}x{size.z} cells"
+                    );
+                }
+            }
+            else
+            {
+                area = new TerrainRect.Box { X1 = 0, Z1 = 0, X2 = size.x - 1, Z2 = size.z - 1 };
+            }
+
+            int width = area.Width;
+            int height = area.Height;
 
             // 1. Build Palette and Raw Index Grid
             var palette = new List<string>();
@@ -949,10 +979,10 @@ namespace RIMAPI.Helpers
             var rawIndices = new int[width * height];
 
             int cellIndex = 0;
-            // Iterate Z then X (Standard loop order)
-            for (int z = 0; z < height; z++)
+            // Iterate Z then X (Standard loop order), row-major inside the box
+            for (int z = area.Z1; z <= area.Z2; z++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = area.X1; x <= area.X2; x++)
                 {
                     TerrainDef def = terrainGrid.TerrainAt(new IntVec3(x, 0, z));
 
@@ -999,12 +1029,13 @@ namespace RIMAPI.Helpers
             var rawFloorIndices = new int[width * height];
 
             cellIndex = 0;
-            for (int z = 0; z < height; z++)
+            for (int z = area.Z1; z <= area.Z2; z++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = area.X1; x <= area.X2; x++)
                 {
-                    var cell = new IntVec3(x, 0, z);
-                    var building = map.edificeGrid.InnerArray[cellIndex];
+                    // The edifice grid is the map's own array, indexed by the
+                    // whole map's row length, not by the box.
+                    var building = map.edificeGrid.InnerArray[z * size.x + x];
 
                     // Check if this is a floor (constructed floor blueprint)
                     // Floors in RimWorld are Buildings that have a graphic but no altitude (they're on the ground)
@@ -1062,6 +1093,8 @@ namespace RIMAPI.Helpers
 
             return new MapTerrainDto
             {
+                X1 = area.X1,
+                Z1 = area.Z1,
                 Width = width,
                 Height = height,
                 Palette = palette,

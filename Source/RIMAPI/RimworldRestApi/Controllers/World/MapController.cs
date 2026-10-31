@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Http;
 using RIMAPI.Models;
 using RIMAPI.Models.Map;
@@ -221,11 +223,51 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/terrain")]
+        [EndpointMetadata("Get the map's natural terrain and constructed floors as a run-length grid; x1, z1, x2, z2 narrow it to that rectangle")]
         public async Task GetMapTerrain(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
-            var result = _mapService.GetMapTerrain(mapId);
+            var result = _mapService.GetMapTerrain(mapId, ReadTerrainBox(context));
             await context.SendJsonResponse(result);
+        }
+
+        // ReadTerrainBox takes the terrain read's optional rectangle: all four
+        // corners or none. Half a rectangle has no meaning, and a caller that
+        // sent two corners would silently get the whole map (fox ticket #3381).
+        private static TerrainRect.Box? ReadTerrainBox(HttpListenerContext context)
+        {
+            string[] names = { "x1", "z1", "x2", "z2" };
+            var corners = new int[names.Length];
+            var missing = new List<string>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                string value = RequestParser.GetStringParameter(context, names[i], required: false);
+                if (string.IsNullOrEmpty(value))
+                {
+                    missing.Add(names[i]);
+                    continue;
+                }
+                if (!int.TryParse(value, out corners[i]))
+                {
+                    throw new ParameterFormatException(names[i], value, typeof(int));
+                }
+            }
+            if (missing.Count == names.Length)
+            {
+                return null;
+            }
+            if (missing.Count > 0)
+            {
+                throw new ParameterNotFoundException(string.Join(", ", missing));
+            }
+
+            return new TerrainRect.Box
+            {
+                X1 = corners[0],
+                Z1 = corners[1],
+                X2 = corners[2],
+                Z2 = corners[3],
+            };
         }
 
         [Get("/api/v1/map/fog-grid")]

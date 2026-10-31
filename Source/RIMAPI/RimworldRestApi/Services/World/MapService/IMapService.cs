@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RIMAPI.Models.Map;
 
@@ -27,7 +28,7 @@ namespace RIMAPI.Services
         ApiResult<AreaCellsDto> ExpandMapArea(AreaExpandRequestDto request);
         ApiResult<MapRoomsDto> GetMapRooms(int mapId);
         ApiResult<List<BuildingDto>> GetMapBuildings(int mapId);
-        ApiResult<MapTerrainDto> GetMapTerrain(int mapId);
+        ApiResult<MapTerrainDto> GetMapTerrain(int mapId, TerrainRect.Box? box);
         ApiResult<List<ThingDto>> GetMapThingsInRadius(int mapId, int x, int z, int radius);
         ApiResult SetWeather(int mapId, string defName);
         ApiResult<List<ThingDto>> GetThingsAtCell(ThingsAtCellRequestDto body);
