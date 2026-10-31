@@ -44,6 +44,17 @@ namespace RIMAPI.Services
             Building building = BuildingHelper.FindBuildingByID(buildingId);
             if (building == null)
             {
+                // An id from the stored read can name a thing that is not a built
+                // building on the map at all; when a container holds it, say which
+                // one instead of a bare "not found" (ticket #3200).
+                Thing holder = ThingHolderHelper.FindContainerHoldingAcrossMaps(buildingId);
+                if (holder != null)
+                {
+                    return ApiResult.Fail(
+                        ThingHolderHelper.DescribeHeld(buildingId, holder)
+                            + "; only a built building on the map has a power switch"
+                    );
+                }
                 return ApiResult.Fail($"Building not found: {buildingId}");
             }
 

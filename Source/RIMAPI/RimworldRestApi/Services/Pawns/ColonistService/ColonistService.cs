@@ -396,8 +396,8 @@ namespace RIMAPI.Services
                     if (holder != null)
                     {
                         return ApiResult.Fail(
-                            $"Thing {itemId} is inside {holder.def.defName} #{holder.thingIDNumber} ({holder.LabelShort}), not on the map, so no haul can take it; "
-                                + "a corpse that sits in a grave is buried already"
+                            ThingHolderHelper.DescribeHeld(itemId, holder)
+                                + "; no haul can take it, and a corpse that sits in a grave is buried already"
                         );
                     }
                     return ApiResult.Fail($"Thing with ID={itemId} not found");
@@ -665,6 +665,19 @@ namespace RIMAPI.Services
                 );
                 if (foundThing == null)
                 {
+                    // The stored read lists a container's contents, so an id from
+                    // it can name a weapon or a piece of apparel that is not on the
+                    // map: hauled into a frame, dropped into a grave, held by a
+                    // building. Naming the container says why the id does nothing
+                    // instead of a bare "not found" (ticket #3200).
+                    Thing holder = ThingHolderHelper.FindContainerHolding(map, equipmentId);
+                    if (holder != null)
+                    {
+                        return ApiResult.Fail(
+                            ThingHolderHelper.DescribeHeld(equipmentId, holder)
+                                + "; nothing inside a container can be equipped, so it has to be hauled out first"
+                        );
+                    }
                     return ApiResult.Fail($"Thing with ID={equipmentId} not found");
                 }
 

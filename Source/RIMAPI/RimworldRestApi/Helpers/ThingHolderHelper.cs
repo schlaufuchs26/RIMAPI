@@ -30,6 +30,29 @@ namespace RIMAPI.Helpers
             return null;
         }
 
+        // Same lookup for a route that holds no map (map/building/power reads the
+        // building by id across every map), ticket #3200.
+        public static Thing FindContainerHoldingAcrossMaps(int thingId)
+        {
+            foreach (Map map in Find.Maps)
+            {
+                Thing holder = FindContainerHolding(map, thingId);
+                if (holder != null)
+                {
+                    return holder;
+                }
+            }
+            return null;
+        }
+
+        // The sentence every write route answers with, so a run reads the same
+        // reason from equip, haul and power instead of three wordings: the id
+        // named a thing the stored read lists, and it sits inside a container.
+        public static string DescribeHeld(int thingId, Thing holder)
+        {
+            return $"Thing {thingId} is inside {holder.def.defName} #{holder.thingIDNumber} ({holder.LabelShort}), not on the map";
+        }
+
         private static bool HoldsThing(IThingHolder holder, int thingId, int depth)
         {
             if (depth > 4)
