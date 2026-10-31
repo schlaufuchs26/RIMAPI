@@ -364,10 +364,13 @@ namespace RIMAPI.Services
         }
 
         // Hauling one named thing: the job the game's own haul work giver would
-        // queue, but for the thing and the destination the caller names. Without
-        // a destination the game picks the best store itself, which is what
-        // makes a burial work: a grave is a Building_Storage whose filter takes
-        // corpses, so the game's own job builder finds it. A corpse that stayed
+        // queue, but for the thing and the destination the caller names. A
+        // destination is any haul destination, not only a Building_Storage: a
+        // grave is a Building_CorpseCasket whose filter takes corpses, so the
+        // burial of a colonist needs exactly that (ticket #3150). Without a
+        // destination a corpse goes into a free grave before it goes back into
+        // a stockpile, because that is what clears the "left unburied" thought;
+        // everything else takes the game's own best store. A corpse that stayed
         // unburied for six days while Hauling ran at 1 had no lever at all
         // (ticket #3136).
         public ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId)
@@ -384,6 +387,19 @@ namespace RIMAPI.Services
                     .listerThings.AllThings.FirstOrDefault(t => t.thingIDNumber == itemId);
                 if (thing == null)
                 {
+                    // The stored read lists a container's contents too, so an id
+                    // from it can name a corpse that sits in a grave already or
+                    // the wood delivered into a frame. Those things are despawned
+                    // and no haul can take them; say which container holds the
+                    // thing instead of answering "not found" (ticket #3150).
+                    Thing holder = FindContainerHolding(map, itemId);
+                    if (holder != null)
+                    {
+                        return ApiResult.Fail(
+                            $"Thing {itemId} is inside {holder.def.defName} #{holder.thingIDNumber} ({holder.LabelShort}), not on the map, so no haul can take it; "
+                                + "a corpse that sits in a grave is buried already"
+                        );
+                    }
                     return ApiResult.Fail($"Thing with ID={itemId} not found");
                 }
                 if (!thing.Spawned)
@@ -433,44 +449,16 @@ namespace RIMAPI.Services
                     {
                         return ApiResult.Fail($"Destination with ID={destId} not found");
                     }
-                    Building_Storage storage = dest as Building_Storage;
-                    if (storage == null)
+                    string refusal;
+                    job = HaulJobToDestination(pawn, thing, dest, out refusal);
+                    if (job == null)
                     {
-                        return ApiResult.Fail(
-                            $"Thing {destId} is {dest.def.defName}, not a storage building; a destination is a grave, a shelf or another building that holds things"
-                        );
-                    }
-                    if (!storage.GetStoreSettings().AllowedToAccept(thing))
-                    {
-                        return ApiResult.Fail(
-                            $"{storage.LabelShort} does not accept {thing.LabelShort}: the storage filter or the item's own settings say no"
-                        );
-                    }
-                    try
-                    {
-                        job = HaulAIUtility.HaulToContainerJob(pawn, thing, storage);
-                    }
-                    catch (Exception ex)
-                    {
-                        return ApiResult.Fail(
-                            $"Failed to build the haul job for thing {itemId} into {destId}: "
-                                + $"{ex.GetType().Name}: {ex.Message}"
-                        );
+                        return ApiResult.Fail(refusal);
                     }
                 }
                 else
                 {
-                    try
-                    {
-                        job = HaulAIUtility.HaulToStorageJob(pawn, thing, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        return ApiResult.Fail(
-                            $"Failed to build the haul job for thing {itemId}: "
-                                + $"{ex.GetType().Name}: {ex.Message}"
-                        );
-                    }
+                    job = BestHaulJob(pawn, thing);
                     if (job == null)
                     {
                         return ApiResult.Fail(
@@ -487,6 +475,14 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail($"Failed to assign job to pawn: {pawn.thingIDNumber}");
                 }
+                // A container job names the destination it went into, which is
+                // how a caller that left dest_id open learns which grave the
+                // mod picked (ticket #3150).
+                int chosenDest = destId;
+                if (job.def == JobDefOf.HaulToContainer && job.targetB.HasThing)
+                {
+                    chosenDest = job.targetB.Thing.thingIDNumber;
+                }
                 return ApiResult.Ok(
                     new
                     {
@@ -495,7 +491,7 @@ namespace RIMAPI.Services
                         item_id = thing.thingIDNumber,
                         def_name = thing.def.defName,
                         label = thing.LabelShort,
-                        dest_id = destId > 0 ? destId : 0,
+                        dest_id = chosenDest,
                         job = job.def.defName,
                     }
                 );
@@ -504,6 +500,193 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.Message);
             }
+        }
+
+        // HaulJobToDestination builds the job into the destination the caller
+        // named: a slot group (a stockpile or a shelf) takes the cell job, a
+        // container (a grave, a sarcophagus) the container job. It refuses with
+        // the reason, because "failed to build the job" leaves the caller
+        // guessing which of the checks said no (ticket #3150).
+        private static Job HaulJobToDestination(Pawn pawn, Thing thing, Thing dest, out string refusal)
+        {
+            refusal = null;
+            IHaulDestination destination = dest as IHaulDestination;
+            if (destination == null)
+            {
+                refusal =
+                    $"Thing {dest.thingIDNumber} is {dest.def.defName}, not a haul destination; a destination is a grave, a shelf, a stockpile or another building that holds things";
+                return null;
+            }
+            if (!destination.HaulDestinationEnabled)
+            {
+                refusal = $"{dest.LabelShort} (#{dest.thingIDNumber}) is switched off as a haul destination";
+                return null;
+            }
+            if (!destination.Accepts(thing))
+            {
+                refusal =
+                    $"{dest.LabelShort} does not accept {thing.LabelShort}: the storage filter, the grave's assignment or the item's own settings say no";
+                return null;
+            }
+            try
+            {
+                if (destination is ISlotGroupParent slotGroupParent)
+                {
+                    IntVec3 cell = FirstStoreCell(pawn, thing, slotGroupParent.GetSlotGroup());
+                    if (!cell.IsValid)
+                    {
+                        refusal = $"{dest.LabelShort} (#{dest.thingIDNumber}) has no free cell that takes {thing.LabelShort}";
+                        return null;
+                    }
+                    return HaulAIUtility.HaulToCellStorageJob(pawn, thing, cell, fitInStoreCell: false);
+                }
+                Job job = HaulAIUtility.HaulToContainerJob(pawn, thing, dest);
+                if (job == null)
+                {
+                    refusal = $"{dest.LabelShort} (#{dest.thingIDNumber}) cannot hold things, so there is no container job for it";
+                }
+                return job;
+            }
+            catch (Exception ex)
+            {
+                refusal =
+                    $"Failed to build the haul job for thing {thing.thingIDNumber} into {dest.thingIDNumber}: {ex.GetType().Name}: {ex.Message}";
+                return null;
+            }
+        }
+
+        // FirstStoreCell is the cell of a slot group the pawn would put the
+        // thing on; the game's own check, so a cell that is full or holds
+        // something else is skipped rather than handed to the job.
+        private static IntVec3 FirstStoreCell(Pawn pawn, Thing thing, SlotGroup group)
+        {
+            if (group == null)
+            {
+                return IntVec3.Invalid;
+            }
+            foreach (IntVec3 cell in group.CellsList)
+            {
+                if (StoreUtility.IsGoodStoreCell(cell, pawn.Map, thing, pawn, pawn.Faction))
+                {
+                    return cell;
+                }
+            }
+            return IntVec3.Invalid;
+        }
+
+        // BestHaulJob is the job for a haul the caller left open. A corpse goes
+        // into a free grave first, because that is what clears the "left
+        // unburied" thought; the game's own search alone finds no grave for a
+        // corpse that already lies in a stockpile of the same priority, since it
+        // only takes a destination that is strictly better (ticket #3150).
+        // Everything else, and a corpse with no free grave, takes the game's own
+        // best store.
+        private static Job BestHaulJob(Pawn pawn, Thing thing)
+        {
+            StoragePriority current = StoreUtility.CurrentStoragePriorityOf(thing, forced: true);
+            Job job = null;
+            if (thing is Corpse && thing.CanBeBuried())
+            {
+                job = ContainerDestinationJob(pawn, thing, current);
+            }
+            if (job == null)
+            {
+                try
+                {
+                    job = HaulAIUtility.HaulToStorageJob(pawn, thing, true);
+                }
+                catch (Exception)
+                {
+                    job = null;
+                }
+            }
+            if (job == null)
+            {
+                job = ContainerDestinationJob(pawn, thing, current);
+            }
+            return job;
+        }
+
+        // ContainerDestinationJob is the job into the nearest free container
+        // destination that takes the thing. TryFindBestBetterNonSlotGroupStorageFor
+        // is the game's own search; acceptSamePriority is what lets it see a
+        // grave next to a stockpile of the same priority, and it still honours
+        // the grave's filter, its assignment, reservations and reachability.
+        private static Job ContainerDestinationJob(Pawn pawn, Thing thing, StoragePriority current)
+        {
+            if (
+                !StoreUtility.TryFindBestBetterNonSlotGroupStorageFor(
+                    thing,
+                    pawn,
+                    pawn.Map,
+                    current,
+                    pawn.Faction,
+                    out IHaulDestination destination,
+                    acceptSamePriority: true
+                )
+            )
+            {
+                return null;
+            }
+            Thing container = destination as Thing;
+            if (container == null)
+            {
+                return null;
+            }
+            try
+            {
+                return HaulAIUtility.HaulToContainerJob(pawn, thing, container);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        // FindContainerHolding is the container a despawned thing sits in: a
+        // grave's corpse, a frame's delivered wood, a shelf's inner owner. The
+        // stored read lists those things, so a write that takes an id from it
+        // has to name the container instead of answering "not found".
+        private static Thing FindContainerHolding(Map map, int thingId)
+        {
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (!(building is IThingHolder holder) || building is ISlotGroupParent)
+                {
+                    continue;
+                }
+                if (HoldsThing(holder, thingId, 0))
+                {
+                    return building;
+                }
+            }
+            return null;
+        }
+
+        private static bool HoldsThing(IThingHolder holder, int thingId, int depth)
+        {
+            if (depth > 4)
+            {
+                return false;
+            }
+            ThingOwner owner = holder.GetDirectlyHeldThings();
+            if (owner == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < owner.Count; i++)
+            {
+                Thing held = owner[i];
+                if (held.thingIDNumber == thingId)
+                {
+                    return true;
+                }
+                if (held is IThingHolder nested && HoldsThing(nested, thingId, depth + 1))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
