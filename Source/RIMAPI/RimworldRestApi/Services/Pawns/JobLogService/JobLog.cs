@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RIMAPI.Helpers;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -31,6 +32,11 @@ namespace RIMAPI.Services
             // Target is the thing the job works on, empty when it works on a
             // cell or on nothing.
             public string Target;
+            // Idle is the game's own answer to "does this pawn have something
+            // to do" (Pawn_MindState.IsIdle, the state the colonists-idle alert
+            // shows). The tool used to guess it from job names, so a new
+            // wander job in a game update counted as work (ticket #3392).
+            public bool Idle;
         }
 
         // KeepTicks bounds the record to two in-game days, which is longer than
@@ -65,12 +71,13 @@ namespace RIMAPI.Services
                 label = cur.def.label ?? job;
                 target = TargetLabel(cur);
             }
+            bool idle = IdleState(pawn);
             int id = pawn.thingIDNumber;
             lock (Gate)
             {
                 Entry last;
                 if (Current.TryGetValue(id, out last)
-                    && last.Job == job && last.Target == target)
+                    && JobLogState.Same(last.Job, last.Target, last.Idle, job, target, idle))
                     return;
                 var entry = new Entry
                 {
@@ -80,10 +87,29 @@ namespace RIMAPI.Services
                     Job = job,
                     Label = label,
                     Target = target,
+                    Idle = idle,
                 };
                 Entries.Add(entry);
                 Current[id] = entry;
                 Prune(now);
+            }
+        }
+
+        // IdleState is the game's own answer, not a list of job names: the
+        // mind state's idle flag is what the "colonists idle" alert shows, and
+        // it covers whatever job the game hands an idle colonist (wandering,
+        // joy, waiting), including one a game update adds.
+        private static bool IdleState(Pawn pawn)
+        {
+            try
+            {
+                return pawn.mindState != null && pawn.mindState.IsIdle;
+            }
+            catch (Exception)
+            {
+                // A pawn whose mind state is not initialized yet (a spawn in
+                // progress) is not known to be idle; the job def still counts.
+                return false;
             }
         }
 

@@ -29,6 +29,7 @@ namespace RIMAPI.Services
                     Job = e.Job,
                     Label = e.Label,
                     Target = e.Target,
+                    Idle = e.Idle,
                 });
             }
             return ApiResult<JobLogDto>.Ok(new JobLogDto

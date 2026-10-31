@@ -18,6 +18,11 @@ namespace RIMAPI.Models
         // Target is the label of the thing the job works on, empty when it
         // works on a cell or on nothing.
         public string Target { get; set; }
+        // Idle is the game's own idle state for this entry: true when the pawn
+        // has nothing to do (Pawn_MindState.IsIdle, the state the colonists-idle
+        // alert shows). It replaces the tool's list of wander job names
+        // (ticket #3392), so a wander job a game update adds is idle at once.
+        public bool Idle { get; set; }
     }
 
     // The answer of GET /api/v1/colonists/job-log: the record from Since on,

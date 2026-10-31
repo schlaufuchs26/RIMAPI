@@ -136,6 +136,28 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryJobLogFieldKeepsTheKeyTheToolReads()
+        {
+            // The activity fold of the fox's wait report reads these keys; the
+            // idle flag in particular is what replaced its own list of wander
+            // job names (ticket #3392), so a rename here has to fail a test.
+            var expected = new[]
+            {
+                "idle",
+                "job",
+                "label",
+                "pawn",
+                "pawn_id",
+                "target",
+                "tick",
+            };
+
+            JObject json = Json(new JobLogEntryDto());
+
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public void ANestedRangeKeepsItsOwnKeys()
         {
             JObject json = Json(new BillDto
