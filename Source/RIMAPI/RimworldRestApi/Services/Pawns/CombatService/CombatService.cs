@@ -546,6 +546,9 @@ namespace RIMAPI.Services
 
         private static CombatantDto CombatantOf(Pawn pawn, string kind, bool hostile)
         {
+            AttackDamage.Hit damage = DamageOf(pawn);
+            float meleeDamage = MeleeDamage(pawn);
+            HitPointsOf(pawn, out int hitPoints, out int maxHitPoints);
             CombatantDto dto = new CombatantDto
             {
                 Id = pawn.thingIDNumber,
@@ -561,6 +564,12 @@ namespace RIMAPI.Services
                 Position = PositionOf(pawn),
                 Weapon = WeaponLabel(pawn),
                 WeaponRange = WeaponRange(pawn),
+                DamagePerHit = damage.Damage,
+                DamageKind = damage.Kind,
+                MeleeDamage = meleeDamage,
+                HitPoints = hitPoints,
+                MaxHitPoints = maxHitPoints,
+                MoveSpeed = MoveSpeed(pawn),
                 Drafted = pawn.Drafted,
                 FireAtWill = pawn.drafter != null && pawn.drafter.FireAtWill,
                 Activity = pawn.CurJobDef != null ? pawn.CurJobDef.defName : "",
@@ -617,24 +626,93 @@ namespace RIMAPI.Services
             return verb != null && verb.verbProps != null ? verb.verbProps.range : 0f;
         }
 
+        // DamageOf is the pawn's primary attack (ticket #3451): the shot of a
+        // ranged weapon, or a blow. The cut between the two lives in
+        // AttackDamage so the test project can state it without a game.
+        private static AttackDamage.Hit DamageOf(Pawn pawn)
+        {
+            Verb verb = AttackVerb(pawn);
+            VerbProperties props = verb != null ? verb.verbProps : null;
+            if (props == null) return new AttackDamage.Hit();
+            float projectile = props.defaultProjectile != null && props.defaultProjectile.projectile != null
+                ? props.defaultProjectile.projectile.GetDamageAmount(
+                    pawn.equipment != null ? pawn.equipment.Primary : null, null)
+                : 0f;
+            return AttackDamage.Of(props.range, MeleeDamage(pawn), projectile);
+        }
+
+        // AttackVerb is the equipped weapon's verb, or the pawn's own first
+        // verb: an animal's bite, an unarmed colonist's fists. Reading only
+        // the equipment made every animal look like it attacked for nothing.
+        private static Verb AttackVerb(Pawn pawn)
+        {
+            if (pawn.equipment != null && pawn.equipment.PrimaryEq != null)
+            {
+                return pawn.equipment.PrimaryEq.PrimaryVerb;
+            }
+            return pawn.VerbTracker != null ? pawn.VerbTracker.PrimaryVerb : null;
+        }
+
+        // MeleeDamage is what the pawn does in contact: the best attack of the
+        // weapon it holds (a rifle's stock) or of its own body (a warg's
+        // teeth). A hostile that closes in is a melee fight whatever it
+        // carries, so the read needs this number next to the shot's.
+        private static float MeleeDamage(Pawn pawn)
+        {
+            ThingDef def = pawn.equipment != null && pawn.equipment.Primary != null
+                ? pawn.equipment.Primary.def
+                : pawn.def;
+            if (def == null || def.tools == null) return 0f;
+            float best = 0f;
+            foreach (Tool tool in def.tools)
+            {
+                if (tool != null && tool.power > best) best = tool.power;
+            }
+            return best;
+        }
+
+        // HitPointsOf is the body's hit points, the unit DamagePerHit is
+        // measured in: the sum over the parts the pawn still has, so a missing
+        // leg takes its points with it. A pawn without a health tracker reads
+        // zero, and the tool then prints no hit-point figure.
+        private static void HitPointsOf(Pawn pawn, out int current, out int max)
+        {
+            current = 0;
+            max = 0;
+            if (pawn.health == null || pawn.health.hediffSet == null) return;
+            foreach (BodyPartRecord part in pawn.health.hediffSet.GetNotMissingParts())
+            {
+                if (part == null || part.def == null) continue;
+                max += part.def.hitPoints;
+                current += (int)System.Math.Min(
+                    pawn.health.hediffSet.GetPartHealth(part), (float)part.def.hitPoints);
+            }
+            if (current < 0) current = 0;
+        }
+
+        // MoveSpeed is the pawn's movement in cells per second, the number that
+        // decides whether walking away breaks contact with a melee attacker.
+        private static float MoveSpeed(Pawn pawn)
+        {
+            return pawn.GetStatValue(StatDefOf.MoveSpeed);
+        }
+
         private static bool HasRangedWeapon(Pawn pawn)
         {
             return WeaponRange(pawn) > 1.6f;
         }
 
         // IsHostile is the side test the tool uses: an enemy faction, or an
-        // animal the game has turned manhunter.
+        // animal the game has turned manhunter. The rule lives in Hostility so
+        // the cheap headcount counts the same pawns (ticket #3451).
         private static bool IsHostile(Pawn pawn)
         {
-            if (IsManhunter(pawn)) return true;
-            return pawn.Faction != null && pawn.Faction.HostileTo(Faction.OfPlayer);
+            return Hostility.IsHostileToColony(pawn);
         }
 
         private static bool IsManhunter(Pawn pawn)
         {
-            if (!pawn.RaceProps.Animal) return false;
-            MentalStateDef state = pawn.MentalStateDef;
-            return state == MentalStateDefOf.Manhunter || state == MentalStateDefOf.ManhunterPermanent;
+            return Hostility.IsManhunter(pawn);
         }
 
         // KindOf names the side a pawn is on for a hostile line.

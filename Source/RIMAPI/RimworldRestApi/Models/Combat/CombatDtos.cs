@@ -24,6 +24,23 @@ namespace RIMAPI.Models
         // melee weapon has range 1.5.
         public string Weapon { get; set; }
         public float WeaponRange { get; set; }
+        // DamagePerHit is what one attack of the pawn's primary verb takes off
+        // a target and DamageKind says whether that is a shot or a blow
+        // ("ranged" or "melee"); MeleeDamage is what the same pawn does with
+        // the weapon's stock or its own teeth. A warg bit a colonist to death
+        // while the read named only "unarmed", so a run could not see that
+        // trading blows was a loss (fox ticket #3451).
+        public float DamagePerHit { get; set; }
+        public string DamageKind { get; set; }
+        public float MeleeDamage { get; set; }
+        // HitPoints and MaxHitPoints are the body's hit points, the unit the
+        // damage above is measured in; Health keeps the percentage.
+        public int HitPoints { get; set; }
+        public int MaxHitPoints { get; set; }
+        // MoveSpeed is the pawn's movement in cells per second
+        // (StatDefOf.MoveSpeed). A tick is 1/60 s, so this is what decides
+        // whether walking away breaks contact with a melee attacker.
+        public float MoveSpeed { get; set; }
         public bool Drafted { get; set; }
         public bool FireAtWill { get; set; }
         // Activity is the current job's defName (the game's own name for what

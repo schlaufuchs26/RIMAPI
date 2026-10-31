@@ -39,6 +39,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CombatRefusal.cs" Link="Linked\CombatRefusal.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AttackDamage.cs" Link="Linked\AttackDamage.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ClockOffset.cs" Link="Linked\ClockOffset.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BillStateReason.cs" Link="Linked\BillStateReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SkillPicker.cs" Link="Linked\SkillPicker.cs" />

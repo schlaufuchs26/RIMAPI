@@ -72,9 +72,11 @@ namespace RIMAPI.Helpers
                 {
                     ColonistsCount = map.mapPawns.FreeColonistsSpawnedCount,
                     PrisonersCount = map.mapPawns.PrisonersOfColonyCount,
-                    EnemiesCount = map.mapPawns.AllPawnsSpawned.Count(p =>
-                        p.RaceProps.Humanlike && p.HostileTo(Faction.OfPlayer)
-                    ),
+                    // The same rule the combat read uses, so a manhunter
+                    // animal or a mechanoid raid is a hostile here too
+                    // (ticket #3451): counting humanlikes only made a warg
+                    // raid read "0 hostiles" and the digest stayed silent.
+                    EnemiesCount = map.mapPawns.AllPawnsSpawned.Count(Hostility.IsHostileToColony),
                     AnimalsCount = map.mapPawns.AllPawnsSpawned.Count(p => p.RaceProps.Animal),
                     InsectoidsCount = map.mapPawns.AllPawnsSpawned.Count(p =>
                         p != null && p.Faction != null && p.Faction.def == FactionDefOf.Insect
