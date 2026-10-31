@@ -127,6 +127,45 @@ namespace RIMAPI.Models
         // Null for anything that is not a stockpile: a growing zone or an area
         // has no storage filter.
         public StockpileFilterDto Storage { get; set; }
+
+        // Growing is what a growing zone is set to grow and how much of it is
+        // actually sown; null for anything else (fox ticket #3277). A rice field
+        // that produced nothing for four game hours read as "339 cells" and no
+        // other word, so no caller could tell a zone without a plant from one
+        // whose cells still hold dead plants.
+        public ZoneGrowingDto Growing { get; set; }
+    }
+
+    // ZoneGrowingDto is one growing zone's plant and its cell counts. Unsown
+    // cells are the cells without a plant: no soil, out of season, or a dead
+    // plant still standing there.
+    public class ZoneGrowingDto
+    {
+        public string PlantDefName { get; set; }
+        public string PlantLabel { get; set; }
+        public bool AllowSow { get; set; }
+        public bool InSeason { get; set; }
+        public int SownCells { get; set; }
+        public int UnsownCells { get; set; }
+        public int DyingCells { get; set; }
+        public int BlightedCells { get; set; }
+        public int HarvestableCells { get; set; }
+    }
+
+    // PlantDto is one plant on a rectangle (fox ticket #3277): the read a field
+    // is diagnosed with, because `map/plants` answers every plant on the map
+    // (6.5 MB) and `things` lists no plants at all.
+    public class PlantDto
+    {
+        public int ThingId { get; set; }
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public int X { get; set; }
+        public int Z { get; set; }
+        public float Growth { get; set; }
+        public bool Harvestable { get; set; }
+        public bool Dying { get; set; }
+        public bool Blighted { get; set; }
     }
 
     // StockpileFilterDto is one stockpile's filter in the terms the storage tab

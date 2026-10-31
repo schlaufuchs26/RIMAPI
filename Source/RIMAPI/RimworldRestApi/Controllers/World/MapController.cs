@@ -67,6 +67,19 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/plants/area")]
+        [EndpointMetadata("Get the plants standing on a rectangle (x1, z1, x2, z2): defName, growth and cell of each")]
+        public async Task GetMapPlantsInRect(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var x1 = RequestParser.GetIntParameter(context, "x1");
+            var z1 = RequestParser.GetIntParameter(context, "z1");
+            var x2 = RequestParser.GetIntParameter(context, "x2");
+            var z2 = RequestParser.GetIntParameter(context, "z2");
+            var result = _mapService.GetMapPlantsInRect(mapId, x1, z1, x2, z2);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/designations")]
         [EndpointMetadata("Get every designation on the map: what is marked for chopping, mining, deconstructing, harvesting or hunting, with its cell or thing")]
         public async Task GetMapDesignations(HttpListenerContext context)

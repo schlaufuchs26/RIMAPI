@@ -308,6 +308,7 @@ namespace RIMAPI.Helpers
                             BaseLabel = zone.BaseLabel,
                             Type = zone.GetType().Name,
                             Storage = stockpile == null ? null : GetStockpileFilter(stockpile),
+                            Growing = GetZoneGrowing(zone as Zone_Growing, map),
                         }
                     );
                 }
@@ -318,6 +319,104 @@ namespace RIMAPI.Helpers
             {
                 throw;
             }
+        }
+
+        // GetZoneGrowing counts one growing zone's cells: which of them carry a
+        // plant, which still need sowing, and how many of the plants are dying,
+        // blighted or ready (fox ticket #3277). The cell counts are what tells
+        // "nothing was ever sown here" from "it was sown and died" from "the
+        // sowing work exists and nobody walks there".
+        public static ZoneGrowingDto GetZoneGrowing(Zone_Growing zone, Map map)
+        {
+            if (zone == null)
+            {
+                return null;
+            }
+
+            ThingDef plantDef = zone.GetPlantDefToGrow();
+            ZoneGrowingDto dto = new ZoneGrowingDto
+            {
+                PlantDefName = plantDef?.defName ?? "None",
+                PlantLabel = plantDef?.label,
+                AllowSow = zone.allowSow,
+            };
+
+            foreach (IntVec3 cell in zone.Cells)
+            {
+                Plant plant = cell.GetPlant(map);
+                if (plant == null)
+                {
+                    dto.UnsownCells++;
+                    continue;
+                }
+
+                dto.SownCells++;
+                if (plant.Dying)
+                {
+                    dto.DyingCells++;
+                }
+                if (plant.Blighted)
+                {
+                    dto.BlightedCells++;
+                }
+                if (plant.HarvestableNow)
+                {
+                    dto.HarvestableCells++;
+                }
+            }
+
+            // InSeason is the game's own growing-season verdict for the plant
+            // the zone is set to: an unsown field in winter is not a broken
+            // zone, and the count alone would read as one.
+            if (plantDef != null && zone.CellCount > 0)
+            {
+                dto.InSeason = PlantUtility.GrowthSeasonNow(map, plantDef);
+            }
+            return dto;
+        }
+
+        // GetMapPlantsInRect lists the plants standing on one rectangle, which
+        // is the field-sized answer `map/plants` cannot give: that read returns
+        // every plant on the map and a full map is 6.5 MB.
+        public static List<PlantDto> GetMapPlantsInRect(
+            int mapId,
+            int x1,
+            int z1,
+            int x2,
+            int z2
+        )
+        {
+            Map map = GetMapByID(mapId);
+            if (map == null)
+            {
+                throw new Exception("Map with this id wasn't found");
+            }
+
+            int minX = Math.Min(x1, x2);
+            int minZ = Math.Min(z1, z2);
+            int maxX = Math.Max(x1, x2);
+            int maxZ = Math.Max(z1, z2);
+            CellRect rect = new CellRect(minX, minZ, maxX - minX + 1, maxZ - minZ + 1);
+
+            return map
+                .listerThings.ThingsInGroup(ThingRequestGroup.Plant)
+                .OfType<Plant>()
+                .Where(p => rect.Contains(p.Position))
+                .Select(p => new PlantDto
+                {
+                    ThingId = p.thingIDNumber,
+                    DefName = p.def?.defName,
+                    Label = p.LabelShort,
+                    X = p.Position.x,
+                    Z = p.Position.z,
+                    Growth = p.Growth,
+                    Harvestable = p.HarvestableNow,
+                    Dying = p.Dying,
+                    Blighted = p.Blighted,
+                })
+                .OrderBy(p => p.Z)
+                .ThenBy(p => p.X)
+                .ToList();
         }
 
         // GetStockpileFilter describes one stockpile's filter the way a player

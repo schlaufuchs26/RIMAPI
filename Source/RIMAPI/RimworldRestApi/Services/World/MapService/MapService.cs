@@ -383,6 +383,21 @@ namespace RIMAPI.Services
             return ApiResult<MapZonesDto>.Ok(mapZones);
         }
 
+        /// <summary>
+        /// The plants standing on one rectangle (fox ticket #3277): the defName,
+        /// growth and cell of each, which is what a field is diagnosed with.
+        /// `map/plants` answers every plant on the map, a 6.5 MB answer no read
+        /// wants, and `things` lists no plants at all.
+        /// </summary>
+        public ApiResult<List<PlantDto>> GetMapPlantsInRect(int mapId, int x1, int z1, int x2, int z2)
+        {
+            if (MapHelper.GetMapByID(mapId) == null)
+            {
+                return ApiResult<List<PlantDto>>.Fail($"Map not found: {mapId}");
+            }
+            return ApiResult<List<PlantDto>>.Ok(MapHelper.GetMapPlantsInRect(mapId, x1, z1, x2, z2));
+        }
+
         public ApiResult<UnwantedFoodDto> GetUnwantedFood(int mapId)
         {
             var map = MapHelper.GetMapByID(mapId);
