@@ -287,10 +287,9 @@ namespace RIMAPI.Services
                     result.Reason = "the game could not assemble the ritual's roles";
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
-                if (hasRoles && (assignments.Participants == null || assignments.Participants.Count == 0))
+                if (assignments == null)
                 {
-                    result.Reason = "no colonist can take part: the ritual's roles are empty, and its own "
-                        + "requirements (a role holder, a free pawn) are not met";
+                    result.Reason = "the game could not assemble the ritual's roles";
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
@@ -303,8 +302,15 @@ namespace RIMAPI.Services
                     .FirstOrDefault(r => r.Ritual == ritual);
                 if (running == null)
                 {
-                    result.Reason = "the game accepted the order but no ritual of that name is running; "
-                        + "`messages` and `dialogs` say why it did not start";
+                    List<string> rolesNamed = new List<string>();
+                    if (roles != null)
+                    {
+                        foreach (RitualRole role in roles) rolesNamed.Add(role.id);
+                    }
+                    result.Reason = "the game accepted the order but no ritual of that name is running "
+                        + $"({assignments.Participants.Count} participant(s); roles: "
+                        + (rolesNamed.Count > 0 ? string.Join(", ", rolesNamed) : "none")
+                        + "); `messages` and `dialogs` say why it did not start";
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
 
