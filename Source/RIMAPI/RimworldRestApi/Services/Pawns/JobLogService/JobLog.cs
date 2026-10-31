@@ -58,7 +58,10 @@ namespace RIMAPI.Services
         {
             if (pawn == null || pawn.jobs == null || pawn.Dead || pawn.Destroyed)
                 return;
-            if (!pawn.IsColonistPlayerControlled)
+            // Not IsColonistPlayerControlled: that flag is false for a colonist
+            // in a mental state, so the record dropped him during a tantrum or
+            // a berserk (ticket #3505).
+            if (!JobLogState.Tracked(pawn.IsColonist, pawn.Faction == Faction.OfPlayer))
                 return;
             int now = Find.TickManager?.TicksGame ?? 0;
             string job = "";
@@ -146,7 +149,9 @@ namespace RIMAPI.Services
                 bool tracked = Current.TryGetValue(id, out last);
                 // A pawn the record never saw is only worth an exit when he is
                 // a colonist; anyone else is not part of the report anyway.
-                if (!tracked && !pawn.IsColonistPlayerControlled)
+                // Same rule as Record, so a colonist in a mental state gets his
+                // exit line too (ticket #3505).
+                if (!tracked && !JobLogState.Tracked(pawn.IsColonist, pawn.Faction == Faction.OfPlayer))
                     return;
                 if (tracked && last.Job == job)
                     return;
