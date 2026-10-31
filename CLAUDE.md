@@ -190,7 +190,7 @@ Route attributes are discovered automatically — no manual registration needed.
 
 Open `Source/RimApi.sln`. Build with `Release-1.6` for RimWorld 1.6 output to `1.6/Assemblies/`.
 
-Conditional compilation: the `RIMWORLD_1_6` symbol is set for every configuration, so Debug compiles the same branches. The `#if RIMWORLD_1_5` branches are dead (kept for now; #3285).
+No conditional compilation: RimWorld 1.6 is the only target (#3285) and the source carries one code path for it (#3339), so Debug and Release-1.6 compile the same code.
 
 ### Version Bump
 

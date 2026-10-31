@@ -12,11 +12,9 @@
   <!-- RimWorld 1.6 is the only supported version (ticket #3285). The 1.5
        configuration is gone: it stopped compiling once 1.6-only APIs came in
        (PathFinder.FindPathNow, Blueprint.EntityToBuild, StatDefOf.Wildness),
-       and the fox builds and installs the 1.6 assembly only. The symbol is
-       set for every configuration, so Debug compiles the same branches. -->
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);RIMWORLD_1_6</DefineConstants>
-  </PropertyGroup>
+       and the fox builds and installs the 1.6 assembly only. Since ticket
+       #3339 no version symbol is defined either: the source has one code path
+       for 1.6, so an edit cannot land in a dead 1.5 branch again. -->
 
   <!-- Conditional properties for RimWorld 1.6 -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release-1.6'">

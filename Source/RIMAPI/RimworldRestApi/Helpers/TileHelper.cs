@@ -22,11 +22,7 @@ namespace RIMAPI.Helpers
             return new TileDto
             {
                 Id = tileId,
-#if RIMWORLD_1_5
-                Biome = tile.biome.defName,
-#elif RIMWORLD_1_6
                 Biome = tile.PrimaryBiome.defName,
-#endif
                 Elevation = tile.elevation,
                 Lat = longLat.y,
                 Lon = longLat.x,
@@ -63,11 +59,7 @@ namespace RIMAPI.Helpers
             // Forageability (count of forageable plants)  
             float forageablePlantCount = 0;
 
-#if RIMWORLD_1_5
-            forageablePlantCount = tile.biome.forageability;
-#elif RIMWORLD_1_6
             forageablePlantCount = tile.PrimaryBiome.forageability;
-#endif
 
             return new TileDetailsDto
             {

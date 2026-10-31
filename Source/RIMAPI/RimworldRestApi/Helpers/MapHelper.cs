@@ -189,12 +189,7 @@ namespace RIMAPI.Helpers
 
         public static int GetMapTileId(Map map)
         {
-#if RIMWORLD_1_5
-            return map.Tile;
-#elif RIMWORLD_1_6
             return map.Tile.tileId;
-#endif
-            throw new Exception("Failed to get GetMapTileId for this rimworld version.");
         }
 
         public static List<AnimalDto> GetMapAnimals(int mapId)
@@ -887,11 +882,7 @@ namespace RIMAPI.Helpers
         public static MapRoomsDto GetRooms(Map map)
         {
             var mapRooms = new MapRoomsDto();
-#if RIMWORLD_1_5
-            List<Room> allRooms = map.regionGrid.allRooms;
-#elif RIMWORLD_1_6
             var allRooms = map.regionGrid.AllRooms;
-#endif
             mapRooms = new MapRoomsDto
             {
                 Rooms = allRooms.Select(s => RoomDtoOf(s, map)).ToList(),

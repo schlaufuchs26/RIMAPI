@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using RIMAPI.CameraStreamer;
 using RIMAPI.Core;
@@ -37,25 +36,7 @@ namespace RIMAPI.Services
             if (Find.UIRoot == null || Find.UIRoot.screenshotMode == null) return;
             var handler = Find.UIRoot.screenshotMode;
 
-#if RIMWORLD_1_6
             handler.Active = state;
-#else
-            // In 1.5, we must use Reflection to write to the private 'active' backing field
-            FieldInfo field = typeof(ScreenshotModeHandler).GetField("active", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field != null)
-            {
-                field.SetValue(handler, state);
-            }
-            else
-            {
-                // Fallback for auto-properties
-                PropertyInfo prop = typeof(ScreenshotModeHandler).GetProperty("Active", BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null && prop.CanWrite)
-                {
-                    prop.SetValue(handler, state, null);
-                }
-            }
-#endif
         }
 
         private static void TakeNativeScreenshotDirect(string fileName)

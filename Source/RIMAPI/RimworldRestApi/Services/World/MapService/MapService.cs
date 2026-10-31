@@ -737,13 +737,7 @@ namespace RIMAPI.Services
                 {
                     try
                     {
-#if RIMWORLD_1_5
-                    ActiveDropPodInfo podInfo = new ActiveDropPodInfo();
-#elif RIMWORLD_1_6
-                    ActiveTransporterInfo podInfo = new ActiveTransporterInfo();
-#else
                         ActiveTransporterInfo podInfo = new ActiveTransporterInfo();
-#endif
                         podInfo.openDelay = request.OpenDelay ? 110 : 0;
                         podInfo.leaveSlag = true;
 
@@ -899,12 +893,7 @@ namespace RIMAPI.Services
 
         public static int GetMapTileId(Map map)
         {
-#if RIMWORLD_1_5
-            return map.Tile;
-#elif RIMWORLD_1_6
             return map.Tile.tileId;
-#endif
-            throw new Exception("Failed to get GetMapTileId for this rimworld version.");
         }
 
         public ApiResult<MapTimeDto> GetCurrentMapDatetime()
