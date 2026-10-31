@@ -85,6 +85,34 @@ namespace RIMAPI.Helpers
             return null;
         }
 
+        // The reason every building route answers for an id that names no built
+        // building on any map, or null when the id belongs to nothing the
+        // stored read lists: the container holding it, else the stored building
+        // that has to be installed first (tickets #3200, #3235, #3295). The
+        // route supplies the clause about what only a built building can do.
+        public static string DescribeUnbuilt(int thingId, string onlyBuilt)
+        {
+            Thing holder = FindContainerHoldingAcrossMaps(thingId);
+            if (holder != null)
+            {
+                return UnbuiltBuildingReason.Describe(
+                    DescribeHeld(thingId, holder),
+                    false,
+                    onlyBuilt
+                );
+            }
+            MinifiedThing minified = FindMinifiedAcrossMaps(thingId);
+            if (minified != null)
+            {
+                return UnbuiltBuildingReason.Describe(
+                    DescribeMinified(thingId, minified),
+                    true,
+                    onlyBuilt
+                );
+            }
+            return null;
+        }
+
         // What a write answers for a stored building: the def it would have once
         // installed, the minified thing's id and cell, and the step that is
         // missing. Same shape as DescribeHeld, so a run reads one wording.

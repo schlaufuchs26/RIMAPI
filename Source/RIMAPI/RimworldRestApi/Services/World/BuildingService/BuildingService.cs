@@ -18,7 +18,15 @@ namespace RIMAPI.Services
 
             if (building == null)
             {
-                return ApiResult<BuildingDto>.Fail("Building with this id wasn't found");
+                // An id from the stored read can name a stored or a held thing
+                // instead of a built building; name it rather than a bare "not
+                // found" (tickets #3200, #3295).
+                return ApiResult<BuildingDto>.Fail(
+                    ThingHolderHelper.DescribeUnbuilt(
+                        buildingId,
+                        "only a built building on the map can be read"
+                    ) ?? $"Building not found: {buildingId}"
+                );
             }
 
             // Turret Info
@@ -45,27 +53,15 @@ namespace RIMAPI.Services
             if (building == null)
             {
                 // An id from the stored read can name a thing that is not a built
-                // building on the map at all; when a container holds it, say which
-                // one instead of a bare "not found" (ticket #3200).
-                Thing holder = ThingHolderHelper.FindContainerHoldingAcrossMaps(buildingId);
-                if (holder != null)
-                {
-                    return ApiResult.Fail(
-                        ThingHolderHelper.DescribeHeld(buildingId, holder)
-                            + "; only a built building on the map has a power switch"
-                    );
-                }
-                // A stored building has no power switch either, but "not found"
-                // hides the fix: it has to be installed first (ticket #3235).
-                MinifiedThing minified = ThingHolderHelper.FindMinifiedAcrossMaps(buildingId);
-                if (minified != null)
-                {
-                    return ApiResult.Fail(
-                        ThingHolderHelper.DescribeMinified(buildingId, minified)
-                            + "; install it first, only a built building on the map has a power switch"
-                    );
-                }
-                return ApiResult.Fail($"Building not found: {buildingId}");
+                // building on the map at all: a container holds it, or it is a
+                // stored building that has to be installed first. Say which
+                // instead of a bare "not found" (tickets #3200, #3235).
+                return ApiResult.Fail(
+                    ThingHolderHelper.DescribeUnbuilt(
+                        buildingId,
+                        "only a built building on the map has a power switch"
+                    ) ?? $"Building not found: {buildingId}"
+                );
             }
 
             bool success = BuildingHelper.SetBuildingPower(building, powerOn);
@@ -89,7 +85,14 @@ namespace RIMAPI.Services
                 Building building = BuildingHelper.FindBuildingByID(buildingId);
                 if (building == null)
                 {
-                    return ApiResult<BedDto>.Fail($"Building not found: {buildingId}");
+                    // A bed taken apart and stored keeps its id in the stored
+                    // read; name it instead of a bare "not found" (#3295).
+                    return ApiResult<BedDto>.Fail(
+                        ThingHolderHelper.DescribeUnbuilt(
+                            buildingId,
+                            "only a built bed on the map takes a prisoner"
+                        ) ?? $"Building not found: {buildingId}"
+                    );
                 }
                 Building_Bed bed = building as Building_Bed;
                 if (bed == null)
