@@ -26,7 +26,7 @@ namespace RIMAPI.Controllers
         // Taking a designation back (fox ticket #3425): the same rectangle and
         // type the designate call took, so a wrong sweep is cleared in one call.
         [Post("/api/v1/order/undesignate/area")]
-        [EndpointMetadata("Remove one designation kind (chop, harvest, mine, deconstruct, hunt) over a rectangle, so a wrong sweep can be cleared")]
+        [EndpointMetadata("Remove one designation kind (chop, blight, harvest, mine, deconstruct, hunt) over a rectangle, so a wrong sweep can be cleared")]
         public async Task UndesignateArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DesignateRequestDto>();

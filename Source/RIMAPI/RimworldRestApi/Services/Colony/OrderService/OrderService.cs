@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
@@ -23,22 +24,45 @@ public partial class OrderService : IOrderService
         // designation before the call, so a second call answers "nothing new"
         // instead of "nothing there" (fox ticket #3060).
         int already = 0;
+        // blighted counts the blighted plants the rectangle covers, whatever
+        // the order was: a chop sweep over a rice field marks nothing, and the
+        // answer has to say why (fox ticket #3530).
+        int blighted = 0;
+        // The entries the call added, in the shape the designations read
+        // sends, so a caller sees what it marked instead of only how many
+        // (fox ticket #3530).
+        List<DesignationDto> designated = new List<DesignationDto>();
         string type = request.Type.ToLower(); // Cache lowercase type
 
         foreach (IntVec3 c in rect)
         {
             if (!c.InBounds(map)) continue;
             cells++;
+            // Counted before the order branches, so any sweep over a blighted
+            // field can say the blight is there (fox ticket #3530).
+            foreach (var t in c.GetThingList(map))
+            {
+                var blightPlant = t as Plant;
+                if (blightPlant != null && blightPlant.Blighted) blighted++;
+            }
 
-            if (type == "chop" || type == "cut")
+            if (type == "chop" || type == "cut" || type == "blight")
             {
                 // Chop wood is the game's CutPlant designation (Designator_PlantsHarvestWood);
                 // HarvestPlant is the harvest order and does nothing on a tree, so marking a
                 // tree as Harvest is a silent no-op (fox ticket #3058).
+                //
+                // Blight is the same designation and a different rule: the
+                // game's "cut the affected plants" of the blight letter cuts
+                // any plant the blight infects, tree or crop (fox ticket #3530).
                 foreach (var t in c.GetThingList(map))
                 {
                     var plant = t as Plant;
-                    if (plant == null || !plant.def.plant.IsTree) continue;
+                    if (plant == null) continue;
+                    bool wanted = type == "blight"
+                        ? DesignationRules.IsBlightTarget(plant.Blighted)
+                        : DesignationRules.IsChopTarget(plant.def.plant.IsTree);
+                    if (!wanted) continue;
                     if (map.designationManager.DesignationOn(plant, DesignationDefOf.CutPlant) != null)
                     {
                         already++;
@@ -46,6 +70,8 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(plant, DesignationDefOf.CutPlant));
                     count++;
+                    designated.Add(DesignationEntry.Make(DesignationDefOf.CutPlant.defName, DesignationDefOf.CutPlant.label,
+                        true, plant.Position.x, plant.Position.z, plant.thingIDNumber, plant.def.defName, plant.LabelShort));
                 }
             }
             else if (type == "mine")
@@ -62,6 +88,8 @@ public partial class OrderService : IOrderService
                     {
                         map.designationManager.AddDesignation(new Designation(c, DesignationDefOf.Mine));
                         count++;
+                        designated.Add(DesignationEntry.Make(DesignationDefOf.Mine.defName, DesignationDefOf.Mine.label,
+                            false, c.x, c.z));
                     }
                 }
             }
@@ -79,6 +107,8 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(t, DesignationDefOf.Deconstruct));
                     count++;
+                    designated.Add(DesignationEntry.Make(DesignationDefOf.Deconstruct.defName, DesignationDefOf.Deconstruct.label,
+                        true, t.Position.x, t.Position.z, t.thingIDNumber, t.def.defName, t.LabelShort));
                 }
             }
             else if (type == "harvest")
@@ -97,6 +127,8 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(p, DesignationDefOf.HarvestPlant));
                     count++;
+                    designated.Add(DesignationEntry.Make(DesignationDefOf.HarvestPlant.defName, DesignationDefOf.HarvestPlant.label,
+                        true, p.Position.x, p.Position.z, p.thingIDNumber, p.def.defName, p.LabelShort));
                 }
             }
             else if (type == "hunt")
@@ -114,6 +146,8 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(p, DesignationDefOf.Hunt));
                     count++;
+                    designated.Add(DesignationEntry.Make(DesignationDefOf.Hunt.defName, DesignationDefOf.Hunt.label,
+                        true, p.Position.x, p.Position.z, p.thingIDNumber, p.def.defName, p.LabelShort));
                 }
             }
             else if (type == "remove-all")
@@ -129,7 +163,9 @@ public partial class OrderService : IOrderService
 
         // The caller cannot see what was marked, so it gets the numbers: how many
         // cells the rectangle covered, how many designations were added, and how
-        // many targets already carried this order.
-        return ApiResult.Ok(new { cells, designated = count, already });
+        // many targets already carried this order. Fox ticket #3530 adds the
+        // added entries themselves and the blighted plants the rectangle
+        // covers, so a sweep that marked nothing can say why.
+        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted });
     }
 }

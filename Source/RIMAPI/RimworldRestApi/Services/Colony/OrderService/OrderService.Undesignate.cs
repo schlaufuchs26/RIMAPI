@@ -29,7 +29,7 @@ public partial class OrderService
         if (def == null)
         {
             return ApiResult.Fail(
-                $"unknown designation type '{request.Type}': use chop, harvest, mine, deconstruct or hunt");
+                $"unknown designation type '{request.Type}': use chop, blight, harvest, mine, deconstruct or hunt");
         }
 
         IntVec3 a = new IntVec3(request.PointA.X, 0, request.PointA.Z);
@@ -90,13 +90,15 @@ public partial class OrderService
     }
 
     // The order's word is the one `designate` takes, so the call that went
-    // wrong can be repeated with the other verb.
+    // wrong can be repeated with the other verb. Blight and chop share one
+    // designation, so clearing either clears both (fox ticket #3530).
     private static DesignationDef DesignationDefFor(string type)
     {
         switch (type)
         {
             case "chop":
             case "cut":
+            case "blight":
                 return DesignationDefOf.CutPlant;
             case "harvest":
                 return DesignationDefOf.HarvestPlant;

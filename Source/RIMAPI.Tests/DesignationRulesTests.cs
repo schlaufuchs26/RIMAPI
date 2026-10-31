@@ -37,6 +37,24 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void ChopTakesATreeAndNothingElse()
+        {
+            // The chop order is the wood order: a blighted rice plant is not a
+            // tree, which is why two chop sweeps over the field marked only the
+            // trees while the blight doubled (fox ticket #3530).
+            Assert.True(DesignationRules.IsChopTarget(true));
+            Assert.False(DesignationRules.IsChopTarget(false));
+        }
+
+        [Fact]
+        public void TheBlightOrderTakesEveryBlightedPlant()
+        {
+            // Tree or crop, blight is cured by cutting only.
+            Assert.True(DesignationRules.IsBlightTarget(true));
+            Assert.False(DesignationRules.IsBlightTarget(false));
+        }
+
+        [Fact]
         public void TheSameRectangleCoversItself()
         {
             Assert.True(DesignationRules.Covers(60, 60, 60, 60, 60, 60, 200, 200));

@@ -28,6 +28,27 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// Whether the chop order takes a plant: a tree, which is what the
+        /// game's own Designator_PlantsHarvestWood offers. A blighted crop is
+        /// not a tree, so chop never cures a blight (fox ticket #3530).
+        /// </summary>
+        public static bool IsChopTarget(bool isTree)
+        {
+            return isTree;
+        }
+
+        /// <summary>
+        /// Whether the blight order takes a plant: any plant the blight
+        /// infects, tree or crop. Cutting is the only cure, and it is the same
+        /// CutPlant designation the chop order uses; the blight letter's "cut
+        /// the affected plants" is this order (fox ticket #3530).
+        /// </summary>
+        public static bool IsBlightTarget(bool blighted)
+        {
+            return blighted;
+        }
+
+        /// <summary>
         /// Whether a rectangle touches a target's footprint, which is how a
         /// clear call finds what a designate call marked: designate walks the
         /// cells of a rectangle and marks the thing on each, so a 2x2 building
