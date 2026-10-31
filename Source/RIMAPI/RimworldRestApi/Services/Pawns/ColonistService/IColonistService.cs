@@ -39,6 +39,9 @@ namespace RIMAPI.Services
         ApiResult MakeJobChat(int mapId, int pawnId, int chatterId);
         ApiResult MakeJobArrest(int mapId, int pawnId, int arrestorId);
         ApiResult MakeJobRescue(int mapId, int pawnId, int rescuerId);
+        // Feeding a patient is the game's FeedPatient job and needs the
+        // patient in a bed (ticket #3445).
+        ApiResult MakeJobFeed(int mapId, int pawnId, int feederId, int mealId);
         ApiResult SetPrisonerInteraction(int pawnId, string mode);
 
         ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId);
