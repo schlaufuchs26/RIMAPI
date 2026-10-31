@@ -12,12 +12,15 @@ namespace RIMAPI.BaseControllers
         private readonly IUIService _uiService;
         private readonly IWindowService _windowService;
         private readonly ILetterService _letterService;
+        private readonly IMessageService _messageService;
 
-        public UIController(IUIService uiService, IWindowService windowService, ILetterService letterService)
+        public UIController(IUIService uiService, IWindowService windowService, ILetterService letterService,
+            IMessageService messageService)
         {
             _uiService = uiService;
             _windowService = windowService;
             _letterService = letterService;
+            _messageService = messageService;
         }
 
         [Get("/api/v1/ui/alerts")]
@@ -72,6 +75,16 @@ namespace RIMAPI.BaseControllers
             var peek = context.Request.QueryString["peek"];
             var markSeen = !(peek == "1" || string.Equals(peek, "true", System.StringComparison.OrdinalIgnoreCase));
             var result = _letterService.ListLetters(markSeen);
+            await context.SendJsonResponse(result);
+        }
+
+        [Get("/api/v1/ui/messages")]
+        [EndpointMetadata("List the game's own message archive: the little notifications (a plant died of cold, blight struck, an animal roams away, a colonist was attacked) with their text, def, tick and the thing or cell they are about. Query: since=<tick> for only the messages created at or after it, limit=<n> for the newest few (default 25, max 200). Letters have their own read and are not in this list.")]
+        public async Task ListMessages(HttpListenerContext context)
+        {
+            int.TryParse(context.Request.QueryString["since"], out var since);
+            int.TryParse(context.Request.QueryString["limit"], out var limit);
+            var result = _messageService.ListMessages(since, limit);
             await context.SendJsonResponse(result);
         }
 

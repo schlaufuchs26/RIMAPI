@@ -191,6 +191,32 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryMessageFieldKeepsTheKeyTheToolReads()
+        {
+            // A message line the fox prints reads these keys: the text, its
+            // kind, its tick, and the cell or thing it is about (ticket
+            // #3336). A rename here would leave the wait report and the digest
+            // with empty fields and no error.
+            var expected = new[]
+            {
+                "def",
+                "has_target",
+                "map_id",
+                "target_def",
+                "target_label",
+                "text",
+                "tick",
+                "x",
+                "y",
+                "z",
+            };
+
+            JObject json = Json(new MessageDto());
+
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public void NoLinkedDtoFieldResolvesToAKeyWithACapitalLetter()
         {
             // A guard for the files linked in the csproj: whatever a future DTO

@@ -45,6 +45,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Common\PositionDto.cs" Link="Linked\PositionDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BillDto.cs" Link="Linked\BillDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BuildingDto.cs" Link="Linked\BuildingDto.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\MessageDtos.cs" Link="Linked\MessageDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
   </ItemGroup>
 </Project>
