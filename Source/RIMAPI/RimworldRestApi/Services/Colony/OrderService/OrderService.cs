@@ -33,20 +33,28 @@ public partial class OrderService : IOrderService
         // (fox ticket #3530).
         List<DesignationDto> designated = new List<DesignationDto>();
         string type = request.Type.ToLower(); // Cache lowercase type
+        // The plant orders walk each cell's things anyway, so they count the
+        // blight in that walk; only the other orders need a pass of their own
+        // (fox ticket #3562). A map-wide sweep used to read every cell's thing
+        // list twice.
+        bool plantOrder = type == "chop" || type == "cut" || type == "blight";
 
         foreach (IntVec3 c in rect)
         {
             if (!c.InBounds(map)) continue;
             cells++;
-            // Counted before the order branches, so any sweep over a blighted
-            // field can say the blight is there (fox ticket #3530).
-            foreach (var t in c.GetThingList(map))
+            // So any sweep over a blighted field can say the blight is there
+            // (fox ticket #3530).
+            if (!plantOrder)
             {
-                var blightPlant = t as Plant;
-                if (blightPlant != null && blightPlant.Blighted) blighted++;
+                foreach (var t in c.GetThingList(map))
+                {
+                    var blightPlant = t as Plant;
+                    if (blightPlant != null && blightPlant.Blighted) blighted++;
+                }
             }
 
-            if (type == "chop" || type == "cut" || type == "blight")
+            if (plantOrder)
             {
                 // Chop wood is the game's CutPlant designation (Designator_PlantsHarvestWood);
                 // HarvestPlant is the harvest order and does nothing on a tree, so marking a
@@ -59,6 +67,10 @@ public partial class OrderService : IOrderService
                 {
                     var plant = t as Plant;
                     if (plant == null) continue;
+                    // Counted before the wanted check: a chop sweep marks only
+                    // trees, but the blighted rice in the same rectangle has to
+                    // show up in the answer all the same (fox ticket #3530).
+                    if (plant.Blighted) blighted++;
                     bool wanted = type == "blight"
                         ? DesignationRules.IsBlightTarget(plant.Blighted)
                         : DesignationRules.IsChopTarget(plant.def.plant.IsTree);

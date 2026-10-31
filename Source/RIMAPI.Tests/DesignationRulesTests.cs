@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using RIMAPI.Helpers;
@@ -100,6 +101,31 @@ namespace RIMAPI.Tests
 
             Assert.Contains("DesignationRules.IsHarvestTarget(", source);
             Assert.DoesNotContain("if (!p.HarvestableNow) continue;", source);
+        }
+
+        // The blight count rides along in the plant order's own walk, so a
+        // map-wide sweep reads each cell's thing list once instead of twice
+        // (fox ticket #3562).
+        [Fact]
+        public void TheBlightCountSharesThePlantOrdersWalk()
+        {
+            string root = SourceTree.RepoRoot();
+            string order = SourceTree
+                .Sources(root, "RimworldRestApi", "Services")
+                .First(path => path.EndsWith(Path.Combine("OrderService", "OrderService.cs")));
+            string source = File.ReadAllText(order);
+
+            // The plant order counts the blight in the walk it takes anyway.
+            Assert.Contains("if (plant.Blighted) blighted++;", source);
+            // Counted before the order's own target rule: a chop sweep marks
+            // trees only and still has to report the blighted crop beside them.
+            Assert.True(source.IndexOf("if (plant.Blighted) blighted++;", StringComparison.Ordinal)
+                < source.IndexOf("bool wanted", StringComparison.Ordinal));
+            // The pass of its own survives behind the guard for the orders that
+            // never walk plants, so no cell's thing list is read twice.
+            Assert.Contains("if (!plantOrder)", source);
+            Assert.True(source.IndexOf("if (!plantOrder)", StringComparison.Ordinal)
+                < source.IndexOf("var blightPlant", StringComparison.Ordinal));
         }
     }
 }
