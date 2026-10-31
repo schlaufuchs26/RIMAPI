@@ -188,7 +188,7 @@ namespace RIMAPI.Services
                 return true;
             }
 
-            reason = "the bridge knows no accept button for this window type; a screen click is the way out";
+            reason = "the bridge knows no accept button for this window type";
             return false;
         }
 
