@@ -215,11 +215,26 @@ namespace RIMAPI.Services
             // across water takes the job and then drops it, and the caller
             // only sees a pawn that never moved. So the check comes before the
             // job, and its answer carries the distance.
-            if (!map.reachability.CanReach(pawn.Position, cell, PathEndMode.OnCell, TraverseMode.ByPawn, Danger.Some))
+            Danger maxDanger;
+            string dangerError;
+            if (!TryParseDanger(request.MaxDanger, out maxDanger, out dangerError))
+            {
+                return ApiResult<OrderResultDto>.Fail(dangerError);
+            }
+            string destText = $"{request.X},{request.Z}";
+            string refusal = ReachRefusal(pawn, cell, PathEndMode.OnCell, maxDanger, destText);
+            if (refusal != null) return ApiResult<OrderResultDto>.Fail(refusal);
+            // The game's danger scale is temperature, so a path through fire
+            // or toxic waste still reads none there (ticket #3209): the walk is
+            // scanned for those, and the order is refused when it crosses more
+            // than the caller tolerates.
+            WalkReport walk = InspectWalk(pawn, cell);
+            if (walk.Worst > maxDanger)
             {
                 return ApiResult<OrderResultDto>.Fail(
-                    $"{pawn.LabelShort} cannot reach {request.X},{request.Z} from {pawn.Position.x},{pawn.Position.z}: " +
-                    "no walkable path there (a sealed room, a wall or water in the way), so the game would drop the job");
+                    $"{pawn.LabelShort} cannot reach {destText} from {pawn.Position.x},{pawn.Position.z} at " +
+                    $"max_danger={DangerText(maxDanger)}: the only path runs through {walk.HazardText()}, " +
+                    "so the pawn would take damage on the way; pass max_danger=deadly to order it anyway");
             }
             Job job = JobMaker.MakeJob(JobDefOf.Goto, cell);
             if (!pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
@@ -230,7 +245,13 @@ namespace RIMAPI.Services
             result.Z = request.Z;
             result.Job = job.def.defName;
             result.Reachable = true;
-            result.Reach = PathText(pawn, cell);
+            result.Reach = walk.ReachText();
+            result.PathDanger = DangerText(walk.Worst);
+            result.PathHazards = walk.HazardText();
+            if (walk.Worst != Danger.None)
+            {
+                result.Note = $"the path crosses {walk.HazardText()}, tolerated at max_danger={DangerText(maxDanger)}";
+            }
             return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
         }
 
@@ -258,11 +279,22 @@ namespace RIMAPI.Services
             // behind a sealed wall or across water takes the attack job and
             // then drops it, so the pawn stands still and the caller learns
             // nothing. A ranged pawn needs a path to its firing position too.
-            if (!pawn.Map.reachability.CanReach(pawn.Position, target, PathEndMode.Touch, TraverseMode.ByPawn, Danger.Some))
+            Danger maxDanger;
+            string dangerError;
+            if (!TryParseDanger(request.MaxDanger, out maxDanger, out dangerError))
+            {
+                return ApiResult<OrderResultDto>.Fail(dangerError);
+            }
+            string destText = $"{target.LabelShort} (id {target.thingIDNumber})";
+            string refusal = ReachRefusal(pawn, target, PathEndMode.Touch, maxDanger, destText);
+            if (refusal != null) return ApiResult<OrderResultDto>.Fail(refusal);
+            WalkReport walk = InspectWalk(pawn, target);
+            if (walk.Worst > maxDanger)
             {
                 return ApiResult<OrderResultDto>.Fail(
-                    $"{pawn.LabelShort} cannot reach {target.LabelShort} (id {target.thingIDNumber}) from " +
-                    $"{pawn.Position.x},{pawn.Position.z}: no walkable path there, so the game would drop the attack job");
+                    $"{pawn.LabelShort} cannot reach {destText} from {pawn.Position.x},{pawn.Position.z} at " +
+                    $"max_danger={DangerText(maxDanger)}: the only path runs through {walk.HazardText()}, " +
+                    "so the pawn would take damage on the way; pass max_danger=deadly to order it anyway");
             }
             JobDef def = HasRangedWeapon(pawn)
                 ? DefDatabase<JobDef>.GetNamedSilentFail(AttackStaticDef)
@@ -280,27 +312,151 @@ namespace RIMAPI.Services
             result.Target = target.LabelShort;
             result.Job = job.def.defName;
             result.Reachable = true;
-            result.Reach = PathText(pawn, target);
+            result.Reach = walk.ReachText();
+            result.PathDanger = DangerText(walk.Worst);
+            result.PathHazards = walk.HazardText();
+            if (walk.Worst != Danger.None)
+            {
+                result.Note = $"the path crosses {walk.HazardText()}, tolerated at max_danger={DangerText(maxDanger)}";
+            }
             return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
         }
 
-        // PathText measures the walk the game's own pathfinder would take, in
-        // cells, so an order's answer carries the distance it checked instead
-        // of a bare "reachable". The node count is the number of cells to walk;
-        // TotalCost is the cost function's sum (terrain multipliers, door
-        // penalties), which reads like a much longer walk than it is. Empty
-        // when no path is found, which the reachability check has refused.
-        private static string PathText(Pawn pawn, LocalTargetInfo dest)
+        // WalkReport is what a walk to a destination costs (ticket #3209): the
+        // path length in cells and the hazards along it, so an order's answer
+        // says "fire (3 cells)" instead of a bare "reachable".
+        private sealed class WalkReport
         {
+            public int Cells;
+            public Danger Worst = Danger.None;
+            private readonly Dictionary<string, int> counts = new Dictionary<string, int>();
+
+            public void Add(string hazard, Danger danger)
+            {
+                int n;
+                counts.TryGetValue(hazard, out n);
+                counts[hazard] = n + 1;
+                if (danger > Worst) Worst = danger;
+            }
+
+            // ReachText is the distance the check measured, in cells, or empty
+            // when no path was found.
+            public string ReachText()
+            {
+                return Cells > 0 ? $"{Cells} cells of path" : "";
+            }
+
+            // HazardText names what the walk crosses with the cells it does,
+            // e.g. "fire (3 cells), toxic waste (8 cells)".
+            public string HazardText()
+            {
+                if (counts.Count == 0) return "";
+                List<string> parts = new List<string>();
+                foreach (KeyValuePair<string, int> pair in counts)
+                {
+                    parts.Add($"{pair.Key} ({pair.Value} {(pair.Value == 1 ? "cell" : "cells")})");
+                }
+                return string.Join(", ", parts);
+            }
+        }
+
+        // InspectWalk finds the walk the game's own pathfinder would take and
+        // scans its cells. The game's danger scale is the temperature of the
+        // rooms the walk crosses (Region.DangerFor), so fire and toxic waste
+        // read "none" there; they are named here at the level each costs: fire
+        // is deadly, polluted ground some.
+        private static WalkReport InspectWalk(Pawn pawn, LocalTargetInfo dest)
+        {
+            WalkReport report = new WalkReport();
             PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, dest, pawn);
-            if (path == null) return "";
+            if (path == null) return report;
             try
             {
-                return path.Found ? $"{path.NodesLeftCount} cells of path" : "";
+                if (!path.Found) return report;
+                report.Cells = path.NodesLeftCount;
+                List<IntVec3> nodes = path.NodesReversed;
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    IntVec3 cell = nodes[i];
+                    if (cell.ContainsStaticFire(pawn.Map))
+                    {
+                        report.Add("fire", Danger.Deadly);
+                    }
+                    if (pawn.Map.pollutionGrid.IsPolluted(cell))
+                    {
+                        report.Add("toxic waste", Danger.Some);
+                    }
+                    Danger heat = cell.GetDangerFor(pawn, pawn.Map);
+                    if (heat == Danger.Deadly)
+                    {
+                        report.Add("deadly heat or cold", Danger.Deadly);
+                    }
+                    else if (heat == Danger.Some)
+                    {
+                        report.Add("heat or cold outside his comfort", Danger.Some);
+                    }
+                }
             }
             finally
             {
                 path.ReleaseToPool();
+            }
+            return report;
+        }
+
+        // ReachRefusal answers why the pawn cannot walk there at the tolerated
+        // danger, or null when it can. The second question tells a wall apart
+        // from a danger the caller did not tolerate: with Danger.Deadly the
+        // game's own check ignores heat and cold, so a path that exists then
+        // was refused by the danger, not by a wall (ticket #3209).
+        private static string ReachRefusal(Pawn pawn, LocalTargetInfo dest, PathEndMode endMode, Danger maxDanger, string destText)
+        {
+            if (pawn.Map.reachability.CanReach(pawn.Position, dest, endMode, TraverseMode.ByPawn, maxDanger))
+            {
+                return null;
+            }
+            string from = $"{pawn.Position.x},{pawn.Position.z}";
+            if (maxDanger < Danger.Deadly &&
+                pawn.Map.reachability.CanReach(pawn.Position, dest, endMode, TraverseMode.ByPawn, Danger.Deadly))
+            {
+                return $"{pawn.LabelShort} cannot reach {destText} from {from} at " +
+                    $"max_danger={DangerText(maxDanger)}: a path exists, but it crosses a room that is " +
+                    "deadly hot or cold for him; pass max_danger=deadly to order it anyway";
+            }
+            return $"{pawn.LabelShort} cannot reach {destText} from {from}: no walkable path there " +
+                "(a sealed room, a wall or water in the way), so the game would drop the job";
+        }
+
+        // TryParseDanger reads max_danger; empty keeps the old level, some.
+        private static bool TryParseDanger(string text, out Danger danger, out string error)
+        {
+            danger = Danger.Some;
+            error = null;
+            if (string.IsNullOrEmpty(text)) return true;
+            switch (text.Trim().ToLowerInvariant())
+            {
+                case "none":
+                    danger = Danger.None;
+                    return true;
+                case "some":
+                    danger = Danger.Some;
+                    return true;
+                case "deadly":
+                    danger = Danger.Deadly;
+                    return true;
+                default:
+                    error = $"max_danger \"{text}\" is not one of none, some or deadly";
+                    return false;
+            }
+        }
+
+        private static string DangerText(Danger danger)
+        {
+            switch (danger)
+            {
+                case Danger.Deadly: return "deadly";
+                case Danger.Some: return "some";
+                default: return "none";
             }
         }
 

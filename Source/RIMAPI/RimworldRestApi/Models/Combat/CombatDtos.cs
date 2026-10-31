@@ -73,6 +73,11 @@ namespace RIMAPI.Models
         public int Z { get; set; }
         public int TargetId { get; set; }
         public bool FireAtWill { get; set; }
+        // MaxDanger is the worst a walk may be (ticket #3209): none, some or
+        // deadly on the game's own Danger scale. Empty means some, the level
+        // the reachability check used before the field existed. The scale is
+        // temperature only, so fire and toxic ground are scanned separately.
+        public string MaxDanger { get; set; }
     }
 
     public class OrderResultDto
@@ -98,6 +103,13 @@ namespace RIMAPI.Models
         // how far it is. Reach is empty when no path length was measured.
         public bool Reachable { get; set; }
         public string Reach { get; set; }
+        // PathDanger is the worst danger the walk really crosses, on the
+        // game's scale (none, some, deadly), and PathHazards names what it is
+        // ("fire (3 cells), toxic waste (8 cells)"). Both come from a scan of
+        // the path cells, because the game's danger scale is temperature only
+        // and a path through fire reads "none" there (ticket #3209).
+        public string PathDanger { get; set; }
+        public string PathHazards { get; set; }
         public string Note { get; set; }
     }
 }
