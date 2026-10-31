@@ -157,6 +157,12 @@ namespace RIMAPI.Models
         public RitualTargetDto Target { get; set; }
         public List<RolePawnDto> Participants { get; set; }
 
+        // TargetFromCandidate is true when the caller named no place and the
+        // ritual's own target filter named none either, so the start took the
+        // first place the ritual's obligation filter accepts; the same place
+        // the `rituals` read offers as best candidate (ticket #3322).
+        public bool TargetFromCandidate { get; set; }
+
         // ObligationFulfilled is true when the ritual paid off one of the
         // ideoligion's due obligations; that is the mood-relevant part.
         public bool ObligationFulfilled { get; set; }

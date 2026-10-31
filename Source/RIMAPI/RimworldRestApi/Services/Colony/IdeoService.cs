@@ -250,6 +250,22 @@ namespace RIMAPI.Services
                 // Without a named place, ask the ritual's own target filter, the
                 // same call the ideo window makes when it opens the Begin dialog.
                 if (!target.IsValid) target = BestTarget(ritual, organizer ?? RoleHolder(ritual));
+                // That filter names nothing for most rituals (funeral,
+                // conversion, festival): the place is what the player picks in
+                // the Begin dialog. The read already falls back to the places
+                // the ritual's obligation filter accepts (#3266), so the start
+                // makes the same choice here instead of refusing a call that
+                // followed the read (ticket #3322).
+                bool fromCandidate = false;
+                if (!target.IsValid)
+                {
+                    List<TargetInfo> candidates = Candidates(ritual, obligation, map);
+                    if (candidates.Count > 0)
+                    {
+                        target = candidates[0];
+                        fromCandidate = true;
+                    }
+                }
 
                 RitualStartResultDto result = new RitualStartResultDto
                 {
@@ -257,6 +273,7 @@ namespace RIMAPI.Services
                     Ritual = ritual.Label,
                     Def = ritual.def.defName,
                     Target = TargetRef(target),
+                    TargetFromCandidate = fromCandidate,
                     Participants = new List<RolePawnDto>(),
                 };
                 if (organizer != null)
