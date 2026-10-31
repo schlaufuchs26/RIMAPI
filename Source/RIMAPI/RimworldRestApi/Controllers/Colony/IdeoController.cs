@@ -38,5 +38,29 @@ namespace RIMAPI.Controllers
             var result = _ideoService.AssignRole(mapId, pawnId, role);
             await context.SendJsonResponse(result);
         }
+
+        [Get("/api/v1/ideo/rituals")]
+        [EndpointMetadata("The ideoligion's rituals with the game's readiness verdict and repeat penalty")]
+        public async Task GetRituals(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            var result = _ideoService.GetRituals(mapId);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/ideo/ritual/start")]
+        [EndpointMetadata("Start an ideoligion ritual or the leader's speech (the game's own start)")]
+        public async Task StartRitual(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            string ritual = RequestParser.GetStringParameter(context, "ritual");
+            int pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            int targetThingId = RequestParser.GetIntParameter(context, "target_id");
+            bool hasCell = RequestParser.HasParameter(context, "x") && RequestParser.HasParameter(context, "z");
+            int x = RequestParser.GetIntParameter(context, "x");
+            int z = RequestParser.GetIntParameter(context, "z");
+            var result = _ideoService.StartRitual(mapId, ritual, pawnId, targetThingId, x, z, hasCell);
+            await context.SendJsonResponse(result);
+        }
     }
 }

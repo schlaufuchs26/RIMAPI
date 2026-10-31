@@ -150,6 +150,347 @@ namespace RIMAPI.Services
             }
         }
 
+        // GetRituals lists the ideoligion's rituals with the game's own
+        // readiness verdict (ticket #3263). The verdict is the sentence the
+        // Begin dialog shows in place of the button, so a run reads the same
+        // reason the player would: an unfilled role, a missing altar, a ritual
+        // of that name already running.
+        public ApiResult<IdeoRitualsDto> GetRituals(int mapId)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null) return ApiResult<IdeoRitualsDto>.Fail($"Map with ID={mapId} not found");
+
+                Ideo ideo = PlayerIdeo(out string reason);
+                if (ideo == null) return ApiResult<IdeoRitualsDto>.Fail(reason);
+
+                List<Pawn> colonists = Colonists(map);
+                IdeoRitualsDto result = new IdeoRitualsDto
+                {
+                    Ideo = ideo.name,
+                    Tick = Find.TickManager.TicksGame,
+                    Rituals = new List<IdeoRitualDto>(),
+                };
+                foreach (Precept_Ritual ritual in Rituals(ideo))
+                {
+                    IdeoRitualDto dto = DescribeRitual(ritual, colonists);
+                    if (dto.Ready) result.ReadyCount++;
+                    result.Rituals.Add(dto);
+                }
+                return ApiResult<IdeoRitualsDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<IdeoRitualsDto>.Fail(ex.ToString());
+            }
+        }
+
+        // StartRitual starts one ritual the way the Begin dialog's own confirm
+        // does: it builds the role assignments the game builds, asks the
+        // behavior worker whether it may start, and hands it to
+        // RitualBehaviorWorker.TryExecuteOn. The answer is read back from the
+        // game, because TryExecuteOn returns void and stays silent on a refusal.
+        public ApiResult<RitualStartResultDto> StartRitual(
+            int mapId, string ritualName, int pawnId, int targetThingId, int x, int z, bool hasCell)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null) return ApiResult<RitualStartResultDto>.Fail($"Map with ID={mapId} not found");
+
+                Ideo ideo = PlayerIdeo(out string reason);
+                if (ideo == null) return ApiResult<RitualStartResultDto>.Fail(reason);
+
+                Precept_Ritual ritual = FindRitual(ideo, ritualName, out string ritualError);
+                if (ritual == null) return ApiResult<RitualStartResultDto>.Fail(ritualError);
+                if (ritual.behavior == null)
+                {
+                    return ApiResult<RitualStartResultDto>.Fail(
+                        $"{ritual.Label} has no ritual behavior in this game build, so it cannot be started");
+                }
+
+                Pawn organizer = null;
+                if (pawnId > 0)
+                {
+                    organizer = FindPawn(map, pawnId);
+                    if (organizer == null)
+                        return ApiResult<RitualStartResultDto>.Fail($"Pawn with ID={pawnId} not found");
+                }
+
+                TargetInfo target = TargetInfo.Invalid;
+                bool targetGiven = false;
+                if (hasCell)
+                {
+                    IntVec3 cell = new IntVec3(x, 0, z);
+                    if (!cell.InBounds(map))
+                        return ApiResult<RitualStartResultDto>.Fail($"{x},{z} is outside the map");
+                    target = new TargetInfo(cell, map);
+                    targetGiven = true;
+                }
+                else if (targetThingId > 0)
+                {
+                    Thing thing = FindThing(map, targetThingId);
+                    if (thing == null)
+                        return ApiResult<RitualStartResultDto>.Fail(
+                            $"Thing with ID={targetThingId} not found on this map (the `things` read prints ids)");
+                    target = new TargetInfo(thing);
+                    targetGiven = true;
+                }
+
+                // An obligation is the game's own "this ritual is due": the
+                // target it was created for is the one that pays it off.
+                RitualObligation obligation = PickObligation(ritual, target, targetGiven);
+                if (obligation != null && !targetGiven) target = obligation.FirstValidTarget;
+
+                RitualStartResultDto result = new RitualStartResultDto
+                {
+                    Ideo = ideo.name,
+                    Ritual = ritual.Label,
+                    Def = ritual.def.defName,
+                    Target = TargetRef(target),
+                    Participants = new List<RolePawnDto>(),
+                };
+                if (organizer != null)
+                {
+                    result.Organizer = organizer.LabelShort;
+                    result.OrganizerId = organizer.thingIDNumber;
+                }
+
+                string why = ritual.behavior.CanStartRitualNow(target, ritual, null, null);
+                if (!string.IsNullOrEmpty(why))
+                {
+                    result.Reason = why;
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+                if (!target.IsValid)
+                {
+                    result.Reason = "no target: pass the cell the ritual is held at (x1/z1) or the building "
+                        + "or spot (target_id), as the Begin dialog asks";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+
+                RitualRoleAssignments assignments = Dialog_BeginRitual.CreateRitualRoleAssignments(
+                    ritual, target, map, null, null, null, null);
+                if (assignments == null || assignments.Participants == null || assignments.Participants.Count == 0)
+                {
+                    result.Reason = "no colonist can take part: the ritual's roles are empty, and its own "
+                        + "requirements (a role holder, a free pawn) are not met";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+
+                ritual.behavior.TryExecuteOn(target, organizer, ritual, obligation, assignments, true);
+
+                // TryExecuteOn returns nothing and gives up silently, so the
+                // answer comes from the game state: a LordJob_Ritual of this
+                // ritual has to stand now.
+                LordJob_Ritual running = Find.IdeoManager.GetActiveRituals(map)
+                    .FirstOrDefault(r => r.Ritual == ritual);
+                if (running == null)
+                {
+                    result.Reason = "the game accepted the order but no ritual of that name is running; "
+                        + "`messages` and `dialogs` say why it did not start";
+                    return ApiResult<RitualStartResultDto>.Ok(result);
+                }
+
+                result.Started = true;
+                result.Target = TargetRef(running.selectedTarget);
+                result.ObligationFulfilled = obligation != null
+                    && (ritual.activeObligations == null || !ritual.activeObligations.Contains(obligation));
+                RitualRoleAssignments live = running.assignments ?? assignments;
+                if (live.Participants != null)
+                {
+                    foreach (Pawn pawn in live.Participants)
+                    {
+                        if (pawn != null) result.Participants.Add(PawnRef(pawn));
+                    }
+                }
+                return ApiResult<RitualStartResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<RitualStartResultDto>.Fail(ex.ToString());
+            }
+        }
+
+        // Rituals are precepts of the ideoligion; there is no separate list.
+        private static List<Precept_Ritual> Rituals(Ideo ideo)
+        {
+            return ideo.PreceptsListForReading.OfType<Precept_Ritual>().ToList();
+        }
+
+        // DescribeRitual fills one read entry. The target is the game's own
+        // choice (an obligation's target, else the ritual filter's best one),
+        // because CanStartRitualNow only checks the roles once it has a valid
+        // target: without one every ritual would read as ready.
+        private static IdeoRitualDto DescribeRitual(Precept_Ritual ritual, List<Pawn> colonists)
+        {
+            IdeoRitualDto dto = new IdeoRitualDto
+            {
+                Def = ritual.def.defName,
+                Label = ritual.Label,
+                Anytime = ritual.isAnytime,
+                DateTriggered = ritual.IsDateTriggered,
+                RepeatPenaltyActive = ritual.RepeatPenaltyActive,
+                RepeatQualityPenalty = ritual.RepeatQualityPenalty,
+                RepeatPenaltyTimeLeft = ritual.RepeatPenaltyTimeLeft,
+                Obligations = new List<RitualObligationDto>(),
+                Roles = new List<RitualRoleDto>(),
+            };
+            if (ritual.abilityOnCooldownUntilTick > 0)
+            {
+                dto.CooldownTicks = Math.Max(0, ritual.abilityOnCooldownUntilTick - Find.TickManager.TicksGame);
+            }
+
+            RitualObligation first = null;
+            if (ritual.activeObligations != null)
+            {
+                foreach (RitualObligation obligation in ritual.activeObligations)
+                {
+                    if (!obligation.StillValid) continue;
+                    if (first == null) first = obligation;
+                    dto.Obligations.Add(new RitualObligationDto
+                    {
+                        Id = obligation.ID,
+                        Expires = obligation.expires,
+                        TicksUntilExpiration = obligation.TicksUntilExpiration,
+                        Target = TargetRef(obligation.FirstValidTarget),
+                    });
+                }
+            }
+
+            if (ritual.behavior != null && ritual.behavior.def != null && ritual.behavior.def.roles != null)
+            {
+                foreach (RitualRole role in ritual.behavior.def.roles)
+                {
+                    dto.Roles.Add(new RitualRoleDto
+                    {
+                        Id = role.id,
+                        Label = role.Label.ToString(),
+                        Required = role.required,
+                        MaxCount = role.maxCount,
+                    });
+                }
+            }
+
+            TargetInfo target = first != null
+                ? first.FirstValidTarget
+                : BestTarget(ritual, RoleHolder(ritual) ?? colonists.FirstOrDefault());
+            dto.Target = TargetRef(target);
+
+            string why = ritual.behavior?.CanStartRitualNow(target, ritual, null, null);
+            dto.Ready = string.IsNullOrEmpty(why);
+            dto.Reason = why ?? "";
+            return dto;
+        }
+
+        // RoleHolder is the pawn who fills the first ideoligion role the ritual
+        // asks for (the leader for the speech), which is who the target filter
+        // measures from. RitualRole.precept names the PreceptDef of that role.
+        private static Pawn RoleHolder(Precept_Ritual ritual)
+        {
+            if (ritual.ideo == null || ritual.ideo.RolesListForReading == null
+                || ritual.behavior?.def?.roles == null) return null;
+            foreach (RitualRole wanted in ritual.behavior.def.roles)
+            {
+                if (wanted.precept == null) continue;
+                Precept_Role role = ritual.ideo.RolesListForReading
+                    .FirstOrDefault(r => r.def == wanted.precept);
+                if (role == null) continue;
+                Pawn pawn = role.ChosenPawns().FirstOrDefault(p => p != null);
+                if (pawn != null) return pawn;
+            }
+            return null;
+        }
+
+        // BestTarget is the game's own target choice for a ritual that has none
+        // yet, the same call CompAbilityEffect_StartRitual makes. A target
+        // filter of a third-party ritual may throw on an odd map; the readiness
+        // hint then simply comes without a target.
+        private static TargetInfo BestTarget(Precept_Ritual ritual, Pawn organizer)
+        {
+            if (ritual.targetFilter == null || organizer == null || organizer.Map == null) return TargetInfo.Invalid;
+            try
+            {
+                return ritual.targetFilter.BestTarget(new TargetInfo(organizer), TargetInfo.Invalid);
+            }
+            catch (Exception)
+            {
+                return TargetInfo.Invalid;
+            }
+        }
+
+        // PickObligation takes the due obligation a start pays off: the one
+        // whose target the caller named, or the first still-valid one when the
+        // caller named none.
+        private static RitualObligation PickObligation(Precept_Ritual ritual, TargetInfo target, bool targetGiven)
+        {
+            if (ritual.activeObligations == null) return null;
+            List<RitualObligation> valid = ritual.activeObligations.Where(o => o.StillValid).ToList();
+            if (valid.Count == 0) return null;
+            if (!targetGiven) return valid[0];
+            return valid.FirstOrDefault(o => SameTarget(o.FirstValidTarget, target));
+        }
+
+        private static bool SameTarget(TargetInfo a, TargetInfo b)
+        {
+            if (!a.IsValid || !b.IsValid) return false;
+            if (a.HasThing != b.HasThing) return false;
+            return a.HasThing ? a.Thing == b.Thing : a.Cell == b.Cell;
+        }
+
+        private static RitualTargetDto TargetRef(TargetInfo target)
+        {
+            RitualTargetDto dto = new RitualTargetDto();
+            if (!target.IsValid) return dto;
+            dto.Valid = true;
+            dto.X = target.Cell.x;
+            dto.Z = target.Cell.z;
+            if (target.HasThing && target.Thing != null)
+            {
+                dto.ThingId = target.Thing.thingIDNumber;
+                dto.Label = target.Thing.LabelShort;
+            }
+            return dto;
+        }
+
+        private static Pawn FindPawn(Map map, int pawnId)
+        {
+            return map.mapPawns.AllPawnsSpawned.FirstOrDefault(p => p.thingIDNumber == pawnId)
+                ?? map.mapPawns.AllPawns.FirstOrDefault(p => p.thingIDNumber == pawnId);
+        }
+
+        private static Thing FindThing(Map map, int thingId)
+        {
+            return map.listerThings.AllThings.FirstOrDefault(t => t.thingIDNumber == thingId);
+        }
+
+        // FindRitual takes the defName or the label the game shows, ignoring
+        // case, so a run reads "Leader speech" from the window and does not have
+        // to know the defName behind it.
+        private static Precept_Ritual FindRitual(Ideo ideo, string name, out string error)
+        {
+            error = null;
+            List<Precept_Ritual> rituals = Rituals(ideo);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                error = "no ritual named: pass the ritual's label or defName (`rituals` prints both)";
+                return null;
+            }
+            string wanted = name.Trim();
+            Precept_Ritual ritual = rituals.FirstOrDefault(r =>
+                    string.Equals(r.def.defName, wanted, StringComparison.OrdinalIgnoreCase))
+                ?? rituals.FirstOrDefault(r => string.Equals(r.Label, wanted, StringComparison.OrdinalIgnoreCase))
+                ?? rituals.FirstOrDefault(r =>
+                    string.Equals(r.Label.Replace(" ", ""), wanted.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+            if (ritual == null)
+            {
+                string known = string.Join(", ", rituals.Select(r => r.Label));
+                error = $"no ritual \"{wanted}\" in the ideoligion; it has {known}";
+            }
+            return ritual;
+        }
+
         // PlayerIdeo is the colony's own ideoligion, and the reason there is
         // none: without the Ideology expansion no faction carries one, so a
         // caller that asks about roles is told that instead of "empty list".
