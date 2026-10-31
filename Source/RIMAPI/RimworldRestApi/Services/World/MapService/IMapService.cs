@@ -16,6 +16,7 @@ namespace RIMAPI.Services
         ApiResult<List<DesignationDto>> GetMapDesignations(int mapId);
 
         ApiResult<List<BlueprintEntryDto>> GetMapBlueprints(int mapId);
+        ApiResult<List<PenDto>> GetMapPens(int mapId);
         ApiResult<MapCreaturesSummaryDto> GetMapCreaturesSummary(int mapId);
         ApiResult<MapFarmSummaryDto> GenerateFarmSummary(int mapId);
         ApiResult<GrowingZoneDto> GetGrowingZoneById(int mapId, int zoneId);

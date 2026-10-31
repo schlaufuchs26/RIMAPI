@@ -85,6 +85,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/pens")]
+        [EndpointMetadata("Get every animal pen on the map: the marker's cell, the game's enclosure verdict, the animals standing inside and the pen tab's food numbers and animal capacity")]
+        public async Task GetMapPens(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var result = _mapService.GetMapPens(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/area")]
         [EndpointMetadata("Get one area's cells as rectangles: where the Home area reaches, which is where colonists haul and therefore where a blueprint is ever built")]
         public async Task GetMapArea(HttpListenerContext context)
