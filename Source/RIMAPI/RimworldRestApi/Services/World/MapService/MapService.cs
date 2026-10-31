@@ -891,10 +891,7 @@ namespace RIMAPI.Services
         public ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request) => MapHelper.UpdateStockpile(request);
 
 
-        public static int GetMapTileId(Map map)
-        {
-            return map.Tile.tileId;
-        }
+        public static int GetMapTileId(Map map) => MapHelper.GetMapTileId(map);
 
         public ApiResult<MapTimeDto> GetCurrentMapDatetime()
         {
