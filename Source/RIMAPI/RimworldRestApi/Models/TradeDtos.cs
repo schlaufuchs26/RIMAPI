@@ -45,4 +45,58 @@ namespace RIMAPI.Models
         [DefaultValue(true)]
         public bool Buys { get; set; } = true;
     }
+
+    // A live trader, not a trader kind (ticket #3170): a caravan visitor or an
+    // orbital trade ship on the map, with the silver it holds and the stock it
+    // sells. Id is the pawn's thing id for a visitor and negative for an
+    // orbital ship (the tool prints it, and a trade call takes it back).
+    public class TraderDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Kind { get; set; }
+        public string Label { get; set; }
+        public string Faction { get; set; }
+        public bool Orbital { get; set; }
+        public bool CanTradeNow { get; set; }
+        public int Silver { get; set; }
+        public int NegotiatorId { get; set; }
+        public string Negotiator { get; set; }
+        public List<TraderStockDto> Stock { get; set; }
+    }
+
+    // One line of a trader's stock, grouped by def and material. MarketValue is
+    // the game's base value per unit, not the price the trader asks.
+    public class TraderStockDto
+    {
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public int Count { get; set; }
+        public float MarketValue { get; set; }
+    }
+
+    public class TradeRequestDto
+    {
+        public int MapId { get; set; }
+        public int TraderId { get; set; }
+        // Op is buy or sell.
+        public string Op { get; set; }
+        public string DefName { get; set; }
+        public int Count { get; set; }
+    }
+
+    public class TradeResultDto
+    {
+        public bool Traded { get; set; }
+        public string Op { get; set; }
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public int Count { get; set; }
+        // Silver is what moved for the colony: positive paid out, negative
+        // received. ColonySilver and TraderSilver are read after the deal.
+        public int Silver { get; set; }
+        public int ColonySilver { get; set; }
+        public int TraderSilver { get; set; }
+        public string Note { get; set; }
+    }
 }
