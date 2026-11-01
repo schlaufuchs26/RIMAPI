@@ -40,6 +40,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FrameConstruction.cs" Link="Linked\FrameConstruction.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CombatRefusal.cs" Link="Linked\CombatRefusal.cs" />
+    <!-- Why an ordered attack does not land (fox ticket #3737): the wording of
+         the four gates is plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AttackBlockRules.cs" Link="Linked\AttackBlockRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AttackDamage.cs" Link="Linked\AttackDamage.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ClockOffset.cs" Link="Linked\ClockOffset.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BillStateReason.cs" Link="Linked\BillStateReason.cs" />
