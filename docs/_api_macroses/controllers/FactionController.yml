@@ -84,7 +84,28 @@ desc: |-
         "success": true,
         "errors": [],
         "warnings": [],
-        "timestamp": "2025-12-08T19:13:29.997162Z"
+        "timestamp": "2025-12-08T19:13:29.997162Z",
+        "data": {
+            "id": 2,
+            "relations": {
+                "0": {"goodwill": 0, "relation_kind": ""},
+                "1": {"goodwill": 0, "relation_kind": ""},
+                "3": {"goodwill": 0, "relation_kind": ""},
+                "4": {"goodwill": 0, "relation_kind": ""},
+                "5": {"goodwill": 0, "relation_kind": ""},
+                "6": {"goodwill": 0, "relation_kind": ""},
+                "7": {"goodwill": 0, "relation_kind": ""},
+                "8": {"goodwill": 0, "relation_kind": ""},
+                "9": {"goodwill": 0, "relation_kind": ""},
+                "10": {"goodwill": 0, "relation_kind": ""},
+                "11": {"goodwill": 0, "relation_kind": ""},
+                "12": {"goodwill": 0, "relation_kind": ""},
+                "13": {"goodwill": 0, "relation_kind": ""},
+                "14": {"goodwill": 0, "relation_kind": ""},
+                "15": {"goodwill": 0, "relation_kind": ""},
+                "16": {"goodwill": 0, "relation_kind": ""}
+            }
+        }
     }
     ```
   method: GET
@@ -263,10 +284,7 @@ desc: |-
     {
         "success": true,
         "data": {
-            "image": {
-                "result": "Success",
-                "image_base_64": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AA..."
-            },
+            "image": {"result": "Success", "image_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACq..."},
             "color": "#9A2A2A"
         },
         "timestamp": "2025-12-11T19:46:05.7088803Z"

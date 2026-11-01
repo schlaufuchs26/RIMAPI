@@ -20,11 +20,17 @@ desc: The **UI Controller** manages in-game windows, dialogs, and on-screen aler
         "data": [
             {
                 "label": "Major Break Risk",
-                "explanation": "Colonist Emilia has a mood of 22%."
+                "explanation": "Colonist Emilia has a mood of 22%.",
+                "priority": "",
+                "targets": [],
+                "cells": []
             },
             {
                 "label": "Need Defenses",
-                "explanation": "Your colony has no turrets or traps."
+                "explanation": "Your colony has no turrets or traps.",
+                "priority": "",
+                "targets": [],
+                "cells": []
             }
         ],
         "errors": [],
@@ -137,11 +143,21 @@ desc: The **UI Controller** manages in-game windows, dialogs, and on-screen aler
         "data": [
             {
                 "window_type": "Dialog_NamePlayerSettlement",
-                "force_pause": true
+                "force_pause": true,
+                "title": "",
+                "text": "",
+                "buttons": [],
+                "name": "",
+                "second_name": ""
             },
             {
                 "window_type": "MainTabWindow_Inspect",
-                "force_pause": false
+                "force_pause": false,
+                "title": "",
+                "text": "",
+                "buttons": [],
+                "name": "",
+                "second_name": ""
             }
         ],
         "errors": [],

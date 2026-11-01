@@ -40,7 +40,7 @@ desc: |-
             "buildings": [
                 {"def_name":"Wall","stuff_def_name":"WoodLog","rel_x":0,"rel_z":0,"rotation":0},
                 {"def_name":"Wall","stuff_def_name":"WoodLog","rel_x":3,"rel_z":0,"rotation":0},
-                {"def_name":"Wall","stuff_def_name":"WoodLog","rel_x":0,"rel_z":1,"rotation":0},
+                {"def_name":"Wall","stuff_def_name":"WoodLog","rel_x":0,"rel_z":1,"rotation":0}
             ]
         },
         "errors": [],

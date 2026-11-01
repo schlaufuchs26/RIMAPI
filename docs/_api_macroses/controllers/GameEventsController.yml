@@ -26,28 +26,38 @@ desc: |-
         "success": true,
         "data": {
             "active_quests": [
-            {
-                "id": 1,
-                "quest_def": "OpportunitySite_ItemStash",
-                "name": "Choma's Shack of Valuables",
-                "description": "<color=#D09B61FF>Choma</color>, Great Chief of <color=#00BFFFFF>Coalition of Tol</color>, has informed us of a collection of valuable items worth $535 not far from us. The collection consists of:\n\n  - The Archaic Psychoid Chronicle (excellent)\r\n  - Voro-Harbinger (good)\n\n<color=#D09B61FF>Choma</color> says that there may be an <color=#D46F68FF>unknown threat</color>.",
-                "state": "Ongoing",
-                "expiry_hours": -0.000400000019,
-                "reward": [
-                "Reward_Items(value $535)\n  -Voro-Harbinger (good) $310\n  -The Archaic Psychoid Chronicle (excellent) $225"
-                ]
-            }
+                {
+                    "id": 1,
+                    "quest_def": "OpportunitySite_ItemStash",
+                    "name": "Choma's Shack of Valuables",
+                    "description": "<color=#D09B61FF>Choma</color>, Great Chief of <color=#00BFFFFF>Coalition of Tol</color>, has informed us of a collection of valuable items worth $535 not far from us. The collection consists of:\n\n  - The Archaic Psychoid Chronicle (excellent)\r\n  - Voro-Harbinger (good)\n\n<color=#D09B61FF>Choma</color> says that there may be an <color=#D46F68FF>unknown threat</color>.",
+                    "state": "Ongoing",
+                    "expiry_hours": -0.000400000019,
+                    "reward": [
+                        "Reward_Items(value $535)\n  -Voro-Harbinger (good) $310\n  -The Archaic Psychoid Chronicle (excellent) $225"
+                    ],
+                    "can_accept": false,
+                    "accept_reason": "",
+                    "requires_accepter": false,
+                    "choices": [{"index": 0, "total_market_value": 0.0, "rewards": []}],
+                    "accepter": ""
+                }
             ],
             "historical_quests": [
-            {
-                "id": 0,
-                "quest_def": "Beggars",
-                "name": "Drifter Hopes for Resources",
-                "description": "A poor traveler named <color=#D09B61FF>Ace</color> is approaching looking for help. <color=#D09B61FF>Ace</color> is begging for x700 silver. <color=#D09B61FF>Ace</color> wants the silver to pay off a debt to a gang of pirates who are hunting her.\n\nYou can give items to <color=#D09B61FF>Ace</color> by selecting a colonist and right-clicking on her.\n\n<color=#D09B61FF>Ace</color> will move on after <color=#87F6F6FF>1 day</color>.\n\nThis traveler is not part of any faction. If you wish, you can choose to kill, arrest, sell, or harvest her, without diplomatic consequences.",
-                "state": "EndedSuccess",
-                "expiry_hours": -0.000400000019,
-                "reward": []
-            }
+                {
+                    "id": 0,
+                    "quest_def": "Beggars",
+                    "name": "Drifter Hopes for Resources",
+                    "description": "A poor traveler named <color=#D09B61FF>Ace</color> is approaching looking for help. <color=#D09B61FF>Ace</color> is begging for x700 silver. <color=#D09B61FF>Ace</color> wants the silver to pay off a debt to a gang of pirates who are hunting her.\n\nYou can give items to <color=#D09B61FF>Ace</color> by selecting a colonist and right-clicking on her.\n\n<color=#D09B61FF>Ace</color> will move on after <color=#87F6F6FF>1 day</color>.\n\nThis traveler is not part of any faction. If you wish, you can choose to kill, arrest, sell, or harvest her, without diplomatic consequences.",
+                    "state": "EndedSuccess",
+                    "expiry_hours": -0.000400000019,
+                    "reward": [""],
+                    "can_accept": false,
+                    "accept_reason": "",
+                    "requires_accepter": false,
+                    "choices": [{"index": 0, "total_market_value": 0.0, "rewards": []}],
+                    "accepter": ""
+                }
             ]
         },
         "errors": [],

@@ -40,8 +40,20 @@ desc: The **Learning Controller** exposes RimWorld's in-game tutorial/learning h
     {
         "success": true,
         "data": [
-            {"def_name": "BuildingFire", "learned": true},
-            {"def_name": "Drafting", "learned": false}
+            {
+                "def_name": "BuildingFire",
+                "label": "",
+                "help_text": "",
+                "knowledge_progress": 0.0,
+                "is_completed": false
+            },
+            {
+                "def_name": "Drafting",
+                "label": "",
+                "help_text": "",
+                "knowledge_progress": 0.0,
+                "is_completed": false
+            }
         ],
         "errors": [],
         "warnings": [],
@@ -64,7 +76,13 @@ desc: The **Learning Controller** exposes RimWorld's in-game tutorial/learning h
     {
         "success": true,
         "data": [
-            {"def_name": "Drafting", "learned": false}
+            {
+                "def_name": "Drafting",
+                "label": "",
+                "help_text": "",
+                "knowledge_progress": 0.0,
+                "is_completed": false
+            }
         ],
         "errors": [],
         "warnings": [],
@@ -89,7 +107,9 @@ desc: The **Learning Controller** exposes RimWorld's in-game tutorial/learning h
         "data": {
             "def_name": "Drafting",
             "label": "Drafting colonists",
-            "learned": false
+            "help_text": "To control colonists directly for combat...",
+            "knowledge_progress": 0.0,
+            "is_completed": false
         },
         "errors": [],
         "warnings": [],

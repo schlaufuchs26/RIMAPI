@@ -37,33 +37,15 @@ desc: |-
                             "summary": "Raw food",
                             "count": 0.5,
                             "is_fixed_item": false,
-                            "allowed_def_names": [
-                                "RawPotatoes",
-                                "RawRice",
-                                "Meat_Chicken"
-                            ]
+                            "allowed_def_names": ["RawPotatoes", "RawRice", "Meat_Chicken"]
                         }
                     ],
                     "produced_at": [
-                        {
-                            "def_name": "ElectricStove",
-                            "label": "electric stove"
-                        },
-                        {
-                            "def_name": "FueledStove",
-                            "label": "fueled stove"
-                        },
-                        {
-                            "def_name": "Campfire",
-                            "label": "campfire"
-                        }
+                        {"def_name": "ElectricStove", "label": "electric stove"},
+                        {"def_name": "FueledStove", "label": "fueled stove"},
+                        {"def_name": "Campfire", "label": "campfire"}
                     ],
-                    "skill_requirements": [
-                        {
-                            "skill": "Cooking",
-                            "min_level": 0
-                        }
-                    ],
+                    "skill_requirements": [{"skill": "Cooking", "min_level": 0}],
                     "research_prerequisite": null
                 }
             ]
@@ -136,11 +118,11 @@ desc: |-
         "success": true,
         "data": {
             "total_items": 1234,
-            "total_market_value": 5678.90,
+            "total_market_value": 5678.9,
             "last_updated": "2025-12-12t10:00:00.0000000z",
             "categories": [
-                { "category": "foods", "count": 500, "market_value": 1200.00 },
-                { "category": "manufactured", "count": 200, "market_value": 2500.00 }
+                {"category": "foods", "count": 500, "market_value": 1200.0},
+                {"category": "manufactured", "count": 200, "market_value": 2500.0}
             ],
             "critical_resources": {
                 "food_summary": {
@@ -169,7 +151,25 @@ desc: |-
                 },
                 "medicine_total": 20,
                 "weapon_count": 5,
-                "weapon_value": 1000.00
+                "weapon_value": 1000.0,
+                "fuel_summary": {
+                    "stocks": [{"def_name": "", "label": "", "count": 0}],
+                    "buildings": [
+                        {
+                            "id": 0,
+                            "def_name": "",
+                            "label": "",
+                            "fuel": 0.0,
+                            "fuel_capacity": 0.0,
+                            "fuel_type": "",
+                            "has_fuel": false,
+                            "refuel_available": false,
+                            "refuel_forced": false,
+                            "bills": 0,
+                            "meal_bills": 0
+                        }
+                    ]
+                }
             }
         },
         "errors": [],
@@ -202,47 +202,208 @@ desc: |-
     {
         "success": true,
         "data": {
-            "Foods": [
-                {
-                    "thing_id": 4895,
-                    "def_name": "MealSurvivalPack",
-                    "label": "packaged survival meal x10",
-                    "categories": ["FoodMeals"],
-                    "position": { "x": 13, "y": 0, "z": 62 },
-                    "stack_count": 10,
-                    "market_value": 24.0,
-                    "is_forbidden": false,
-                    "quality": -1,
-                    "hit_points": 50,
-                    "max_hit_points": 50
-                },
-                {
-                    "thing_id": 4896,
-                    "def_name": "Pemmican",
-                    "label": "pemmican x2",
-                    "categories": ["FoodMeals"],
-                    "position": { "x": 14, "y": 0, "z": 62 },
-                    "stack_count": 50,
-                    "market_value": 1.5,
-                    "is_forbidden": false,
-                    "quality": -1,
-                    "hit_points": 50,
-                    "max_hit_points": 50
-                }
-            ],
             "resources_raw": [
                 {
                     "thing_id": 2328,
                     "def_name": "ChunkGranite",
                     "label": "granite chunk",
                     "categories": ["StoneChunks"],
-                    "position": { "x": 41, "y": 0, "z": 1 },
+                    "position": {"x": 41, "y": 0, "z": 1},
                     "stack_count": 1,
                     "market_value": 0.0,
                     "is_forbidden": false,
                     "quality": -1,
                     "hit_points": 300,
-                    "max_hit_points": 300
+                    "max_hit_points": 300,
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0}
+                }
+            ],
+            "stone_chunks": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "corpses_humanlike": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "plants": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "apparel_misc": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "buildings_joy": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "plant_food_raw": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "manufactured": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "medicine": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "food_meals": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "weapons_melee": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
+                }
+            ],
+            "corpses_animal": [
+                {
+                    "thing_id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "categories": [""],
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "rotation": 0,
+                    "size": {"x": 0, "y": 0, "z": 0},
+                    "stack_count": 0,
+                    "market_value": 0.0,
+                    "is_forbidden": false,
+                    "quality": 0,
+                    "hit_points": 0,
+                    "max_hit_points": 0
                 }
             ]
         },

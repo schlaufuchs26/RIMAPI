@@ -36,11 +36,9 @@ desc: |-
                     "health": 1.0,
                     "mood": 0.85,
                     "hunger": 0.2,
-                    "position": {
-                        "x": 10,
-                        "y": 0,
-                        "z": 15
-                    }
+                    "position": {"x": 10, "y": 0, "z": 15},
+                    "allowed_area_cells": 0,
+                    "carried_by": ""
                 },
                 "detailes": {
                     "body_size": 1.0,
@@ -53,19 +51,92 @@ desc: |-
                     "surrounding_beauty": 1.2,
                     "fresh_air": 1.0,
                     "work_info": {
-                        "job": "Harvesting",
-                        "work_speed": 1.1
+                        "skills": [
+                            {
+                                "name": "",
+                                "level": 0,
+                                "description": "",
+                                "min_level": 0,
+                                "max_level": 0,
+                                "level_descriptor": "",
+                                "permanently_disabled": false,
+                                "totally_disabled": false,
+                                "xp_total_earned": 0.0,
+                                "xp_progress_percent": 0.0,
+                                "xp_required_for_level_up": 0.0,
+                                "xp_since_last_level": 0.0,
+                                "aptitude": 0,
+                                "passion": 0,
+                                "disabled_work_tags": 0
+                            }
+                        ],
+                        "current_job": "",
+                        "traits": [{"name": "", "label": "", "disabled_work_tags": 0, "suppressed": false}],
+                        "work_priorities": [{"work_type": "", "priority": 0, "is_totally_disabled": false}],
+                        "incapable_of": [],
+                        "can_fight": false
                     },
-                    "policies_info": {
-                        "food": "Lavish",
-                        "clothing": "Anything"
-                    },
+                    "policies_info": {"food_policy_id": 0, "hostility_response": 0},
                     "medical_info": {
-                        "in_pain": false,
-                        "bleeding_rate": 0.0
+                        "is_dead": false,
+                        "is_downed": false,
+                        "downed_reason": "",
+                        "mental_state": "",
+                        "consciousness": 0.0,
+                        "moving": 0.0,
+                        "health": 0.0,
+                        "hediffs": [
+                            {
+                                "load_id": 0,
+                                "def_name": "",
+                                "label": "",
+                                "label_cap": "",
+                                "label_in_brackets": "",
+                                "severity": 0.0,
+                                "severity_label": "",
+                                "cur_stage_index": 0,
+                                "part_label": "",
+                                "part_def_name": "",
+                                "age_ticks": 0,
+                                "age_string": "",
+                                "visible": false,
+                                "is_permanent": false,
+                                "is_tended": false,
+                                "tendable_now": false,
+                                "bleeding": false,
+                                "bleed_rate": 0.0,
+                                "is_lethal": false,
+                                "is_currently_life_threatening": false,
+                                "can_ever_kill": false,
+                                "is_infection": false,
+                                "severity_per_day": 0.0,
+                                "immunity_per_day": 0.0,
+                                "immunity": 0.0,
+                                "tip_string_extra": "",
+                                "pain_factor": 0.0,
+                                "pain_offset": 0.0,
+                                "cur_stage_label": ""
+                            }
+                        ],
+                        "medical_policy_id": 0,
+                        "is_self_tend_allowed": false,
+                        "in_bed": false
                     },
-                    "social_info": {
-                        "marital_status": "Single"
+                    "social_info": {"id": "", "name": "", "direct_relations": [], "children_count": 0},
+                    "mood_info": {
+                        "mood": 0.0,
+                        "total_offset": 0.0,
+                        "thoughts": [
+                            {
+                                "def_name": "",
+                                "label": "",
+                                "stage_label": "",
+                                "mood_offset": 0.0,
+                                "age_days": 0,
+                                "permanent": false,
+                                "kind": ""
+                            }
+                        ]
                     }
                 }
             }
@@ -159,11 +230,9 @@ desc: |-
                 "health": 1.0,
                 "mood": 0.7448001,
                 "hunger": 0.663999736,
-                "position": {
-                    "x": 71,
-                    "y": 0,
-                    "z": 94
-                }
+                "position": {"x": 71, "y": 0, "z": 94},
+                "allowed_area_cells": 0,
+                "carried_by": ""
             },
             {
                 "id": 1014,
@@ -173,11 +242,9 @@ desc: |-
                 "health": 1.0,
                 "mood": 0.559999764,
                 "hunger": 0.663999736,
-                "position": {
-                    "x": 74,
-                    "y": 0,
-                    "z": 91
-                }
+                "position": {"x": 74, "y": 0, "z": 91},
+                "allowed_area_cells": 0,
+                "carried_by": ""
             },
             {
                 "id": 1017,
@@ -187,11 +254,9 @@ desc: |-
                 "health": 1.0,
                 "mood": 0.55,
                 "hunger": 0.667999744,
-                "position": {
-                    "x": 68,
-                    "y": 0,
-                    "z": 95
-                }
+                "position": {"x": 68, "y": 0, "z": 95},
+                "allowed_area_cells": 0,
+                "carried_by": ""
             }
         ],
         "errors": [],
@@ -258,7 +323,9 @@ desc: |-
                     "health": 1.0,
                     "mood": 0.85,
                     "hunger": 0.2,
-                    "position": { "x": 10, "y": 0, "z": 15 }
+                    "position": {"x": 10, "y": 0, "z": 15},
+                    "allowed_area_cells": 0,
+                    "carried_by": ""
                 },
                 "body_size": 1.0,
                 "sleep": 0.9,
@@ -270,19 +337,92 @@ desc: |-
                 "surrounding_beauty": 1.2,
                 "fresh_air": 1.0,
                 "colonist_work_info": {
-                    "job": "Harvesting",
-                    "work_speed": 1.1
+                    "skills": [
+                        {
+                            "name": "",
+                            "level": 0,
+                            "description": "",
+                            "min_level": 0,
+                            "max_level": 0,
+                            "level_descriptor": "",
+                            "permanently_disabled": false,
+                            "totally_disabled": false,
+                            "xp_total_earned": 0.0,
+                            "xp_progress_percent": 0.0,
+                            "xp_required_for_level_up": 0.0,
+                            "xp_since_last_level": 0.0,
+                            "aptitude": 0,
+                            "passion": 0,
+                            "disabled_work_tags": 0
+                        }
+                    ],
+                    "current_job": "",
+                    "traits": [{"name": "", "label": "", "disabled_work_tags": 0, "suppressed": false}],
+                    "work_priorities": [{"work_type": "", "priority": 0, "is_totally_disabled": false}],
+                    "incapable_of": [],
+                    "can_fight": false
                 },
-                "policies_info": {
-                    "food": "Lavish",
-                    "clothing": "Anything"
-                },
+                "policies_info": {"food_policy_id": 0, "hostility_response": 0},
                 "colonist_medical_info": {
-                    "in_pain": false,
-                    "bleeding_rate": 0.0
+                    "is_dead": false,
+                    "is_downed": false,
+                    "downed_reason": "",
+                    "mental_state": "",
+                    "consciousness": 0.0,
+                    "moving": 0.0,
+                    "health": 0.0,
+                    "hediffs": [
+                        {
+                            "load_id": 0,
+                            "def_name": "",
+                            "label": "",
+                            "label_cap": "",
+                            "label_in_brackets": "",
+                            "severity": 0.0,
+                            "severity_label": "",
+                            "cur_stage_index": 0,
+                            "part_label": "",
+                            "part_def_name": "",
+                            "age_ticks": 0,
+                            "age_string": "",
+                            "visible": false,
+                            "is_permanent": false,
+                            "is_tended": false,
+                            "tendable_now": false,
+                            "bleeding": false,
+                            "bleed_rate": 0.0,
+                            "is_lethal": false,
+                            "is_currently_life_threatening": false,
+                            "can_ever_kill": false,
+                            "is_infection": false,
+                            "severity_per_day": 0.0,
+                            "immunity_per_day": 0.0,
+                            "immunity": 0.0,
+                            "tip_string_extra": "",
+                            "pain_factor": 0.0,
+                            "pain_offset": 0.0,
+                            "cur_stage_label": ""
+                        }
+                    ],
+                    "medical_policy_id": 0,
+                    "is_self_tend_allowed": false,
+                    "in_bed": false
                 },
-                "social_info": {
-                    "marital_status": "Single"
+                "social_info": {"id": "", "name": "", "direct_relations": [], "children_count": 0},
+                "mood_info": {
+                    "mood": 0.0,
+                    "total_offset": 0.0,
+                    "thoughts": [
+                        {
+                            "def_name": "",
+                            "label": "",
+                            "stage_label": "",
+                            "mood_offset": 0.0,
+                            "age_days": 0,
+                            "permanent": false,
+                            "kind": ""
+                        }
+                    ]
                 }
             }
         ],
@@ -781,7 +921,7 @@ desc: |-
                         "Apparel_CowboyHat",
                         "Apparel_BowlerHat",
                         "Apparel_TribalHeaddress",
-                        "Apparel_Tuque",
+                        "Apparel_Tuque"
                     ],
                     "disallowed_special_filter_def_names": ["AllowBurned"],
                     "allowed_hit_points_min": 0.5,

@@ -19,7 +19,25 @@ desc: This controller handles the general game functions.
             "colony_wealth": 4.0,
             "colonist_count": 3,
             "storyteller": "Cassandra",
-            "is_paused": true
+            "is_paused": true,
+            "program_state": "Playing",
+            "current_view": "Map",
+            "is_settings_open": false,
+            "is_mod_settings_open": false,
+            "map_count": 1,
+            "has_game": true,
+            "has_map": true,
+            "is_loading": false,
+            "colony_name": "Quaverdo Confederation",
+            "loaded_save": "colony-day22",
+            "save_name": "",
+            "time_speed": "Paused",
+            "pause_source": "",
+            "clock_offset_ticks": 15000,
+            "scenario": "",
+            "scenario_label": "",
+            "picked_pawns": "",
+            "pick_problem": ""
         },
         "errors": [],
         "warnings": [],
@@ -146,12 +164,24 @@ desc: This controller handles the general game functions.
             {
                 "name": "Core",
                 "package_id": "ludeon.rimworld",
-                "load_order": 0
+                "load_order": 0,
+                "author": "",
+                "description": "",
+                "url": "",
+                "version": "",
+                "supported_versions": [],
+                "root_dir": ""
             },
             {
                 "name": "RIMAPI",
                 "package_id": "redeyedev.rimapi",
-                "load_order": 1
+                "load_order": 1,
+                "author": "",
+                "description": "",
+                "url": "",
+                "version": "",
+                "supported_versions": [],
+                "root_dir": ""
             }
         ],
         "errors": [],
@@ -561,7 +591,7 @@ desc: This controller handles the general game functions.
                     "insulation__heat": 0.0
                 },
                 {
-                    <...>
+                    "def_name": "...", "label": "another one"
                 }
             ],
             "incidents_defs": [],
@@ -846,7 +876,8 @@ desc: This controller handles the general game functions.
             "resource_readout_categorized": false,
             "show_animal_names": false,
             "reset_mods_config_on_crash": false,
-            "texture_compression": 0
+            "texture_compression": 0,
+            "manual_priorities": true
         },
         "errors": [],
         "warnings": [],

@@ -63,7 +63,7 @@ desc: |-
                 "hit_points": 50,
                 "max_hit_points": 50
             },
-            <...>
+            {"thing_id": 0, "def_name": "...", "label": "another one"}
         ],
         "errors": [],
         "warnings": [],
@@ -181,34 +181,12 @@ desc: |-
         "data": {
             "width": 250,
             "height": 250,
-            "palette": [
-                "Soil",
-                "Gravel",
-                "SoilRich",
-                "WaterDeep"
-            ],
-            "grid": [
-                22,
-                0,
-                5,
-                1,
-                500,
-                0,
-                10,
-                3
-            ],
-            "floor_palette": [
-                "WoodPlankFloor",
-                "TileSandstone"
-            ],
-            "floor_grid": [
-                62400,
-                0,
-                50,
-                1,
-                50,
-                2
-            ]
+            "palette": ["Soil", "Gravel", "SoilRich", "WaterDeep"],
+            "grid": [22, 0, 5, 1, 500, 0, 10, 3],
+            "floor_palette": ["WoodPlankFloor", "TileSandstone"],
+            "floor_grid": [62400, 0, 50, 1, 50, 2],
+            "x1": 0,
+            "z1": 0
         },
         "errors": [],
         "warnings": [],
@@ -285,15 +263,31 @@ desc: |-
                 "thing_id": 2328,
                 "def_name": "ChunkGranite",
                 "label": "granite chunk",
-                "position": { "x": 121, "y": 0, "z": 119 },
-                "stack_count": 1
+                "position": {"x": 121, "y": 0, "z": 119},
+                "stack_count": 1,
+                "categories": [],
+                "rotation": 0,
+                "size": {"x": 0, "y": 0, "z": 0},
+                "market_value": 0.0,
+                "is_forbidden": false,
+                "quality": 0,
+                "hit_points": 0,
+                "max_hit_points": 0
             },
             {
                 "thing_id": 5012,
                 "def_name": "Steel",
                 "label": "steel",
-                "position": { "x": 118, "y": 0, "z": 122 },
-                "stack_count": 35
+                "position": {"x": 118, "y": 0, "z": 122},
+                "stack_count": 35,
+                "categories": [],
+                "rotation": 0,
+                "size": {"x": 0, "y": 0, "z": 0},
+                "market_value": 0.0,
+                "is_forbidden": false,
+                "quality": 0,
+                "hit_points": 0,
+                "max_hit_points": 0
             }
         ],
         "errors": [],
@@ -325,28 +319,17 @@ desc: |-
         "data": {
             "map_width": 250,
             "ores": {
-                "MineableSteel": {
-                    "max_hp": 1500,
-                    "cells": [
-                        12500,
-                        12501,
-                        12502
-                    ],
-                    "hp": [
-                        1500,
-                        1500,
-                        850
-                    ]
-                },
-                "MineableGold": {
-                    "max_hp": 500,
-                    "cells": [
-                        3005
-                    ],
-                    "hp": [
-                        500
-                    ]
-                }
+                "MineableSteel": {"max_hp": 1500, "cells": [12500, 12501, 12502], "hp": [1500, 1500, 850]},
+                "MineableGold": {"max_hp": 500, "cells": [3005], "hp": [500]},
+                "mineable_components_industrial": {"max_hp": 0, "cells": [], "hp": []},
+                "granite": {"max_hp": 0, "cells": [], "hp": []},
+                "sandstone": {"max_hp": 0, "cells": [], "hp": []},
+                "mineable_steel": {"max_hp": 0, "cells": [], "hp": []},
+                "slate": {"max_hp": 0, "cells": [], "hp": []},
+                "mineable_uranium": {"max_hp": 0, "cells": [], "hp": []},
+                "mineable_silver": {"max_hp": 0, "cells": [], "hp": []},
+                "mineable_jade": {"max_hp": 0, "cells": [], "hp": []},
+                "mineable_plasteel": {"max_hp": 0, "cells": [], "hp": []}
             }
         },
         "timestamp": "2025-12-11T19:46:05.7088803Z"
@@ -401,15 +384,31 @@ desc: |-
                 "thing_id": 1024,
                 "def_name": "Plant_TreeOak",
                 "label": "oak tree",
-                "position": { "x": 45, "y": 0, "z": 88 },
-                "growth": 0.85
+                "position": {"x": 45, "y": 0, "z": 88},
+                "categories": [""],
+                "rotation": 0,
+                "size": {"x": 0, "y": 0, "z": 0},
+                "stack_count": 0,
+                "market_value": 0.0,
+                "is_forbidden": false,
+                "quality": 0,
+                "hit_points": 0,
+                "max_hit_points": 0
             },
             {
                 "thing_id": 1025,
                 "def_name": "Plant_Potato",
                 "label": "potato plant",
-                "position": { "x": 50, "y": 0, "z": 50 },
-                "growth": 0.45
+                "position": {"x": 50, "y": 0, "z": 50},
+                "categories": [],
+                "rotation": 0,
+                "size": {"x": 0, "y": 0, "z": 0},
+                "stack_count": 0,
+                "market_value": 0.0,
+                "is_forbidden": false,
+                "quality": 0,
+                "hit_points": 0,
+                "max_hit_points": 0
             }
         ],
         "errors": [],
@@ -463,27 +462,47 @@ desc: |-
         "success": true,
         "data": [
             {
-            "id": 3633,
-            "name": "Colin",
-            "def": "Yak",
-            "faction": "PlayerColony",
-            "position": {
-                "x": 67,
-                "y": 119,
-                "z": 0
-            },
-            "pregnant": false
+                "id": 3633,
+                "name": "Colin",
+                "def": "Yak",
+                "faction": "PlayerColony",
+                "position": {"x": 67, "y": 119, "z": 0},
+                "pregnant": false,
+                "label": "",
+                "side": "",
+                "sex": "",
+                "life_stage": "",
+                "health": 0.0,
+                "downed": false,
+                "tameable": false,
+                "tame_designated": false,
+                "hunt_designated": false,
+                "manhunter": false,
+                "predator": false,
+                "quest_lodger": false,
+                "carried_by": "",
+                "carried_to": ""
             },
             {
-            "id": 8547,
-            "name": "Hare",
-            "def": "Hare",
-            "position": {
-                "x": 50,
-                "y": 40,
-                "z": 0
-            },
-            "pregnant": false
+                "id": 8547,
+                "name": "Hare",
+                "def": "Hare",
+                "position": {"x": 50, "y": 40, "z": 0},
+                "pregnant": false,
+                "label": "",
+                "side": "",
+                "sex": "",
+                "life_stage": "",
+                "health": 0.0,
+                "downed": false,
+                "tameable": false,
+                "tame_designated": false,
+                "hunt_designated": false,
+                "manhunter": false,
+                "predator": false,
+                "quest_lodger": false,
+                "carried_by": "",
+                "carried_to": ""
             }
         ],
         "errors": [],
@@ -510,15 +529,42 @@ desc: |-
     {
         "success": true,
         "data": {
-            "zones": [],
-            "areas": [
+            "zones": [
                 {
                     "id": 0,
                     "cells_count": 0,
-                    "label": "Home",
-                    "base_label": "Home",
-                    "type": "Area_Home"
-                },
+                    "label": "",
+                    "base_label": "",
+                    "type": "",
+                    "growing": {
+                        "plant_def_name": "",
+                        "plant_label": "",
+                        "allow_sow": false,
+                        "in_season": false,
+                        "sown_cells": 0,
+                        "unsown_cells": 0,
+                        "foreign_cells": 0,
+                        "foreign_plants": [],
+                        "dying_cells": 0,
+                        "blighted_cells": 0,
+                        "harvestable_cells": 0,
+                        "mature_cells": 0,
+                        "max_growth": 0.0
+                    },
+                    "storage": {
+                        "priority": "",
+                        "accepts_food": false,
+                        "accepts_raw_food": false,
+                        "accepts_meals": false,
+                        "allowed_def_count": 0,
+                        "allowed_food_categories": [],
+                        "allowed_meal_defs": [],
+                        "allowed_raw_defs": []
+                    }
+                }
+            ],
+            "areas": [
+                {"id": 0, "cells_count": 0, "label": "Home", "base_label": "Home", "type": "Area_Home"},
                 {
                     "id": 1,
                     "cells_count": 0,
@@ -620,15 +666,37 @@ desc: |-
     {
         "success": true,
         "data": {
-            "produce_power_buildings": [],
-            "consume_power_buildings": [],
-            "store_power_buildings": [],
+            "produce_power_buildings": [0],
+            "consume_power_buildings": [0],
+            "store_power_buildings": [0],
             "current_power": 0,
             "total_possible_power": 0,
             "currently_stored_power": 0,
             "total_power_storage": 0,
             "total_consumption": 0,
-            "consumption_power_on": 0
+            "consumption_power_on": 0,
+            "buildings": [
+                {
+                    "id": 0,
+                    "def_name": "",
+                    "label": "",
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "consumes": 0.0,
+                    "produces": 0.0,
+                    "nominal": 0.0,
+                    "connected": false,
+                    "powered": false,
+                    "switched_on": false,
+                    "net_production": 0.0,
+                    "net_stored": 0.0,
+                    "conduit_distance": 0,
+                    "conduit_position": {"x": 0, "y": 0, "z": 0},
+                    "net_id": 0,
+                    "plant": "",
+                    "broken_down": false
+                }
+            ],
+            "ticks_since_load": 1
         },
         "errors": [],
         "warnings": [],
@@ -656,7 +724,8 @@ desc: |-
             "enemies_count": 0,
             "animals_count": 5,
             "insectoids_count": 0,
-            "mechanoids_count": 0
+            "mechanoids_count": 0,
+            "attackers": []
         },
         "errors": [],
         "warnings": [],
@@ -689,7 +758,24 @@ desc: |-
             "max_growth_progress": 0.0,
             "total_harvestable_plants": 0,
             "days_until_next_harvest": 0.0,
-            "crop_types": []
+            "crop_types": [
+                {
+                    "plant_def_name": "",
+                    "plant_label": "",
+                    "plant_category": "",
+                    "total_plants": 0,
+                    "harvestable_plants": 0,
+                    "expected_yield": 0,
+                    "infected_count": 0,
+                    "growth_progress_average": 0.0,
+                    "max_growth_progress": 0.0,
+                    "days_until_harvest": 0.0,
+                    "is_fully_grown": false,
+                    "is_harvestable": false,
+                    "zone_id": 0
+                }
+            ],
+            "total_mature_plants": 0
         },
         "errors": [],
         "warnings": [],
@@ -834,12 +920,33 @@ desc: |-
                 "id": 8880,
                 "def": "Turret_MiniTurret",
                 "label": "steel mini-turret",
-                "position": {
-                    "x": 60,
-                    "y": 0,
-                    "z": 86
+                "position": {"x": 60, "y": 0, "z": 86},
+                "type": "Building_TurretGun",
+                "rotation": 0,
+                "size": {"x": 0, "y": 0, "z": 0},
+                "bed": {
+                    "for_prisoners": false,
+                    "for_slaves": false,
+                    "medical": false,
+                    "owner_id": 0,
+                    "capacity": 0,
+                    "owners": [{"name": "", "id": 0}],
+                    "cell": {
+                        "is_prison_cell": false,
+                        "role_label": "",
+                        "cells_count": 0,
+                        "no_cell_reason": "",
+                        "no_cell_cause": ""
+                    },
+                    "owner": ""
                 },
-                "type": "Building_TurretGun"
+                "grave": {
+                    "assigned_pawn": "",
+                    "assigned_pawn_id": 0,
+                    "holds": "",
+                    "holds_pawn": "",
+                    "filter": ""
+                }
             }
         ],
         "errors": [],

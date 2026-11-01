@@ -17,18 +17,7 @@ desc: |-
     ```json
     {
         "success": true,
-        "data": [
-            {
-                "def_name": "Chitchat",
-                "label": "chitchat",
-                "description": "Casual conversation."
-            },
-            {
-                "def_name": "Insult",
-                "label": "insult",
-                "description": "A direct insult."
-            }
-        ]
+        "data": [{"def_name": "Chitchat", "label": "chitchat"}, {"def_name": "Insult", "label": "insult"}]
     }
     ```
   method: GET

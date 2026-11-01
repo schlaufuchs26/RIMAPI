@@ -561,7 +561,7 @@ desc: Этот контроллер обрабатывает общие игро
                     "insulation__heat": 0.0
                 },
                 {
-                    <...>
+                    "def_name": "...", "label": "another one"
                 }
             ],
             "incidents_defs": [],

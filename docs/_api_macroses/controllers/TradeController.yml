@@ -29,32 +29,12 @@ desc: |-
                 "visitor": false,
                 "commonality": 1.0,
                 "items": [
-                    {
-                        "name": "Steel",
-                        "count": "500~800",
-                        "price": "Normal"
-                    },
-                    {
-                        "name": "ComponentIndustrial",
-                        "count": "20~40"
-                    }
+                    {"name": "Steel", "count": "500~800", "price": "Normal"},
+                    {"name": "ComponentIndustrial", "count": "20~40"}
                 ],
-                "categories": [
-                    {
-                        "name": "Textiles",
-                        "count": "300~600"
-                    },
-                    {
-                        "name": "FoodRaw",
-                        "count": "200~400"
-                    }
-                ],
-                "tags": [
-                    {
-                        "name": "Artifact",
-                        "buys": false
-                    }
-                ]
+                "categories": [{"name": "Textiles", "count": "300~600"}, {"name": "FoodRaw", "count": "200~400"}],
+                "tags": [{"name": "Artifact", "buys": false, "count": ""}],
+                "special": [{"name": "", "count": ""}]
             },
             {
                 "def_name": "Caravan_Outlander_CombatSupplier",
@@ -62,18 +42,10 @@ desc: |-
                 "orbital": false,
                 "visitor": true,
                 "commonality": 1.0,
-                "items": [
-                    {
-                        "name": "MedicineIndustrial",
-                        "count": "5~15"
-                    }
-                ],
-                "categories": [
-                    {
-                        "name": "WeaponsMelee",
-                        "count": "3~6"
-                    }
-                ]
+                "items": [{"name": "MedicineIndustrial", "count": "5~15"}],
+                "categories": [{"name": "WeaponsMelee", "count": "3~6"}],
+                "tags": [{"name": "", "count": ""}],
+                "special": [{"name": "", "count": ""}]
             }
         ],
         "timestamp": "2025-12-11T19:46:05.7088803Z"

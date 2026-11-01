@@ -76,6 +76,22 @@ desc: |-
             "compiled_delegate_count": 0,
             "compiled_delegate_hits": 0,
             "compiled_delegate_misses": 0
+        },
+        "data": {
+            "enabled": false,
+            "statistics": {
+                "total_entries": 0,
+                "hits": 0,
+                "misses": 0,
+                "memory_usage_bytes": 0,
+                "last_cleanup": "",
+                "hit_ratio": 0.0,
+                "compiled_delegate_count": 0,
+                "compiled_delegate_hits": 0,
+                "compiled_delegate_misses": 0,
+                "entries": [],
+                "recent_activity": []
+            }
         }
     }
     ```

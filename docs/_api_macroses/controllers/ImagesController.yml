@@ -19,10 +19,7 @@ desc: |-
     ```json
     {
         "success": true,
-        "data": {
-            "name": "Soil",
-            "image_base64": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0..."
-        },
+        "data": {"image_base64": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0...", "result": "success"},
         "errors": [],
         "warnings": [],
         "timestamp": "2025-12-14T14:15:30.000Z"

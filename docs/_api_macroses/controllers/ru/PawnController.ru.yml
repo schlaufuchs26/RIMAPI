@@ -754,7 +754,7 @@ desc: |-
                         "Apparel_CowboyHat",
                         "Apparel_BowlerHat",
                         "Apparel_TribalHeaddress",
-                        "Apparel_Tuque",
+                        "Apparel_Tuque"
                     ],
                     "disallowed_special_filter_def_names": ["AllowBurned"],
                     "allowed_hit_points_min": 0.5,

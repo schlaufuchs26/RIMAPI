@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import sys
@@ -112,6 +113,41 @@ def get_yaml_routes():
     return base_routes, translation_routes, parse_errors
 
 
+def check_examples():
+    """Every documented response example must at least be valid JSON.
+
+    Whether the example is *true* is a different question, answered against a
+    running game by mkdocs_capture_examples.py; a hand-written example that no
+    parser accepts is wrong no matter what the game answers.
+    """
+    errors = 0
+    for dirpath, _, filenames in os.walk(YAML_DIR):
+        for filename in filenames:
+            if not filename.endswith(".yml") or filename.startswith("_"):
+                continue
+            filepath = os.path.join(dirpath, filename)
+            data = _load_yaml_file(filepath)
+            if not isinstance(data, dict):
+                continue
+            rel = os.path.relpath(filepath, YAML_DIR)
+            for route, block in data.items():
+                if not (isinstance(route, str) and route.startswith("/")):
+                    continue
+                if not isinstance(block, dict):
+                    continue
+                match = re.search(
+                    r"```json\s*\n(.*?)```", block.get("response") or "", re.DOTALL
+                )
+                if not match:
+                    continue
+                try:
+                    json.loads(match.group(1))
+                except json.JSONDecodeError as e:
+                    print(f"❌ INVALID EXAMPLE: '{route}' in {rel}: {e}")
+                    errors += 1
+    return errors
+
+
 def run_validation():
     print("🔍 Scanning C# Controllers and YAML Documentation...\n")
 
@@ -181,6 +217,10 @@ def run_validation():
                         f"👻 GHOST IN TRANSLATION: '{path}' in {controller}.{lang}.yml has no matching route in {controller}.yml."
                     )
                     warnings_found += 1
+
+    # ── 3. Response examples ──────────────────────────────────────────────────
+
+    errors_found += check_examples()
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 40)

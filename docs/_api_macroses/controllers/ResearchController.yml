@@ -193,18 +193,17 @@ desc: |-
             "total_projects_count": 50,
             "available_projects_count": 15,
             "by_tech_level": {
-                "neolithic": {
-                    "finished": 1,
-                    "total": 5,
-                    "percent_complete": 20.0,
-                    "projects": ["BasicResearch"]
-                },
+                "neolithic": {"finished": 1, "total": 5, "percent_complete": 20.0, "projects": ["BasicResearch"]},
                 "industrial": {
                     "finished": 2,
                     "total": 10,
                     "percent_complete": 20.0,
                     "projects": ["Electricity", "Stonecutting"]
-                }
+                },
+                "medieval": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []},
+                "spacer": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []},
+                "ultra": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []},
+                "undefined": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []}
             },
             "by_tab": {
                 "basic": {
@@ -213,12 +212,9 @@ desc: |-
                     "percent_complete": 20.0,
                     "projects": ["BasicResearch", "Stonecutting"]
                 },
-                "power": {
-                    "finished": 1,
-                    "total": 5,
-                    "percent_complete": 20.0,
-                    "projects": ["electricity"]
-                }
+                "power": {"finished": 1, "total": 5, "percent_complete": 20.0, "projects": ["electricity"]},
+                "main": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []},
+                "anomaly": {"finished": 0, "total": 0, "percent_complete": 0.0, "projects": []}
             }
         },
         "errors": [],

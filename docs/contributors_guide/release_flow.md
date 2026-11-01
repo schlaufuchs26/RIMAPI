@@ -32,6 +32,37 @@ echo "🔍 Running final validation check..."
 python scripts/docs/mkdocs_check_api.py
 ```
 
+`mkdocs_check_api.py` only proves that every route is documented, not that the
+example under it is true. The examples are hand-written, so they keep fields a
+route no longer sends. `mkdocs_capture_examples.py` repeats each block's own
+`curl` call against a running game and compares the keys of the answer with the
+keys of the example:
+
+```bash
+# a debug slot answers on its own port; name every colony you have, because one
+# colony is a poor witness for a field it happens to have none of
+python3 scripts/docs/mkdocs_capture_examples.py --base-url http://localhost:8766
+
+# repair the shape of the examples that drifted, keeping their hand-written values
+python3 scripts/docs/mkdocs_capture_examples.py --base-url http://localhost:8766 --write
+```
+
+It exits non-zero while any route still drifts. `stale` names a key the example
+has and no colony answered with: the field is either gone or this colony has
+none of it, so the report needs a human. `undocumented` names a key the game
+sends and nobody wrote down, which `--write` adds. With `--prune` a route you
+have read the report for drops its stale keys too:
+
+```bash
+python3 scripts/docs/mkdocs_capture_examples.py --base-url http://localhost:8766 \
+  --write --prune --filter /api/v1/client/learning
+```
+
+Values are never compared, so an example can still claim `"cells_count": 0` for
+a room full of cells. Fields added inside a list carry placeholder values (`0`,
+`""`, `[]`), because the game's third building is not the example's third
+building; fields added to a single object carry the value the game answered.
+
 ## 3. Run the Version Bump Script
 RimAPI uses a Python script to enforce a "Single Source of Truth" for versioning. You do not need to manually edit XML or C# files.
 

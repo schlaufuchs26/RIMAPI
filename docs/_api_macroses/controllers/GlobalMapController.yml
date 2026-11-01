@@ -23,44 +23,31 @@ desc: |-
         "success": true,
         "data": [
             {
-            "id": 11,
-            "name": "Rosa's caravan",
-            "is_player_controlled": true,
-            "position": {
-                "x": 1,
-                "y": 65,
-                "z": -75
-            },
-            "tile": 232,
-            "pawns": [
-                {
-                "id": 74,
-                "name": "Rosa"
-                }
-            ],
-            "items": [
-                {
-                "thing_id": 74,
-                "def_name": "Human",
-                "label": "Rosa<color=#999999FF>, Explorer</color>",
-                "categories": [],
-                "position": {
-                    "x": 143,
-                    "y": 0,
-                    "z": 62
-                },
-                "stack_count": 1,
-                "market_value": 840.0,
-                "is_forbidden": false,
-                "quality": -1,
-                "hit_points": 0,
-                "max_hit_points": 0
-                }
-            ],
-            "mass_usage": 0.75,
-            "mass_capacity": 28.0,
-            "forageability": "Forageable",
-            "visibility": "0.16"
+                "id": 11,
+                "name": "Rosa's caravan",
+                "is_player_controlled": true,
+                "position": {"x": 1, "y": 65, "z": -75},
+                "tile": 232,
+                "pawns": [{"id": 74, "name": "Rosa"}],
+                "items": [
+                    {
+                        "thing_id": 74,
+                        "def_name": "Human",
+                        "label": "Rosa<color=#999999FF>, Explorer</color>",
+                        "categories": [],
+                        "position": {"x": 143, "y": 0, "z": 62},
+                        "stack_count": 1,
+                        "market_value": 840.0,
+                        "is_forbidden": false,
+                        "quality": -1,
+                        "hit_points": 0,
+                        "max_hit_points": 0
+                    }
+                ],
+                "mass_usage": 0.75,
+                "mass_capacity": 28.0,
+                "forageability": "Forageable",
+                "visibility": "0.16"
             }
         ],
         "errors": [],
@@ -89,7 +76,6 @@ desc: |-
             {
                 "id": 0,
                 "name": "Planeton",
-                "tile": 2241,
                 "faction": {
                     "load_id": 0,
                     "def_name": "OutlanderCivil",
@@ -97,12 +83,12 @@ desc: |-
                     "is_player": false,
                     "leader_title": "Spiritual Bodhisattva",
                     "leader_id": 10
-                }
+                },
+                "tile_id": 0
             },
             {
                 "id": 1,
                 "name": "Borne",
-                "tile": 1031,
                 "faction": {
                     "load_id": 1,
                     "def_name": "TribeCivil",
@@ -110,12 +96,12 @@ desc: |-
                     "is_player": false,
                     "leader_title": "Anima Chief",
                     "leader_id": 19
-                }
+                },
+                "tile_id": 0
             },
             {
                 "id": 2,
                 "name": "Carsium",
-                "tile": 387,
                 "faction": {
                     "load_id": 2,
                     "def_name": "Empire",
@@ -123,12 +109,12 @@ desc: |-
                     "is_player": false,
                     "leader_title": "High Stellarch",
                     "leader_id": 25
-                }
+                },
+                "tile_id": 0
             },
-                {
+            {
                 "id": 3,
                 "name": "Colony",
-                "tile": 232,
                 "faction": {
                     "load_id": 14,
                     "def_name": "PlayerColony",
@@ -136,7 +122,8 @@ desc: |-
                     "is_player": true,
                     "leader_title": "Spirit Curate",
                     "leader_id": 0
-                }
+                },
+                "tile_id": 0
             }
         ],
         "errors": [],
@@ -216,10 +203,11 @@ desc: |-
             "temperature": -4.1,
             "rainfall": 269.0,
             "hilliness": "SmallHills",
-            "roads": [
-                "DirtRoad",
-                "DirtRoad"
-            ]
+            "roads": ["DirtRoad", "DirtRoad"],
+            "lat": 39.8361855,
+            "lon": 15.9745693,
+            "is_polluted": false,
+            "pollution": 0.0
         },
         "errors": [],
         "warnings": [],
@@ -277,13 +265,15 @@ desc: |-
             {
                 "id": 123,
                 "name": "Player's Hope",
-                "tile": 5678,
                 "faction": {
                     "load_id": 3,
                     "def_name": "PlayerColony",
                     "name": "New Arrivals",
-                    "is_player": true
-                }
+                    "is_player": true,
+                    "leader_title": "",
+                    "leader_id": 0
+                },
+                "tile_id": 0
             }
         ],
         "errors": [],
@@ -373,14 +363,8 @@ desc: |-
             "temperature": -10.0,
             "rainfall": 200.0,
             "hilliness": "SmallHills",
-            "roads": [
-                "279644:StoneRoad",
-                "279641:StoneRoad"
-            ],
-            "rivers": [
-                "279640:Creek",
-                "279686:Creek"
-            ],
+            "roads": ["279644:StoneRoad", "279641:StoneRoad"],
+            "rivers": ["279640:Creek", "279686:Creek"],
             "lat": 60.0,
             "lon": -30.0,
             "is_polluted": false,
@@ -389,10 +373,7 @@ desc: |-
             "forageability": 0.5,
             "growing_period": "Year-round",
             "movement_difficulty": 1.0,
-            "stone_types": [
-                "Sandstone",
-                "Granite"
-            ]
+            "stone_types": ["Sandstone", "Granite"]
         },
         "errors": [],
         "warnings": [],
