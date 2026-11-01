@@ -149,10 +149,11 @@ namespace RIMAPI.Services
                     result.BedForPrisoners = bed.ForPrisoners;
                     result.BedRoomTempC = bed.AmbientTemperature;
                     result.BedRoomHasFire = BedPick.RoomHasFire(map, bed);
+                    result.BedOutdoors = BedPick.Outdoors(map, bed);
                     if (room != null)
                     {
                         result.BedRoomId = room.ID;
-                        result.BedRoomLabel = room.GetRoomRoleLabel();
+                        result.BedRoomLabel = BedPick.RoomLabel(room);
                     }
                 }
                 if (rejected != null)

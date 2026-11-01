@@ -116,6 +116,10 @@ namespace RIMAPI.Models
         public string BedRoomLabel { get; set; }
         public float BedRoomTempC { get; set; }
         public bool BedRoomHasFire { get; set; }
+        // The bed's cell is under no roof (fox ticket #3622). A bed with no
+        // room of its own carries "none" as its role label, which is not a
+        // room name; the roof grid is what tells outdoors from a roleless room.
+        public bool BedOutdoors { get; set; }
         // The bed the game's own lookup picked first, when the tool took a safer
         // one instead; zero when the game's choice was the one used.
         public int RejectedBedId { get; set; }
@@ -162,6 +166,9 @@ namespace RIMAPI.Models
         public string BedRoomLabel { get; set; }
         public float BedRoomTempC { get; set; }
         public bool BedRoomHasFire { get; set; }
+        // The bed's cell is under no roof (fox ticket #3622), the answer to a
+        // role label the game prints as "none".
+        public bool BedOutdoors { get; set; }
         // The bed the game's own lookup picked first, when the tool took a safer
         // one instead; zero when the game's choice was the one used.
         public int RejectedBedId { get; set; }

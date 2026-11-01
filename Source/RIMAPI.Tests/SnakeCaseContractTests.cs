@@ -188,6 +188,62 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryBedFieldOfACarryKeepsTheKeyTheToolReads()
+        {
+            // The arrest and rescue answers name where the bed stands (ticket
+            // #3421, #3383): the room, its temperature, a fire in it, and the
+            // roof answer that tells "outdoors" from a roleless room (#3622).
+            var arrest = new[]
+            {
+                "arrestor",
+                "arrestor_id",
+                "bed",
+                "bed_id",
+                "bed_outdoors",
+                "bed_room_has_fire",
+                "bed_room_id",
+                "bed_room_label",
+                "bed_room_temp_c",
+                "drafted",
+                "job",
+                "name",
+                "pawn_id",
+                "rejected_bed",
+                "rejected_bed_id",
+                "rejected_bed_room_has_fire",
+                "rejected_bed_temp_c",
+            };
+            JObject json = Json(new ArrestResultDto());
+            Assert.Equal(arrest, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+
+            var rescue = new[]
+            {
+                "bed",
+                "bed_for_prisoners",
+                "bed_id",
+                "bed_outdoors",
+                "bed_room_has_fire",
+                "bed_room_id",
+                "bed_room_label",
+                "bed_room_temp_c",
+                "guest",
+                "job",
+                "name",
+                "pawn_id",
+                "rejected_bed",
+                "rejected_bed_id",
+                "rejected_bed_room_has_fire",
+                "rejected_bed_temp_c",
+                "rescuer",
+                "rescuer_id",
+            };
+            JObject rescueJson = Json(new RescueResultDto());
+            Assert.Equal(
+                rescue,
+                rescueJson.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public void EveryHediffFieldKeepsTheKeyTheToolReads()
         {
             // The untended-injury block reads these keys, the two infection

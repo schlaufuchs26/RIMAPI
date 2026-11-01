@@ -83,6 +83,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\LetterDtos.cs" Link="Linked\LetterDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\JobLogDtos.cs" Link="Linked\JobLogDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\ColonistDto.cs" Link="Linked\ColonistDto.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\PersonDtos.cs" Link="Linked\PersonDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
   </ItemGroup>
 </Project>

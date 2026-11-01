@@ -245,12 +245,13 @@ namespace RIMAPI.Services
                     Drafted = arrestor.Drafted,
                     BedRoomTempC = bed.AmbientTemperature,
                     BedRoomHasFire = BedPick.RoomHasFire(map, bed),
+                    BedOutdoors = BedPick.Outdoors(map, bed),
                 };
                 Room room = BedPick.BedRoom(map, bed);
                 if (room != null)
                 {
                     result.BedRoomId = room.ID;
-                    result.BedRoomLabel = room.GetRoomRoleLabel();
+                    result.BedRoomLabel = BedPick.RoomLabel(room);
                 }
                 if (rejected != null)
                 {

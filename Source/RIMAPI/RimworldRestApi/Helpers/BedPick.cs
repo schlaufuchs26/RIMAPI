@@ -44,6 +44,28 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// The room's role label as the answer should print it, or "" when the
+        /// room has none: the game's own word for that is "none", which read
+        /// as a room name ("in the none at 34.5 C", fox ticket #3622). A bed
+        /// with no room of its own gets that word too.
+        /// </summary>
+        public static string RoomLabel(Room room)
+        {
+            if (room == null || room.Role == null) return "";
+            return room.GetRoomRoleLabel();
+        }
+
+        /// <summary>
+        /// Whether the bed stands under no roof. A roleless room and the open
+        /// map read the same through the room label, and only the roof grid
+        /// tells them apart, so the answer says "outdoors" only here.
+        /// </summary>
+        public static bool Outdoors(Map map, Building_Bed bed)
+        {
+            return !bed.Position.Roofed(map);
+        }
+
+        /// <summary>
         /// The fire the thermometer can miss: a small fire in a large room
         /// leaves the room below the heat threshold while it spreads towards
         /// the bed.
