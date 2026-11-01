@@ -7,12 +7,13 @@ using Verse;
 
 namespace RIMAPI.Helpers
 {
-    // The ideoligion a colony is founded with (fox ticket #3612). The fast
-    // start skips the game's "choose your ideoligion" page, so the player
-    // faction fell back to a randomly generated ideo: whichever precepts the
-    // dice gave it, some of them (no meat, slower work, rituals nobody
-    // performs) make an unattended colony harder for no reason. This builds a
-    // small, harmless one instead, or takes a saved ideoligion by name.
+    // The ideoligion a colony is founded with (fox tickets #3612, #3927).
+    // The fast start skips the game's "choose your ideoligion" page, so the
+    // player faction fell back to a randomly generated ideo: whichever
+    // precepts the dice gave it, some of them (no meat, slower work, rituals
+    // nobody performs) make an unattended colony harder for no reason. This
+    // builds a small, harmless one instead, takes a saved ideoligion by name,
+    // or takes the meme and the precepts a caller picked.
     public static class IdeoSetup
     {
         // Ideological: no gods, so no deity names or deity moods to satisfy.
@@ -22,10 +23,9 @@ namespace RIMAPI.Helpers
         // no precept of its own and no ritual.
         public const string DefaultNormalMeme = "Individualist";
 
-        // The default precept set: four harmless choices that a run profits
-        // from and none that blocks food, work or mood. Everything the game
-        // would roll on its own (slavery, skull spikes, work penalties) stays
-        // out.
+        // The default precept set: harmless choices that a run profits from
+        // and none that blocks food, work or mood. Everything the game would
+        // roll on its own (slavery, skull spikes, work penalties) stays out.
         public static readonly string[] DefaultPrecepts =
         {
             "Research_VeryFast",
@@ -50,7 +50,9 @@ namespace RIMAPI.Helpers
             }
             if (!ModsConfig.IdeologyActive)
             {
-                if (named || naming)
+                if (named || naming ||
+                    !string.IsNullOrEmpty(request.IdeoMeme) ||
+                    (request.IdeoPrecepts != null && request.IdeoPrecepts.Count > 0))
                 {
                     throw new Exception(
                         "an ideoligion was named, but the Ideology expansion is not active");
@@ -70,7 +72,7 @@ namespace RIMAPI.Helpers
 
             Ideo ideo = named
                 ? FindSaved(request.IdeoName)
-                : BuildDefault();
+                : BuildCustom(request.IdeoMeme, request.IdeoPrecepts);
 
             // A colony that names its own belief (fox ticket #3929): the name
             // is checked before the ideo is added, so a refused name leaves
@@ -155,11 +157,15 @@ namespace RIMAPI.Helpers
                 "Leave ideo empty for the fox default");
         }
 
-        // BuildDefault makes the fluid ideo this tool starts a colony with.
-        // The precepts are added by hand instead of rolled, so the set is the
-        // same every time and stays free of the expensive ones.
-        private static Ideo BuildDefault()
+        // BuildCustom makes the fluid ideo this tool starts a colony with. The
+        // meme and the precepts come from the caller when it names them, so
+        // the set is a decision instead of whatever the dice rolled; with no
+        // names it is the fox default (#3927).
+        private static Ideo BuildCustom(string memeName, List<string> preceptNames)
         {
+            MemeDef normal = ResolveMeme(memeName);
+            List<PreceptDef> precepts = ResolvePrecepts(preceptNames);
+
             Ideo ideo = IdeoUtility.MakeEmptyIdeo();
             IdeoGenerationParms parms = new IdeoGenerationParms(Faction.OfPlayer.def);
 
@@ -168,7 +174,7 @@ namespace RIMAPI.Helpers
 
             ideo.memes.Clear();
             ideo.memes.Add(RequiredMeme(DefaultStructureMeme));
-            ideo.memes.Add(RequiredMeme(DefaultNormalMeme));
+            ideo.memes.Add(normal);
             ideo.SortMemesInDisplayOrder();
 
             // Fluid before the precepts: the setter creates the development
@@ -181,14 +187,18 @@ namespace RIMAPI.Helpers
             ideo.foundation.RandomizeIcon();
             ideo.foundation.RandomizeStyles();
 
-            foreach (string defName in DefaultPrecepts)
+            List<IdeoChoiceRules.PreceptFacts> facts = precepts.Select(Facts).ToList();
+            string problem = IdeoChoiceRules.Problem(
+                normal.defName,
+                ideo.memes.Select(m => m.defName).ToList(),
+                facts);
+            if (!string.IsNullOrEmpty(problem))
             {
-                PreceptDef def = DefDatabase<PreceptDef>.GetNamedSilentFail(defName);
-                if (def == null)
-                {
-                    Log.Warning($"[RIMAPI] default ideoligion precept {defName} is not in this game; skipped");
-                    continue;
-                }
+                throw new Exception(problem);
+            }
+
+            foreach (PreceptDef def in precepts)
+            {
                 ideo.AddPrecept(PreceptMaker.MakePrecept(def), init: true, Faction.OfPlayer.def);
             }
 
@@ -202,6 +212,96 @@ namespace RIMAPI.Helpers
             ideo.development.TryAddDevelopmentPoints(
                 ideo.development.NextReformationDevelopmentPoints);
             return ideo;
+        }
+
+        private static IdeoChoiceRules.PreceptFacts Facts(PreceptDef def)
+        {
+            return new IdeoChoiceRules.PreceptFacts
+            {
+                Def = def.defName,
+                TipLabel = PreceptDescribe.TipLabel(def),
+                Issue = def.issue != null ? def.issue.label : "",
+                RequiredMemes = PreceptDescribe.RequiredMemes(def),
+                ConflictingMemes = PreceptDescribe.ConflictingMemes(def),
+            };
+        }
+
+        // ResolveMeme reads the one normal meme by defName or by the label the
+        // ideoligion window shows. The structure meme is not a choice: a fluid
+        // ideo needs one and Ideological is the one this tool builds.
+        private static MemeDef ResolveMeme(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return RequiredMeme(DefaultNormalMeme);
+            }
+            List<MemeDef> normal = DefDatabase<MemeDef>.AllDefsListForReading
+                .Where(m => m.category == MemeCategory.Normal && !m.hiddenInChooseMemes)
+                .ToList();
+            MemeDef found = normal.FirstOrDefault(m =>
+                    string.Equals(m.defName, name, StringComparison.OrdinalIgnoreCase))
+                ?? normal.FirstOrDefault(m =>
+                    string.Equals(m.LabelCap.ToString(), name, StringComparison.OrdinalIgnoreCase));
+            if (found != null)
+            {
+                return found;
+            }
+            MemeDef structure = DefDatabase<MemeDef>.AllDefsListForReading.FirstOrDefault(m =>
+                m.category == MemeCategory.Structure &&
+                (string.Equals(m.defName, name, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(m.LabelCap.ToString(), name, StringComparison.OrdinalIgnoreCase)));
+            if (structure != null)
+            {
+                throw new Exception(
+                    $"\"{name}\" is a structure meme; a fluid ideo keeps the {DefaultStructureMeme} structure, " +
+                    "and only the one normal meme is a choice");
+            }
+            string known = string.Join(", ", normal.Select(m => m.defName).OrderBy(n => n));
+            throw new Exception($"no normal meme is named \"{name}\"; the game offers {known}");
+        }
+
+        // ResolvePrecepts reads the precept set by defName or by the
+        // "Issue: label" the ideoligion window shows. A name that matches no
+        // precept is refused with the near misses, because a silently dropped
+        // precept would read like an accepted one.
+        private static List<PreceptDef> ResolvePrecepts(List<string> names)
+        {
+            var defs = new List<PreceptDef>();
+            List<PreceptDef> all = DefDatabase<PreceptDef>.AllDefsListForReading.ToList();
+            List<string> wanted = (names ?? new List<string>())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => n.Trim())
+                .ToList();
+            if (wanted.Count == 0)
+            {
+                wanted = DefaultPrecepts.ToList();
+            }
+            foreach (string name in wanted)
+            {
+                PreceptDef def = all.FirstOrDefault(p =>
+                        string.Equals(p.defName, name, StringComparison.OrdinalIgnoreCase))
+                    ?? all.FirstOrDefault(p =>
+                        string.Equals(PreceptDescribe.TipLabel(p), name, StringComparison.OrdinalIgnoreCase));
+                if (def == null)
+                {
+                    List<string> near = all
+                        .Where(p => PreceptDescribe.TipLabel(p)
+                            .IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                        .Select(PreceptDescribe.TipLabel)
+                        .Take(8)
+                        .ToList();
+                    string hint = near.Count > 0
+                        ? " Did you mean " + string.Join(", ", near) + "?"
+                        : " The precept list is GET /api/v1/defs?include=precept_defs";
+                    throw new Exception($"no precept is named \"{name}\".{hint}");
+                }
+                if (defs.Any(d => d == def))
+                {
+                    continue;
+                }
+                defs.Add(def);
+            }
+            return defs;
         }
 
         private static MemeDef RequiredMeme(string defName)

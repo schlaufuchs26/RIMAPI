@@ -39,6 +39,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LandingSiteRules.cs" Link="Linked\LandingSiteRules.cs" />
+    <!-- Whether a hand-picked precept set can stand (fox ticket #3927): the
+         meme a precept needs and the issue two of them share. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IdeoChoiceRules.cs" Link="Linked\IdeoChoiceRules.cs" />
     <!-- The arithmetic of a starting-colonist batch (fox ticket #3924): the
          seed it is reproduced from and the bounds a pick is checked against. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PawnBatchRules.cs" Link="Linked\PawnBatchRules.cs" />

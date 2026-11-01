@@ -374,6 +374,15 @@ namespace RIMAPI.Models
         public string Label { get; set; }
         public string Description { get; set; }
         public string Impact { get; set; }
+        // Issue and TipLabel are what the ideoligion window shows and what a
+        // founding accepts as a precept name (ticket #3927).
+        public string Issue { get; set; }
+        public string TipLabel { get; set; }
+        // RequiredMemes names the memes a precept demands; Effects what it
+        // buys and costs, restated from the def.
+        public List<string> RequiredMemes { get; set; }
+        public List<string> Effects { get; set; }
+        public string Ritual { get; set; }
     }
 
     public class AbilityDefDto

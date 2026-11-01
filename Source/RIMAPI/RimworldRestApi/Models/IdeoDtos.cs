@@ -52,6 +52,32 @@ namespace RIMAPI.Models
         public int Believers { get; set; }
         public List<string> Memes { get; set; }
         public List<string> Precepts { get; set; }
+
+        // PreceptDetails is the same set with what each one buys and costs
+        // (ticket #3927), read from the game's own precept defs. A founding
+        // reports it so the pick is a decision with reasons instead of a list
+        // of labels.
+        public List<PreceptDetailDto> PreceptDetails { get; set; }
+    }
+
+    // One precept of the colony's ideoligion with its effect (ticket #3927).
+    public class PreceptDetailDto
+    {
+        public string Def { get; set; }
+        // Label is the "Issue: label" the ideoligion window shows.
+        public string Label { get; set; }
+        public string Issue { get; set; }
+        public string Impact { get; set; }
+        public string Description { get; set; }
+        // RequiredMemes names the memes a precept demands by defName; empty
+        // means any ideo may carry it.
+        public List<string> RequiredMemes { get; set; }
+        // Effects restates the def: stat factors, stat offsets, the mood
+        // range of the thought its comps grant, what it refuses.
+        public List<string> Effects { get; set; }
+        // Ritual names the ritual the precept brings with its required roles,
+        // empty when it brings none.
+        public string Ritual { get; set; }
     }
 
     // What GET /api/v1/ideo/roles answers: the colony's ideoligion and its

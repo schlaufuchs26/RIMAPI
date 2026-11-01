@@ -307,6 +307,11 @@ namespace RIMAPI.Helpers
                     Label = p.LabelCap,
                     Description = p.description,
                     Impact = p.impact.ToString(),
+                    Issue = p.issue != null ? p.issue.LabelCap.ToString() : "",
+                    TipLabel = PreceptDescribe.TipLabel(p),
+                    RequiredMemes = PreceptDescribe.RequiredMemes(p),
+                    Effects = PreceptDescribe.Effects(p),
+                    Ritual = PreceptDescribe.Ritual(p),
                 })
                 .ToList();
         }

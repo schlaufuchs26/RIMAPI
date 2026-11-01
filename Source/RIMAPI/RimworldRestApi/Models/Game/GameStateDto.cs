@@ -85,6 +85,16 @@ namespace RIMAPI.Models
         // name. GET /api/v1/ideo reads back what the colony ended up with.
         public string NewIdeoName { get; set; }
 
+        // IdeoMeme is the one normal meme a freshly built ideo carries
+        // (ticket #3927); empty keeps Individualist, which forces no precept.
+        // The structure meme stays Ideological, because a fluid ideo needs one.
+        public string IdeoMeme { get; set; }
+
+        // IdeoPrecepts are the precepts a freshly built ideo carries, by
+        // defName or by the "Issue: label" the ideoligion window shows
+        // (ticket #3927). Empty keeps the fox default set.
+        public List<string> IdeoPrecepts { get; set; }
+
         // Scenario names the starting scenario by defName or label (ticket
         // #3930); empty keeps the game's Crashlanded default. The list the
         // installed game offers is GET /api/v1/game/scenarios.

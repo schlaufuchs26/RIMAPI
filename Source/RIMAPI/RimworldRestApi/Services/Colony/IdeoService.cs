@@ -26,7 +26,6 @@ namespace RIMAPI.Services
             {
                 Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null) return ApiResult<IdeoRolesDto>.Fail(mapError);
-
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<IdeoRolesDto>.Fail(reason);
 
@@ -86,6 +85,7 @@ namespace RIMAPI.Services
                     Fluid = ideo.Fluid,
                     Memes = ideo.memes.Select(m => m.label).ToList(),
                     Precepts = ideo.PreceptsListForReading.Select(p => p.TipLabel).ToList(),
+                    PreceptDetails = PreceptDescribe.Details(ideo),
                     Believers = ideo.ColonistBelieverCountCached,
                 };
                 if (ideo.Fluid && ideo.development != null)
