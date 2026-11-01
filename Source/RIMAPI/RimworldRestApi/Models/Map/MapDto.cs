@@ -75,6 +75,12 @@ namespace RIMAPI.Models
         public float GrowthProgressAverage { get; set; }
         public float MaxGrowthProgress { get; set; }
         public int TotalHarvestablePlants { get; set; }
+        // TotalMaturePlants counts the plants the growing zone's harvest takes
+        // (fox ticket #3677): TotalHarvestablePlants is HarvestableNow, which
+        // starts below full growth, so a field of 34 ripe rice read the same
+        // once three of them matured and the ripe count stopped being the
+        // answer to "how much can be picked right now".
+        public int TotalMaturePlants { get; set; }
         public float DaysUntilNextHarvest { get; set; }
         public List<CropTypeDto> CropTypes { get; set; } = new List<CropTypeDto>();
     }

@@ -80,6 +80,14 @@ namespace RIMAPI.Helpers
                         crop.IsHarvestable = true;
                     }
 
+                    // The same predicate MapHelper counts mature_cells with: the
+                    // zone's harvest (WorkGiver_GrowerHarvest) takes only a
+                    // PlantLifeStage.Mature plant (fox ticket #3677).
+                    if (plant.LifeStage == PlantLifeStage.Mature)
+                    {
+                        summary.TotalMaturePlants++;
+                    }
+
                     if (plant.Blighted)
                     {
                         crop.InfectedCount++;
