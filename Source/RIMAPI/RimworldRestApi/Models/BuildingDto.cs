@@ -76,6 +76,17 @@ namespace RIMAPI.Models
         // or by name and needs the id to tell two colonists apart.
         public int OwnerId { get; set; }
 
+        // Capacity is how many colonists the bed takes
+        // (CompAssignableToPawn.MaxAssignedPawnsCount): 2 for a double bed. A
+        // read that prints only Owner makes a half-filled double bed look full
+        // or a full one look free (fox ticket #3874).
+        public int Capacity { get; set; }
+
+        // Owners is every colonist the bed belongs to, in the game's order.
+        // Owner and OwnerId stay the first of them for the reads that print one
+        // name.
+        public List<BedOwnerSlotDto> Owners { get; set; }
+
         // Cell is the room the bed stands in, as a prison cell (fox ticket
         // #3743). The toggle alone answers "set for prisoners" while the game
         // still refuses the room, so a run learned about a bed at the map edge
@@ -102,6 +113,20 @@ namespace RIMAPI.Models
 
         // Changed is false when the bed already read what the call asked for.
         public bool Changed { get; set; }
+
+        // Cleared is every colonist a clear call took off the bed, in the
+        // game's order: a double bed holds two (fox ticket #3874). Pawn and
+        // PawnId stay the first of them for a caller that reads one name.
+        public List<BedOwnerSlotDto> Cleared { get; set; }
+    }
+
+    public class BedOwnerSlotDto
+    {
+        // Name and Id of one colonist a bed belongs to (fox ticket #3874): a
+        // double bed names both, and the assignment rule needs the ids to tell
+        // a second colonist from the owner already on the bed.
+        public string Name { get; set; }
+        public int Id { get; set; }
     }
 
     public class BedCellDto

@@ -162,14 +162,18 @@ namespace RIMAPI.Services
                 }
 
                 Building_Bed previous = pawn.ownership != null ? pawn.ownership.OwnedBed : null;
-                Pawn current = bed.OwnersForReading != null ? bed.OwnersForReading.FirstOrDefault() : null;
+                List<Pawn> owners = bed.OwnersForReading != null
+                    ? new List<Pawn>(bed.OwnersForReading)
+                    : new List<Pawn>();
                 BedOwnerRules.State state = new BedOwnerRules.State
                 {
                     BedIsHumanlike = bed.def?.building != null && bed.def.building.bed_humanlike,
                     BedForPrisoners = bed.ForPrisoners,
                     BedForSlaves = bed.ForSlaves,
-                    BedOwner = current?.LabelShort ?? "",
-                    BedOwnerId = current?.thingIDNumber ?? 0,
+                    Owners = owners
+                        .Select(o => new BedOwnerRules.Owner { Name = o.LabelShort, Id = o.thingIDNumber })
+                        .ToList(),
+                    Capacity = BuildingHelper.BedCapacity(bed),
                     Pawn = pawn.LabelShort,
                     PawnId = pawn.thingIDNumber,
                     PawnIsColonist = pawn.IsColonist,
@@ -181,7 +185,7 @@ namespace RIMAPI.Services
                     return ApiResult<BedOwnerDto>.Fail($"{bed.Label} (id {buildingId}): {problem}");
                 }
 
-                bool changed = state.BedOwnerId != pawn.thingIDNumber;
+                bool changed = !state.Holds(pawn.thingIDNumber);
                 if (changed)
                 {
                     // The bed tab's own path: it assigns the pawn and the game
@@ -190,14 +194,16 @@ namespace RIMAPI.Services
                 }
 
                 BedDto after = BuildingHelper.BedDtoOf(bed);
-                if (after == null || after.OwnerId != pawn.thingIDNumber)
+                bool holds = after != null && after.Owners != null
+                    && after.Owners.Any(o => o.Id == pawn.thingIDNumber);
+                if (!holds)
                 {
                     // Say what the game reads instead of an acknowledgement: a
                     // bed that refuses its owner is the whole reason this call
                     // exists.
-                    string reads = after == null || string.IsNullOrEmpty(after.Owner)
+                    string reads = after == null || after.Owners == null || after.Owners.Count == 0
                         ? "no owner"
-                        : $"owner {after.Owner} (id {after.OwnerId})";
+                        : "owner " + string.Join(", ", after.Owners.Select(o => $"{o.Name} (id {o.Id})"));
                     return ApiResult<BedOwnerDto>.Fail(
                         $"{bed.Label} (id {buildingId}) did not take {pawn.LabelShort} as its owner: it reads {reads}");
                 }
@@ -233,10 +239,12 @@ namespace RIMAPI.Services
             }
 
             BedDto after = BuildingHelper.BedDtoOf(bed);
-            if (after != null && after.OwnerId != 0)
+            if (after != null && after.Owners != null && after.Owners.Count > 0)
             {
                 return ApiResult<BedOwnerDto>.Fail(
-                    $"{bed.Label} (id {bed.thingIDNumber}) still belongs to {after.Owner}: the game did not clear it");
+                    $"{bed.Label} (id {bed.thingIDNumber}) still belongs to " +
+                    string.Join(", ", after.Owners.Select(o => $"{o.Name} (id {o.Id})")) +
+                    ": the game did not clear it");
             }
             return ApiResult<BedOwnerDto>.Ok(
                 new BedOwnerDto
@@ -245,6 +253,9 @@ namespace RIMAPI.Services
                     PawnId = owners.Count > 0 ? owners[0].thingIDNumber : 0,
                     Pawn = owners.Count > 0 ? owners[0].LabelShort : "",
                     Changed = owners.Count > 0,
+                    Cleared = owners
+                        .Select(p => new BedOwnerSlotDto { Name = p.LabelShort, Id = p.thingIDNumber })
+                        .ToList(),
                 }
             );
         }

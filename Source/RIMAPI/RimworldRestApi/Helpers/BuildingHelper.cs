@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using RIMAPI.Models;
 using RimWorld;
@@ -51,12 +52,16 @@ namespace RIMAPI.Helpers
 
         // BedDtoOf describes a humanlike bed's settings and answers null for
         // every other building, so a read can mark the beds that take a
-        // prisoner (ticket #3183).
+        // prisoner (ticket #3183). It carries the bed's slot count and every
+        // owner, because a double bed holds two (fox ticket #3874).
         public static BedDto BedDtoOf(Building building)
         {
             Building_Bed bed = building as Building_Bed;
             if (bed == null || bed.def?.building == null || !bed.def.building.bed_humanlike) return null;
-            Pawn owner = bed.OwnersForReading?.FirstOrDefault();
+            List<Pawn> owners = bed.OwnersForReading != null
+                ? bed.OwnersForReading.ToList()
+                : new List<Pawn>();
+            Pawn owner = owners.FirstOrDefault();
             return new BedDto
             {
                 ForPrisoners = bed.ForPrisoners,
@@ -64,8 +69,21 @@ namespace RIMAPI.Helpers
                 Medical = bed.Medical,
                 Owner = owner?.LabelShort,
                 OwnerId = owner?.thingIDNumber ?? 0,
+                Capacity = BedCapacity(bed),
+                Owners = owners
+                    .Select(p => new BedOwnerSlotDto { Name = p.LabelShort, Id = p.thingIDNumber })
+                    .ToList(),
                 Cell = BedCellOf(bed),
             };
+        }
+
+        // BedCapacity is how many colonists a bed takes: the game's own number
+        // from CompAssignableToPawn, 2 for a double bed, never 0 so a caller
+        // cannot read a missing value as "unlimited" (fox ticket #3874).
+        public static int BedCapacity(Building_Bed bed)
+        {
+            int capacity = bed.CompAssignableToPawn?.MaxAssignedPawnsCount ?? 0;
+            return capacity > 0 ? capacity : 1;
         }
 
         // BedCellOf is the room the bed stands in, as a prison cell (fox ticket

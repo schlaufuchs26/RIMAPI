@@ -31,9 +31,55 @@ namespace RIMAPI.Tests
             // The bed tab shows the owner his own bed; a second call for the
             // same pawn is no refusal, it changes nothing.
             var state = ColonistOnFreeBed();
-            state.BedOwner = "Neeko";
-            state.BedOwnerId = 12;
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Neeko", Id = 12 });
             Assert.Null(BedOwnerRules.Problem(state));
+        }
+
+        [Fact]
+        public void ADoubleBedTakesASecondColonist()
+        {
+            // A double bed has two slots (fox ticket #3874): one owner must not
+            // read as "full", or the second colonist of a couple can never be
+            // assigned and the bedroom stays half empty.
+            var state = ColonistOnFreeBed();
+            state.Capacity = 2;
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Danil", Id = 4 });
+            Assert.Null(BedOwnerRules.Problem(state));
+        }
+
+        [Fact]
+        public void ADoubleBedWithTwoOwnersIsFull()
+        {
+            var state = ColonistOnFreeBed();
+            state.Capacity = 2;
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Danil", Id = 4 });
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Val", Id = 5 });
+            string problem = BedOwnerRules.Problem(state);
+            Assert.Contains("Danil (id 4)", problem);
+            Assert.Contains("Val (id 5)", problem);
+            Assert.Contains("clear one owner first", problem);
+        }
+
+        [Fact]
+        public void ASecondOwnerOfADoubleBedMayKeepHisSlot()
+        {
+            // The second slot's owner asking again for his own bed changes
+            // nothing; the rule must not read him as a third colonist.
+            var state = ColonistOnFreeBed();
+            state.Capacity = 2;
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Danil", Id = 4 });
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Neeko", Id = 12 });
+            Assert.Null(BedOwnerRules.Problem(state));
+        }
+
+        [Fact]
+        public void ACapacityTheBridgeDidNotReadCountsAsOneSlot()
+        {
+            // Capacity 0 is what a bed reports when nothing filled it in; the
+            // safe reading is a single slot, never "unlimited".
+            var state = ColonistOnFreeBed();
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Squint", Id = 44 });
+            Assert.Contains("clear the owner first", BedOwnerRules.Problem(state));
         }
 
         [Fact]
@@ -85,8 +131,7 @@ namespace RIMAPI.Tests
             // that bed or pick another one; taking it over silently would leave
             // a colonist on a bed no read explains any more.
             var state = ColonistOnFreeBed();
-            state.BedOwner = "Squint";
-            state.BedOwnerId = 44;
+            state.Owners.Add(new BedOwnerRules.Owner { Name = "Squint", Id = 44 });
             string problem = BedOwnerRules.Problem(state);
             Assert.Contains("Squint (id 44)", problem);
             Assert.Contains("clear the owner first", problem);
