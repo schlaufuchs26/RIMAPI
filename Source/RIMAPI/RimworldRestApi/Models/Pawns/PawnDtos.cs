@@ -20,6 +20,19 @@ namespace RIMAPI.Models
         public int AllowedAreaCells { get; set; }
     }
 
+    // AllowedAreaDto is what setting a pawn's allowed area answers (fox ticket
+    // #3645): the pawn and the area it is restricted to afterwards, in the
+    // same shape the colonists read sends. A null AllowedArea means
+    // unrestricted, and Note says why the change did not stick.
+    public class AllowedAreaDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
+        public string AllowedArea { get; set; }
+        public int AllowedAreaCells { get; set; }
+        public string Note { get; set; }
+    }
+
     public class PawnDetailedDto
     {
         public float BodySize { get; set; }

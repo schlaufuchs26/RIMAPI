@@ -48,6 +48,11 @@ namespace RIMAPI.Services
         ApiResult MakeJobFeed(int mapId, int pawnId, int feederId, int mealId);
         ApiResult SetPrisonerInteraction(int pawnId, string mode);
 
+        // AllowedArea restricts a pawn to one of the map's allowed areas, or
+        // lifts the restriction, the player's dropdown on the pawn's row (fox
+        // ticket #3645).
+        ApiResult SetAllowedArea(int mapId, int pawnId, string area);
+
         ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId);
 
         // Prioritize orders one job on one named colonist now, the way the

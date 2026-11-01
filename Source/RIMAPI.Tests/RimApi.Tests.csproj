@@ -76,6 +76,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkSettingsRules.cs" Link="Linked\WorkSettingsRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PriorityJobRules.cs" Link="Linked\PriorityJobRules.cs" />
+    <!-- The area words of `allowed_area` (fox ticket #3645): the matching
+         between a caller's word and the map's areas is plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AllowedAreaRules.cs" Link="Linked\AllowedAreaRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\AnimalDto.cs" Link="Linked\AnimalDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ArchiveNoise.cs" Link="Linked\ArchiveNoise.cs" />

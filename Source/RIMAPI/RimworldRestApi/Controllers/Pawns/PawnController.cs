@@ -424,5 +424,20 @@ namespace RIMAPI.Controllers
             var result = _colonistService.SetPrisonerInteraction(pawnId, mode);
             await context.SendJsonResponse(result);
         }
+
+        // The pawn's allowed area: the player's dropdown on the pawn's row,
+        // which no route could reach before (fox ticket #3645). area takes a
+        // label the map has (Home, a named area) or Unrestricted to lift the
+        // restriction; the answer is the pawn's area afterwards.
+        [Post("/api/v1/pawn/allowed_area")]
+        [EndpointMetadata("Restrict a pawn to an allowed area, or lift the restriction")]
+        public async Task SetAllowedArea(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var area = RequestParser.GetStringParameter(context, "area", false);
+            var result = _colonistService.SetAllowedArea(mapId, pawnId, area);
+            await context.SendJsonResponse(result);
+        }
     }
 }
