@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using LudeonTK;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace RIMAPI.Services
 {
@@ -17,6 +19,11 @@ namespace RIMAPI.Services
     /// 31 live checks were left undone on 2026-11-01 because no save held the
     /// state they needed (an infected pawn, a berserk colonist, a raid, a job
     /// that has to finish).
+    ///
+    /// A state the ops here do not name is still reachable through the game's
+    /// own dev-action menu (ticket #3799): `debug_actions` lists it and
+    /// `debug_action` runs an entry, so the fox works with the tools a player in
+    /// dev mode has instead of waiting for a new op per state.
     ///
     /// The whole route is refused unless the game itself runs in dev mode, so a
     /// colony the fox plays honestly cannot be tampered with even if the flag
@@ -89,7 +96,10 @@ namespace RIMAPI.Services
                         result = SpawnItem(map, request);
                         break;
                     case "spawn_animal":
-                        result = SpawnAnimal(map, request);
+                        result = SpawnPawnKind(map, request);
+                        break;
+                    case "spawn_pawn":
+                        result = SpawnPawnKind(map, request);
                         break;
                     case "mental":
                         result = Mental(request);
@@ -111,6 +121,12 @@ namespace RIMAPI.Services
                         break;
                     case "ticks":
                         result = RunTicks(request);
+                        break;
+                    case "debug_actions":
+                        result = ListDebugActions(request);
+                        break;
+                    case "debug_action":
+                        result = RunDebugAction(request);
                         break;
                     default:
                         return ApiResult<DevActionResultDto>.Fail(
@@ -436,7 +452,14 @@ namespace RIMAPI.Services
             return result;
         }
 
-        private DevActionResultDto SpawnAnimal(Map map, DevActionRequest request)
+        /// <summary>
+        /// Places pawns of one kind: an animal, a humanlike, a mech. It runs the
+        /// game's own dev spawner (GeneratePawn, GenSpawn, then a lord for a
+        /// hostile faction), so a state the player can build in dev mode is one
+        /// call here: a wild man is `name=WildMan`, a raid party is a kind with
+        /// its faction named (ticket #3799).
+        /// </summary>
+        private DevActionResultDto SpawnPawnKind(Map map, DevActionRequest request)
         {
             PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(request.Name);
             if (kind == null)
@@ -444,23 +467,25 @@ namespace RIMAPI.Services
                 throw new DevRefusal(
                     "\""
                         + request.Name
-                        + "\" is not a pawn kind this game knows; use the defName, e.g. Muffalo, "
-                        + "Boomrat, Warg, Chicken"
+                        + "\" is not a pawn kind this game knows; use the defName, e.g. WildMan, "
+                        + "Colonist, Muffalo, Boomrat, Warg, Chicken"
                 );
             }
+            Faction faction = FactionOf(kind, request.Faction);
             int count = DevActionRules.SpawnCount(request.Count);
             IntVec3 cell = Cell(map, request);
             Pawn last = null;
             int spawned = 0;
             for (int i = 0; i < count; i++)
             {
-                Pawn pawn = PawnGenerator.GeneratePawn(kind, null);
+                Pawn pawn = PawnGenerator.GeneratePawn(kind, faction, map.Tile);
                 if (pawn == null)
                 {
                     throw new DevRefusal("the game generated no " + kind.defName + " (pawn generation failed)");
                 }
                 IntVec3 at = CellFinder.RandomClosewalkCellNear(cell, map, 4);
                 GenSpawn.Spawn(pawn, at, map, WipeMode.Vanish);
+                PostPawnSpawn(pawn);
                 last = pawn;
                 spawned++;
             }
@@ -468,16 +493,8 @@ namespace RIMAPI.Services
             {
                 Op = request.Op,
                 Done = spawned > 0,
-                Thing = last == null
-                    ? null
-                    : new DevThingStateDto
-                    {
-                        Id = last.thingIDNumber,
-                        DefName = last.kindDef.defName,
-                        Label = last.LabelShort,
-                        StackCount = 1,
-                        Position = PositionOf(last.Position),
-                    },
+                Thing = last == null ? null : DescribeThing(last),
+                Pawn = last == null ? null : DescribePawn(last),
             };
             result.Detail =
                 "spawned "
@@ -489,8 +506,89 @@ namespace RIMAPI.Services
                 + ","
                 + cell.z
                 + ")"
-                + (last == null ? "" : "; the newest is id " + last.thingIDNumber);
+                + (last == null ? "" : "; the newest is id " + last.thingIDNumber)
+                + (faction == null ? ", which no faction owns" : ", in " + faction.Name);
             return result;
+        }
+
+        /// <summary>
+        /// The faction a spawn puts the pawn in: the request's word (player,
+        /// none, or a faction's name or defName), else the pawn kind's own
+        /// default, which is what the game's dev spawner uses.
+        /// </summary>
+        private static Faction FactionOf(PawnKindDef kind, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return FactionUtility.DefaultFactionFrom(kind.defaultFactionDef);
+            }
+            if (string.Equals(name, "none", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            if (string.Equals(name, "player", StringComparison.OrdinalIgnoreCase))
+            {
+                return Faction.OfPlayer;
+            }
+            Faction found = Find.FactionManager.AllFactions.FirstOrDefault(f =>
+                string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(f.def.defName, name, StringComparison.OrdinalIgnoreCase)
+            );
+            if (found == null)
+            {
+                string known = string.Join(
+                    ", ",
+                    Find
+                        .FactionManager.AllFactions.Where(f => !f.IsPlayer)
+                        .Select(f => f.def.defName)
+                        .Take(12)
+                );
+                throw new DevRefusal(
+                    "\""
+                        + name
+                        + "\" is not a faction this game knows; use player, none, or one of "
+                        + known
+                );
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// What the game's own dev spawner does after it placed a pawn: a pawn
+        /// of another faction joins a lord, or he stands where he landed and
+        /// never acts.
+        /// </summary>
+        private static void PostPawnSpawn(Pawn pawn)
+        {
+            if (pawn.Spawned && pawn.Faction != null && pawn.Faction != Faction.OfPlayer)
+            {
+                Lord lord = null;
+                if (pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction).Any(p => p != pawn))
+                {
+                    lord = (
+                        (Pawn)
+                            GenClosest.ClosestThing_Global(
+                                pawn.Position,
+                                pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction),
+                                99999f,
+                                p => p != pawn && ((Pawn)p).GetLord() != null
+                            )
+                    )?.GetLord();
+                }
+                if (lord == null || !lord.CanAddPawn(pawn))
+                {
+                    lord = LordMaker.MakeNewLord(
+                        pawn.Faction,
+                        new LordJob_DefendPoint(pawn.Position),
+                        Find.CurrentMap
+                    );
+                }
+                if (lord != null && lord.LordJob.CanAutoAddPawns)
+                {
+                    lord.AddPawn(pawn);
+                }
+            }
+            pawn.Rotation = Rot4.South;
         }
 
         private DevActionResultDto FireIncident(Map map, DevActionRequest request)
@@ -660,6 +758,194 @@ namespace RIMAPI.Services
             return result;
         }
 
+        // ---- the game's own dev-action menu (ticket #3799) ------------------
+
+        /// <summary>
+        /// Lists the entries of the game's dev-action menu, the tools a player
+        /// finds under the debug dialog's Actions tab, so a check can look up
+        /// what exists before it needs it (ticket #3799).
+        /// </summary>
+        private DevActionResultDto ListDebugActions(DevActionRequest request)
+        {
+            List<DebugActionNode> nodes = DebugActionNodes();
+            List<DevActionNodeDto> all = nodes.Select(DescribeNode).ToList();
+            string filter = DevActionRules.ActionPath(request.Name);
+            List<DevActionNodeDto> hits =
+                filter.Length == 0
+                    ? all
+                    : all.Where(n => n.Path.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            int limit = DevActionRules.ListLimit(request.Count);
+            DevActionResultDto result = new DevActionResultDto
+            {
+                Op = request.Op,
+                Done = true,
+                Actions = new DevActionsStateDto
+                {
+                    Total = all.Count,
+                    Shown = Math.Min(limit, hits.Count),
+                    Truncated = all.Count >= DevActionRules.MaxNodes,
+                    Nodes = hits.Take(limit).ToList(),
+                },
+            };
+            result.Detail =
+                "the dev action menu holds "
+                + (result.Actions.Truncated ? "at least " : "")
+                + all.Count
+                + " entries"
+                + (filter.Length == 0 ? "" : ", " + hits.Count + " matching \"" + filter + "\"")
+                + "; this answer lists "
+                + result.Actions.Shown;
+            return result;
+        }
+
+        /// <summary>
+        /// Runs one entry of the dev-action menu that does its work at once. An
+        /// entry that holds sub-entries, and a tool that acts on the clicked
+        /// cell, are refused with the entries that would work instead: a call has
+        /// no mouse, and a menu it cannot walk is not an action.
+        /// </summary>
+        private DevActionResultDto RunDebugAction(DevActionRequest request)
+        {
+            string wanted = DevActionRules.ActionPath(request.Name);
+            List<DebugActionNode> nodes = DebugActionNodes();
+            List<DebugActionNode> hits = nodes
+                .Where(n => DevActionRules.MatchesPath(n.Path, wanted))
+                .ToList();
+            if (hits.Count == 0)
+            {
+                throw new DevRefusal(
+                    "\""
+                        + wanted
+                        + "\" is not a dev action this game has; the `debug_actions` op lists them"
+                        + (nodes.Count == 0 ? "" : ", e.g. " + string.Join(", ", nodes.Take(3).Select(n => n.Path)))
+                );
+            }
+            if (hits.Count > 1)
+            {
+                throw new DevRefusal(
+                    "\""
+                        + wanted
+                        + "\" names "
+                        + hits.Count
+                        + " entries; write the whole path: "
+                        + string.Join(", ", hits.Take(5).Select(n => n.Path))
+                );
+            }
+            DebugActionNode node = hits[0];
+            node.TrySetupChildren();
+            if (node.children.Any())
+            {
+                throw new DevRefusal(
+                    node.Path
+                        + " is a menu with "
+                        + node.children.Count
+                        + " entries; name one of them: "
+                        + string.Join(", ", node.children.Take(5).Select(n => n.Path))
+                );
+            }
+            if (node.actionType != DebugActionType.Action || node.action == null)
+            {
+                throw new DevRefusal(
+                    node.Path
+                        + " is a "
+                        + node.actionType
+                        + " entry: a tool acts on the cell clicked in the game, and a call has no mouse"
+                );
+            }
+            int windows = Find.WindowStack.Windows.Count;
+            node.action();
+            List<Window> opened = Find.WindowStack.Windows.Skip(windows).ToList();
+            if (opened.Count > 0)
+            {
+                // A dialog waits for a click that never comes, so it is closed
+                // again and the call says why it did nothing.
+                string names = string.Join(", ", opened.Select(w => w.GetType().Name));
+                foreach (Window window in opened)
+                {
+                    Find.WindowStack.TryRemove(window, false);
+                }
+                throw new DevRefusal(
+                    node.Path
+                        + " opens the game's own window ("
+                        + names
+                        + "), which a call cannot drive; nothing was applied"
+                );
+            }
+            DevActionResultDto result = new DevActionResultDto
+            {
+                Op = request.Op,
+                Done = true,
+                Actions = new DevActionsStateDto
+                {
+                    Total = nodes.Count,
+                    Shown = 1,
+                    Nodes = new List<DevActionNodeDto> { DescribeNode(node) },
+                },
+            };
+            result.Detail = "ran " + node.Path + " (the game's own dev action)";
+            return result;
+        }
+
+        /// <summary>
+        /// The dev-action menu as the game builds it for the debug dialog: one
+        /// node per attribute-declared action, three levels deep so a leaf like
+        /// Actions/Spawning/WildMan is reachable by path.
+        /// </summary>
+        private static List<DebugActionNode> DebugActionNodes()
+        {
+            DebugActionNode root = new DebugActionNode("root");
+            new DebugTabMenu_Actions(DebugTabMenuDefOf.Actions, null, root).InitActions(root);
+            List<DebugActionNode> nodes = new List<DebugActionNode>();
+            CollectNodes(root, nodes, 0);
+            return nodes;
+        }
+
+        private static void CollectNodes(DebugActionNode node, List<DebugActionNode> into, int depth)
+        {
+            const int maxDepth = 4;
+            int maxNodes = DevActionRules.MaxNodes;
+            if (depth < maxDepth && into.Count < maxNodes)
+            {
+                node.TrySetupChildren();
+            }
+            if (node.parent != null)
+            {
+                into.Add(node);
+            }
+            if (depth >= maxDepth || into.Count >= maxNodes)
+            {
+                return;
+            }
+            foreach (DebugActionNode child in node.children)
+            {
+                CollectNodes(child, into, depth + 1);
+                if (into.Count >= maxNodes) return;
+            }
+        }
+
+        private static DevActionNodeDto DescribeNode(DebugActionNode node)
+        {
+            string kind;
+            if (node.children.Any())
+            {
+                kind = "menu";
+            }
+            else if (node.actionType == DebugActionType.Action)
+            {
+                kind = "action";
+            }
+            else
+            {
+                kind = "tool";
+            }
+            return new DevActionNodeDto
+            {
+                Path = node.Path,
+                Category = node.category,
+                Kind = kind,
+            };
+        }
+
         // ---- helpers ------------------------------------------------------
 
         private static Pawn Pawn(int? id)
@@ -809,6 +1095,8 @@ namespace RIMAPI.Services
                 Dead = pawn.Dead,
                 MentalState = pawn.MentalStateDef == null ? "" : pawn.MentalStateDef.defName,
                 Injuries = InjuryCount(pawn),
+                Faction = pawn.Faction == null ? "" : pawn.Faction.Name,
+                Wild = pawn.IsWildMan(),
             };
             foreach (Hediff hediff in pawn.health.hediffSet.hediffs)
             {

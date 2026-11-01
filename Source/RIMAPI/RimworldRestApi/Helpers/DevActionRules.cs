@@ -47,6 +47,7 @@ namespace RIMAPI.Helpers
             "infection",
             "spawn",
             "spawn_animal",
+            "spawn_pawn",
             "mental",
             "skill",
             "trait",
@@ -54,6 +55,8 @@ namespace RIMAPI.Helpers
             "quest",
             "wealth",
             "ticks",
+            "debug_actions",
+            "debug_action",
         };
 
         /// <summary>True for an op this route implements.</summary>
@@ -99,10 +102,12 @@ namespace RIMAPI.Helpers
                 case "hediff":
                 case "spawn":
                 case "spawn_animal":
+                case "spawn_pawn":
                 case "mental":
                 case "skill":
                 case "trait":
                 case "incident":
+                case "debug_action":
                     return true;
                 default:
                     return false;
@@ -169,6 +174,7 @@ namespace RIMAPI.Helpers
                     break;
                 case "spawn":
                 case "spawn_animal":
+                case "spawn_pawn":
                     if (count != null && (count < 1 || count > MaxSpawn))
                     {
                         return "count must be 1 to "
@@ -239,6 +245,59 @@ namespace RIMAPI.Helpers
         {
             if (amount == null) return null;
             return amount < 0f ? 0f : amount;
+        }
+
+        // ---- the dev-action menu (ticket #3799) ---------------------------
+
+        /// <summary>Paths one `debug_actions` call prints; the menu holds a few thousand.</summary>
+        public const int MaxListed = 500;
+
+        /// <summary>
+        /// Entries one listing walks before it stops: the menu's own sub-menus
+        /// (pawn kinds, incidents) expand to thousands, and a walk that never
+        /// ends would hold the game for minutes.
+        /// </summary>
+        public const int MaxNodes = 20000;
+
+        /// <summary>
+        /// A dev-action path with one separator and no leading or trailing slash,
+        /// so a caller may write Actions\Spawning\WildMan, Actions/Spawning/WildMan
+        /// or just Spawning/WildMan and all three name the same entry.
+        /// </summary>
+        public static string ActionPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return "";
+            string trimmed = path.Replace('\\', '/').Trim();
+            while (trimmed.StartsWith("/", StringComparison.Ordinal))
+            {
+                trimmed = trimmed.Substring(1);
+            }
+            while (trimmed.EndsWith("/", StringComparison.Ordinal))
+            {
+                trimmed = trimmed.Substring(0, trimmed.Length - 1);
+            }
+            return trimmed;
+        }
+
+        /// <summary>
+        /// True when a menu entry's own path is the one the call names, or ends
+        /// with it: the entries sit under the Actions root, and a caller should
+        /// not have to type it.
+        /// </summary>
+        public static bool MatchesPath(string nodePath, string wanted)
+        {
+            string node = ActionPath(nodePath);
+            string want = ActionPath(wanted);
+            if (want.Length == 0) return false;
+            if (string.Equals(node, want, StringComparison.OrdinalIgnoreCase)) return true;
+            return node.EndsWith("/" + want, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>How many paths a listing prints: the request's, else 100, never past MaxListed.</summary>
+        public static int ListLimit(int? count)
+        {
+            if (count == null || count < 1) return 100;
+            return count.Value > MaxListed ? MaxListed : count.Value;
         }
     }
 }

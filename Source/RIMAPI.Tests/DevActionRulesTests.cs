@@ -16,6 +16,7 @@ namespace RIMAPI.Tests
         [InlineData("infection")]
         [InlineData("spawn")]
         [InlineData("spawn_animal")]
+        [InlineData("spawn_pawn")]
         [InlineData("mental")]
         [InlineData("skill")]
         [InlineData("trait")]
@@ -23,6 +24,8 @@ namespace RIMAPI.Tests
         [InlineData("quest")]
         [InlineData("wealth")]
         [InlineData("ticks")]
+        [InlineData("debug_actions")]
+        [InlineData("debug_action")]
         public void EveryDocumentedOpIsKnown(string op)
         {
             Assert.True(DevActionRules.IsOp(op));
@@ -121,6 +124,47 @@ namespace RIMAPI.Tests
             Assert.True(DevActionRules.NeedsPawn("heal"));
             Assert.False(DevActionRules.NeedsName("heal"));
             Assert.False(DevActionRules.NeedsPawn("incident"));
+        }
+
+        // A pawn spawn is the general form of the animal one (ticket #3799): it
+        // needs the kind it generates, and the same count cap, because the game
+        // generates each pawn in one call.
+        [Fact]
+        public void APawnSpawnNeedsItsKind()
+        {
+            Assert.Contains("name", DevActionRules.Problem("spawn_pawn", null, null, null, null, null, null));
+            Assert.Null(DevActionRules.Problem("spawn_pawn", null, "WildMan", null, null, 2, null));
+            Assert.Contains("500", DevActionRules.Problem("spawn_pawn", null, "WildMan", null, null, 501, null));
+        }
+
+        // The menu's paths come with the Actions root and either separator; a
+        // caller who writes the tail of the path still names one entry.
+        [Theory]
+        [InlineData(@"Actions\Spawning\WildMan", "Actions/Spawning/WildMan")]
+        [InlineData(@"Actions\Spawning\WildMan", "Spawning/WildMan")]
+        [InlineData(@"Actions\Spawning\WildMan", @"actions\spawning\wildman")]
+        public void AMenuPathMatchesWhatTheCallNames(string nodePath, string wanted)
+        {
+            Assert.True(DevActionRules.MatchesPath(nodePath, wanted));
+        }
+
+        [Fact]
+        public void AMenuPathIsNotAMereSubstring()
+        {
+            // The last step of a path is enough (the leaf's own label), but a
+            // part of a word is not: "Wild" would otherwise pick whichever entry
+            // the walk reaches first.
+            Assert.True(DevActionRules.MatchesPath(@"Actions\Spawning\WildMan", "WildMan"));
+            Assert.False(DevActionRules.MatchesPath(@"Actions\Spawning\WildMan", "Wild"));
+            Assert.False(DevActionRules.MatchesPath(@"Actions\Spawning\WildMan", ""));
+        }
+
+        [Fact]
+        public void AListingPrintsAHundredPathsUnlessTheCallAsksForMore()
+        {
+            Assert.Equal(100, DevActionRules.ListLimit(null));
+            Assert.Equal(7, DevActionRules.ListLimit(7));
+            Assert.Equal(DevActionRules.MaxListed, DevActionRules.ListLimit(DevActionRules.MaxListed + 1));
         }
     }
 }

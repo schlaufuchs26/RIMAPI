@@ -18,7 +18,9 @@ namespace RIMAPI.Models
 
         /// <summary>
         /// The defName the op needs: an item, an animal kind, a hediff, a mental
-        /// state, a skill, a trait, an incident, or a quest script.
+        /// state, a skill, a trait, an incident, or a quest script. `debug_action`
+        /// reads the dev-action menu's path here, `debug_actions` a substring to
+        /// filter by.
         /// </summary>
         public string Name { get; set; }
 
@@ -43,6 +45,14 @@ namespace RIMAPI.Models
         /// <summary>The cell a spawn goes to; both unset means near a colonist.</summary>
         public int? X { get; set; }
         public int? Z { get; set; }
+
+        /// <summary>
+        /// `spawn_pawn` only: which faction the pawn joins, as the game names it
+        /// (a faction's name or defName), or player, or none for a pawn no
+        /// faction owns (a wild man). Empty takes the pawn kind's own default,
+        /// which is what the game's dev spawner does.
+        /// </summary>
+        public string Faction { get; set; }
     }
 
     /// <summary>
@@ -68,6 +78,37 @@ namespace RIMAPI.Models
         public DevIncidentStateDto Incident { get; set; }
         public DevTickStateDto Ticks { get; set; }
         public DevWealthStateDto Wealth { get; set; }
+        public DevActionsStateDto Actions { get; set; }
+    }
+
+    /// <summary>
+    /// The game's own dev-action menu (fox ticket #3799): every entry the player
+    /// finds under the debug dialog's Actions tab, so a check can look the tools
+    /// up instead of waiting for a new op per state.
+    /// </summary>
+    public class DevActionsStateDto
+    {
+        /// <summary>How many entries the whole menu holds.</summary>
+        public int Total { get; set; }
+        /// <summary>How many of them this answer lists.</summary>
+        public int Shown { get; set; }
+
+        /// <summary>True when the walk stopped at its node cap, so Total is a lower bound.</summary>
+        public bool Truncated { get; set; }
+
+        public List<DevActionNodeDto> Nodes { get; set; } = new List<DevActionNodeDto>();
+    }
+
+    /// <summary>One entry of the dev-action menu: its path, category and what it does.</summary>
+    public class DevActionNodeDto
+    {
+        /// <summary>The path a `debug_action` call names, e.g. Actions\Spawning\WildMan.</summary>
+        public string Path { get; set; }
+
+        public string Category { get; set; }
+
+        /// <summary>action (runs at once), menu (holds entries) or tool (acts on a clicked cell).</summary>
+        public string Kind { get; set; }
     }
 
     /// <summary>One pawn after a dev op: health, wounds, hediffs, skills, traits.</summary>
@@ -88,6 +129,12 @@ namespace RIMAPI.Models
 
         /// <summary>How many injuries the pawn carries (Hediff_Injury and missing parts).</summary>
         public int Injuries { get; set; }
+
+        /// <summary>The faction the pawn belongs to, as the game names it; empty when none owns him.</summary>
+        public string Faction { get; set; }
+
+        /// <summary>True for a wild man or wild woman: a humanlike no faction owns.</summary>
+        public bool Wild { get; set; }
 
         public List<DevHediffDto> Hediffs { get; set; } = new List<DevHediffDto>();
         public List<DevSkillDto> Skills { get; set; } = new List<DevSkillDto>();
