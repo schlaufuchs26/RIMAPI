@@ -144,10 +144,14 @@ namespace RIMAPI.Helpers
             foreach (LocalTargetInfo target in targets)
             {
                 if (tried++ >= SampleTargets) break;
-                Job job = target.HasThing
-                    ? giver.JobOnThing(pawn, target.Thing, forced)
-                    : giver.JobOnCell(pawn, target.Cell, forced);
-                if (job != null) return true;
+                // HasJobOnThing is the work loop's own question, and some
+                // givers override only that one: HunterHunt has no
+                // JobOnThing at all, so asking for a job would call every
+                // hunter unable to hunt.
+                bool accepted = target.HasThing
+                    ? giver.HasJobOnThing(pawn, target.Thing, forced)
+                    : giver.HasJobOnCell(pawn, target.Cell, forced);
+                if (accepted) return true;
             }
             return false;
         }
