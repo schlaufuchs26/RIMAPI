@@ -111,6 +111,11 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\SnakeCaseContractResolver.cs" Link="Linked\SnakeCaseContractResolver.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\QueryFilter.cs" Link="Linked\QueryFilter.cs" />
+    <!-- What a malformed call answers with (fox ticket #3769): a missing
+         parameter is a 400 with its own sentence, not a server fault whose text
+         happens to say "not found". -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\RequestParser.cs" Link="Linked\RequestParser.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RequestErrorStatus.cs" Link="Linked\RequestErrorStatus.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Common\PositionDto.cs" Link="Linked\PositionDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BillDto.cs" Link="Linked\BillDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BuildingDto.cs" Link="Linked\BuildingDto.cs" />

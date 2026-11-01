@@ -198,9 +198,11 @@ namespace RIMAPI.Core
                     LogApi.Error(
                         $"Error in auto-routed endpoint {controllerType.Name}.{method.Name}: {innerEx}"
                     );
+                    // A missing or malformed parameter is the caller's mistake,
+                    // not a server fault: it answers 400 (fox ticket #3769).
                     await context.SendError(
-                        HttpStatusCode.InternalServerError,
-                        $"Internal server error: {innerEx.Message}"
+                        Helpers.RequestErrorStatus.For(innerEx),
+                        Helpers.RequestErrorStatus.MessageFor(innerEx)
                     );
                 }
                 catch (Exception ex)
@@ -209,8 +211,8 @@ namespace RIMAPI.Core
                         $"Error in auto-routed endpoint {controllerType.Name}.{method.Name}: {ex}"
                     );
                     await context.SendError(
-                        HttpStatusCode.InternalServerError,
-                        $"Internal server error: {ex.Message}"
+                        Helpers.RequestErrorStatus.For(ex),
+                        Helpers.RequestErrorStatus.MessageFor(ex)
                     );
                 }
             };

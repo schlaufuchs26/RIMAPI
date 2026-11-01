@@ -117,8 +117,12 @@ namespace RIMAPI.Core
             string errorMessage
         )
         {
-            var result = ApiResult.Fail(errorMessage);
-            await SendApiResult(response, result);
+            LogApi.Warning($"API Error {statusCode}: {errorMessage}");
+            // The caller's status is the answer. Re-deriving it from the words
+            // turned an explicit 400 or 500 into a 404 whenever the message
+            // said "not found", so a missing parameter arrived as a missing
+            // route (fox ticket #3769).
+            await WriteResponse(response, statusCode, ApiResult.Fail(errorMessage));
         }
 
         public static async Task SendValidationError(
