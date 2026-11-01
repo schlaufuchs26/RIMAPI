@@ -75,5 +75,18 @@ namespace RIMAPI.Tests
             Assert.False(PriorityTargetRules.NamesRemoval(""));
             Assert.False(PriorityTargetRules.NamesRemoval(null));
         }
+
+        // The way-clearing deconstruct is the game's own initiative job; an
+        // unnamed order must never take it, because its giver answers for any
+        // building once the call is forced (fox #3706).
+        [Fact]
+        public void The_way_clearing_job_is_recognised_by_its_defname()
+        {
+            Assert.True(PriorityTargetRules.IsWayClearingJob("DeconstructForBlueprint"));
+            Assert.True(PriorityTargetRules.IsWayClearingJob("deconstructforblueprint"));
+            Assert.False(PriorityTargetRules.IsWayClearingJob("Deconstruct"));
+            Assert.False(PriorityTargetRules.IsWayClearingJob("FinishFrame"));
+            Assert.False(PriorityTargetRules.IsWayClearingJob(""));
+        }
     }
 }

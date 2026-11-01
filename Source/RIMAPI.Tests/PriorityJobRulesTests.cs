@@ -29,16 +29,24 @@ namespace RIMAPI.Tests
         }
 
         // The same word can cover two jobs: a haul is HaulToCell on the ground
-        // and HaulToContainer into a shelf, and a deconstruct is the plain job
-        // or the one that clears a building out of a blueprint's way; the game
-        // decides which applies.
+        // and HaulToContainer into a shelf, and the game decides which applies.
         [Fact]
         public void OneWordCanNameTwoJobs()
         {
             Assert.True(PriorityJobRules.Matches("haul", "HaulToCell"));
             Assert.True(PriorityJobRules.Matches("haul", "HaulToContainer"));
+        }
+
+        // "deconstruct" is the plain job only. DeconstructForBlueprint is the
+        // game's own way-clearing job, and its giver answers for any building
+        // once the call is forced, so a word that covered both queued it on a
+        // working generator (fox #3706).
+        [Fact]
+        public void TheDeconstructWordIsThePlainJob()
+        {
             Assert.True(PriorityJobRules.Matches("deconstruct", "Deconstruct"));
-            Assert.True(PriorityJobRules.Matches("deconstruct", "DeconstructForBlueprint"));
+            Assert.False(PriorityJobRules.Matches("deconstruct", "DeconstructForBlueprint"));
+            Assert.True(PriorityJobRules.Matches("DeconstructForBlueprint", "DeconstructForBlueprint"));
         }
 
         // "build" has to reach the job the game actually builds, FinishFrame.

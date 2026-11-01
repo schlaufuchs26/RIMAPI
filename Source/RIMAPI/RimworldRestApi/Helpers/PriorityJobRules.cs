@@ -28,11 +28,11 @@ namespace RIMAPI.Helpers
                 { "cook", new[] { "DoBill" } },
                 { "craft", new[] { "DoBill" } },
                 { "mine", new[] { "Mine" } },
-                // The game files two deconstruct jobs: the plain one and the
-                // one that clears a building out of a planned blueprint's way,
-                // which is the job a deconstruct order actually queues on a
-                // wall (fox #3706).
-                { "deconstruct", new[] { "Deconstruct", "DeconstructForBlueprint" } },
+                // Plain Deconstruct only. DeconstructForBlueprint is the game's
+                // own way-clearing job and its giver answers for any building
+                // with forced=true, so naming it here queued it on a working
+                // generator (fox #3706). A run that wants it names the defName.
+                { "deconstruct", new[] { "Deconstruct" } },
                 { "tend", new[] { "TendPatient", "TendSelf" } },
                 { "equip", new[] { "Equip" } },
                 { "sow", new[] { "Sow" } },

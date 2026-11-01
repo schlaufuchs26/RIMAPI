@@ -55,6 +55,19 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// IsWayClearingJob reports whether a job is the game's own way-clearing
+        /// deconstruct: the one a colonist does on his own when a building
+        /// stands where a blueprint is planned. Its giver answers for any
+        /// building once the call is forced, so an unnamed `prioritize` that
+        /// let it win demolished a working solar generator; only a caller who
+        /// names it gets it (fox #3706).
+        /// </summary>
+        public static bool IsWayClearingJob(string jobDefName)
+        {
+            return string.Equals(jobDefName, "DeconstructForBlueprint", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// The jobs that take a thing away rather than build it. A caller who
         /// names one of these on the colony's own blueprint or frame is asking
         /// for the plan to be destroyed, which is never what a prioritize call

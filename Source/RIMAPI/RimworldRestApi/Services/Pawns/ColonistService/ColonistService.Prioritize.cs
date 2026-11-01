@@ -121,6 +121,16 @@ namespace RIMAPI.Services
                     }
                     foreach (WorkGiver giver in OrderableGivers(pawn, workType))
                     {
+                        // The way-clearing deconstruct answers for any building
+                        // once the call is forced, so an unnamed order on a
+                        // working generator queued it and the colony lost the
+                        // machine. A caller who wants that job names it
+                        // (fox #3706).
+                        if (string.IsNullOrEmpty(jobName)
+                            && PriorityTargetRules.IsWayClearingJob(giver.def.defName))
+                        {
+                            continue;
+                        }
                         Job job = OrderedJob(giver, pawn, candidate);
                         if (job == null || job.def == null) continue;
                         offered.Add(job.def.defName);
