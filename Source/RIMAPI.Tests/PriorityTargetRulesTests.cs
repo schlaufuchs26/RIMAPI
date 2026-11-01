@@ -46,16 +46,34 @@ namespace RIMAPI.Tests
             Assert.Empty(PriorityTargetRules.ConstructiblesFirst<string>(null, t => true));
         }
 
-        // The build jobs are the three the game files under Construct; the roof
-        // above the cell and a deconstruct of the blueprint are not builds.
+        // Exactly one job builds a planned build, and it is FinishFrame. The
+        // WorkGiverDef names are not JobDefs, so a prefix test on "Construct"
+        // recognised no build at all and skipped the job it meant to protect
+        // (fox #3706).
         [Fact]
-        public void Only_the_construct_jobs_build_a_blueprint()
+        public void Only_the_finish_frame_job_builds_a_blueprint()
         {
-            Assert.True(PriorityTargetRules.IsConstructJob("ConstructFinishFrames"));
-            Assert.True(PriorityTargetRules.IsConstructJob("ConstructDeliverResourcesToBlueprints"));
+            Assert.True(PriorityTargetRules.IsConstructJob("FinishFrame"));
+            Assert.True(PriorityTargetRules.IsConstructJob("finishframe"));
+            Assert.False(PriorityTargetRules.IsConstructJob("ConstructFinishFrames"));
             Assert.False(PriorityTargetRules.IsConstructJob("BuildRoof"));
             Assert.False(PriorityTargetRules.IsConstructJob("DeconstructForBlueprint"));
             Assert.False(PriorityTargetRules.IsConstructJob(""));
+        }
+
+        // A deconstruct named on the colony's own blueprint or frame is the one
+        // order that destroys the plan, in the menu's word or as the defName the
+        // game prints, so the call refuses it instead of queueing it (#3706).
+        [Fact]
+        public void The_removal_words_name_a_deconstruct()
+        {
+            Assert.True(PriorityTargetRules.NamesRemoval("deconstruct"));
+            Assert.True(PriorityTargetRules.NamesRemoval("DeconstructForBlueprint"));
+            Assert.True(PriorityTargetRules.NamesRemoval("uninstall"));
+            Assert.False(PriorityTargetRules.NamesRemoval("build"));
+            Assert.False(PriorityTargetRules.NamesRemoval("FinishFrame"));
+            Assert.False(PriorityTargetRules.NamesRemoval(""));
+            Assert.False(PriorityTargetRules.NamesRemoval(null));
         }
     }
 }

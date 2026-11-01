@@ -28,7 +28,11 @@ namespace RIMAPI.Helpers
                 { "cook", new[] { "DoBill" } },
                 { "craft", new[] { "DoBill" } },
                 { "mine", new[] { "Mine" } },
-                { "deconstruct", new[] { "Deconstruct" } },
+                // The game files two deconstruct jobs: the plain one and the
+                // one that clears a building out of a planned blueprint's way,
+                // which is the job a deconstruct order actually queues on a
+                // wall (fox #3706).
+                { "deconstruct", new[] { "Deconstruct", "DeconstructForBlueprint" } },
                 { "tend", new[] { "TendPatient", "TendSelf" } },
                 { "equip", new[] { "Equip" } },
                 { "sow", new[] { "Sow" } },
@@ -37,21 +41,16 @@ namespace RIMAPI.Helpers
                 { "cut", new[] { "CutPlant" } },
                 { "clean", new[] { "Clean" } },
                 { "repair", new[] { "Repair" } },
-                { "build", new[]
-                    {
-                        "ConstructFinishFrames",
-                        "ConstructDeliverResourcesToBlueprints",
-                        "ConstructDeliverResourcesToFrames",
-                    } },
+                // The job that finishes a blueprint or a frame is FinishFrame;
+                // the names in the WorkGiverDef files (ConstructFinishFrames and
+                // the two delivery givers) are not JobDefs, so a table keyed on
+                // them matched nothing and "build" fell through to the refusal
+                // (fox #3706). A delivery is a haul, so it keeps its own word.
+                { "build", new[] { "FinishFrame" } },
                 // "construct" is the work type's own name, which is what a
-                // caller reads in the answer and then names back; the game
-                // builds three job defs under it (fox ticket #3708).
-                { "construct", new[]
-                    {
-                        "ConstructFinishFrames",
-                        "ConstructDeliverResourcesToBlueprints",
-                        "ConstructDeliverResourcesToFrames",
-                    } },
+                // caller reads in the answer and then names back; the build
+                // under it is the same one job (fox tickets #3708, #3706).
+                { "construct", new[] { "FinishFrame" } },
                 { "firefight", new[] { "BeatFire" } },
                 { "extinguish", new[] { "BeatFire" } },
                 { "arrest", new[] { "Arrest", "Capture" } },

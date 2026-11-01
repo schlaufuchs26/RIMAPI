@@ -29,24 +29,30 @@ namespace RIMAPI.Tests
         }
 
         // The same word can cover two jobs: a haul is HaulToCell on the ground
-        // and HaulToContainer into a shelf, and the game decides which applies.
+        // and HaulToContainer into a shelf, and a deconstruct is the plain job
+        // or the one that clears a building out of a blueprint's way; the game
+        // decides which applies.
         [Fact]
         public void OneWordCanNameTwoJobs()
         {
             Assert.True(PriorityJobRules.Matches("haul", "HaulToCell"));
             Assert.True(PriorityJobRules.Matches("haul", "HaulToContainer"));
-            Assert.True(PriorityJobRules.Matches("build", "ConstructFinishFrames"));
+            Assert.True(PriorityJobRules.Matches("deconstruct", "Deconstruct"));
+            Assert.True(PriorityJobRules.Matches("deconstruct", "DeconstructForBlueprint"));
         }
 
-        // The work type's own name is what an answer prints in brackets, so a
-        // run names it back; it has to reach the same three job defs (fox
-        // ticket #3708).
+        // "build" has to reach the job the game actually builds, FinishFrame.
+        // The WorkGiverDef names (ConstructFinishFrames and the delivery
+        // givers) are not JobDefs, so the old table matched nothing and a
+        // caller who named the build got the refusal (fox #3706).
         [Fact]
-        public void TheWorkTypesNameReachesItsJobs()
+        public void TheBuildWordReachesTheJobTheGameBuilds()
         {
-            Assert.True(PriorityJobRules.Matches("construct", "ConstructFinishFrames"));
-            Assert.True(PriorityJobRules.Matches("Construct", "ConstructDeliverResourcesToBlueprints"));
-            Assert.False(PriorityJobRules.Matches("construct", "BuildRoof"));
+            Assert.True(PriorityJobRules.Matches("build", "FinishFrame"));
+            Assert.True(PriorityJobRules.Matches("build", "finishframe"));
+            Assert.True(PriorityJobRules.Matches("Construct", "FinishFrame"));
+            Assert.False(PriorityJobRules.Matches("build", "BuildRoof"));
+            Assert.False(PriorityJobRules.Matches("build", "ConstructFinishFrames"));
         }
 
         [Fact]

@@ -105,8 +105,18 @@ namespace RIMAPI.Services
                 List<string> offered = new List<string>();
                 Job chosen = null;
                 WorkGiver chosenGiver = null;
+                string removalRefusal = null;
                 foreach (JobTarget candidate in JobTargets(map, thing, cell))
                 {
+                    // The colony's own blueprint or frame is there to be built.
+                    // A deconstruct on it takes the plan away, and no other job
+                    // is what a prioritize call on a planned build means, so a
+                    // named removal is refused instead of queued (fox #3706).
+                    if (IsPlannedBuild(candidate.Thing) && PriorityTargetRules.NamesRemoval(jobName))
+                    {
+                        removalRefusal = removalRefusal ?? RemovalRefusal(candidate.Thing);
+                        continue;
+                    }
                     foreach (WorkGiver giver in OrderableGivers(pawn, workType))
                     {
                         Job job = OrderedJob(giver, pawn, candidate.Thing, candidate.Cell);
@@ -119,8 +129,8 @@ namespace RIMAPI.Services
                         // A blueprint or frame is what the build jobs are for;
                         // a caller who named no job there gets that build, not
                         // the roof above the cell and not the deconstruct of
-                        // the player's own plan (ticket #3708).
-                        if (candidate.Thing is Blueprint_Build
+                        // the player's own plan (tickets #3708, #3706).
+                        if (IsPlannedBuild(candidate.Thing)
                             && string.IsNullOrEmpty(jobName)
                             && !PriorityTargetRules.IsConstructJob(job.def.defName))
                         {
@@ -136,7 +146,7 @@ namespace RIMAPI.Services
                 if (chosen == null)
                 {
                     result.Offered = PriorityJobRules.OfferList(offered);
-                    result.Refusal = NoOfferReason(pawn, jobName, workType, target);
+                    result.Refusal = removalRefusal ?? NoOfferReason(pawn, jobName, workType, target);
                     return ApiResult.Ok(result);
                 }
 
@@ -222,12 +232,32 @@ namespace RIMAPI.Services
             List<Thing> standing = map.thingGrid.ThingsListAt(cell)
                 .Where(t => t != null && !(t is Pawn))
                 .ToList();
-            foreach (Thing onCell in PriorityTargetRules.ConstructiblesFirst(standing, t => t is Blueprint_Build))
+            foreach (Thing onCell in PriorityTargetRules.ConstructiblesFirst(standing, IsPlannedBuild))
             {
                 targets.Add(new JobTarget { Thing = onCell });
             }
             targets.Add(new JobTarget { Cell = cell });
             return targets;
+        }
+
+        // IsPlannedBuild reports whether a thing is a build the colony planned:
+        // a blueprint that waits for its materials, or the frame a colonist has
+        // started. Both are what the construct givers answer for and what a
+        // deconstruct would take away (fox #3706).
+        private static bool IsPlannedBuild(Thing thing)
+        {
+            return thing is Blueprint_Build || thing is Frame;
+        }
+
+        // RemovalRefusal says why the deconstruct the caller named is not the
+        // job on a planned build, and names the calls that do what the caller
+        // meant (fox #3706).
+        private static string RemovalRefusal(Thing thing)
+        {
+            string kind = thing is Frame ? "frame" : "blueprint";
+            string label = thing.def != null ? thing.def.label : "build";
+            return $"thing {thing.thingIDNumber} is the colony's own {label} {kind}: a deconstruct takes the plan "
+                + "away instead of building it. Name `job=build` to finish it, or `cancel` to drop the plan.";
         }
 
         private static WorkTypeDef FindWorkType(string name)

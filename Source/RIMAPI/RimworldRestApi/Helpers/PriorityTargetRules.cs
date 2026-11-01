@@ -43,15 +43,50 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// IsConstructJob reports whether a job builds a blueprint or a frame:
-        /// the game's three construct jobs all carry the prefix, while the roof
-        /// job (BuildRoof) and the deconstruct of a blueprint do not. A cell or
-        /// thing that carries a blueprint is what those jobs are for.
+        /// IsConstructJob reports whether a job finishes a blueprint or a frame.
+        /// The game builds exactly one job for that, FinishFrame; the
+        /// WorkGiverDef names (ConstructFinishFrames, ConstructDeliverResources*)
+        /// are not JobDefs, so a prefix test on "Construct" matched no job at
+        /// all and skipped the build it was meant to protect (fox #3706).
         /// </summary>
         public static bool IsConstructJob(string jobDefName)
         {
-            return !string.IsNullOrEmpty(jobDefName)
-                && jobDefName.StartsWith("Construct", StringComparison.Ordinal);
+            return string.Equals(jobDefName, "FinishFrame", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// The jobs that take a thing away rather than build it. A caller who
+        /// names one of these on the colony's own blueprint or frame is asking
+        /// for the plan to be destroyed, which is never what a prioritize call
+        /// on a planned build means (fox #3706).
+        /// </summary>
+        private static readonly string[] RemovalJobs =
+        {
+            "Deconstruct",
+            "DeconstructForBlueprint",
+            "Uninstall",
+        };
+
+        /// <summary>
+        /// NamesRemoval reports whether the caller's word names a removal job,
+        /// by the menu's word ("deconstruct") or by the JobDef defName the
+        /// game prints, so an explicit deconstruct of the colony's own
+        /// blueprint is refused whichever form the run wrote.
+        /// </summary>
+        public static bool NamesRemoval(string requestedJob)
+        {
+            if (string.IsNullOrEmpty(requestedJob))
+            {
+                return false;
+            }
+            foreach (string jobDefName in RemovalJobs)
+            {
+                if (PriorityJobRules.Matches(requestedJob, jobDefName))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
