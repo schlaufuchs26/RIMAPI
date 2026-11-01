@@ -44,7 +44,32 @@ namespace RIMAPI
         public RIMAPI_Mod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<RIMAPI_Settings>();
+            ApplyCommandLinePort();
             InitializeHarmony();
+        }
+
+        /// <summary>
+        /// Lets the command line move the listen port (fox ticket #3580):
+        /// a second game started with its own save-data folder would otherwise
+        /// read this folder's settings and fail to bind the port the real
+        /// colony already holds. <c>-rimapi-port=8766</c> is what the debug
+        /// instance is started with; a value that is no port is refused in the
+        /// log and the saved port stands.
+        /// </summary>
+        private void ApplyCommandLinePort()
+        {
+            string raw = GenCommandLine.TryGetCommandLineArg("rimapi-port");
+            int port = Helpers.ListenPort.Override(raw, Settings.serverPort, out bool refused);
+            if (refused)
+            {
+                LogApi.Error($"-rimapi-port={raw} is not a port between 1 and 65535; keeping {Settings.serverPort}");
+                return;
+            }
+            if (port != Settings.serverPort)
+            {
+                LogApi.Info($"Listen port {Settings.serverPort} overridden to {port} by -rimapi-port");
+                Settings.serverPort = port;
+            }
         }
 
         /// <summary>
