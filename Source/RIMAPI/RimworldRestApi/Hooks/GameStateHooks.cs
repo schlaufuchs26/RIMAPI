@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using RIMAPI.Helpers;
 using Verse;
 
 namespace RimworldRestApi.Hooks
@@ -37,6 +38,19 @@ namespace RimworldRestApi.Hooks
         }
 
         // --- 1. GAME LOADED ---
+        // fox #3603: the game keeps no record of the save file a colony was
+        // read from outside commitment mode, so this hook records the name and
+        // the state read reports it. A release writes the colony back into
+        // that file, which is what keeps a probe copy out of the live save.
+        [HarmonyPatch(typeof(SavedGameLoaderNow), nameof(SavedGameLoaderNow.LoadGameFromSaveFileNow))]
+        public static class LoadGameFromSaveFilePatch
+        {
+            static void Prefix(string fileName)
+            {
+                LoadedSave.Set(fileName);
+            }
+        }
+
         [HarmonyPatch(typeof(Game), nameof(Game.LoadGame))]
         public static class GameLoadPatch
         {
@@ -57,6 +71,9 @@ namespace RimworldRestApi.Hooks
         {
             static void Postfix()
             {
+                // A new colony was read from no file, so it must not be saved
+                // back into the one that was open before (#3603).
+                LoadedSave.Clear();
                 SendStateEvent("new_game_created", new
                 {
                     scenario = Find.Scenario?.name,
@@ -73,6 +90,9 @@ namespace RimworldRestApi.Hooks
             static void Prefix()
             {
                 // Prefix is better here because once GoToMainMenu finishes, the game state is cleared.
+                // The colony is gone, so the save it was read from is no
+                // longer what a release would write (#3603).
+                LoadedSave.Clear();
                 SendStateEvent("exit_to_menu", new
                 {
                     reason = "User requested main menu"

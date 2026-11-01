@@ -59,6 +59,8 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogRecord.cs" Link="Linked\JobLogRecord.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HediffRate.cs" Link="Linked\HediffRate.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PauseSource.cs" Link="Linked\PauseSource.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SaveNameRules.cs" Link="Linked\SaveNameRules.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LoadedSave.cs" Link="Linked\LoadedSave.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AnimalRules.cs" Link="Linked\AnimalRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ListenPort.cs" Link="Linked\ListenPort.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />

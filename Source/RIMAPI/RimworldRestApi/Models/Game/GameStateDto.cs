@@ -21,6 +21,15 @@ namespace RIMAPI.Models
         public bool IsLoading { get; set; } // a long event is running: reading a save, generating a world
         public string ColonyName { get; set; } // the player faction's name, the one the game shows
 
+        // Which file a save writes (fox #3603). LoadedSave is the save the
+        // running colony was read from; SaveName is the name the game's next
+        // save writes, which in commitment mode is the colony's own unique
+        // name whatever the caller asks for (Helpers/SaveNameRules.cs). A
+        // caller that saves the colony must write it back into LoadedSave,
+        // otherwise a probe copy of the live colony overwrites the live save.
+        public string LoadedSave { get; set; }
+        public string SaveName { get; set; }
+
         // Why the clock stands still (fox ticket #3490). Paused is one boolean
         // over several causes: TimeSpeed is the game's own speed switch
         // ("Paused", "Normal", "Fast", ...), and PauseSource names the hold

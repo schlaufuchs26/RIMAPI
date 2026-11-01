@@ -108,6 +108,21 @@ namespace RIMAPI.Helpers
                 {
                     state.ColonyName = "";
                 }
+                // #3603: which file a save writes. The loaded save is the one
+                // the load hook recorded, and the written name is the game's
+                // own in commitment mode; a release writes the colony back
+                // into the file it came from instead of one fixed name.
+                try
+                {
+                    state.LoadedSave = LoadedSave.Current;
+                    state.SaveName = SaveNameRules.WrittenName(
+                        Current.Game.Info.permadeathMode, Current.Game.Info.permadeathModeUniqueName);
+                }
+                catch
+                {
+                    state.LoadedSave = "";
+                    state.SaveName = "";
+                }
                 // #3412: the clock is the map's, not the colony's. The game
                 // adds the tile's whole-hour time zone to its start tick, so
                 // report the offset this map runs at instead of letting a
