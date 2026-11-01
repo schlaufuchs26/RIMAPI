@@ -116,6 +116,22 @@ namespace RIMAPI.Tests
                                 Position = new PositionDto { X = 133, Z = 139 },
                             },
                         },
+                        // The machine that holds the room warm (fox ticket
+                        // #3745): colony 15's cooler still stood at its
+                        // default 21 C, so the room never chilled below it.
+                        Thermostats = new System.Collections.Generic.List<RoomThermostatDto>
+                        {
+                            new RoomThermostatDto
+                            {
+                                RoomId = 7,
+                                BuildingId = 4831,
+                                Label = "cooler",
+                                DefName = "Cooler",
+                                Target = 21f,
+                                HasPower = true,
+                                Powered = true,
+                            },
+                        },
                     },
                     settings
                 )
@@ -131,6 +147,17 @@ namespace RIMAPI.Tests
             Assert.Equal("freezer", (string)item["room_label"]);
             Assert.Equal(16f, (float)item["room_temperature"]);
             Assert.Equal(133, (int)item["position"]["x"]);
+
+            // The tool names the machine's target beside the warm room, so a
+            // rename of these keys would leave the rot line reading like a room
+            // without a machine (fox ticket #3745).
+            JObject thermostat = (JObject)json["thermostats"][0];
+            Assert.Equal(7, (int)thermostat["room_id"]);
+            Assert.Equal(4831, (int)thermostat["building_id"]);
+            Assert.Equal("cooler", (string)thermostat["label"]);
+            Assert.Equal(21f, (float)thermostat["target"]);
+            Assert.True((bool)thermostat["has_power"]);
+            Assert.True((bool)thermostat["powered"]);
         }
     }
 }

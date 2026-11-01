@@ -51,7 +51,7 @@ namespace RIMAPI.Helpers
         /// belongs to no room, so a cooler's own cell contributes nothing and
         /// its two sides do the work.
         /// </summary>
-        private static List<RoomTemperatureDto> RoomsBeside(Building building)
+        public static List<RoomTemperatureDto> RoomsBeside(Building building)
         {
             var rooms = new List<RoomTemperatureDto>();
             if (!building.Spawned || building.Map == null) return rooms;

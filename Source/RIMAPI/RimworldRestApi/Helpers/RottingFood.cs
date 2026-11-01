@@ -33,6 +33,7 @@ namespace RIMAPI.Helpers
             var dto = new MapRottingFoodDto();
             int tile = MapHelper.GetMapTileId(map);
             var items = new List<RottingFoodDto>();
+            var warmRooms = new HashSet<int>();
             foreach (Thing thing in FoodThings(map))
             {
                 CompRottable rottable = thing.TryGetComp<CompRottable>();
@@ -51,6 +52,7 @@ namespace RIMAPI.Helpers
                 {
                     continue;
                 }
+                warmRooms.Add(room.ID);
 
                 float hours = RottingFoodRules.ClampHours(
                     DaysUntilRotCalculator.ApproxTicksUntilRot_AssumeTimePassesBy(rottable, tile)
@@ -84,7 +86,45 @@ namespace RIMAPI.Helpers
             dto.WarmestTemperature = dto.Items.Count == 0
                 ? 0f
                 : dto.Items.Max(i => i.RoomTemperature);
+            dto.Thermostats = RoomThermostats(map, warmRooms);
             return dto;
+        }
+
+        /// <summary>
+        /// The coolers and heaters that touch a warm room in the answer (fox
+        /// ticket #3745). The room read names a temperature and the rot read a
+        /// stack, but a warm room reads the same with or without a machine in
+        /// it: colony 15's cooler still stood at its default 21 C, so the room
+        /// never chilled below 21 and the meat would have spoiled beside a
+        /// machine that looked like the fix.
+        /// </summary>
+        private static List<RoomThermostatDto> RoomThermostats(Map map, HashSet<int> roomIds)
+        {
+            var found = new List<RoomThermostatDto>();
+            if (roomIds.Count == 0) return found;
+            foreach (Building building in map.listerBuildings.allBuildingsColonist)
+            {
+                CompTempControl comp = building.TryGetComp<CompTempControl>();
+                if (comp == null) continue;
+                CompPowerTrader power = building.TryGetComp<CompPowerTrader>();
+                foreach (RoomTemperatureDto room in Thermostat.RoomsBeside(building))
+                {
+                    if (!roomIds.Contains(room.Id)) continue;
+                    found.Add(
+                        new RoomThermostatDto
+                        {
+                            RoomId = room.Id,
+                            BuildingId = building.thingIDNumber,
+                            Label = building.Label,
+                            DefName = building.def?.defName,
+                            Target = comp.targetTemperature,
+                            HasPower = power != null,
+                            Powered = power != null && power.PowerOn,
+                        }
+                    );
+                }
+            }
+            return found;
         }
 
         /// <summary>The food stacks to look at: spawned storables plus what a shelf holds.</summary>
