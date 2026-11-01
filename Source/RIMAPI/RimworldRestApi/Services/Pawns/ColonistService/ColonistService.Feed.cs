@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
@@ -40,8 +41,27 @@ namespace RIMAPI.Services
                 if (!FeedPatientUtility.ShouldBeFed(patient))
                 {
                     return ApiResult.Fail(
-                        $"{Describe(patient)} is not hungry: the game hands out a feed job only while "
-                        + "malnutrition is on the patient");
+                        $"{Describe(patient)} does not need feeding right now: the game hands out a feed job only "
+                        + "for a patient who lies in a bed for medical rest");
+                }
+                // The gate behind ticket #3680: the patient had just eaten, so
+                // the game refused the job, and the old answer blamed a missing
+                // meal while 16 meals sat in the colony's own stockpile.
+                if (patient.DevelopmentalStage.Baby())
+                {
+                    return ApiResult.Fail(
+                        $"{Describe(patient)} is a baby: the game feeds a baby at the breast, not with a feed job");
+                }
+                if (!FeedPatientUtility.IsHungry(patient))
+                {
+                    int stacks, meals;
+                    CountStoredMeals(map, patient, out stacks, out meals);
+                    // IsHungry allows the 2-point band above the hungry
+                    // threshold, so the answer names the same boundary the game
+                    // applies.
+                    return ApiResult.Fail(FeedRules.NotHungry(Describe(patient),
+                        patient.needs.food.CurLevelPercentage * 100f,
+                        (patient.needs.food.PercentageThreshHungry + 0.02f) * 100f, meals, stacks));
                 }
 
                 Pawn feeder = feederId > 0 ? FindPawnOnMap(map, feederId) : PickFeeder(map, patient);
@@ -85,8 +105,7 @@ namespace RIMAPI.Services
                     // order JobDriver_FoodFeedPatient reads (the game's own
                     // givers build it this way), and the old call had them the
                     // other way round, so a named meal fed the meal to nobody.
-                    job = JobMaker.MakeJob(JobDefOf.FeedPatient, meal, patient);
-                    job.count = 1;
+                    job = FeedJob(meal, patient, 1);
                 }
                 else
                 {
@@ -113,16 +132,25 @@ namespace RIMAPI.Services
                             $"the game's feed work giver \"{giverName}\" is no scanner, so it cannot be asked for "
                             + "a job");
                     }
-                    if (!giver.HasJobOnThing(feeder, patient, true))
-                    {
-                        return ApiResult.Fail(
-                            $"{Describe(patient)} cannot be fed right now: {FeedRefusal(patient, feeder)}");
-                    }
-                    job = giver.JobOnThing(feeder, patient, true);
+                    job = giver.HasJobOnThing(feeder, patient, true)
+                        ? giver.JobOnThing(feeder, patient, true)
+                        : null;
                     if (job == null)
                     {
-                        return ApiResult.Fail(
-                            $"{Describe(patient)} cannot be fed right now: no meal the patient may eat is in reach");
+                        // Every rule we can name passed, so the giver's own food
+                        // search is what came up empty. Find the stack here and
+                        // say which ones were looked at instead of sending the
+                        // run off to cook food that already exists (#3680).
+                        MealScan scan = ScanMeals(map, feeder, patient);
+                        Thing meal = scan.Best(patient, feeder);
+                        if (meal == null)
+                        {
+                            return ApiResult.Fail($"{Describe(patient)} cannot be fed right now: "
+                                + FeedRules.NoMealRefusal(scan.Refused));
+                        }
+                        job = FeedJob(meal, patient,
+                            FoodUtility.WillIngestStackCountOf(patient, meal.def,
+                                FoodUtility.GetNutrition(patient, meal, meal.def)));
                     }
                 }
 
@@ -140,10 +168,13 @@ namespace RIMAPI.Services
                     Job = job.def.defName,
                     Queued = true,
                 };
-                if (job.targetB.HasThing)
+                // targetA is the meal and targetB the patient in the game's own
+                // job, so the meal has to be read from targetA; the old block
+                // reported the patient's name and id as the meal.
+                if (job.targetA.HasThing)
                 {
-                    result.MealId = job.targetB.Thing.thingIDNumber;
-                    result.Meal = job.targetB.Thing.LabelShort;
+                    result.MealId = job.targetA.Thing.thingIDNumber;
+                    result.Meal = job.targetA.Thing.LabelShort;
                 }
                 Building_Bed bed = patient.CurrentBed();
                 if (bed != null)
@@ -157,6 +188,16 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.ToString());
             }
+        }
+
+        // FeedJob is the game's own job shape: targetA the food, targetB the
+        // patient, which is the order JobDriver_FoodFeedPatient reads. count is
+        // how much of the stack the feeder carries; the driver caps it itself.
+        private static Job FeedJob(Thing meal, Pawn patient, int count)
+        {
+            Job job = JobMaker.MakeJob(JobDefOf.FeedPatient, meal, patient);
+            job.count = count;
+            return job;
         }
 
         // PickFeeder takes the nearest colonist who could feed the patient and
@@ -177,18 +218,111 @@ namespace RIMAPI.Services
                 .FirstOrDefault();
         }
 
-        // FeedRefusal says which of the game's feed conditions failed, in the
-        // game's own terms, because HasJobOnThing answers a bare false. The bed
-        // is checked before this, so it never has to be the answer here.
-        private static string FeedRefusal(Pawn patient, Pawn feeder)
+        // CountStoredMeals counts the proper meals the patient may eat, for the
+        // "not hungry" answer: it tells the run the food exists, so there is
+        // nothing to cook (ticket #3680).
+        private static void CountStoredMeals(Map map, Pawn patient, out int stacks, out int count)
         {
-            if (!feeder.CanReserveAndReach(patient, PathEndMode.ClosestTouch, Danger.Deadly, 1, -1, null, true))
+            stacks = 0;
+            count = 0;
+            foreach (Thing t in map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
             {
-                return $"{Describe(feeder)} cannot reserve or reach him (another pawn has him reserved, or the "
-                    + "path is blocked)";
+                if (!t.Spawned || t.def.ingestible == null) continue;
+                if (t.def.ingestible.preferability < FoodPreferability.MealAwful) continue;
+                if (t.IsForbidden(patient) || t.IsNotFresh() || t.IsDessicated()) continue;
+                if (!patient.WillEat(t, patient, careIfNotAcceptableForTitle: true, allowVenerated: true)) continue;
+                stacks++;
+                count += t.stackCount;
             }
-            return "no meal the patient may eat is in reach: cook one (`bill`), allow a forbidden stack "
-                + "(`allow`), or store meals inside the home area";
+        }
+
+        // MealScan is the map's stored food split into what the patient may eat
+        // and reach and what not, with the reason for each refusal, so a
+        // refusal can name the stacks it considered (ticket #3680).
+        private sealed class MealScan
+        {
+            public readonly List<Thing> Usable = new List<Thing>();
+            public readonly List<MealRefusal> Refused = new List<MealRefusal>();
+
+            public Thing Best(Pawn patient, Pawn feeder)
+            {
+                return Usable
+                    .OrderByDescending(t => FoodUtility.FoodOptimality(patient, t, t.def,
+                        (t.PositionHeld - feeder.Position).LengthHorizontal))
+                    .FirstOrDefault();
+            }
+        }
+
+        private static MealScan ScanMeals(Map map, Pawn feeder, Pawn patient)
+        {
+            MealScan scan = new MealScan();
+            FoodPreferability minPref = MinPreferability(patient);
+            var refused = new List<KeyValuePair<Thing, string>>();
+            // The same thing group the game's own feed search walks: meals, raw
+            // food and corpses, never plants (a feed job does not harvest).
+            foreach (Thing t in map.listerThings.ThingsInGroup(ThingRequestGroup.FoodSourceNotPlantOrTree))
+            {
+                if (!t.Spawned) continue;
+                string reason = MealRefusalReason(t, feeder, patient, minPref);
+                if (reason == null) scan.Usable.Add(t);
+                else refused.Add(new KeyValuePair<Thing, string>(t, reason));
+            }
+            // Meals first: a run reads the first lines, and a forbidden meal
+            // says more than a stack of raw rice.
+            refused.Sort((a, b) => Preferability(b.Key).CompareTo(Preferability(a.Key)));
+            foreach (KeyValuePair<Thing, string> pair in refused)
+            {
+                scan.Refused.Add(new MealRefusal(pair.Key.LabelShort, pair.Key.thingIDNumber, pair.Key.stackCount,
+                    pair.Value));
+            }
+            return scan;
+        }
+
+        // MealRefusalReason states the first of the game's own food conditions
+        // a stack fails, so the list explains the refusal instead of repeating
+        // "no meal in reach". Null means the patient could be fed from it.
+        private static string MealRefusalReason(Thing t, Pawn feeder, Pawn patient, FoodPreferability minPref)
+        {
+            if (!t.def.IsNutritionGivingIngestible) return "is not food";
+            if (!patient.WillEat(t, feeder, careIfNotAcceptableForTitle: true, allowVenerated: true))
+            {
+                return "is ruled out by the patient's diet or food restriction";
+            }
+            if ((int)t.def.ingestible.preferability < (int)minPref)
+            {
+                return "is too unappetising while the patient is only hungry (raw food is for starving patients)";
+            }
+            if (!t.IngestibleNow) return "is not edible right now";
+            if (t.IsNotFresh()) return "is rotten";
+            if (t.IsDessicated()) return "is dried out";
+            if (t.IsForbidden(feeder)) return "is forbidden";
+            if (!feeder.CanReserveAndReach(t, PathEndMode.ClosestTouch, Danger.Deadly))
+            {
+                return "is out of reach or reserved by another pawn";
+            }
+            return null;
+        }
+
+        // MinPreferability mirrors the floor the game's food search applies: an
+        // animal or wild man eats anything, a starving patient raw food, a
+        // merely hungry one at least a bad meal.
+        private static FoodPreferability MinPreferability(Pawn patient)
+        {
+            if (patient.NonHumanlikeOrWildMan()) return FoodPreferability.NeverForNutrition;
+            if (patient.needs.food.CurCategory == HungerCategory.Starving) return FoodPreferability.DesperateOnly;
+            FoodPreferability min = (int)patient.needs.food.CurCategory >= 2
+                ? FoodPreferability.RawBad
+                : FoodPreferability.MealAwful;
+            if (min == FoodPreferability.MealAwful && patient.genes != null && patient.genes.DontMindRawFood)
+            {
+                min = FoodPreferability.RawBad;
+            }
+            return min;
+        }
+
+        private static int Preferability(Thing t)
+        {
+            return t.def.ingestible == null ? 0 : (int)t.def.ingestible.preferability;
         }
     }
 }

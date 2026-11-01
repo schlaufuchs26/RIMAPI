@@ -74,6 +74,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HostilityRules.cs" Link="Linked\HostilityRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />
+    <!-- The words of a feed refusal (fox ticket #3680): the hunger gate and the
+         per-stack reasons are plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FeedRules.cs" Link="Linked\FeedRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkSettingsRules.cs" Link="Linked\WorkSettingsRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PriorityJobRules.cs" Link="Linked\PriorityJobRules.cs" />
     <!-- The area words of `allowed_area` (fox ticket #3645): the matching
