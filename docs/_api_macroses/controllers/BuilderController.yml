@@ -138,8 +138,11 @@ desc: |-
   method: POST
 /api/v1/builder/blueprint:
   desc: |-
-    Places blueprints for a copied area, allowing colonists to construct
-    the buildings.
+    Places a layout of blueprints, allowing colonists to construct the
+    buildings. A def with no construction work (SleepingSpot,
+    AnimalSleepingSpot) is spawned finished instead, the way the game's own
+    build designator places it; those cells are counted in `instantly` as well
+    as in `placed`.
   curl: |-
     **Example:**
     ```bash
@@ -175,6 +178,12 @@ desc: |-
     ```json
     {
         "success":true,
+        "data": {
+            "placed":2,
+            "instantly":1,
+            "dropped":[
+                {"def_name":"Wall","x":83,"z":80,"reason":"CannotPlaceOnTerrain","source":"placement"}]
+        },
         "errors":[],
         "warnings":[],
         "timestamp":"2025-12-31T12:18:40.2019606Z"

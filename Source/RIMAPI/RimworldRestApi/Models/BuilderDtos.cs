@@ -62,6 +62,14 @@ namespace RIMAPI.Models
     {
         public int Placed { get; set; }
 
+        /// <summary>
+        /// How many of the placed things went out finished instead of as a
+        /// blueprint, because their def takes no construction work (a sleeping
+        /// spot). Placed counts them too; this field says so, so the answer
+        /// does not promise a plan that will never be listed (fox ticket #3940).
+        /// </summary>
+        public int Instantly { get; set; }
+
         public List<PlaceRefusalDto> Dropped { get; set; } = new List<PlaceRefusalDto>();
     }
 
