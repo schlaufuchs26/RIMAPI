@@ -271,7 +271,7 @@ namespace RIMAPI.Services
                     BedOutdoors = BedPick.Outdoors(map, bed),
                     BedNoCellReason = BedPick.NoCellReason(map, bed),
                 };
-                Room room = BedPick.BedRoom(map, bed);
+                Room room = BedPick.BedRoom(bed);
                 if (room != null)
                 {
                     result.BedRoomId = room.ID;
@@ -281,7 +281,7 @@ namespace RIMAPI.Services
                 {
                     result.RejectedBedId = rejected.thingIDNumber;
                     result.RejectedBed = rejected.Label;
-                    Room rejectedRoom = BedPick.BedRoom(map, rejected);
+                    Room rejectedRoom = BedPick.BedRoom(rejected);
                     if (rejectedRoom != null) result.RejectedBedRoomLabel = rejectedRoom.GetRoomRoleLabel();
                     result.RejectedBedTempC = rejectedTempC;
                     result.RejectedBedRoomHasFire = rejectedFire;

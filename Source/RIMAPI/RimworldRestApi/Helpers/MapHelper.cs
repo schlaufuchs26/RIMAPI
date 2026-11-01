@@ -1022,6 +1022,14 @@ namespace RIMAPI.Helpers
         /// humanlike ones standing inside (fox ticket #3225): the read carries
         /// no cell list, so a bed was the only occupancy signal, and a room
         /// with a colonist and no bed was invisible to a caller.
+        ///
+        /// A bed is listed under the room the bed itself stands in, not under
+        /// every room that reports it: the game's Room.ContainedBeds is
+        /// ContainedAndAdjacentThings, so a bedroom's bed also turns up in the
+        /// 1-cell doorway room beside it (measured on a live colony, fox ticket
+        /// #3770: three bedrooms, three doorway stubs, each naming the same
+        /// bed). A caller that joins a bed to its room then lands on the stub
+        /// and reads a room of 1 cell with role "none".
         /// </summary>
         private static RoomDto RoomDtoOf(Room room, Map map)
         {
@@ -1034,7 +1042,10 @@ namespace RIMAPI.Helpers
                 TouchesMapEdge = room.TouchesMapEdge,
                 IsPrisonCell = room.IsPrisonCell,
                 IsDoorway = room.IsDoorway,
-                ContainedBedsIds = room.ContainedBeds.Select(b => b.thingIDNumber).ToList(),
+                ContainedBedsIds = room.ContainedBeds
+                    .Where(b => b.GetRoom() == room)
+                    .Select(b => b.thingIDNumber)
+                    .ToList(),
                 ContainedPawnsIds = map.mapPawns.AllPawnsSpawned
                     .Where(p => p.RaceProps.Humanlike && p.GetRoom() == room)
                     .Select(p => p.thingIDNumber)

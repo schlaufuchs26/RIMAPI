@@ -48,7 +48,7 @@ namespace RIMAPI.Helpers
         /// </summary>
         public static bool IsCell(Map map, Building_Bed bed)
         {
-            Room room = BedRoom(map, bed);
+            Room room = BedRoom(bed);
             return room != null && room.IsPrisonCell;
         }
 
@@ -58,18 +58,21 @@ namespace RIMAPI.Helpers
         /// </summary>
         public static string NoCellReason(Map map, Building_Bed bed)
         {
-            Room room = BedRoom(map, bed);
+            Room room = BedRoom(bed);
             return BedSafety.NoCellReason(room != null, Outdoors(map, bed), room != null && room.IsPrisonCell) ?? "";
         }
 
         /// <summary>
-        /// The room the bed stands in: the room read reports its beds, the bed
-        /// itself reports no room. Null for a bed whose cell belongs to no
-        /// region the room grid knows.
+        /// The room the bed stands in: the bed itself reports it (fox ticket
+        /// #3770). Scanning AllRooms for one whose ContainedBeds names the bed
+        /// is not the same question: the game's ContainedBeds is
+        /// ContainedAndAdjacentThings, so the doorway room beside a bedroom
+        /// names the same bed, and whichever room comes first in the list wins.
+        /// Null for a bed whose cell belongs to no region the room grid knows.
         /// </summary>
-        public static Room BedRoom(Map map, Building_Bed bed)
+        public static Room BedRoom(Building_Bed bed)
         {
-            return map.regionGrid.AllRooms.FirstOrDefault(r => r.ContainedBeds.Contains(bed));
+            return bed.GetRoom();
         }
 
         /// <summary>
@@ -101,7 +104,7 @@ namespace RIMAPI.Helpers
         /// </summary>
         public static bool RoomHasFire(Map map, Building_Bed bed)
         {
-            Room room = BedRoom(map, bed);
+            Room room = BedRoom(bed);
             if (room == null) return false;
             return map.listerThings.ThingsOfDef(ThingDefOf.Fire).Any(f => f.GetRoom() == room);
         }
@@ -190,7 +193,7 @@ namespace RIMAPI.Helpers
         /// </summary>
         public static CellRefusal CellRefusalOf(Map map, Building_Bed bed)
         {
-            Room room = BedRoom(map, bed);
+            Room room = BedRoom(bed);
             CellRefusal noCell = BedSafety.NotPrisonCell(
                 room != null,
                 room != null && room.TouchesMapEdge,

@@ -147,7 +147,7 @@ namespace RIMAPI.Services
                 };
                 if (bed != null)
                 {
-                    Room room = BedPick.BedRoom(map, bed);
+                    Room room = BedPick.BedRoom(bed);
                     result.BedId = bed.thingIDNumber;
                     result.Bed = bed.Label;
                     result.BedForPrisoners = bed.ForPrisoners;
@@ -164,7 +164,7 @@ namespace RIMAPI.Services
                 {
                     result.RejectedBedId = rejected.thingIDNumber;
                     result.RejectedBed = rejected.Label;
-                    Room rejectedRoom = BedPick.BedRoom(map, rejected);
+                    Room rejectedRoom = BedPick.BedRoom(rejected);
                     if (rejectedRoom != null) result.RejectedBedRoomLabel = rejectedRoom.GetRoomRoleLabel();
                     result.RejectedBedTempC = rejectedTempC;
                     result.RejectedBedRoomHasFire = rejectedFire;
