@@ -20,14 +20,32 @@ namespace RIMAPI.Services
         // ---- the game's own dev-action menu (ticket #3799) ------------------
 
         /// <summary>
+        /// The whole menu, walked once and kept for the game's lifetime
+        /// (ticket #3946). The walk costs about 8 s for 60,456 entries, so a
+        /// filtered listing that matched little used to pay it again on the
+        /// next call; now only the first call does.
+        /// </summary>
+        private static readonly MenuCache<ActionMenu> CachedMenu = new MenuCache<ActionMenu>();
+
+        /// <summary>
+        /// Drops the cached menu (ticket #3946). The game builds the menu from
+        /// its loaded defs, so another colony (a load, a new game, a return to
+        /// the main menu) may hold a different menu; the game-state hooks call
+        /// this.
+        /// </summary>
+        internal static void ForgetActionMenu()
+        {
+            CachedMenu.Invalidate();
+        }
+
+        /// <summary>
         /// Lists the entries of the game's dev-action menu, the tools a player
         /// finds under the debug dialog's Actions tab, so a check can look up
         /// what exists before it needs it (ticket #3799).
         ///
-        /// The walk stops as soon as it holds as many matches as the answer
-        /// lists (ticket #3855): the whole menu costs about 7 s and holds more
-        /// than the 20,000-entry cap, so a filter that only walked to the cap
-        /// could miss an entry the game does have.
+        /// The listing collects as many matches as the answer lists, but reads
+        /// the whole cached menu (ticket #3946), so it can say exactly how many
+        /// entries the menu holds and how many match the filter.
         /// </summary>
         private DevActionResultDto ListDebugActions(DevActionRequest request)
         {
@@ -54,45 +72,36 @@ namespace RIMAPI.Services
         }
 
         /// <summary>
-        /// What the listing walked and what it left out, so a caller can tell a
-        /// menu with three entries from one whose walk stopped at three matches.
+        /// What the menu holds, how much of it matches, and what this answer
+        /// lists, so a caller can tell a menu with three entries from one whose
+        /// answer lists three of many.
         /// </summary>
         private static string ListingDetail(string filter, DebugActionWalk walk)
         {
-            string filterNote = filter.Length == 0 ? "" : ", " + walk.Nodes.Count + " matching \"" + filter + "\"";
-            if (walk.Complete)
-            {
-                return "the dev action menu holds "
-                    + walk.Walked
-                    + " entries"
-                    + filterNote
-                    + "; this answer lists "
-                    + walk.Nodes.Count;
-            }
-            if (walk.Capped)
-            {
-                return "the dev action menu holds at least "
-                    + walk.Walked
-                    + " entries (the walk stopped at the "
+            string menu = walk.Capped
+                ? "the dev action menu is past the "
                     + DevActionRules.MaxNodes
-                    + "-entry cap)"
-                    + filterNote
-                    + "; this answer lists "
-                    + walk.Nodes.Count;
+                    + "-entry cap, so the walk searched "
+                    + walk.Walked
+                    + " of its entries"
+                : "the dev action menu holds " + walk.Walked + " entries";
+            if (filter.Length > 0)
+            {
+                menu += ", " + walk.Matches + " matching \"" + filter + "\"";
             }
+            string listed = "this answer lists " + walk.Nodes.Count;
             if (filter.Length == 0)
             {
-                return "the dev action menu has more than the "
-                    + walk.Nodes.Count
-                    + " entries this answer lists; pass `name` to search the rest";
+                return walk.Walked > walk.Nodes.Count
+                    ? menu + "; " + listed + "; pass `name` to search the rest"
+                    : menu + "; " + listed;
             }
-            return "the walk stopped after "
-                + walk.Walked
-                + " entries, once it had "
-                + walk.Nodes.Count
-                + " matching \""
-                + filter
-                + "\"; more entries may match, so narrow the filter for the rest";
+            return walk.Matches > walk.Nodes.Count
+                ? menu
+                    + "; "
+                    + listed
+                    + " of them, so narrow the filter or raise `count` for the rest"
+                : menu + "; " + listed;
         }
 
         /// <summary>
@@ -105,8 +114,8 @@ namespace RIMAPI.Services
         {
             string wanted = DevActionRules.ActionPath(request.Name);
             // Six matches are enough: one is a hit and two already make the call
-            // ambiguous, so the walk stops there instead of building the whole
-            // menu for a refusal that names five (ticket #3855).
+            // ambiguous, so the answer names five instead of listing the menu
+            // (ticket #3855). The menu itself is already cached (#3946).
             DebugActionWalk walk = WalkDebugActions(
                 path => DevActionRules.MatchesPath(path, wanted),
                 AmbiguousAt
@@ -124,7 +133,11 @@ namespace RIMAPI.Services
                             : ", e.g. " + string.Join(", ", walk.Samples.Select(n => n.Path)))
                         + (walk.Complete
                             ? ""
-                            : " (the walk stopped after " + walk.Walked + " of the menu's entries)")
+                            : " (the menu is past the "
+                                + DevActionRules.MaxNodes
+                                + "-entry cap, so the walk searched "
+                                + walk.Walked
+                                + " of its entries)")
                 );
             }
             if (hits.Count > 1)
@@ -212,83 +225,112 @@ namespace RIMAPI.Services
         private const int SamplePaths = 3;
 
         /// <summary>
-        /// One walk of the dev-action menu (ticket #3855): the entries that
-        /// matched, the first few entries it met, and whether it reached the
-        /// menu's end. The whole menu costs about 7 s, so a caller that has what
-        /// it asked for stops the walk instead of building the rest.
+        /// One read of the cached dev-action menu (tickets #3855, #3946): the
+        /// entries whose path matched, the first few entries it met, and what
+        /// the menu holds. The listing collects at most `want` matches, but the
+        /// menu is already in memory, so the counts are exact.
         /// </summary>
         private sealed class DebugActionWalk
         {
             public readonly List<DebugActionNode> Nodes = new List<DebugActionNode>();
             public readonly List<DebugActionNode> Samples = new List<DebugActionNode>();
 
-            /// <summary>Entries the walk visited; a lower bound when Complete is false.</summary>
+            /// <summary>Entries the menu holds, i.e. the cached walk's length.</summary>
             public int Walked;
 
-            /// <summary>True when the walk reached the end of the menu.</summary>
+            /// <summary>Entries of the whole menu whose path matched the filter.</summary>
+            public int Matches;
+
+            /// <summary>True when the cached walk reached the end of the menu.</summary>
             public bool Complete = true;
 
-            /// <summary>True when the node cap, not a full set of matches, stopped the walk.</summary>
+            /// <summary>True when the node cap, not the menu's end, stopped the build.</summary>
             public bool Capped;
         }
 
         /// <summary>
-        /// The dev-action menu as the game builds it for the debug dialog: one
-        /// node per attribute-declared action, three levels deep so a leaf like
-        /// Actions/Spawning/WildMan is reachable by path. The walk ends as soon
-        /// as it holds `want` matching entries.
+        /// One read of the cached menu: the entries whose path matched, the
+        /// first few entries, and what the menu holds. Only the first call
+        /// walks the game's menu (ticket #3946); every later one filters the
+        /// list it left behind.
         /// </summary>
         private static DebugActionWalk WalkDebugActions(Func<string, bool> match, int want)
         {
-            DebugActionNode root = new DebugActionNode("root");
-            new DebugTabMenu_Actions(DebugTabMenuDefOf.Actions, null, root).InitActions(root);
-            DebugActionWalk walk = new DebugActionWalk();
-            if (CollectNodes(root, 0, walk, match, want))
+            ActionMenu menu = CachedMenu.Get(BuildActionMenu);
+            DebugActionWalk walk = new DebugActionWalk
             {
-                walk.Complete = false;
+                Walked = menu.Nodes.Count,
+                Complete = !menu.Capped,
+                Capped = menu.Capped,
+            };
+            foreach (DebugActionNode node in menu.Nodes)
+            {
+                if (walk.Samples.Count < SamplePaths)
+                {
+                    walk.Samples.Add(node);
+                }
+                if (!match(node.Path)) continue;
+                walk.Matches++;
+                if (walk.Nodes.Count < want)
+                {
+                    walk.Nodes.Add(node);
+                }
             }
             return walk;
         }
 
         /// <summary>
-        /// Visits one node and its sub-tree; true when the walk stopped early,
-        /// either with the matches it wanted or at the node cap.
+        /// The dev-action menu as the game builds it for the debug dialog: one
+        /// node per attribute-declared action, three levels deep so a leaf like
+        /// Actions/Spawning/WildMan is reachable by path. This is the expensive
+        /// half (ticket #3946): CachedMenu keeps the result for the game's
+        /// lifetime.
+        /// </summary>
+        private static ActionMenu BuildActionMenu()
+        {
+            DebugActionNode root = new DebugActionNode("root");
+            new DebugTabMenu_Actions(DebugTabMenuDefOf.Actions, null, root).InitActions(root);
+            ActionMenu menu = new ActionMenu();
+            if (CollectNodes(root, 0, menu.Nodes))
+            {
+                menu.Capped = true;
+            }
+            return menu;
+        }
+
+        /// <summary>The built menu: its entries in walk order, and whether the cap stopped the walk.</summary>
+        private sealed class ActionMenu
+        {
+            public readonly List<DebugActionNode> Nodes = new List<DebugActionNode>();
+            public bool Capped;
+        }
+
+        /// <summary>
+        /// Adds one node and its sub-tree to the list; true when the node cap
+        /// stopped the walk.
         /// </summary>
         private static bool CollectNodes(
             DebugActionNode node,
             int depth,
-            DebugActionWalk walk,
-            Func<string, bool> match,
-            int want
+            List<DebugActionNode> nodes
         )
         {
             const int maxDepth = 4;
-            int maxNodes = DevActionRules.MaxNodes;
-            if (depth < maxDepth && walk.Walked < maxNodes)
+            if (depth < maxDepth && nodes.Count < DevActionRules.MaxNodes)
             {
                 node.TrySetupChildren();
             }
             if (node.parent != null)
             {
-                walk.Walked++;
-                if (walk.Samples.Count < SamplePaths)
-                {
-                    walk.Samples.Add(node);
-                }
-                if (match(node.Path))
-                {
-                    walk.Nodes.Add(node);
-                    if (walk.Nodes.Count >= want) return true;
-                }
+                nodes.Add(node);
             }
-            if (depth >= maxDepth || walk.Walked >= maxNodes)
+            if (depth >= maxDepth || nodes.Count >= DevActionRules.MaxNodes)
             {
-                walk.Capped = walk.Walked >= maxNodes;
-                return walk.Capped;
+                return nodes.Count >= DevActionRules.MaxNodes;
             }
             foreach (DebugActionNode child in node.children)
             {
-                if (CollectNodes(child, depth + 1, walk, match, want)) return true;
+                if (CollectNodes(child, depth + 1, nodes)) return true;
             }
             return false;
         }

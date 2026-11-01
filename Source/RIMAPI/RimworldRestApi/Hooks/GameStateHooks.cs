@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using RIMAPI.Helpers;
+using RIMAPI.Services;
 using Verse;
 
 namespace RimworldRestApi.Hooks
@@ -60,6 +61,10 @@ namespace RimworldRestApi.Hooks
                 // written by the game's tick, and the loader's own tick still
                 // reads 0 W produced (fox ticket #3781).
                 LoadedTick.Record(Find.TickManager?.TicksGame ?? 0);
+                // The dev-action menu is built from the loaded defs, so the
+                // one the previous colony walked is not this colony's menu
+                // (fox ticket #3946).
+                DevActionService.ForgetActionMenu();
                 SendStateEvent("game_loaded", new
                 {
                     map_count = Find.Maps?.Count ?? 0,
@@ -80,6 +85,9 @@ namespace RimworldRestApi.Hooks
                 LoadedSave.Clear();
                 // A new colony starts at its own tick 0 (fox ticket #3781).
                 LoadedTick.Record(Find.TickManager?.TicksGame ?? 0);
+                // A new colony is a different game, so the menu the last one
+                // walked is dropped (fox ticket #3946).
+                DevActionService.ForgetActionMenu();
                 SendStateEvent("new_game_created", new
                 {
                     scenario = Find.Scenario?.name,
@@ -97,8 +105,10 @@ namespace RimworldRestApi.Hooks
             {
                 // Prefix is better here because once GoToMainMenu finishes, the game state is cleared.
                 // The colony is gone, so the save it was read from is no
-                // longer what a release would write (#3603).
+                // longer what a release would write (#3603), and the dev-action
+                // menu it walked goes with it (fox ticket #3946).
                 LoadedSave.Clear();
+                DevActionService.ForgetActionMenu();
                 SendStateEvent("exit_to_menu", new
                 {
                     reason = "User requested main menu"

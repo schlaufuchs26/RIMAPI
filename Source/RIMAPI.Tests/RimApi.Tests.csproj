@@ -182,5 +182,9 @@
          own build designator places it (fox ticket #3940: the sleeping spot
          that waited for a builder). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BlueprintPlacement.cs" Link="Linked\BlueprintPlacement.cs" />
+    <!-- The dev-action menu walked once per game (fox ticket #3946): the walk
+         costs about 8 s for 60,456 entries, so the cache is plain C# and the
+         test project compiles it. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\MenuCache.cs" Link="Linked\MenuCache.cs" />
   </ItemGroup>
 </Project>
