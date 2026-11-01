@@ -59,6 +59,12 @@ namespace RIMAPI.Models
     // fueled generator, a torch). HasFuel is the component's own verdict, so a
     // caller never has to compare Fuel against zero itself; MealBills tells a
     // stove from a lamp, because only a stove's bills make meals.
+    //
+    // RefuelAvailable is the game's own answer to "would a colonist refill this
+    // tank now" (WorkGiver_Refuel's check, fox ticket #3731): an empty tank
+    // nobody refuels is the one worth a line, and RefuelBlocked carries the
+    // game's refusal for it ("No fuel to refuel (wood)"). Only filled for an
+    // empty tank.
     public class FuelBuildingDto
     {
         public int Id { get; set; }
@@ -68,6 +74,8 @@ namespace RIMAPI.Models
         public float FuelCapacity { get; set; }
         public string FuelType { get; set; }
         public bool HasFuel { get; set; }
+        public bool RefuelAvailable { get; set; }
+        public string RefuelBlocked { get; set; }
         public int Bills { get; set; }
         public int MealBills { get; set; }
     }

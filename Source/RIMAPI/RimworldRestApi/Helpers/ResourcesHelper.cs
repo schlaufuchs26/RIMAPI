@@ -7,6 +7,7 @@ using RIMAPI.Models;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI;
 
 namespace RIMAPI.Helpers
 {
@@ -103,6 +104,16 @@ namespace RIMAPI.Helpers
                     }
                 }
 
+                // An empty tank is only news when nobody is on the way to
+                // refill it (fox ticket #3731). The game's own check is
+                // WorkGiver_Refuel's, so a tank the colony is already fetching
+                // wood for reads as covered, and a tank the game refuses to
+                // refuel carries the game's reason.
+                bool refuelAvailable = false;
+                string refuelBlocked = null;
+                if (!comp.HasFuel)
+                    refuelAvailable = AnyColonistWouldRefuel(map, building, out refuelBlocked);
+
                 summary.Buildings.Add(new FuelBuildingDto
                 {
                     Id = building.thingIDNumber,
@@ -112,6 +123,8 @@ namespace RIMAPI.Helpers
                     FuelCapacity = comp.Props?.fuelCapacity ?? 0f,
                     FuelType = fuelType,
                     HasFuel = comp.HasFuel,
+                    RefuelAvailable = refuelAvailable,
+                    RefuelBlocked = refuelBlocked,
                     Bills = bills,
                     MealBills = mealBills,
                 });
@@ -135,6 +148,40 @@ namespace RIMAPI.Helpers
             }
 
             return summary;
+        }
+
+        // AnyColonistWouldRefuel answers "would the colony refill this tank by
+        // itself" with the game's own gate: RefuelWorkGiverUtility.CanRefuel is
+        // what WorkGiver_Refuel asks before it hands out the job, so a false
+        // answer means the tank stays empty until a player does something
+        // (fox ticket #3731). The refusal is the game's own wording, e.g.
+        // "No fuel to refuel (wood)".
+        //
+        // CanRefuel writes its refusal into JobFailReason, a process-wide
+        // string the UI shows; the previous value is put back so a read does
+        // not leave a stale reason behind.
+        private static bool AnyColonistWouldRefuel(Map map, Thing building, out string blocked)
+        {
+            blocked = null;
+            string previousReason = JobFailReason.Reason;
+            try
+            {
+                foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
+                {
+                    if (RefuelWorkGiverUtility.CanRefuel(pawn, building, false))
+                        return true;
+                    if (blocked == null && !string.IsNullOrEmpty(JobFailReason.Reason))
+                        blocked = JobFailReason.Reason;
+                }
+                return false;
+            }
+            finally
+            {
+                if (previousReason == null)
+                    JobFailReason.Clear();
+                else
+                    JobFailReason.Is(previousReason);
+            }
         }
 
         public static ResourcesFoodSummaryDto GetResourcesFoodSummary(Map map, List<Thing> allItems)
