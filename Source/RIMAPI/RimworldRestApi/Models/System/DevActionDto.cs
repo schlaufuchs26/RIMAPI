@@ -33,6 +33,13 @@ namespace RIMAPI.Models
         /// <summary>How many items or animals to place.</summary>
         public int? Count { get; set; }
 
+        /// <summary>
+        /// `debug_actions` only: how many matching entries to skip before the
+        /// answer starts listing, so a caller pages through a menu instead of
+        /// guessing substrings (ticket #3947). Unset starts at the first match.
+        /// </summary>
+        public int? Offset { get; set; }
+
         /// <summary>Ticks to run by hand.</summary>
         public int? Ticks { get; set; }
 

@@ -45,15 +45,19 @@ namespace RIMAPI.Services
         ///
         /// The listing collects as many matches as the answer lists, but reads
         /// the whole cached menu (ticket #3946), so it can say exactly how many
-        /// entries the menu holds and how many match the filter.
+        /// entries the menu holds and how many match the filter. `offset` skips
+        /// the matches an earlier answer already printed, so a caller pages
+        /// through the menu instead of guessing substrings (ticket #3947).
         /// </summary>
         private DevActionResultDto ListDebugActions(DevActionRequest request)
         {
             string filter = DevActionRules.ActionPath(request.Name);
             int limit = DevActionRules.ListLimit(request.Count);
+            int skip = DevActionRules.ListOffset(request.Offset);
             DebugActionWalk walk = WalkDebugActions(
                 path => DevActionRules.MatchesFilter(path, filter),
-                limit
+                limit,
+                skip
             );
             DevActionResultDto result = new DevActionResultDto
             {
@@ -67,16 +71,17 @@ namespace RIMAPI.Services
                     Nodes = walk.Nodes.Select(DescribeNode).ToList(),
                 },
             };
-            result.Detail = ListingDetail(filter, walk);
+            result.Detail = ListingDetail(filter, walk, skip);
             return result;
         }
 
         /// <summary>
-        /// What the menu holds, how much of it matches, and what this answer
-        /// lists, so a caller can tell a menu with three entries from one whose
-        /// answer lists three of many.
+        /// What the menu holds, how much of it matches, and which part of that
+        /// this answer lists, so a caller can tell a menu with three entries
+        /// from one whose answer lists three of many, and knows the `offset`
+        /// that reaches the next page (ticket #3947).
         /// </summary>
-        private static string ListingDetail(string filter, DebugActionWalk walk)
+        private static string ListingDetail(string filter, DebugActionWalk walk, int skip)
         {
             string menu = walk.Capped
                 ? "the dev action menu is past the "
@@ -89,19 +94,35 @@ namespace RIMAPI.Services
             {
                 menu += ", " + walk.Matches + " matching \"" + filter + "\"";
             }
-            string listed = "this answer lists " + walk.Nodes.Count;
-            if (filter.Length == 0)
+            string listed = ListingRange(walk.Nodes.Count, skip);
+            int next = skip + walk.Nodes.Count;
+            if (next >= walk.Matches)
             {
-                return walk.Walked > walk.Nodes.Count
-                    ? menu + "; " + listed + "; pass `name` to search the rest"
-                    : menu + "; " + listed;
+                return menu + "; " + listed;
             }
-            return walk.Matches > walk.Nodes.Count
-                ? menu
-                    + "; "
-                    + listed
-                    + " of them, so narrow the filter or raise `count` for the rest"
-                : menu + "; " + listed;
+            string tail = filter.Length == 0
+                ? "; pass `offset=" + next + "` for the rest, or `name` to search"
+                : "; pass `offset=" + next + "` for the rest, or narrow the filter";
+            return menu + "; " + listed + tail;
+        }
+
+        /// <summary>
+        /// The part of the matches one answer holds: its count from the start,
+        /// or the range it covers when the call skipped earlier ones.
+        /// </summary>
+        private static string ListingRange(int shown, int skip)
+        {
+            if (shown == 0)
+            {
+                return skip == 0
+                    ? "this answer lists none"
+                    : "nothing matches past the first " + skip;
+            }
+            if (skip == 0)
+            {
+                return "this answer lists " + shown;
+            }
+            return "this answer lists matches " + (skip + 1) + " to " + (skip + shown);
         }
 
         /// <summary>
@@ -118,7 +139,8 @@ namespace RIMAPI.Services
             // (ticket #3855). The menu itself is already cached (#3946).
             DebugActionWalk walk = WalkDebugActions(
                 path => DevActionRules.MatchesPath(path, wanted),
-                AmbiguousAt
+                AmbiguousAt,
+                0
             );
             List<DebugActionNode> nodes = walk.Nodes;
             List<DebugActionNode> hits = nodes;
@@ -252,9 +274,11 @@ namespace RIMAPI.Services
         /// One read of the cached menu: the entries whose path matched, the
         /// first few entries, and what the menu holds. Only the first call
         /// walks the game's menu (ticket #3946); every later one filters the
-        /// list it left behind.
+        /// list it left behind. `skip` drops the matches an earlier page
+        /// printed, so a caller reaches the next page without a filter
+        /// (ticket #3947).
         /// </summary>
-        private static DebugActionWalk WalkDebugActions(Func<string, bool> match, int want)
+        private static DebugActionWalk WalkDebugActions(Func<string, bool> match, int want, int skip)
         {
             ActionMenu menu = CachedMenu.Get(BuildActionMenu);
             DebugActionWalk walk = new DebugActionWalk
@@ -263,6 +287,7 @@ namespace RIMAPI.Services
                 Complete = !menu.Capped,
                 Capped = menu.Capped,
             };
+            int seen = 0;
             foreach (DebugActionNode node in menu.Nodes)
             {
                 if (walk.Samples.Count < SamplePaths)
@@ -271,6 +296,7 @@ namespace RIMAPI.Services
                 }
                 if (!match(node.Path)) continue;
                 walk.Matches++;
+                if (seen++ < skip) continue;
                 if (walk.Nodes.Count < want)
                 {
                     walk.Nodes.Add(node);

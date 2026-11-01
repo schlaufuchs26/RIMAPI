@@ -197,6 +197,18 @@ namespace RIMAPI.Tests
             Assert.Equal(DevActionRules.MaxListed, DevActionRules.ListLimit(DevActionRules.MaxListed + 1));
         }
 
+        // A listing pages through the menu: `offset` skips the matches an
+        // earlier answer already printed, so a caller reaches a later entry
+        // without guessing a substring (ticket #3947).
+        [Fact]
+        public void AListingSkipsTheMatchesAnEarlierPagePrinted()
+        {
+            Assert.Equal(0, DevActionRules.ListOffset(null));
+            Assert.Equal(0, DevActionRules.ListOffset(0));
+            Assert.Equal(0, DevActionRules.ListOffset(-5));
+            Assert.Equal(100, DevActionRules.ListOffset(100));
+        }
+
         // A dev entry that needs something a call cannot give it runs and
         // changes nothing, and used to answer "ran X" all the same (ticket
         // #3922). The stamps around the call are what tells the two apart.

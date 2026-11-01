@@ -316,6 +316,17 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// How many matching entries a listing skips before it starts: the
+        /// request's `offset`, else 0. A negative offset is a typo, and the
+        /// first page is what a caller meant (ticket #3947).
+        /// </summary>
+        public static int ListOffset(int? offset)
+        {
+            if (offset == null || offset < 1) return 0;
+            return offset.Value;
+        }
+
+        /// <summary>
         /// True when a menu entry belongs in a filtered listing: the filter is a
         /// substring of its path, either separator and either case. An empty
         /// filter matches every entry.
