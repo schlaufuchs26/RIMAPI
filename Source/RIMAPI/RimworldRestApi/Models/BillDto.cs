@@ -41,6 +41,14 @@ namespace RIMAPI.Models
         public int? SlotGroupId { get; set; }
         public List<string> AllowedMaterials { get; set; } = new List<string>();
         public List<string> AvailableMaterials { get; set; } = new List<string>();
+        // HumanlikeMaterials are the defNames among AvailableMaterials whose
+        // corpse belonged to a humanlike pawn, which is the game's own test
+        // (ThingDefGenerator_Corpses files them under CorpsesHumanlike, and
+        // Verse.Corpse.ButcherProducts records ButcheredHuman for them). A
+        // butcher bill that takes one costs every colonist "I butchered
+        // humanlike -12", so the tool refuses such a filter unless the call
+        // names the corpse itself (fox ticket #3978).
+        public List<string> HumanlikeMaterials { get; set; } = new List<string>();
         // What the bill is doing, in the game's own terms (ticket #3306):
         // State is one of running, suspended, paused, target met, missing
         // ingredients, no colonist assigned or no worker with the skill, and

@@ -132,6 +132,7 @@ namespace RIMAPI.Tests
                 "best_skill",
                 "best_skill_pawn",
                 "hp_range",
+                "humanlike_materials",
                 "include_equipped",
                 "include_tainted",
                 "ingredient_search_radius",
