@@ -658,6 +658,13 @@ namespace RIMAPI.Services
         private static string BodyText(Letter letter)
         {
             var body = ArchiveText.LetterBody(letter);
+            // A quest offer's own text only announces the offer and names the
+            // quest; the quest's own description is what says which threat and
+            // which game condition it brings, so the read carries both
+            // (ticket #3881).
+            var offer = letter as ChoiceLetter;
+            if (offer != null && offer.quest != null)
+                body = QuestOfferText.Body(body, ArchiveText.Resolve(offer.quest.description));
             if (string.IsNullOrEmpty(body))
                 return "";
             body = body.Replace("\r", "").Trim();
