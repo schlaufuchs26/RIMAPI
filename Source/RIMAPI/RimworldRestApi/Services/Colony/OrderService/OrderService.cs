@@ -31,6 +31,11 @@ public partial class OrderService : IOrderService
         // prevented counts the plants the game refuses to cut, which the cut
         // order leaves standing (fox ticket #4023).
         int prevented = 0;
+        // crops counts the colony's own sown plants a cut marks: the game's
+        // "Cut plants" order destroys a rice field as readily as wild grass,
+        // so a sweep meant to clear ground has to say when it takes the food
+        // (fox ticket #4023).
+        int crops = 0;
         // The entries the call added, in the shape the designations read
         // sends, so a caller sees what it marked instead of only how many
         // (fox ticket #3530).
@@ -117,6 +122,7 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(plant, DesignationDefOf.CutPlant));
                     count++;
+                    if (plant.sown) crops++;
                     designated.Add(DesignationEntry.Make(DesignationDefOf.CutPlant.defName, DesignationDefOf.CutPlant.label,
                         true, plant.Position.x, plant.Position.z, plant.thingIDNumber, plant.def.defName, plant.LabelShort));
                 }
@@ -244,6 +250,6 @@ public partial class OrderService : IOrderService
         // covers, so a sweep that marked nothing can say why. Fox ticket #3648
         // adds the products the marked plants yield, so the caller can ask the
         // storage read whether the harvest has anywhere to go.
-        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, prevented, workers, refusals, harvest_thing_defs = harvestDefs });
+        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, prevented, crops, workers, refusals, harvest_thing_defs = harvestDefs });
     }
 }
