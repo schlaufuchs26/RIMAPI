@@ -91,6 +91,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AllowedAreaRules.cs" Link="Linked\AllowedAreaRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\AnimalDto.cs" Link="Linked\AnimalDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualDutyHelper.cs" Link="Linked\RitualDutyHelper.cs" />
+    <!-- The refusal of a start that found no place (fox ticket #3676): with no
+         organizer the sentence names pawn_id, the field that supplies one. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualTargetRefusal.cs" Link="Linked\RitualTargetRefusal.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ArchiveNoise.cs" Link="Linked\ArchiveNoise.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\IdeoDtos.cs" Link="Linked\IdeoDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />

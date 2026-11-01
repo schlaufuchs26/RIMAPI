@@ -315,8 +315,7 @@ namespace RIMAPI.Services
 
                 if (!target.IsValid)
                 {
-                    result.Reason = "no target: pass the cell the ritual is held at (x1/z1) or the building "
-                        + "or spot (target_id), as the Begin dialog asks";
+                    result.Reason = RitualTargetRefusal.Text(organizer != null);
                     return ApiResult<RitualStartResultDto>.Ok(result);
                 }
                 string why = ritual.behavior.CanStartRitualNow(target, ritual, null, null);
