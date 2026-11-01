@@ -66,6 +66,14 @@ namespace RIMAPI.Helpers
             /// <summary>The pawn is not healthy enough for a shuttle that asks for it.</summary>
             public bool PawnUnhealthy;
 
+            /// <summary>
+            /// The colonist who carries a pawn that cannot walk, empty when
+            /// nobody can. The game's right-click offers "Carry to shuttle" for
+            /// a downed pawn, and a hospitality lodger is often paralyzed, so
+            /// the order is the same lever with a carrier in front.
+            /// </summary>
+            public string Carrier = "";
+
             /// <summary>The pawn is younger than the shuttle's minimum age.</summary>
             public bool BelowMinAge;
 
@@ -123,9 +131,13 @@ namespace RIMAPI.Helpers
                     + ": he is neither one of the people it waits for nor one it accepts";
             }
             if (state.PawnDowned)
+            {
+                if (!string.IsNullOrEmpty(state.Carrier)) return null;
                 return Named(state.Pawn, state.PawnId)
                     + " is down and cannot walk to the shuttle at " + state.Cell
-                    + ": a downed pawn is carried to a bed, not boarded";
+                    + ", and no colonist can carry him there: he needs a colonist who can haul, "
+                    + "who can reach him and whom the shuttle takes";
+            }
             if (!state.CanReach)
                 return Named(state.Pawn, state.PawnId) + " cannot reach the shuttle at " + state.Cell
                     + ": the game finds no path to it";

@@ -62,7 +62,13 @@ namespace RIMAPI.Services
                         $"{shuttle.Label} (id {shuttle.thingIDNumber}) is not a shuttle: it carries no shuttle component");
 
                 bool contained = transporter.innerContainer.Contains(pawn);
-                ShuttleRules.State state = StateOf(shuttle, comp, transporter, pawn, contained);
+                // A pawn who cannot walk is carried in, exactly as the game's
+                // own "Carry to shuttle" option does it: a hospitality lodger is
+                // often paralyzed, and that is the state the ticket lost the
+                // reward pawn in.
+                Pawn carrier = pawn.Downed ? CarrierFor(pawn, shuttle) : null;
+                ShuttleRules.State state = StateOf(shuttle, comp, transporter, pawn, contained,
+                    carrier != null ? carrier.LabelShortCap : "");
                 if (!ShuttleRules.NothingToDo(state))
                 {
                     string problem = ShuttleRules.Problem(state);
@@ -77,8 +83,18 @@ namespace RIMAPI.Services
                     // The float menu's own two steps, in its order.
                     if (!transporter.LoadingInProgressOrReadyToLaunch)
                         TransporterUtility.InitiateLoading(Gen.YieldSingle(transporter));
-                    Job job = JobMaker.MakeJob(JobDefOf.EnterTransporter, shuttle);
-                    tookJob = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                    if (carrier != null)
+                    {
+                        Job carry = JobMaker.MakeJob(JobDefOf.HaulToTransporter, pawn, shuttle);
+                        carry.ignoreForbidden = true;
+                        carry.count = 1;
+                        tookJob = carrier.jobs.TryTakeOrderedJob(carry, JobTag.Misc);
+                    }
+                    else
+                    {
+                        Job job = JobMaker.MakeJob(JobDefOf.EnterTransporter, shuttle);
+                        tookJob = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                    }
                 }
 
                 // Read the game back instead of acknowledging: a job the game
@@ -101,6 +117,7 @@ namespace RIMAPI.Services
                     Position = PositionOf(shuttle),
                     AlreadyAboard = contained,
                     TookJob = tookJob,
+                    CarriedBy = carrier != null ? carrier.LabelShortCap : "",
                     Contained = nowContained,
                     Required = comp.requiredPawns.Contains(pawn),
                     Job = pawn.jobs != null && pawn.jobs.curJob != null ? pawn.jobs.curJob.def.defName : "",
@@ -168,7 +185,7 @@ namespace RIMAPI.Services
         // StateOf collects what the game and the shuttle say about this pawn,
         // for the rule that turns it into a refusal or a go-ahead.
         private static ShuttleRules.State StateOf(Thing shuttle, CompShuttle comp, CompTransporter transporter,
-            Pawn pawn, bool contained)
+            Pawn pawn, bool contained, string carrier)
         {
             return new ShuttleRules.State
             {
@@ -183,6 +200,7 @@ namespace RIMAPI.Services
                 PawnWhere = WhereIs(pawn),
                 PawnDead = pawn.Dead,
                 PawnDowned = pawn.Downed,
+                Carrier = carrier,
                 AlreadyAboard = contained,
                 Required = comp.requiredPawns.Contains(pawn),
                 Allowed = comp.IsAllowedNow(pawn),
@@ -201,6 +219,24 @@ namespace RIMAPI.Services
                 AtColonistLimit = comp.maxColonistCount >= 0
                     && CountBoarding(transporter, shuttle, pawn) >= comp.maxColonistCount,
             };
+        }
+
+        // CarrierFor finds a colonist who can carry a pawn that cannot walk into
+        // the shuttle: the game's own "Carry to shuttle" option asks for a pawn
+        // who can haul, can reach the downed one, and whose own reservation
+        // allows it.
+        private static Pawn CarrierFor(Pawn pawn, Thing shuttle)
+        {
+            Map map = shuttle.MapHeld;
+            if (map == null) return null;
+            foreach (Pawn candidate in map.mapPawns.FreeColonistsSpawned)
+            {
+                if (candidate == pawn || candidate.Dead || candidate.Downed) continue;
+                if (candidate.WorkTypeIsDisabled(WorkTypeDefOf.Hauling)) continue;
+                if (!candidate.CanReserveAndReach(pawn, PathEndMode.OnCell, Danger.Deadly)) continue;
+                return candidate;
+            }
+            return null;
         }
 
         // CountBoarding is the game's own count for its colonist cap: the

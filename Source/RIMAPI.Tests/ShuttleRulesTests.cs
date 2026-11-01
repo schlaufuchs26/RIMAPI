@@ -120,16 +120,26 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
-        public void ADownedPawnIsNotBoarded()
+        public void ADownedPawnIsCarriedInByAColonist()
         {
-            // The game's own check lets a downed pawn through unless the quest
-            // asks for healthy people; the walk to the shuttle is what fails, so
-            // the refusal names that instead of queueing a job that ends at once.
+            // A hospitality lodger is often paralyzed (the Abasia variant of the
+            // quest). The game's right-click offers "Carry to shuttle" for him,
+            // so a carrier makes the call a go-ahead (ticket #3862).
+            var state = LodgerTheShuttleWaitsFor();
+            state.PawnDowned = true;
+            state.Carrier = "McClain";
+            Assert.Null(ShuttleRules.Problem(state));
+        }
+
+        [Fact]
+        public void ADownedPawnWithoutACarrierNamesWhatHeNeeds()
+        {
             var state = LodgerTheShuttleWaitsFor();
             state.PawnDowned = true;
             string problem = ShuttleRules.Problem(state);
             Assert.Contains("down", problem);
             Assert.Contains("(128, 94)", problem);
+            Assert.Contains("can haul", problem);
         }
 
         [Fact]

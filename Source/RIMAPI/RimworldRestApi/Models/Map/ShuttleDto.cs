@@ -123,6 +123,13 @@ namespace RIMAPI.Models
         /// <summary>True when the game took the job the order queued.</summary>
         public bool TookJob { get; set; }
 
+        /// <summary>
+        /// The colonist who carries a downed pawn in, empty when the pawn walks
+        /// or nobody can carry him. The game's own "Carry to shuttle" puts a
+        /// hauler in front of the shuttle, so the answer names him.
+        /// </summary>
+        public string CarriedBy { get; set; }
+
         /// <summary>The job the pawn holds after the call, as the game names it.</summary>
         public string Job { get; set; }
 
