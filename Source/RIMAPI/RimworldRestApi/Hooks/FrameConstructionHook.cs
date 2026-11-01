@@ -26,7 +26,11 @@ namespace RimworldRestApi.Hooks
                     return true;
                 if (!FrameConstruction.FinishInsteadOfFailing(__instance.WorkToBuild, worker == null))
                     return true;
-                LogApi.Info(FrameConstruction.LogLine(
+                // Log.Message, not LogApi.Info: the chatty levels are gated by
+                // LogApi.IsLogging and this line has to land, because it is the
+                // only trace of a frame that the game would otherwise destroy
+                // again and again.
+                Verse.Log.Message("[RIMAPI | INFO] " + FrameConstruction.LogLine(
                     __instance.BuildDef == null ? "?" : __instance.BuildDef.defName,
                     __instance.WorkToBuild));
                 __instance.CompleteConstruction(worker);
