@@ -185,6 +185,10 @@ namespace RIMAPI.Services
                 }
 
                 JobDef def = capture ? JobDefOf.Capture : JobDefOf.Arrest;
+                // A bed set to prisoners before its room changed shape leaves
+                // the room's prison-cell flag stale, and the game's lookup then
+                // passes that bed over (#3742).
+                BedPick.RefreshStalePrisonCells(map);
                 Building_Bed bed =
                     RestUtility.FindBedFor(target, arrestor, false, false, GuestStatus.Prisoner)
                     ?? RestUtility.FindBedFor(target, arrestor, false, true, GuestStatus.Prisoner);
@@ -192,8 +196,8 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail(
                         "no prisoner bed: the game's Arrest and Capture jobs carry the pawn to a bed set to "
-                        + "prisoners, so build one and set it to prisoners first (`things` shows beds, "
-                        + "`build name=Bed` places one)");
+                        + "prisoners in a room the game counts as a prison cell; "
+                        + BedPick.PrisonerBedRefusal(map, arrestor));
                 }
 
                 bool draftedNow = false;

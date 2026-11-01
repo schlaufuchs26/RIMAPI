@@ -108,6 +108,10 @@ namespace RIMAPI.Services
                 if (bed.ForPrisoners != forPrisoners)
                 {
                     bed.ForPrisoners = forPrisoners;
+                    // The setter only dirties the room's role; the prison-cell
+                    // flag the game's bed lookup reads follows the room's
+                    // shape, so the room has to be told (#3742).
+                    BedPick.RefreshAfterBedTypeChange(bed);
                 }
                 return ApiResult<BedDto>.Ok(BuildingHelper.BedDtoOf(bed));
             }

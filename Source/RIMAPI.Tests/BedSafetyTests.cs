@@ -61,5 +61,27 @@ namespace RIMAPI.Tests
         {
             Assert.Equal("its room is no prison cell", BedSafety.NoCellReason(true, false, false));
         }
+
+        [Fact]
+        public void A_proper_room_of_sane_size_can_hold_a_prison_cell()
+        {
+            Assert.Null(BedSafety.NotPrisonCellReason(true, false, false, true));
+        }
+
+        [Fact]
+        public void A_room_the_game_refuses_says_which_condition_it_fails()
+        {
+            // A transport pod's captive needs a prison cell, and a run that
+            // reads only "no prisoner bed" cannot tell a missing bed from a
+            // room the game refuses (fox ticket #3742).
+            Assert.Equal("it stands in no room",
+                BedSafety.NotPrisonCellReason(false, false, false, false));
+            Assert.Equal("its room touches the map edge, which the game never counts as a prison cell",
+                BedSafety.NotPrisonCellReason(true, true, false, true));
+            Assert.Equal("its room is too large to be a prison cell",
+                BedSafety.NotPrisonCellReason(true, false, true, true));
+            Assert.Equal("its room is not enclosed",
+                BedSafety.NotPrisonCellReason(true, false, false, false));
+        }
     }
 }

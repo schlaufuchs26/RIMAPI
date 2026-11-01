@@ -59,5 +59,24 @@ namespace RIMAPI.Helpers
             if (!hasRoom || outdoors) return "it stands outdoors";
             return "its room is no prison cell";
         }
+
+        /// <summary>
+        /// Why the game would refuse to make this room a prison cell, or null
+        /// when it can be one (fox ticket #3742). The game counts only a
+        /// proper room that is not huge (Building_Bed.RoomCanBePrisonCell),
+        /// and a bed set to prisoners in any other room never takes a
+        /// prisoner: the game's own bed lookup passes it over, so an arrest
+        /// answers "no prisoner bed" although the colony has one. The caller
+        /// passes the game's own room answers, so this stays free of game
+        /// types and a test can state the rule.
+        /// </summary>
+        public static string NotPrisonCellReason(bool hasRoom, bool touchesMapEdge, bool huge, bool enclosed)
+        {
+            if (!hasRoom) return "it stands in no room";
+            if (touchesMapEdge) return "its room touches the map edge, which the game never counts as a prison cell";
+            if (huge) return "its room is too large to be a prison cell";
+            if (!enclosed) return "its room is not enclosed";
+            return null;
+        }
     }
 }

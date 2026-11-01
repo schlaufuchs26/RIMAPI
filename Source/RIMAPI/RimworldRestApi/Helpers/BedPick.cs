@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using Verse;
@@ -103,6 +104,112 @@ namespace RIMAPI.Helpers
             Room room = BedRoom(map, bed);
             if (room == null) return false;
             return map.listerThings.ThingsOfDef(ThingDefOf.Fire).Any(f => f.GetRoom() == room);
+        }
+
+        /// <summary>
+        /// Recomputes the room's cached prison-cell flag after the bed's owner
+        /// type changed (fox ticket #3742). The bed's own setter only dirties
+        /// the room's role (Room.Notify_BedTypeChanged), while the flag the
+        /// game's bed lookup reads (Room.IsPrisonCell) follows the room's
+        /// shape. Vanilla's "Set for prisoners" command therefore refreshes
+        /// the district and the room itself after the change
+        /// (Building_Bed.SetBedOwnerTypeByInterface); a bed order that does not
+        /// leaves the room answering "no prison cell" until a wall or door
+        /// changes, so the game's lookup refuses the bed an arrest needs.
+        /// </summary>
+        public static void RefreshAfterBedTypeChange(Building_Bed bed)
+        {
+            if (bed == null || !bed.Spawned) return;
+            District district = bed.GetDistrict();
+            Room room = district?.Room;
+            if (district == null || room == null) return;
+            district.Notify_RoomShapeOrContainedBedsChanged();
+            if (!room.TouchesMapEdge) room.Notify_RoomShapeChanged();
+        }
+
+        /// <summary>
+        /// Refreshes every room that could be a prison cell, holds a prisoner
+        /// bed and still carries the stale false flag (fox ticket #3742). A bed
+        /// set to prisoners before its room changed shape leaves that flag
+        /// behind, and the game's own bed lookup then passes the bed over, so
+        /// the arrest route runs this before it asks the game. Cheap and
+        /// idempotent: rooms whose flag is already right are skipped.
+        /// </summary>
+        public static void RefreshStalePrisonCells(Map map)
+        {
+            foreach (Room room in map.regionGrid.AllRooms)
+            {
+                if (room == null || room.IsPrisonCell) continue;
+                if (!Building_Bed.RoomCanBePrisonCell(room)) continue;
+                if (!room.ContainedBeds.Any(b => b.ForPrisoners)) continue;
+                room.Notify_RoomShapeChanged();
+            }
+        }
+
+        /// <summary>
+        /// Why the game finds no prisoner bed for this arrest, in the game's own
+        /// terms (fox ticket #3742). "no prisoner bed" alone leaves a run
+        /// guessing: the colony may have no such bed, or a bed whose room the
+        /// game refuses, or one the arrestor cannot reach. The first three
+        /// candidates are named with the condition each one fails.
+        /// </summary>
+        public static string PrisonerBedRefusal(Map map, Pawn arrestor)
+        {
+            List<Building_Bed> beds = map.listerBuildings.AllBuildingsColonistOfClass<Building_Bed>()
+                .Where(b => b.Spawned && b.def.building != null && b.def.building.bed_humanlike)
+                .ToList();
+            if (beds.Count == 0)
+            {
+                return "the map holds no humanlike bed: `build name=Bed` places one and `bed` sets it to prisoners";
+            }
+            List<Building_Bed> prisonerBeds = beds.Where(b => b.ForPrisoners).ToList();
+            if (prisonerBeds.Count == 0)
+            {
+                return "none of the " + beds.Count + " humanlike beds is set to prisoners: "
+                    + "`things` lists the beds and `bed` with bed_for=prisoners sets one";
+            }
+            List<string> named = new List<string>();
+            foreach (Building_Bed bed in prisonerBeds.Take(3))
+            {
+                named.Add(bed.Label + " (id " + bed.thingIDNumber + ") " + WhyNoPrisonerBed(map, bed, arrestor));
+            }
+            string text = string.Join("; ", named);
+            if (prisonerBeds.Count > 3)
+            {
+                text += "; and " + (prisonerBeds.Count - 3) + " more";
+            }
+            return text;
+        }
+
+        /// <summary>
+        /// The first condition that keeps the game from using this prisoner bed,
+        /// in the order the game's own check reads them (RestUtility.
+        /// CanUseBedNow and IsValidBedFor).
+        /// </summary>
+        private static string WhyNoPrisonerBed(Map map, Building_Bed bed, Pawn arrestor)
+        {
+            Room room = BedRoom(map, bed);
+            string noCell = BedSafety.NotPrisonCellReason(
+                room != null,
+                room != null && room.TouchesMapEdge,
+                room != null && room.IsHuge,
+                room != null && room.ProperRoom);
+            if (noCell != null) return "is no prison bed: " + noCell;
+            if (!bed.Position.IsInPrisonCell(map))
+            {
+                // A proper room whose flag the game has not re-read since the
+                // bed changed; the arrest route refreshes these before its
+                // lookup, so only a foreign change reaches this line.
+                return "stands in a room the game has not re-read as a prison cell";
+            }
+            if (!bed.AnyUnoccupiedSleepingSlot) return "has no free sleeping slot";
+            if (bed.IsBurning()) return "is on fire";
+            if (bed.IsForbidden(arrestor)) return "is forbidden";
+            if (!arrestor.CanReserveAndReach(bed, PathEndMode.OnCell, Danger.Some, 1, -1, null, false))
+            {
+                return "cannot be reached or reserved by " + arrestor.LabelShort;
+            }
+            return "is a prisoner bed the game's lookup passed over";
         }
     }
 }
