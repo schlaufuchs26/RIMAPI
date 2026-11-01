@@ -159,6 +159,19 @@ namespace RIMAPI.Tests
             Assert.False(DevActionRules.MatchesPath(@"Actions\Spawning\WildMan", ""));
         }
 
+        // A listing's filter is a substring: it is how a caller reaches an entry
+        // the walk would otherwise pass by (ticket #3855).
+        [Fact]
+        public void AListingFiltersByAnyPartOfThePath()
+        {
+            Assert.True(DevActionRules.MatchesFilter(@"Actions\Spawning\WildMan", "Wild"));
+            Assert.True(DevActionRules.MatchesFilter(@"Actions\Spawning\WildMan", "spawning/wild"));
+            Assert.False(DevActionRules.MatchesFilter(@"Actions\Spawning\WildMan", "Caribou"));
+            // No filter lists everything the walk reaches.
+            Assert.True(DevActionRules.MatchesFilter(@"Actions\Spawning\WildMan", ""));
+            Assert.True(DevActionRules.MatchesFilter(@"Actions\Spawning\WildMan", "  "));
+        }
+
         [Fact]
         public void AListingPrintsAHundredPathsUnlessTheCallAsksForMore()
         {

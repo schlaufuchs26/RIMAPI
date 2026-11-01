@@ -88,13 +88,17 @@ namespace RIMAPI.Models
     /// </summary>
     public class DevActionsStateDto
     {
-        /// <summary>How many entries the whole menu holds.</summary>
-        public int Total { get; set; }
+        /// <summary>
+        /// Entries the walk visited. The menu's own sub-menus (pawn kinds,
+        /// incidents) expand to thousands, so a walk that stopped early leaves
+        /// this a lower bound (ticket #3855).
+        /// </summary>
+        public int Walked { get; set; }
         /// <summary>How many of them this answer lists.</summary>
         public int Shown { get; set; }
 
-        /// <summary>True when the walk stopped at its node cap, so Total is a lower bound.</summary>
-        public bool Truncated { get; set; }
+        /// <summary>True when the walk reached the menu's end, so Walked is the whole menu.</summary>
+        public bool Complete { get; set; }
 
         public List<DevActionNodeDto> Nodes { get; set; } = new List<DevActionNodeDto>();
     }

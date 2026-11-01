@@ -253,11 +253,13 @@ namespace RIMAPI.Helpers
         public const int MaxListed = 500;
 
         /// <summary>
-        /// Entries one listing walks before it stops: the menu's own sub-menus
-        /// (pawn kinds, incidents) expand to thousands, and a walk that never
-        /// ends would hold the game for minutes.
+        /// Entries one walk may visit before it gives up: a guard against a
+        /// sub-menu that generates entries forever, not a routine stop. The
+        /// whole menu held 60,456 entries and walked in 8.2 s on 2026-11-01
+        /// (ticket #3855), so a filtered walk reaches every entry a game has;
+        /// the listing stops earlier only when it holds the matches it prints.
         /// </summary>
-        public const int MaxNodes = 20000;
+        public const int MaxNodes = 120000;
 
         /// <summary>
         /// A dev-action path with one separator and no leading or trailing slash,
@@ -298,6 +300,19 @@ namespace RIMAPI.Helpers
         {
             if (count == null || count < 1) return 100;
             return count.Value > MaxListed ? MaxListed : count.Value;
+        }
+
+        /// <summary>
+        /// True when a menu entry belongs in a filtered listing: the filter is a
+        /// substring of its path, either separator and either case. An empty
+        /// filter matches every entry.
+        /// </summary>
+        public static bool MatchesFilter(string nodePath, string filter)
+        {
+            string want = ActionPath(filter);
+            if (want.Length == 0) return true;
+            string node = ActionPath(nodePath);
+            return node.IndexOf(want, StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }
