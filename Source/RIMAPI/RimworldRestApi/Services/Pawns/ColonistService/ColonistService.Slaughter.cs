@@ -68,9 +68,10 @@ namespace RIMAPI.Services
 
                 if (job == null)
                 {
-                    result.Note =
-                        "no handler can take it now; the order stands and the colony's handlers will take it "
-                        + "when one is free and can reach the animal";
+                    result.Note = result.Refusals.Count > 0
+                        ? "no handler can take it now; the order stands and the refusals name the check that stops each one"
+                        : "no handler can take it now; the order stands and the colony's handlers will take it "
+                          + "when one is free and can reach the animal";
                     return ApiResult.Ok(result);
                 }
                 if (!handler.jobs.TryTakeOrderedJob(job, JobTag.Misc))
@@ -118,7 +119,7 @@ namespace RIMAPI.Services
                 Id = pawn.thingIDNumber,
                 Name = pawn.LabelShort,
                 Skill = level,
-                SkillLabel = SkillDefOf.Animals.label,
+                SkillLabel = SkillDefOf.Animals.LabelCap,
                 Reason = reason,
             };
         }

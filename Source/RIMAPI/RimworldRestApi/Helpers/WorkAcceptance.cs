@@ -91,7 +91,7 @@ namespace RIMAPI.Helpers
                 {
                     Pawn = pawn,
                     Skill = SkillLevel(pawn, skill),
-                    SkillLabel = skill?.label ?? string.Empty,
+                    SkillLabel = skill?.LabelCap ?? string.Empty,
                 };
                 verdict.Refusal = CommonRefusal(pawn, giver);
                 if (verdict.Refusal == null && !AcceptsAny(pawn, giver, targets, forced))
