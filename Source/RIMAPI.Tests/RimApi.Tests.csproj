@@ -149,9 +149,9 @@
     <!-- Why a grave refused a corpse (fox ticket #3784): the assignment, the
          body already inside or the filter, each with its own sentence. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CasketRefusal.cs" Link="Linked\CasketRefusal.cs" />
-    <!-- When the power grid last ticked (fox ticket #3781): the power figures
-         describe the last tick, so a colony that never ticked must be visible
-         as such instead of reading 0 W. -->
-    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PowerTick.cs" Link="Linked\PowerTick.cs" />
+    <!-- How many ticks a colony has run since it loaded (fox ticket #3781):
+         the power figures are written by the tick, and the loader's own tick
+         still reads 0 W, so a fresh load must be visible as such. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LoadedTick.cs" Link="Linked\LoadedTick.cs" />
   </ItemGroup>
 </Project>

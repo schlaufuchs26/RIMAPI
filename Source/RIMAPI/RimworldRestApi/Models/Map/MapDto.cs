@@ -37,12 +37,13 @@ namespace RIMAPI.Models
         // unconnected stove or cooler becomes visible.
         public List<PoweredBuildingDto> Buildings = new List<PoweredBuildingDto>();
 
-        // LastNetTick is the game tick of the grid's last update, -1 while it
-        // has not updated since the map loaded (fox ticket #3781). Every figure
-        // above describes that tick, so -1 says they measure nothing yet: a
-        // colony read straight from a save reported 0 W produced of 1700 W
-        // installed, and 1700 W one `wait` later.
-        public int LastNetTick { get; set; } = -1;
+        // TicksSinceLoad is how many ticks the colony has run since it was
+        // loaded, -1 when this build saw no load (fox ticket #3781). Every
+        // figure above is written by the game's tick, and the tick the loader
+        // itself runs still reads 0 W produced of 1700 W installed, so a colony
+        // that has run almost nothing since its load is not measured: the same
+        // colony read 1700 W one `wait` later.
+        public int TicksSinceLoad { get; set; } = -1;
     }
 
     public class PoweredBuildingDto

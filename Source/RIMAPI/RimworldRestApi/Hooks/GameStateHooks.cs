@@ -56,10 +56,10 @@ namespace RimworldRestApi.Hooks
         {
             static void Postfix()
             {
-                // A loaded colony keeps its map ids from the save, so the power
-                // ticks of the game that ran before must not count for this
-                // load (fox ticket #3781).
-                PowerTick.Clear();
+                // The tick this colony starts from: the power figures are
+                // written by the game's tick, and the loader's own tick still
+                // reads 0 W produced (fox ticket #3781).
+                LoadedTick.Record(Find.TickManager?.TicksGame ?? 0);
                 SendStateEvent("game_loaded", new
                 {
                     map_count = Find.Maps?.Count ?? 0,
@@ -78,8 +78,8 @@ namespace RimworldRestApi.Hooks
                 // A new colony was read from no file, so it must not be saved
                 // back into the one that was open before (#3603).
                 LoadedSave.Clear();
-                // Nothing has ticked in this colony yet (fox ticket #3781).
-                PowerTick.Clear();
+                // A new colony starts at its own tick 0 (fox ticket #3781).
+                LoadedTick.Record(Find.TickManager?.TicksGame ?? 0);
                 SendStateEvent("new_game_created", new
                 {
                     scenario = Find.Scenario?.name,
