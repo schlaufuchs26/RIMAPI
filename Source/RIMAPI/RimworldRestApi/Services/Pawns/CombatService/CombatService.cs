@@ -277,7 +277,12 @@ namespace RIMAPI.Services
                 return ApiResult<OrderResultDto>.Fail(
                     $"{target.LabelShort} is a colonist{mental}; the tool does not order friendly fire");
             }
-            if (!target.HostileTo(Faction.OfPlayer) && !IsManhunter(target))
+            // The same rule the fight read counts with (fox #3630): a wild man
+            // who is beating a colonist is a hostile, so `attack` must take the
+            // id the read just printed. Asking HostileTo alone refused him with
+            // "not hostile, so the colony has no fight with him" while he was
+            // hurting Veniamin.
+            if (!Hostility.IsHostileToColony(target))
             {
                 return ApiResult<OrderResultDto>.Fail(
                     $"{target.LabelShort} is not hostile, so the colony has no fight with him");
