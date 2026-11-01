@@ -26,6 +26,10 @@ namespace RIMAPI.Helpers
         // (ticket #3362): the material and the skill are there, but no free
         // colonist has that type switched on, so the bill never gets a job.
         public const string NoColonistAssigned = "no colonist assigned";
+        // NoPower is the bench's own power: a machine that draws power and has
+        // none runs no bill at all, and the bill read said "running" for four
+        // game hours on a stove no conduit reached (fox ticket #3762).
+        public const string NoPower = "no power";
 
         public struct Facts
         {
@@ -52,6 +56,11 @@ namespace RIMAPI.Helpers
             // colonists have one of them switched on.
             public IList<string> WorkTypes;
             public int AssignedColonists;
+            // PowerFault is the sentence that says why the bench has no power
+            // (PowerFault.Describe), null when the bench is powered or draws
+            // none. It is the bench's fact, so every bill on that bench carries
+            // it.
+            public string PowerFault;
         }
 
         public struct State
@@ -81,6 +90,13 @@ namespace RIMAPI.Helpers
                     Name = Satisfied,
                     Reason = f.TargetText == null ? "you have enough" : f.TargetText,
                 };
+            }
+            // A bench without power runs nothing, whatever the material says:
+            // the fault comes before the ingredients because it blocks every
+            // bill on that bench (fox ticket #3762).
+            if (f.PowerFault != null)
+            {
+                return new State { Name = NoPower, Reason = f.PowerFault };
             }
             if (f.MissingIngredients != null && f.MissingIngredients.Count > 0)
             {

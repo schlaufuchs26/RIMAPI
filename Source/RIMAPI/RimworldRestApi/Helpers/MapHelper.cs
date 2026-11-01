@@ -206,6 +206,12 @@ namespace RIMAPI.Helpers
                     }
                 }
 
+                // The rows are gathered from the built buildings, not from the
+                // nets, so a machine no conduit reaches appears here with its
+                // own switch and the distance to the nearest conduit (fox
+                // ticket #3762).
+                powerInfo.Buildings = PowerGrid.Buildings(map);
+
                 return powerInfo;
             }
             catch (Exception ex)

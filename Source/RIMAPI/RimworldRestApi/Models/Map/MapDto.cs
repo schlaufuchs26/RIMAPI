@@ -31,6 +31,45 @@ namespace RIMAPI.Models
         public List<int> ProducePowerBuildings = new List<int>();
         public List<int> ConsumePowerBuildings = new List<int>();
         public List<int> StorePowerBuildings = new List<int>();
+        // Buildings answers every built building with a power comp, one row
+        // each (fox ticket #3762). The figures above sum the nets, so a machine
+        // no net reaches is in none of them; this row list is where an
+        // unconnected stove or cooler becomes visible.
+        public List<PoweredBuildingDto> Buildings = new List<PoweredBuildingDto>();
+    }
+
+    public class PoweredBuildingDto
+    {
+        public int Id { get; set; }
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public PositionDto Position { get; set; }
+
+        // Consumes is what the building draws when it runs, Produces what a
+        // plant gives right now, Nominal what it gives at full strength.
+        public float Consumes { get; set; }
+        public float Produces { get; set; }
+        public float Nominal { get; set; }
+
+        // Connected says a power net reaches the building at all; Powered is
+        // the game's own answer to "does it have power now", so a consumer on a
+        // net without a producer is connected and still dead.
+        public bool Connected { get; set; }
+        public bool Powered { get; set; }
+
+        // SwitchedOn is the player's own switch: a machine switched off is not
+        // a wiring fault and needs a different lever.
+        public bool SwitchedOn { get; set; }
+
+        // NetProduction and NetStored describe the net the building stands on,
+        // in W and Wd, so a connected building on a dead net can say why.
+        public float NetProduction { get; set; }
+        public float NetStored { get; set; }
+
+        // ConduitDistance is how many cells away the nearest conduit cell
+        // stands, -1 when the map holds none; ConduitPosition names that cell.
+        public int ConduitDistance { get; set; }
+        public PositionDto ConduitPosition { get; set; }
     }
 
     public class MapTimeDto

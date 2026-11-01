@@ -86,6 +86,7 @@ namespace RIMAPI.Helpers
                     && have >= bill.targetCount,
                 TargetText = TargetText(bill, product, have),
                 MissingIngredients = dto.MissingIngredients,
+                PowerFault = BenchPowerFault(bill),
             };
 
             List<WorkTypeDef> workTypes = BenchWorkTypes(bill);
@@ -132,6 +133,50 @@ namespace RIMAPI.Helpers
             // no level at all, which is exactly the case a colony of level-0
             // cooks starves in (ticket #3371).
             ApplyBestSkill(dto, recipe, map, workTypes);
+        }
+
+        // BenchPowerFault answers why the bench cannot run for want of power
+        // (fox ticket #3762), or null when it can. The bill's own state said
+        // "running" for four game hours on a stove that stood four cells from
+        // the nearest conduit and had no net at all, while the meals fell from
+        // 9 to 4.
+        private static string BenchPowerFault(Bill_Production bill)
+        {
+            Thing bench = bill.billStack?.billGiver as Thing;
+            if (bench == null)
+                return null;
+
+            CompPowerTrader power = bench.TryGetComp<CompPowerTrader>();
+            if (power == null || power.Props.PowerConsumption <= 0f)
+                return null;
+
+            var facts = new PowerFault.Facts
+            {
+                Label = bench.Label,
+                ConsumesPower = true,
+                SwitchedOn = FlickUtility.WantsToBeOn(bench),
+                Connected = power.PowerNet != null,
+                Powered = power.PowerOn,
+                ConduitDistance = -1,
+            };
+            if (power.PowerNet != null)
+            {
+                facts.NetProduction = power.PowerNet.CurrentEnergyGainRate();
+                facts.NetStored = power.PowerNet.CurrentStoredEnergy();
+            }
+
+            Building building = bench as Building;
+            if (building != null && !facts.Connected)
+            {
+                IntVec3 cell;
+                facts.ConduitDistance = PowerGrid.NearestConduit(building, out cell);
+                if (cell.IsValid)
+                {
+                    facts.ConduitX = cell.x;
+                    facts.ConduitZ = cell.z;
+                }
+            }
+            return PowerFault.Describe(facts);
         }
 
         // ApplyBestSkill names the colonist a caller would expect to do the
