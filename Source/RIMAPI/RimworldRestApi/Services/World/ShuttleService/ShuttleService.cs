@@ -120,7 +120,9 @@ namespace RIMAPI.Services
                     CarriedBy = carrier != null ? carrier.LabelShortCap : "",
                     Contained = nowContained,
                     Required = comp.requiredPawns.Contains(pawn),
-                    Job = pawn.jobs != null && pawn.jobs.curJob != null ? pawn.jobs.curJob.def.defName : "",
+                    // A carried pawn's own job is "Pray"; the job that moves
+                    // him is the carrier's, so the answer names that one.
+                    Job = JobOf(carrier ?? pawn),
                     ShuttleState = ShuttleDtoOf(shuttle, map),
                 };
                 return ApiResult<ShuttleEnterResultDto>.Ok(result);
@@ -219,6 +221,14 @@ namespace RIMAPI.Services
                 AtColonistLimit = comp.maxColonistCount >= 0
                     && CountBoarding(transporter, shuttle, pawn) >= comp.maxColonistCount,
             };
+        }
+
+        // JobOf names the job a pawn holds, empty when it holds none.
+        private static string JobOf(Pawn pawn)
+        {
+            return pawn != null && pawn.jobs != null && pawn.jobs.curJob != null
+                ? pawn.jobs.curJob.def.defName
+                : "";
         }
 
         // CarrierFor finds a colonist who can carry a pawn that cannot walk into
