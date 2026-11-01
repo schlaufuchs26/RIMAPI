@@ -19,6 +19,11 @@ namespace RIMAPI.Helpers
         /// null when the colony has none. Nearest keeps the carry as short as
         /// the game's own choice once safety is equal. A rescue wants a normal
         /// bed, an arrest or capture a prisoner bed; the two never share one.
+        ///
+        /// A prisoner bed also has to be a real cell (fox ticket #3621): the
+        /// game calls only a bed inside an enclosed room a prison cell, and a
+        /// prisoner carried into an open bed escapes at once, however cool the
+        /// spot is. So the search never proposes a bed that is no cell.
         /// </summary>
         public static Building_Bed SaferBed(
             Map map, Pawn target, Pawn carrier, Building_Bed unsafeBed, bool forPrisoners)
@@ -27,10 +32,33 @@ namespace RIMAPI.Helpers
                 .Where(b => b != unsafeBed && b.Spawned)
                 .Where(b => forPrisoners ? b.ForPrisoners : !b.ForPrisoners && !b.ForSlaves)
                 .Where(b => b.AnyUnownedSleepingSlot)
+                .Where(b => !forPrisoners || IsCell(map, b))
                 .Where(b => !BedSafety.IsUnsafe(b.AmbientTemperature, RoomHasFire(map, b)))
                 .Where(b => carrier.CanReserveAndReach(b, PathEndMode.OnCell, Danger.Deadly, 1, -1, null, false))
                 .OrderBy(b => (b.Position - target.Position).LengthHorizontalSquared)
                 .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Whether the bed stands in a room the game calls a prison cell: an
+        /// enclosed room holding a prisoner bed. This is the game's own answer
+        /// (`Room.IsPrisonCell`), not a roof guess, because that is what the
+        /// prisoner's escape check reads (fox ticket #3621).
+        /// </summary>
+        public static bool IsCell(Map map, Building_Bed bed)
+        {
+            Room room = BedRoom(map, bed);
+            return room != null && room.IsPrisonCell;
+        }
+
+        /// <summary>
+        /// Why the bed is no cell, or "" when it is one: the rule lives in
+        /// BedSafety, this is the game-side read of it.
+        /// </summary>
+        public static string NoCellReason(Map map, Building_Bed bed)
+        {
+            Room room = BedRoom(map, bed);
+            return BedSafety.NoCellReason(room != null, Outdoors(map, bed), room != null && room.IsPrisonCell) ?? "";
         }
 
         /// <summary>

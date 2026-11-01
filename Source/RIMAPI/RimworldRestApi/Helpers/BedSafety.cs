@@ -44,5 +44,20 @@ namespace RIMAPI.Helpers
         {
             return UnsafeReason(temperatureC, roomHasFire) != null;
         }
+
+        /// <summary>
+        /// Why a prisoner bed is no cell, or null when it is one (fox ticket
+        /// #3621). Temperature and fire say nothing about this: a cool bed on
+        /// open ground passes every check above, and the prisoner put into it
+        /// is "escaping" in the same minute, because the game counts only a bed
+        /// inside an enclosed room as a prison cell. The caller passes the
+        /// game's own cell answer, so this stays free of game types.
+        /// </summary>
+        public static string NoCellReason(bool hasRoom, bool outdoors, bool isPrisonCell)
+        {
+            if (isPrisonCell) return null;
+            if (!hasRoom || outdoors) return "it stands outdoors";
+            return "its room is no prison cell";
+        }
     }
 }

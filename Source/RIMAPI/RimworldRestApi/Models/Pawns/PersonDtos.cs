@@ -120,6 +120,10 @@ namespace RIMAPI.Models
         // room of its own carries "none" as its role label, which is not a
         // room name; the roof grid is what tells outdoors from a roleless room.
         public bool BedOutdoors { get; set; }
+        // Why the bed is no prison cell, empty when it is one (fox ticket
+        // #3621): a cool prisoner bed on open ground passes every temperature
+        // check and still lets the prisoner escape in the same minute.
+        public string BedNoCellReason { get; set; }
         // The bed the game's own lookup picked first, when the tool took a safer
         // one instead; zero when the game's choice was the one used.
         public int RejectedBedId { get; set; }
@@ -129,6 +133,9 @@ namespace RIMAPI.Models
         public string RejectedBedRoomLabel { get; set; }
         public float RejectedBedTempC { get; set; }
         public bool RejectedBedRoomHasFire { get; set; }
+        // Why the refused bed was no cell either (ticket #3621); empty when it
+        // was a real cell and only unsafe.
+        public string RejectedBedNoCellReason { get; set; }
     }
 
     // What a rescue order did: the job the game got, the bed it carries the

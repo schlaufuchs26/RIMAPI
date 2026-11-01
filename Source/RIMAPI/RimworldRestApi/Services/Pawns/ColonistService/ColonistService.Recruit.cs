@@ -210,10 +210,17 @@ namespace RIMAPI.Services
                 // #3421, the same trap the rescue route had in #3383). A safe
                 // prisoner bed replaces it when the colony has one; the answer
                 // carries the room temperature either way.
+                //
+                // Since #3621 the search also runs when the bed is no cell: a
+                // cool prisoner bed on open ground reads safe and still lets
+                // the prisoner escape in the same minute, so a bed inside a
+                // walled room replaces it when the colony has one.
+                string noCell = BedPick.NoCellReason(map, bed);
                 Building_Bed rejected = null;
                 float rejectedTempC = 0f;
                 bool rejectedFire = false;
-                if (BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
+                string rejectedNoCell = "";
+                if (noCell != "" || BedSafety.IsUnsafe(bed.AmbientTemperature, BedPick.RoomHasFire(map, bed)))
                 {
                     Building_Bed safer = BedPick.SaferBed(map, target, arrestor, bed, forPrisoners: true);
                     if (safer != null)
@@ -221,6 +228,7 @@ namespace RIMAPI.Services
                         rejected = bed;
                         rejectedTempC = bed.AmbientTemperature;
                         rejectedFire = BedPick.RoomHasFire(map, bed);
+                        rejectedNoCell = noCell;
                         bed = safer;
                     }
                 }
@@ -246,6 +254,7 @@ namespace RIMAPI.Services
                     BedRoomTempC = bed.AmbientTemperature,
                     BedRoomHasFire = BedPick.RoomHasFire(map, bed),
                     BedOutdoors = BedPick.Outdoors(map, bed),
+                    BedNoCellReason = BedPick.NoCellReason(map, bed),
                 };
                 Room room = BedPick.BedRoom(map, bed);
                 if (room != null)
@@ -261,6 +270,7 @@ namespace RIMAPI.Services
                     if (rejectedRoom != null) result.RejectedBedRoomLabel = rejectedRoom.GetRoomRoleLabel();
                     result.RejectedBedTempC = rejectedTempC;
                     result.RejectedBedRoomHasFire = rejectedFire;
+                    result.RejectedBedNoCellReason = rejectedNoCell;
                 }
                 return ApiResult.Ok(result);
             }
