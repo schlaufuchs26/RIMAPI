@@ -122,6 +122,22 @@ namespace RIMAPI.Controllers
             );
         }
 
+        [Get("/api/v1/world/landing")]
+        public async Task GetLanding(HttpListenerContext context)
+        {
+            // The site a founding picked from its wish list (ticket #3930).
+            // The choice is made inside the world generation, so it is read
+            // back here rather than returned by the start call.
+            LandingChoiceDto choice = LandingSitePick.Last;
+            if (choice == null)
+            {
+                await context.SendJsonResponse(
+                    ApiResult<LandingChoiceDto>.Fail("No founding asked for a site in this game."));
+                return;
+            }
+            await context.SendJsonResponse(ApiResult<LandingChoiceDto>.Ok(choice));
+        }
+
 
 
         [Get("/api/v1/world/grid")]

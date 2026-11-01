@@ -38,6 +38,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Hooks\LetterOpenTargets.cs" Link="Linked\LetterOpenTargets.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LandingSiteRules.cs" Link="Linked\LandingSiteRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
     <!-- Whether the game lets a pawn board a shuttle (fox ticket #3862): the
          refusal wording is plain C#. -->

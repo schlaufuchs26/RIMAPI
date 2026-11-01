@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Http;
 using RIMAPI.Models;
 using RIMAPI.Services;
@@ -238,6 +239,16 @@ namespace RIMAPI.Controllers
         {
             var result = _gameStateService.GameDevQuickStart();
             await context.SendJsonResponse(result);
+        }
+
+        [Get("/api/v1/game/scenarios")]
+        public async Task GetScenarios(HttpListenerContext context)
+        {
+            // The starting scenarios the installed game carries (ticket
+            // #3930), so a founding can name one instead of guessing a
+            // defName.
+            await context.SendJsonResponse(
+                ApiResult<List<ScenarioOptionDto>>.Ok(LandingSitePick.ScenarioOptions()));
         }
 
         [Post("/api/v1/game/start")]

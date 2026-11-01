@@ -22,13 +22,25 @@ namespace RIMAPI.Helpers
             Game.ClearCaches();
             Current.Game = new Game();
             Current.Game.InitData = new GameInitData();
-            Current.Game.Scenario = ScenarioDefOf.Crashlanded.scenario;
+            ScenarioDef scenarioDef = LandingSitePick.ResolveScenario(request.Scenario);
+            LandingSitePick.ScenarioDefName = scenarioDef.defName;
+            LandingSitePick.ScenarioLabel = scenarioDef.label;
+            Current.Game.Scenario = scenarioDef.scenario;
             Find.Scenario.PreConfigure();
             Current.Game.storyteller = new Storyteller(storytellerDef, difficultyDef);
             GameInitData initData = Find.GameInitData;
 
             Current.Game.World = WorldGenerator.GenerateWorld(Mathf.Clamp(request.PlanetCoverage, 0, 1), seed, (OverallRainfall)request.OverallRainfall, (OverallTemperature)request.OverallTemperature, (OverallPopulation)request.OverallPopulation, (LandmarkDensity)request.LandmarkDensity);
-            if (!string.IsNullOrEmpty(request.StartingTile) && request.StartingTile != "auto")
+            // The site wish picks the tile from the planet that was just
+            // generated (ticket #3930). It has to run here: the world exists
+            // only inside this long event, and the picker keeps its ranking so
+            // GET /api/v1/world/landing can answer once the colony is up.
+            LandingChoiceDto landing = LandingSitePick.Choose(request);
+            if (landing.Wished && landing.Tile >= 0)
+            {
+                initData.startingTile = Find.WorldGrid[landing.Tile].tile;
+            }
+            else if (!string.IsNullOrEmpty(request.StartingTile) && request.StartingTile != "auto")
             {
                 if (int.TryParse(request.StartingTile, out int tileId))
                 {
@@ -94,6 +106,8 @@ namespace RIMAPI.Helpers
 
                 state.GameTick = Find.TickManager?.TicksGame ?? 0;
                 state.Storyteller = Current.Game.storyteller?.def?.defName ?? "Unknown";
+                state.Scenario = LandingSitePick.ScenarioDefName ?? "";
+                state.ScenarioLabel = LandingSitePick.ScenarioLabel ?? "";
                 state.MapCount = Find.Maps.Count;
                 state.ProgramState = Current.ProgramState.ToString();
                 // #3098: the flags that say what is loaded, instead of a

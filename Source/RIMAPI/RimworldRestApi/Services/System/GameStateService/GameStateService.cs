@@ -126,6 +126,15 @@ namespace RIMAPI.Services
         {
             try
             {
+                // The wish and the scenario are checked before the world is
+                // generated: a long event cannot answer its caller, so an
+                // unknown biome or scenario would otherwise fail into the log
+                // and leave no colony (ticket #3930).
+                string problem = LandingSitePick.Problem(request);
+                if (problem != "")
+                {
+                    return ApiResult.Fail(problem);
+                }
                 LongEventHandler.QueueLongEvent(() =>
                 {
                     GamePlayHelper.InitGameFromConfiguration(request);

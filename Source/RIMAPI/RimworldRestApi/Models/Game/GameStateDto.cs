@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RIMAPI.Models
 {
     public class GameStateDto
@@ -44,6 +46,11 @@ namespace RIMAPI.Models
         // second settlement on another longitude reads hours off from the
         // founding map. Null when the read could not name a map.
         public int? ClockOffsetTicks { get; set; }
+
+        // The scenario the colony was founded under (ticket #3930), so a run
+        // can tell Crashlanded from Lost Tribe without remembering the call.
+        public string Scenario { get; set; }
+        public string ScenarioLabel { get; set; }
     }
 
     public class NewGameStartRequestDto
@@ -64,6 +71,30 @@ namespace RIMAPI.Models
         // IdeoName picks a saved ideoligion by its name; empty builds the
         // fox default (Helpers/IdeoSetup.cs, ticket #3612).
         public string IdeoName { get; set; }
+
+        // Scenario names the starting scenario by defName or label (ticket
+        // #3930); empty keeps the game's Crashlanded default. The list the
+        // installed game offers is GET /api/v1/game/scenarios.
+        public string Scenario { get; set; }
+
+        // The site wish (ticket #3930): what the starting tile should look
+        // like. Every field is a preference, not a filter; the picker takes
+        // the closest tile and names what it gave up. With every field empty
+        // the landing site stays random, as before.
+        public List<string> SiteBiomes { get; set; }
+        public List<string> SiteHilliness { get; set; }
+        public float? SiteTemperatureMin { get; set; }
+        public float? SiteTemperatureMax { get; set; }
+        public int SiteGrowingDaysMin { get; set; }
+        public bool SiteRoad { get; set; }
+        public bool SiteRiver { get; set; }
+        // SiteSettlementsMin other factions' settlements within
+        // SiteSettlementRadius tiles: neighbours worth trading with or raiding.
+        public int SiteSettlementsMin { get; set; }
+        public int SiteSettlementRadius { get; set; }
+        // SiteVary takes the Nth best tile instead of the best, so a run can
+        // found a deliberately different colony on purpose.
+        public int SiteVary { get; set; }
     }
 
     public class GameSettingsDto
