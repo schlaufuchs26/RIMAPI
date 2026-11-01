@@ -251,8 +251,12 @@ namespace RIMAPI.Services
                 // Without a named organizer the pawn who fills the ritual's own
                 // role takes it (the leader for the speech): some rituals, the
                 // speech among them, are carried by that pawn alone and have no
-                // other role to fill.
-                if (organizer == null) organizer = RoleHolder(ritual);
+                // other role to fill. Failing that the first colonist takes it,
+                // the same fallback the read makes: the game's BestTarget names
+                // no place for a null organizer, so a start without pawn_id
+                // refused with "no target" the place the read had just printed
+                // (ticket #3675).
+                organizer = RitualOrganizerRules.Pick(organizer, RoleHolder(ritual), Colonists(map).FirstOrDefault());
 
                 TargetInfo target = TargetInfo.Invalid;
                 bool targetGiven = false;
@@ -280,7 +284,7 @@ namespace RIMAPI.Services
                 if (obligation != null && !targetGiven) target = obligation.FirstValidTarget;
                 // Without a named place, ask the ritual's own target filter, the
                 // same call the ideo window makes when it opens the Begin dialog.
-                if (!target.IsValid) target = BestTarget(ritual, organizer ?? RoleHolder(ritual));
+                if (!target.IsValid) target = BestTarget(ritual, organizer);
                 // That filter names nothing for most rituals (funeral,
                 // conversion, festival): the place is what the player picks in
                 // the Begin dialog. The read already falls back to the places
@@ -535,7 +539,9 @@ namespace RIMAPI.Services
                 }
             }
 
-            Pawn organizer = RoleHolder(ritual) ?? colonists.FirstOrDefault();
+            // The read and the start pick the organizer the same way, so a start
+            // without pawn_id finds the place this line names (ticket #3675).
+            Pawn organizer = RitualOrganizerRules.Pick(null, RoleHolder(ritual), colonists.FirstOrDefault());
             TargetInfo target = first != null
                 ? first.FirstValidTarget
                 : BestTarget(ritual, organizer);

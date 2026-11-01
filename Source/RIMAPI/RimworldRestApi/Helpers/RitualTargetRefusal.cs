@@ -2,10 +2,12 @@ namespace RIMAPI.Helpers
 {
     // The place a ritual is held at is what the Begin dialog asks the player
     // for, and the start asks the ritual's own target filter first. That filter
-    // measures from an organizer, so a start that names no pawn and whose
-    // ritual has no role holder has nothing to ask with and finds no place at
-    // all (fox #3676). The refusal then has to name `pawn_id`, because the cell
-    // the `rituals` read already prints was not what was missing.
+    // measures from an organizer, so a start with no pawn at all finds no place
+    // to ask about (fox #3676). The refusal then has to name `pawn_id`, because
+    // the cell the `rituals` read already prints was not what was missing. A
+    // start that names no pawn otherwise takes the ritual's role holder, else
+    // the colony's first colonist, as the read does (#3675), so this case is an
+    // empty colony.
     //
     // Kept free of RimWorld types so Source/RIMAPI.Tests can state both
     // sentences.
@@ -13,7 +15,8 @@ namespace RIMAPI.Helpers
     {
         /// <summary>
         /// The reason a start gives when it found no place. hasOrganizer is
-        /// false when the call passed no pawn_id and no role holder filled one.
+        /// false when the call passed no pawn_id and the colony had no colonist
+        /// to fall back to.
         /// </summary>
         public static string Text(bool hasOrganizer)
         {

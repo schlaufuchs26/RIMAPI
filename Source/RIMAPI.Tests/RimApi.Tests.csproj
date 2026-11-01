@@ -94,6 +94,10 @@
     <!-- The refusal of a start that found no place (fox ticket #3676): with no
          organizer the sentence names pawn_id, the field that supplies one. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualTargetRefusal.cs" Link="Linked\RitualTargetRefusal.cs" />
+    <!-- Which pawn organizes a ritual (fox ticket #3675): the read and a start
+         without pawn_id have to pick the same one, or the start finds no place
+         for the one the read printed. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RitualOrganizerRules.cs" Link="Linked\RitualOrganizerRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ArchiveNoise.cs" Link="Linked\ArchiveNoise.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\IdeoDtos.cs" Link="Linked\IdeoDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />
