@@ -39,6 +39,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
+    <!-- Whether the game lets a pawn board a shuttle (fox ticket #3862): the
+         refusal wording is plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ShuttleRules.cs" Link="Linked\ShuttleRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FrameConstruction.cs" Link="Linked\FrameConstruction.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CombatRefusal.cs" Link="Linked\CombatRefusal.cs" />
     <!-- Why an ordered attack does not land (fox ticket #3737): the wording of

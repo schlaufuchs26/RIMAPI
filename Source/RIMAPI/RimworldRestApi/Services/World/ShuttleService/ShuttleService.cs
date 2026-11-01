@@ -1,0 +1,368 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using RIMAPI.Core;
+using RIMAPI.Helpers;
+using RIMAPI.Models;
+using RimWorld;
+using RimWorld.Planet;
+using Verse;
+using Verse.AI;
+
+namespace RIMAPI.Services
+{
+    /// <summary>
+    /// The shuttles on a map and the game's own "Enter shuttle" order (fox
+    /// ticket #3862). A quest shuttle waits for the pawns its quest names, and
+    /// the game's lever is the right-click action on the shuttle
+    /// (CompShuttle.CompFloatMenuOptions): start the loading if it has not
+    /// started, then queue JobDefOf.EnterTransporter on the pawn. Nothing in
+    /// the toolset reached it, so a hospitality quest failed while its lodger
+    /// stood healthy on the map; this service is that lever plus the read that
+    /// names the shuttle's cell and the people it waits for.
+    /// </summary>
+    public class ShuttleService : IShuttleService
+    {
+        public ApiResult<List<ShuttleDto>> Shuttles(int mapId)
+        {
+            try
+            {
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string error);
+                if (map == null)
+                    return ApiResult<List<ShuttleDto>>.Fail(error);
+
+                List<ShuttleDto> shuttles = ShuttlesOn(map).Select(s => ShuttleDtoOf(s, map)).ToList();
+                return ApiResult<List<ShuttleDto>>.Ok(shuttles);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<List<ShuttleDto>>.Fail(ex.ToString());
+            }
+        }
+
+        public ApiResult<ShuttleEnterResultDto> Enter(int pawnId, int shuttleId)
+        {
+            try
+            {
+                Pawn pawn = PawnHelper.FindPawnById(pawnId);
+                if (pawn == null)
+                    return ApiResult<ShuttleEnterResultDto>.Fail(
+                        $"no pawn with id {pawnId}: the `colonists` or `people` read prints the ids");
+
+                Thing shuttle;
+                string shuttleProblem;
+                if (!FindShuttle(pawn, shuttleId, out shuttle, out shuttleProblem))
+                    return ApiResult<ShuttleEnterResultDto>.Fail(shuttleProblem);
+
+                Map map = shuttle.MapHeld;
+                CompShuttle comp = shuttle.TryGetComp<CompShuttle>();
+                CompTransporter transporter = shuttle.TryGetComp<CompTransporter>();
+                if (comp == null || transporter == null)
+                    return ApiResult<ShuttleEnterResultDto>.Fail(
+                        $"{shuttle.Label} (id {shuttle.thingIDNumber}) is not a shuttle: it carries no shuttle component");
+
+                bool contained = transporter.innerContainer.Contains(pawn);
+                ShuttleRules.State state = StateOf(shuttle, comp, transporter, pawn, contained);
+                if (!ShuttleRules.NothingToDo(state))
+                {
+                    string problem = ShuttleRules.Problem(state);
+                    if (problem != null)
+                        return ApiResult<ShuttleEnterResultDto>.Fail(
+                            shuttle.Label.CapitalizeFirst() + " (id " + shuttle.thingIDNumber + "): " + problem);
+                }
+
+                bool tookJob = false;
+                if (!contained)
+                {
+                    // The float menu's own two steps, in its order.
+                    if (!transporter.LoadingInProgressOrReadyToLaunch)
+                        TransporterUtility.InitiateLoading(Gen.YieldSingle(transporter));
+                    Job job = JobMaker.MakeJob(JobDefOf.EnterTransporter, shuttle);
+                    tookJob = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                }
+
+                // Read the game back instead of acknowledging: a job the game
+                // dropped, or a pawn that boarded at once, is the answer.
+                bool nowContained = transporter.innerContainer.Contains(pawn);
+                if (!contained && !tookJob && !nowContained)
+                {
+                    string job = pawn.jobs != null && pawn.jobs.curJob != null ? pawn.jobs.curJob.def.defName : "";
+                    return ApiResult<ShuttleEnterResultDto>.Fail(
+                        shuttle.Label.CapitalizeFirst() + " (id " + shuttle.thingIDNumber + "): the game did not take the job for "
+                        + pawn.LabelShortCap + (job == "" ? "" : ", who holds " + job + " instead"));
+                }
+
+                ShuttleEnterResultDto result = new ShuttleEnterResultDto
+                {
+                    PawnId = pawn.thingIDNumber,
+                    Pawn = pawn.LabelShortCap,
+                    ShuttleId = shuttle.thingIDNumber,
+                    Shuttle = shuttle.Label.CapitalizeFirst(),
+                    Position = PositionOf(shuttle),
+                    AlreadyAboard = contained,
+                    TookJob = tookJob,
+                    Contained = nowContained,
+                    Required = comp.requiredPawns.Contains(pawn),
+                    Job = pawn.jobs != null && pawn.jobs.curJob != null ? pawn.jobs.curJob.def.defName : "",
+                    ShuttleState = ShuttleDtoOf(shuttle, map),
+                };
+                return ApiResult<ShuttleEnterResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<ShuttleEnterResultDto>.Fail(ex.ToString());
+            }
+        }
+
+        // ShuttlesOn lists the things on a map that carry a CompShuttle: a quest
+        // shuttle, an imperial shuttle, a player's passenger shuttle.
+        private static IEnumerable<Thing> ShuttlesOn(Map map)
+        {
+            return map.listerThings.AllThings
+                .Where(t => t != null && t.TryGetComp<CompShuttle>() != null)
+                .OrderBy(t => t.thingIDNumber);
+        }
+
+        // FindShuttle resolves the shuttle a call means: the one it names, else
+        // the single shuttle on the pawn's map. Two shuttles without an id is a
+        // refusal that names both, because boarding the wrong one is what the
+        // call must not guess at.
+        private static bool FindShuttle(Pawn pawn, int shuttleId, out Thing shuttle, out string problem)
+        {
+            shuttle = null;
+            problem = null;
+            if (shuttleId > 0)
+            {
+                foreach (Map m in Find.Maps)
+                {
+                    shuttle = ShuttlesOn(m).FirstOrDefault(t => t.thingIDNumber == shuttleId);
+                    if (shuttle != null) return true;
+                }
+                problem = $"no shuttle with id {shuttleId} is on a map: the `shuttles` read prints the id";
+                return false;
+            }
+
+            Map map = pawn.MapHeld ?? Find.CurrentMap;
+            if (map == null)
+            {
+                problem = "no map is open: a shuttle is read on the map it landed on";
+                return false;
+            }
+            List<Thing> onMap = ShuttlesOn(map).ToList();
+            if (onMap.Count == 0)
+            {
+                problem = "no shuttle is on the map: the `shuttles` read names one when it has landed";
+                return false;
+            }
+            if (onMap.Count > 1)
+            {
+                problem = "the map has " + onMap.Count + " shuttles, so the call names one: "
+                    + string.Join(", ", onMap.Select(t => t.Label + " (id " + t.thingIDNumber + ") at "
+                        + t.Position.x + "," + t.Position.z).ToArray());
+                return false;
+            }
+            shuttle = onMap[0];
+            return true;
+        }
+
+        // StateOf collects what the game and the shuttle say about this pawn,
+        // for the rule that turns it into a refusal or a go-ahead.
+        private static ShuttleRules.State StateOf(Thing shuttle, CompShuttle comp, CompTransporter transporter,
+            Pawn pawn, bool contained)
+        {
+            return new ShuttleRules.State
+            {
+                Shuttle = shuttle.Label.CapitalizeFirst(),
+                ShuttleId = shuttle.thingIDNumber,
+                Cell = "(" + shuttle.Position.x + ", " + shuttle.Position.z + ")",
+                ShuttleSpawned = shuttle.Spawned,
+                Loading = transporter.LoadingInProgressOrReadyToLaunch,
+                Pawn = pawn.LabelShortCap,
+                PawnId = pawn.thingIDNumber,
+                PawnSpawned = pawn.Spawned && pawn.MapHeld == shuttle.MapHeld,
+                PawnWhere = WhereIs(pawn),
+                PawnDead = pawn.Dead,
+                PawnDowned = pawn.Downed,
+                AlreadyAboard = contained,
+                Required = comp.requiredPawns.Contains(pawn),
+                Allowed = comp.IsAllowedNow(pawn),
+                CanReach = pawn.Spawned && shuttle.Spawned
+                    && pawn.CanReach(shuttle, PathEndMode.Touch, Danger.Deadly),
+                AcceptsColonists = comp.acceptColonists,
+                OnlyAcceptColonists = comp.onlyAcceptColonists,
+                OnlyAcceptHealthy = comp.onlyAcceptHealthy,
+                PawnIsQuestLodger = pawn.IsQuestLodger(),
+                PawnUnhealthy = pawn.Downed || pawn.InMentalState
+                    || !pawn.health.capacities.CanBeAwake
+                    || !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Moving)
+                    || !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation),
+                BelowMinAge = pawn.ageTracker != null && pawn.ageTracker.AgeBiologicalYearsFloat < comp.minAge,
+                MaxColonistCount = comp.maxColonistCount,
+                AtColonistLimit = comp.maxColonistCount >= 0
+                    && CountBoarding(transporter, shuttle, pawn) >= comp.maxColonistCount,
+            };
+        }
+
+        // CountBoarding is the game's own count for its colonist cap: the
+        // colonists inside the shuttle plus the ones walking to it.
+        private static int CountBoarding(CompTransporter transporter, Thing shuttle, Pawn except)
+        {
+            int count = 0;
+            foreach (Thing thing in (IEnumerable<Thing>)transporter.innerContainer)
+            {
+                if (thing != except && thing is Pawn p && p.IsColonist) count++;
+            }
+            Map map = shuttle.MapHeld;
+            if (map == null) return count;
+            foreach (Pawn other in map.mapPawns.AllPawns)
+            {
+                if (other == except || other.jobs == null) continue;
+                if (HeadsFor(other.jobs.curJob, shuttle)) count++;
+                foreach (QueuedJob queued in other.jobs.jobQueue)
+                {
+                    if (HeadsFor(queued.job, shuttle)) count++;
+                }
+            }
+            return count;
+        }
+
+        private static bool HeadsFor(Job job, Thing shuttle)
+        {
+            return job != null && job.def != null && job.def.driverClass != null
+                && typeof(JobDriver_EnterTransporter).IsAssignableFrom(job.def.driverClass)
+                && job.GetTarget(TargetIndex.A).Thing == shuttle;
+        }
+
+        // WhereIs names the place a pawn that is not on the shuttle's map is,
+        // so the refusal says why he cannot board.
+        private static string WhereIs(Pawn pawn)
+        {
+            if (pawn.Dead) return "";
+            if (pawn.CarriedBy != null) return "carried by " + pawn.CarriedBy.LabelShort;
+            if (pawn.GetCaravan() != null) return "in a caravan";
+            if (pawn.MapHeld == null) return "off the map";
+            if (pawn.MapHeld.Parent != null && pawn.MapHeld.Parent.def != null)
+                return "on " + pawn.MapHeld.Parent.def.label;
+            return "on another map";
+        }
+
+        // ShuttleDtoOf reads one shuttle as the tool prints it: the cell, the
+        // people it waits for with the state each one is in, the items it
+        // wants, and the quest's own countdown to its departure.
+        private static ShuttleDto ShuttleDtoOf(Thing shuttle, Map map)
+        {
+            CompShuttle comp = shuttle.TryGetComp<CompShuttle>();
+            CompTransporter transporter = shuttle.TryGetComp<CompTransporter>();
+            ShuttleDto dto = new ShuttleDto
+            {
+                Id = shuttle.thingIDNumber,
+                DefName = shuttle.def != null ? shuttle.def.defName : "",
+                Label = shuttle.Label.CapitalizeFirst(),
+                Faction = shuttle.Faction != null ? shuttle.Faction.Name : "",
+                Position = PositionOf(shuttle),
+                Spawned = shuttle.Spawned,
+                Loading = transporter != null && transporter.LoadingInProgressOrReadyToLaunch,
+                Autoload = comp.Autoload,
+                AllRequiredLoaded = comp.AllRequiredThingsLoaded,
+                RequiredColonistCount = comp.requiredColonistCount,
+                RequireAllColonistsOnMap = comp.requireAllColonistsOnMap,
+            };
+
+            if (transporter != null)
+            {
+                foreach (Thing thing in (IEnumerable<Thing>)transporter.innerContainer)
+                {
+                    if (thing is Pawn p) dto.ContainedPawns.Add(PawnDtoOf(p, shuttle, true));
+                }
+                foreach (ThingDefCount required in comp.requiredItems)
+                {
+                    if (required == null || required.ThingDef == null) continue;
+                    int loaded = 0;
+                    foreach (Thing thing in (IEnumerable<Thing>)transporter.innerContainer)
+                    {
+                        if (thing.def == required.ThingDef) loaded += thing.stackCount;
+                    }
+                    dto.RequiredItems.Add(new ShuttleItemDto
+                    {
+                        DefName = required.ThingDef.defName,
+                        Label = required.ThingDef.label,
+                        Required = required.Count,
+                        Loaded = loaded,
+                    });
+                }
+            }
+            foreach (Pawn p in comp.requiredPawns)
+            {
+                if (p == null) continue;
+                dto.RequiredPawns.Add(PawnDtoOf(p, shuttle, transporter != null && transporter.innerContainer.Contains(p)));
+            }
+
+            int ticks;
+            bool soon;
+            DepartureOf(shuttle, out ticks, out soon);
+            dto.LeavesInTicks = ticks;
+            dto.LeavesSoon = soon;
+            return dto;
+        }
+
+        // DepartureOf finds the quest part that sends this shuttle away and
+        // reports its countdown: that part is what fails the quest, so the
+        // number it holds is the one a run has to beat.
+        private static void DepartureOf(Thing shuttle, out int ticks, out bool soon)
+        {
+            ticks = -1;
+            soon = false;
+            if (Find.QuestManager == null) return;
+            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+            {
+                if (quest == null || quest.Historical) continue;
+                foreach (QuestPart part in quest.PartsListForReading)
+                {
+                    QuestPart_ShuttleLeaveDelay leave = part as QuestPart_ShuttleLeaveDelay;
+                    if (leave == null || leave.shuttle != shuttle) continue;
+                    if (leave.State != QuestPartState.Enabled) continue;
+                    ticks = Math.Max(0, leave.TicksLeft);
+                    soon = leave.AlertCritical;
+                    return;
+                }
+            }
+        }
+
+        private static ShuttlePawnDto PawnDtoOf(Pawn pawn, Thing shuttle, bool contained)
+        {
+            return new ShuttlePawnDto
+            {
+                Id = pawn.thingIDNumber,
+                Name = pawn.LabelShortCap,
+                Contained = contained,
+                Downed = pawn.Downed,
+                OnMap = pawn.Spawned && pawn.MapHeld == shuttle.MapHeld,
+                Dead = pawn.Dead,
+                Kind = KindOf(pawn),
+            };
+        }
+
+        // KindOf says what the pawn is to the colony, which decides whether a
+        // shuttle takes him at all.
+        private static string KindOf(Pawn pawn)
+        {
+            if (pawn.IsQuestLodger()) return "quest lodger";
+            if (pawn.IsPrisonerOfColony) return "prisoner";
+            if (pawn.IsColonist) return "colonist";
+            if (pawn.IsSlave) return "slave";
+            if (pawn.RaceProps != null && pawn.RaceProps.Animal) return "animal";
+            if (pawn.Faction != null && pawn.Faction.IsPlayer) return "colonist";
+            return "guest";
+        }
+
+        private static PositionDto PositionOf(Thing thing)
+        {
+            return new PositionDto
+            {
+                X = thing.Position.x,
+                Y = thing.Position.y,
+                Z = thing.Position.z,
+            };
+        }
+    }
+}
