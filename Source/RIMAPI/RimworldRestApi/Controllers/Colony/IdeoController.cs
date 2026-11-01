@@ -23,8 +23,9 @@ namespace RIMAPI.Controllers
         [EndpointMetadata("The colony ideoligion: name, structure, memes, precepts and whether it can be reformed")]
         public async Task GetIdeo(HttpListenerContext context)
         {
-            int mapId = RequestParser.GetMapId(context);
-            var result = _ideoService.GetIdeo(mapId);
+            // The colony's ideoligion is not a map's: the read takes no map_id
+            // so a caller can ask before it knows a map (ticket #3612).
+            var result = _ideoService.GetIdeo();
             await context.SendJsonResponse(result);
         }
 

@@ -72,7 +72,7 @@ namespace RIMAPI.Services
             }
         }
 
-        public ApiResult<IdeoSummaryDto> GetIdeo(int mapId)
+        public ApiResult<IdeoSummaryDto> GetIdeo()
         {
             try
             {
@@ -85,7 +85,7 @@ namespace RIMAPI.Services
                     Structure = ideo.StructureMeme != null ? ideo.StructureMeme.label : "",
                     Fluid = ideo.Fluid,
                     Memes = ideo.memes.Select(m => m.label).ToList(),
-                    Precepts = ideo.PreceptsListForReading.Select(p => p.Label).ToList(),
+                    Precepts = ideo.PreceptsListForReading.Select(p => p.TipLabel).ToList(),
                     Believers = ideo.ColonistBelieverCountCached,
                 };
                 if (ideo.Fluid && ideo.development != null)

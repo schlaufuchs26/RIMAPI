@@ -19,6 +19,6 @@ namespace RIMAPI.Services
 
         // GetIdeo names the colony's ideoligion with its structure, its memes
         // and precepts, and whether it can be reformed (ticket #3612).
-        ApiResult<IdeoSummaryDto> GetIdeo(int mapId);
+        ApiResult<IdeoSummaryDto> GetIdeo();
     }
 }
