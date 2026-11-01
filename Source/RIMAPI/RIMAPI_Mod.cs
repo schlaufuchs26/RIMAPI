@@ -58,7 +58,8 @@ namespace RIMAPI
         /// </summary>
         private void ApplyCommandLinePort()
         {
-            string raw = GenCommandLine.TryGetCommandLineArg("rimapi-port");
+            string raw = null;
+            GenCommandLine.TryGetCommandLineArg("rimapi-port", out raw);
             int port = Helpers.ListenPort.Override(raw, Settings.serverPort, out bool refused);
             if (refused)
             {
