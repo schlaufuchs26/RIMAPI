@@ -54,6 +54,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TradeHoldingText.cs" Link="Linked\TradeHoldingText.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FirefightPlan.cs" Link="Linked\FirefightPlan.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogState.cs" Link="Linked\JobLogState.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogRecord.cs" Link="Linked\JobLogRecord.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HediffRate.cs" Link="Linked\HediffRate.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PauseSource.cs" Link="Linked\PauseSource.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AnimalRules.cs" Link="Linked\AnimalRules.cs" />

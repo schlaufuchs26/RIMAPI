@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using RIMAPI.Core;
+using RIMAPI.Services;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -218,8 +219,9 @@ namespace RIMAPI
         public override void ExposeData()
         {
             base.ExposeData();
-            // Keep this if you need to save mod settings into the save file,
-            // otherwise it can be empty.
+            // The job record travels with the save, so a reload brings back
+            // what each colonist did instead of starting empty (ticket #3614).
+            JobLog.ExposeData();
         }
     }
 }

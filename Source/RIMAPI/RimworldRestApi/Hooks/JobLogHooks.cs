@@ -91,10 +91,32 @@ namespace RimworldRestApi.Hooks
     }
 
     // A load rewinds the game clock and brings back the pawns of another
-    // moment, so the record of the colony that was there before belongs to
-    // nobody: start it over when a game finishes loading.
+    // moment, so what the record holds of the timeline before it belongs to
+    // nobody: keep only what the loaded world already lived, and the state each
+    // pawn is in (ticket #3614). The record itself comes back from the save, so
+    // this hook no longer wipes it.
     [HarmonyPatch(typeof(Game), nameof(Game.FinalizeInit))]
     public static class JobLogResetPatch
+    {
+        static void Postfix()
+        {
+            try
+            {
+                JobLog.AfterLoad();
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"[RimworldRestApi] Error in JobLogResetPatch.Postfix: {ex}");
+            }
+        }
+    }
+
+    // A new colony has no record of its own: the pawn ids of the colony before
+    // it are the ids the new one hands out, so keeping the old lines would
+    // credit them with work nobody did (ticket #3614). InitNewGame runs before
+    // any pawn exists, so the record starts empty.
+    [HarmonyPatch(typeof(Game), nameof(Game.InitNewGame))]
+    public static class JobLogNewGamePatch
     {
         static void Postfix()
         {
@@ -104,7 +126,7 @@ namespace RimworldRestApi.Hooks
             }
             catch (Exception ex)
             {
-                LogApi.Error($"[RimworldRestApi] Error in JobLogResetPatch.Postfix: {ex}");
+                LogApi.Error($"[RimworldRestApi] Error in JobLogNewGamePatch.Postfix: {ex}");
             }
         }
     }

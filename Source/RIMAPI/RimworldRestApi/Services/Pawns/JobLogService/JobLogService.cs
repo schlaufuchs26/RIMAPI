@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using Verse;
 
@@ -19,7 +20,7 @@ namespace RIMAPI.Services
             if (sinceTick < 0) sinceTick = 0;
             if (sinceTick > now) sinceTick = now;
             var entries = new List<JobLogEntryDto>();
-            foreach (JobLog.Entry e in JobLog.Since(sinceTick))
+            foreach (JobLogEntry e in JobLog.Since(sinceTick))
             {
                 entries.Add(new JobLogEntryDto
                 {

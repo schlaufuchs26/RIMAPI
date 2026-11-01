@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RimWorld;
 using Verse;
@@ -18,38 +19,14 @@ namespace RIMAPI.Services
     // on) differs from the one recorded before, so a job that is re-started
     // without changing anything costs no line. A pawn with no job at all is an
     // entry of its own ("idle"), which is the state a run needs to see.
+    //
+    // The record itself is JobLogRecord, which is game-free so the unit tests
+    // pin it (ticket #3614); this class reads the pawns and carries the record
+    // in the save.
     public static class JobLog
     {
-        public class Entry
-        {
-            public int Tick;
-            public int PawnId;
-            public string Pawn;
-            // Job is the def's defName, empty when the pawn has no job at all.
-            public string Job;
-            // Label is the def's own label ("harvest"); "idle" without a job.
-            public string Label;
-            // Target is the thing the job works on, empty when it works on a
-            // cell or on nothing.
-            public string Target;
-            // Idle is the game's own answer to "does this pawn have something
-            // to do" (Pawn_MindState.IsIdle, the state the colonists-idle alert
-            // shows). The tool used to guess it from job names, so a new
-            // wander job in a game update counted as work (ticket #3392).
-            public bool Idle;
-        }
-
-        // KeepTicks bounds the record to two in-game days, which is longer than
-        // any wait asks for, and MaxEntries keeps a long-running colony from
-        // growing it without bound.
-        private const int KeepTicks = 2 * 60000;
-        private const int MaxEntries = 20000;
-
         private static readonly object Gate = new object();
-        private static readonly List<Entry> Entries = new List<Entry>();
-        // Current is the entry each pawn is in right now, so a repeated hook
-        // (StartJob and EndCurrentJob both fire on one change) writes nothing.
-        private static readonly Dictionary<int, Entry> Current = new Dictionary<int, Entry>();
+        private static readonly JobLogRecord Store = new JobLogRecord();
 
         // Record looks at one pawn and appends an entry when its job changed.
         // Both hooks call it after the game has set the new state, so it reads
@@ -74,27 +51,19 @@ namespace RIMAPI.Services
                 label = cur.def.label ?? job;
                 target = TargetLabel(cur);
             }
-            bool idle = IdleState(pawn);
-            int id = pawn.thingIDNumber;
+            var entry = new JobLogEntry
+            {
+                Tick = now,
+                PawnId = pawn.thingIDNumber,
+                Pawn = pawn.LabelShort ?? pawn.Name?.ToStringShort ?? "?",
+                Job = job,
+                Label = label,
+                Target = target,
+                Idle = IdleState(pawn),
+            };
             lock (Gate)
             {
-                Entry last;
-                if (Current.TryGetValue(id, out last)
-                    && JobLogState.Same(last.Job, last.Target, last.Idle, job, target, idle))
-                    return;
-                var entry = new Entry
-                {
-                    Tick = now,
-                    PawnId = id,
-                    Pawn = pawn.LabelShort ?? pawn.Name?.ToStringShort ?? "?",
-                    Job = job,
-                    Label = label,
-                    Target = target,
-                    Idle = idle,
-                };
-                Entries.Add(entry);
-                Current[id] = entry;
-                Prune(now);
+                Store.Append(entry, now);
             }
         }
 
@@ -145,17 +114,17 @@ namespace RIMAPI.Services
             int now = Find.TickManager?.TicksGame ?? 0;
             lock (Gate)
             {
-                Entry last;
-                bool tracked = Current.TryGetValue(id, out last);
                 // A pawn the record never saw is only worth an exit when he is
                 // a colonist; anyone else is not part of the report anyway.
                 // Same rule as Record, so a colonist in a mental state gets his
                 // exit line too (ticket #3505).
+                bool tracked = Store.Tracks(id);
                 if (!tracked && !JobLogState.Tracked(pawn.IsColonist, pawn.Faction == Faction.OfPlayer))
                     return;
-                if (tracked && last.Job == job)
+                JobLogEntry last = Store.Last(id);
+                if (last != null && last.Job == job)
                     return;
-                var entry = new Entry
+                Store.Append(new JobLogEntry
                 {
                     Tick = now,
                     PawnId = id,
@@ -163,61 +132,69 @@ namespace RIMAPI.Services
                     Job = job,
                     Label = label,
                     Target = "",
-                };
-                Entries.Add(entry);
-                Current[id] = entry;
-                Prune(now);
+                }, now);
             }
         }
 
         // Since answers the record from one tick on, plus the entry each pawn
         // was in at that tick: without it the first span of the answer has no
         // start, and a pawn who began a job before the wait would look idle.
-        public static List<Entry> Since(int sinceTick)
+        public static List<JobLogEntry> Since(int sinceTick)
         {
             lock (Gate)
             {
-                var prior = new Dictionary<int, Entry>();
-                var outList = new List<Entry>();
-                foreach (var e in Entries)
-                {
-                    if (e.Tick < sinceTick)
-                    {
-                        prior[e.PawnId] = e;
-                        continue;
-                    }
-                    if (prior.Count > 0)
-                    {
-                        foreach (var p in prior.Values) outList.Add(p);
-                        prior.Clear();
-                    }
-                    outList.Add(e);
-                }
-                foreach (var p in prior.Values) outList.Add(p);
-                return outList;
+                return Store.Since(sinceTick);
             }
         }
 
-        // Forget drops the record, for a new game or a reloaded save whose pawn
-        // ids belong to a colony that is gone.
+        // AfterLoad runs when a game finished loading. It keeps what the loaded
+        // world has already lived and drops the rest, and it rebuilds the state
+        // each pawn is in, so a report that straddles the reload still starts
+        // with the job each pawn was in (ticket #3614).
+        public static void AfterLoad()
+        {
+            int now = Find.TickManager?.TicksGame ?? 0;
+            lock (Gate)
+            {
+                Store.AfterLoad(now);
+            }
+        }
+
+        // Forget drops the record, for a new colony whose pawns share nothing
+        // with the one before it (ticket #3614).
         public static void Forget()
         {
             lock (Gate)
             {
-                Entries.Clear();
-                Current.Clear();
+                Store.Clear();
             }
         }
 
-        private static void Prune(int now)
+        // ExposeData carries the record in the save, so a reload brings it back
+        // instead of starting empty (ticket #3614). RIMAPI_GameComponent calls
+        // it; the format is one line per entry (JobLogEntry.ToLine), and a line
+        // this build cannot read is dropped rather than failing the load.
+        public static void ExposeData()
         {
-            int drop = 0;
-            while (drop < Entries.Count && Entries[drop].Tick < now - KeepTicks)
-                drop++;
-            if (Entries.Count - drop > MaxEntries)
-                drop = Entries.Count - MaxEntries;
-            if (drop > 0)
-                Entries.RemoveRange(0, drop);
+            if (Scribe.mode != LoadSaveMode.Saving && Scribe.mode != LoadSaveMode.LoadingVars)
+                return;
+            List<string> lines = null;
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                lock (Gate)
+                {
+                    lines = Store.SaveLines();
+                }
+            }
+            Scribe_Collections.Look(ref lines, "jobLog", LookMode.Value);
+            if (Scribe.mode != LoadSaveMode.LoadingVars)
+                return;
+            lock (Gate)
+            {
+                int dropped = Store.LoadLines(lines);
+                if (dropped > 0)
+                    LogApi.Warning($"[RimworldRestApi] job record: dropped {dropped} line(s) of a save this build cannot read");
+            }
         }
 
         // TargetLabel names what a job works on. The game keeps up to three
