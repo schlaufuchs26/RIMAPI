@@ -48,6 +48,18 @@ namespace RIMAPI.Helpers
             return blighted;
         }
 
+        /// <summary>
+        /// Whether the cut order takes a plant: the game's own "Cut plants"
+        /// order (Designator_PlantsCut) takes any plant, tree, bush or grass,
+        /// and refuses only one whose comp forbids cutting (fox ticket #4023).
+        /// A wild field carries grass, not trees, so chop cannot clear it and
+        /// the growing zone stayed unsown.
+        /// </summary>
+        public static bool IsCutTarget(bool preventCutting)
+        {
+            return !preventCutting;
+        }
+
 
         /// <summary>
         /// The designation a designate order leaves behind, by the word the

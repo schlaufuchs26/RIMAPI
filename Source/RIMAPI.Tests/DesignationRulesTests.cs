@@ -56,6 +56,32 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void CutTakesEveryPlantTheGameWouldCut()
+        {
+            // The game's "Cut plants" order (Designator_PlantsCut) takes any
+            // plant, so a grass field is cleared by it and not by chop (fox
+            // ticket #4023).
+            Assert.True(DesignationRules.IsCutTarget(false));
+            Assert.False(DesignationRules.IsCutTarget(true));
+        }
+
+        // The cut order is only worth its rule when the walk asks it: the
+        // branch used to send "cut" through the chop rule, which takes trees
+        // only, so a wild grass field stayed standing (fox ticket #4023).
+        [Fact]
+        public void TheCutOrderAsksTheCutRule()
+        {
+            string root = SourceTree.RepoRoot();
+            string order = SourceTree
+                .Sources(root, "RimworldRestApi", "Services")
+                .First(path => path.EndsWith(Path.Combine("OrderService", "OrderService.cs")));
+            string source = File.ReadAllText(order);
+
+            Assert.Contains("DesignationRules.IsCutTarget(", source);
+            Assert.Contains("prevented", source);
+        }
+
+        [Fact]
         public void TheSameRectangleCoversItself()
         {
             Assert.True(DesignationRules.Covers(60, 60, 60, 60, 60, 60, 200, 200));

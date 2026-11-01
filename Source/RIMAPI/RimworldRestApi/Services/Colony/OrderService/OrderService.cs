@@ -28,6 +28,9 @@ public partial class OrderService : IOrderService
         // the order was: a chop sweep over a rice field marks nothing, and the
         // answer has to say why (fox ticket #3530).
         int blighted = 0;
+        // prevented counts the plants the game refuses to cut, which the cut
+        // order leaves standing (fox ticket #4023).
+        int prevented = 0;
         // The entries the call added, in the shape the designations read
         // sends, so a caller sees what it marked instead of only how many
         // (fox ticket #3530).
@@ -85,9 +88,26 @@ public partial class OrderService : IOrderService
                     // trees, but the blighted rice in the same rectangle has to
                     // show up in the answer all the same (fox ticket #3530).
                     if (plant.Blighted) blighted++;
-                    bool wanted = type == "blight"
-                        ? DesignationRules.IsBlightTarget(plant.Blighted)
-                        : DesignationRules.IsChopTarget(plant.def.plant.IsTree);
+                    // Cut is the game's own "Cut plants" order: any plant,
+                    // tree or grass, which is what a wild field needs before a
+                    // growing zone can sow it (fox ticket #4023). Its one
+                    // refusal is a plant whose comp forbids cutting, e.g. a
+                    // connected Gauranlen tree.
+                    bool wanted;
+                    if (type == "blight")
+                    {
+                        wanted = DesignationRules.IsBlightTarget(plant.Blighted);
+                    }
+                    else if (type == "cut")
+                    {
+                        bool preventCutting = plant.TryGetComp(out CompPlantPreventCutting prevent) && prevent.PreventCutting;
+                        if (preventCutting) prevented++;
+                        wanted = DesignationRules.IsCutTarget(preventCutting);
+                    }
+                    else
+                    {
+                        wanted = DesignationRules.IsChopTarget(plant.def.plant.IsTree);
+                    }
                     if (!wanted) continue;
                     NoteTarget(plant);
                     if (map.designationManager.DesignationOn(plant, DesignationDefOf.CutPlant) != null)
@@ -224,6 +244,6 @@ public partial class OrderService : IOrderService
         // covers, so a sweep that marked nothing can say why. Fox ticket #3648
         // adds the products the marked plants yield, so the caller can ask the
         // storage read whether the harvest has anywhere to go.
-        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, workers, refusals, harvest_thing_defs = harvestDefs });
+        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, prevented, workers, refusals, harvest_thing_defs = harvestDefs });
     }
 }
