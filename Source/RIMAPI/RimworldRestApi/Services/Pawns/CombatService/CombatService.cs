@@ -321,14 +321,19 @@ namespace RIMAPI.Services
             {
                 return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} refused the attack order");
             }
-            result.TargetId = target.thingIDNumber;
-            result.Target = target.LabelShort;
-            result.Job = job.def.defName;
-            result.Reachable = true;
-            result.Reach = walk.ReachText();
-            result.PathDanger = DangerText(walk.Worst);
             result.PathHazards = walk.HazardText();
-            if (walk.Worst != Danger.None)
+            // Whether the shot can land from where the pawn stands (fox #3737):
+            // the order took and the job reads back, but a target behind a wall
+            // or beyond the weapon leaves the pawn standing and firing nothing,
+            // which reads as "the shot missed" for hours. The reason is the
+            // game's own check, so the answer says what the game would say.
+            string block = BlockReason(pawn, target);
+            if (block != null)
+            {
+                result.Note = $"from {pawn.Position.x},{pawn.Position.z} the attack cannot land: {block}, "
+                    + "so the pawn stands and does not fire until it can; move him into the open or closer first";
+            }
+            else if (walk.Worst != Danger.None)
             {
                 result.Note = $"the path crosses {walk.HazardText()}, tolerated at max_danger={DangerText(maxDanger)}";
             }
@@ -581,6 +586,7 @@ namespace RIMAPI.Services
                 Moving = pawn.pather != null && pawn.pather.Moving,
                 Fighting = IsFightJob(pawn.CurJobDef),
                 LordJob = LordJobOf(pawn),
+                AttackBlocked = AttackBlockedOf(pawn),
             };
             if (pawn.CurJob != null && pawn.CurJob.targetA.HasThing)
             {
@@ -678,8 +684,12 @@ namespace RIMAPI.Services
 
         // HitPointsOf is the body's hit points, the unit DamagePerHit is
         // measured in: the sum over the parts the pawn still has, so a missing
-        // leg takes its points with it. A pawn without a health tracker reads
-        // zero, and the tool then prints no hit-point figure.
+        // leg takes its points with it. Both sides are scaled by the pawn's own
+        // health scale (BodyPartDef.GetMaxHealth), the same number the game
+        // uses for a part: the raw def value made a full-health raccoon read
+        // "196/489 hp", i.e. 40%, and a run read that as a wounded animal it
+        // was finally hurting (fox #3737). A pawn without a health tracker
+        // reads zero, and the tool then prints no hit-point figure.
         private static void HitPointsOf(Pawn pawn, out int current, out int max)
         {
             current = 0;
@@ -688,9 +698,8 @@ namespace RIMAPI.Services
             foreach (BodyPartRecord part in pawn.health.hediffSet.GetNotMissingParts())
             {
                 if (part == null || part.def == null) continue;
-                max += part.def.hitPoints;
-                current += (int)System.Math.Min(
-                    pawn.health.hediffSet.GetPartHealth(part), (float)part.def.hitPoints);
+                max += (int)part.def.GetMaxHealth(pawn);
+                current += (int)pawn.health.hediffSet.GetPartHealth(part);
             }
             if (current < 0) current = 0;
         }
@@ -705,6 +714,45 @@ namespace RIMAPI.Services
         private static bool HasRangedWeapon(Pawn pawn)
         {
             return WeaponRange(pawn) > 1.6f;
+        }
+
+        // BlockReason names the game's own gate between a pawn and its target,
+        // or null when the attack can land (fox #3737). The verb's own check
+        // decides, so the reason matches what the game does instead of a second
+        // opinion; only the wording is ours (AttackBlockRules, game-free and
+        // tested).
+        private static string BlockReason(Pawn pawn, Thing target)
+        {
+            if (target == null || !target.Spawned || pawn.Map == null) return null;
+            Verb verb = HasRangedWeapon(pawn)
+                ? (pawn.equipment != null && pawn.equipment.PrimaryEq != null
+                    ? pawn.equipment.PrimaryEq.PrimaryVerb
+                    : null)
+                : pawn.meleeVerbs.TryGetMeleeVerb(target);
+            AttackBlockRules.Facts facts = new AttackBlockRules.Facts
+            {
+                CanFight = PawnHelper.CanFight(pawn),
+                HasVerb = verb != null,
+                CanHit = verb != null && verb.CanHitTargetFrom(pawn.Position, target),
+                Distance = pawn.Position.DistanceTo(target.Position),
+                Range = verb != null ? verb.EffectiveRange : 0f,
+                MinRange = verb != null && verb.verbProps != null
+                    ? verb.verbProps.EffectiveMinRange(target, pawn)
+                    : 0f,
+            };
+            string reason = AttackBlockRules.Reason(facts);
+            return reason.Length == 0 ? null : reason;
+        }
+
+        // AttackBlockedOf is the read's half of it: a drafted pawn whose job is
+        // an attack says why that attack is not landing, so a run reads "no
+        // line of sight" instead of "the shot missed" (fox #3737).
+        private static string AttackBlockedOf(Pawn pawn)
+        {
+            if (!pawn.Drafted || pawn.CurJob == null || !IsFightJob(pawn.CurJob.def)) return "";
+            Thing target = pawn.CurJob.targetA.Thing;
+            if (target == null) return "";
+            return BlockReason(pawn, target) ?? "";
         }
 
         // IsHostile is the side test the tool uses: an enemy faction, or an

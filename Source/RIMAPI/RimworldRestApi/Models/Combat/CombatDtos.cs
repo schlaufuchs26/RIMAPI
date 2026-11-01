@@ -59,6 +59,12 @@ namespace RIMAPI.Models
         // so the tool reads this to tell a raid from a group that stays put
         // (ticket #3294).
         public string LordJob { get; set; }
+        // AttackBlocked names why an ordered attack is not landing: a drafted
+        // pawn whose job is an attack stood an hour next to a mad raccoon while
+        // the animal stayed at full health, and the read could not tell a miss
+        // from an order that never fired (fox #3737). Empty when the attack can
+        // land or the pawn has no attack job.
+        public string AttackBlocked { get; set; }
     }
 
     public class CombatStateDto
