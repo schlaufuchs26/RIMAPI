@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using RIMAPI.CameraStreamer;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RIMAPI.Models.Camera;
 using UnityEngine;
@@ -239,6 +240,7 @@ namespace RIMAPI.Services
                         Height = flippedRT.height,
                         SizeBytes = imageBytes.Length
                     },
+                    Camera = CameraViewOf(flippedRT.width, flippedRT.height),
                     GameContext = new GameContext
                     {
                         CurrentTick = Find.TickManager != null ? Find.TickManager.TicksGame : 0
@@ -345,69 +347,53 @@ namespace RIMAPI.Services
             targetWidth = Mathf.Clamp(targetWidth, 16, 7680);
             targetHeight = Mathf.Clamp(targetHeight, 16, 4320);
 
-            bool originalUIState = false;
-
-            // 1. Hide the UI BEFORE the try-catch block
-            if (request.HideUI && Find.UIRoot != null)
+            // The picture comes from the game's own camera, not from the screen
+            // buffer (fox ticket #4025): a debug slot keeps its window behind
+            // or minimized, and a screen read there captures whatever the
+            // window last showed. Camera.Render() into a render texture works
+            // without a visible window, and it never contains the UI, so no
+            // frame has to be waited for and no screenshot mode switched.
+            var camera = Find.Camera;
+            if (camera == null)
             {
-                originalUIState = Find.UIRoot.screenshotMode.Active;
-                SetScreenshotMode(true);
+                tcs.TrySetResult(ApiResult<CameraScreenshotResponseDto>.Fail("Cannot take a screenshot. The game camera is not up."));
+                yield break;
             }
 
-            // Yield to let Unity render a brand new frame WITHOUT the UI!
-            // We must do this outside the try-catch to satisfy C# compiler rules (CS1626).
-            yield return new WaitForEndOfFrame();
+            RenderTexture renderTexture = RenderTexture.GetTemporary(targetWidth, targetHeight, 24, RenderTextureFormat.ARGB32);
+            Texture2D texture = null;
 
             try
             {
-                // Read the raw screen buffer directly! 
-                // Because we waited for the end of the frame, the IMGUI (RimWorld UI) is guaranteed to be here.
-                RenderTexture.active = null; // Ensure we are reading from the screen, not an RT
-                Texture2D screenTex = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
-                screenTex.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
-                screenTex.Apply();
+                RenderTexture previousTarget = camera.targetTexture;
+                camera.targetTexture = renderTexture;
+                camera.Render();
+                camera.targetTexture = previousTarget;
 
-                Texture2D finalTexture = screenTex;
-                RenderTexture resizedRT = null;
-
-                // Handle Resizing (If the API client requested a smaller/larger width than the game window)
-                bool needsResize = (targetWidth != Screen.width || targetHeight != Screen.height);
-                if (needsResize)
-                {
-                    resizedRT = RenderTexture.GetTemporary(targetWidth, targetHeight, 24, RenderTextureFormat.ARGB32);
-
-                    // Copy the full screen into the resized target
-                    Graphics.Blit(screenTex, resizedRT);
-
-                    // Read the resized pixels into a new texture
-                    finalTexture = new Texture2D(targetWidth, targetHeight, TextureFormat.RGB24, false);
-                    RenderTexture.active = resizedRT;
-                    finalTexture.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
-                    finalTexture.Apply();
-                    RenderTexture.active = null;
-                }
+                RenderTexture.active = renderTexture;
+                texture = new Texture2D(targetWidth, targetHeight, TextureFormat.RGB24, false);
+                texture.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+                texture.Apply();
+                RenderTexture.active = null;
 
                 byte[] imageBytes;
                 string actualFormat;
-
                 if (format == "png")
                 {
-                    imageBytes = finalTexture.EncodeToPNG();
+                    imageBytes = texture.EncodeToPNG();
                     actualFormat = "png";
                 }
                 else
                 {
-                    imageBytes = finalTexture.EncodeToJPG(quality);
+                    imageBytes = texture.EncodeToJPG(quality);
                     actualFormat = "jpeg";
                 }
-
-                string base64String = Convert.ToBase64String(imageBytes);
 
                 var dto = new CameraScreenshotResponseDto
                 {
                     Image = new ImageData
                     {
-                        DataUri = $"data:image/{actualFormat};base64,{base64String}"
+                        DataUri = $"data:image/{actualFormat};base64,{Convert.ToBase64String(imageBytes)}"
                     },
                     Metadata = new ImageMetadata
                     {
@@ -416,19 +402,12 @@ namespace RIMAPI.Services
                         Height = targetHeight,
                         SizeBytes = imageBytes.Length
                     },
+                    Camera = CameraViewOf(targetWidth, targetHeight),
                     GameContext = new GameContext
                     {
                         CurrentTick = Find.TickManager != null ? Find.TickManager.TicksGame : 0
                     }
                 };
-
-                // Cleanup memory to prevent massive memory leaks
-                UnityEngine.Object.Destroy(screenTex);
-                if (needsResize)
-                {
-                    UnityEngine.Object.Destroy(finalTexture);
-                    RenderTexture.ReleaseTemporary(resizedRT);
-                }
 
                 tcs.TrySetResult(ApiResult<CameraScreenshotResponseDto>.Ok(dto));
             }
@@ -439,11 +418,49 @@ namespace RIMAPI.Services
             }
             finally
             {
-                if (request.HideUI && Find.UIRoot != null)
-                {
-                    SetScreenshotMode(originalUIState);
-                }
+                RenderTexture.active = null;
+                if (texture != null)
+                    UnityEngine.Object.Destroy(texture);
+                RenderTexture.ReleaseTemporary(renderTexture);
             }
+        }
+
+        // CameraViewOf names the cells the picture covers (fox ticket #4025):
+        // a check that compares the map art with the screen needs the camera's
+        // position and zoom next to the pixels, or it has to read the save.
+        private static CameraViewDto CameraViewOf(int width, int height)
+        {
+            var driver = Find.CameraDriver;
+            var camera = Find.Camera;
+            if (driver == null || camera == null)
+                return null;
+
+            var map = Find.CurrentMap;
+            // The camera's own transform is the view's centre; CameraDriver
+            // keeps its copy private, and MapPosition truncates it to a cell,
+            // which would put the rectangle half a cell off.
+            var root = camera.transform.position;
+            var view = CameraViewRules.Visible(
+                root.x,
+                root.z,
+                driver.RootSize,
+                width,
+                height,
+                map != null ? map.Size.x : 0,
+                map != null ? map.Size.z : 0
+            );
+
+            return new CameraViewDto
+            {
+                RootX = view.RootX,
+                RootZ = view.RootZ,
+                RootSize = view.RootSize,
+                X1 = view.X1,
+                Z1 = view.Z1,
+                X2 = view.X2,
+                Z2 = view.Z2,
+                HasCells = view.HasCells
+            };
         }
     }
 }

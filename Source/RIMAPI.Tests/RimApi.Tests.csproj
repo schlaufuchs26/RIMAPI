@@ -74,6 +74,9 @@
          function. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\MapLookup.cs" Link="Linked\MapLookup.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TerrainRect.cs" Link="Linked\TerrainRect.cs" />
+    <!-- The cells a screenshot covers (fox ticket #4025): camera arithmetic,
+         plain C# so it is checked without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CameraViewRules.cs" Link="Linked\CameraViewRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RoofTiling.cs" Link="Linked\RoofTiling.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkAcceptanceRules.cs" Link="Linked\WorkAcceptanceRules.cs" />

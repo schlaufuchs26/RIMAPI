@@ -99,9 +99,13 @@ desc: |-
     {
         "success": true,
         "data": {
-            "image": "/9j/4AAQSkZJRgAB...",
-            "width": 1280,
-            "height": 720
+            "image": { "data_uri": "data:image/png;base64,iVBORw0KGgo..." },
+            "metadata": { "format": "png", "width": 1280, "height": 720, "size_bytes": 812345 },
+            "camera": {
+                "root_x": 147.6, "root_z": 109.5, "root_size": 20.38,
+                "x1": 111, "z1": 89, "x2": 183, "z2": 129, "has_cells": true
+            },
+            "game_context": { "current_tick": 150000 }
         },
         "errors": [],
         "warnings": [],
