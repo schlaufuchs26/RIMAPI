@@ -24,7 +24,18 @@ namespace RIMAPI.Services
         public ApiResult<GrowingZoneDto> GetGrowingZoneById(int mapId, int zoneId)
         {
             var map = MapHelper.GetMapByID(mapId);
+            if (map == null)
+            {
+                return ApiResult<GrowingZoneDto>.Fail(GrowingZoneLookup.MapNotFound(mapId));
+            }
+
             var result = FarmHelper.GetGrowingZoneById(map, zoneId);
+            if (result == null)
+            {
+                return ApiResult<GrowingZoneDto>.Fail(
+                    GrowingZoneLookup.ZoneNotFound(mapId, zoneId));
+            }
+
             return ApiResult<GrowingZoneDto>.Ok(result);
         }
 
@@ -33,7 +44,7 @@ namespace RIMAPI.Services
             var map = MapHelper.GetMapByID(request.MapId);
             if (map == null)
             {
-                return ApiResult<GrowingZoneDto>.Fail($"Map not found: {request.MapId}");
+                return ApiResult<GrowingZoneDto>.Fail(GrowingZoneLookup.MapNotFound(request.MapId));
             }
 
             var minX = Math.Min(request.PointA.X, request.PointB.X);

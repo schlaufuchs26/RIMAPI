@@ -45,6 +45,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SkillPicker.cs" Link="Linked\SkillPicker.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IncapabilityTags.cs" Link="Linked\IncapabilityTags.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\GrowingZoneMerge.cs" Link="Linked\GrowingZoneMerge.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\GrowingZoneLookup.cs" Link="Linked\GrowingZoneLookup.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TerrainRect.cs" Link="Linked\TerrainRect.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RoofTiling.cs" Link="Linked\RoofTiling.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
