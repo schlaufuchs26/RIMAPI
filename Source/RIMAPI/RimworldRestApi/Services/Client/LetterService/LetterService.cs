@@ -25,9 +25,6 @@ namespace RIMAPI.Services
         // answering the whole colony history over the bridge.
         private const int MaxArchivedLetters = 200;
         private const int DefaultArchivedLetters = 25;
-        // MaxBodyChars caps the body one letter answers with, so a long
-        // narrative letter cannot fill a wait report (ticket #3491).
-        private const int MaxBodyChars = 4000;
 
         public ApiResult<List<LetterDto>> ListLetters(bool markSeen)
         {
@@ -628,7 +625,7 @@ namespace RIMAPI.Services
                 Id = letter.ID,
                 Label = ArchiveText.FirstLine(letter.Label),
                 Text = ArchiveText.FirstLine(ArchiveText.LetterBody(letter)),
-                Body = BodyText(letter),
+                Body = LetterBodyText.Of(letter),
                 Options = ChoicesOf(letter),
                 Def = letter.def != null ? letter.def.defName : "",
                 Tick = letter.arrivalTick,
@@ -649,28 +646,6 @@ namespace RIMAPI.Services
                 dto.PassionGains = offer.Gains;
             }
             return dto;
-        }
-
-        // BodyText is the whole body, not the first line: the wait report
-        // hands a run the letter it arrived on, and a first line of a quest
-        // offer says nothing about the reward (ticket #3491). A cap keeps a
-        // long narrative letter from dominating an answer.
-        private static string BodyText(Letter letter)
-        {
-            var body = ArchiveText.LetterBody(letter);
-            // A quest offer's own text only announces the offer and names the
-            // quest; the quest's own description is what says which threat and
-            // which game condition it brings, so the read carries both
-            // (ticket #3881).
-            var offer = letter as ChoiceLetter;
-            if (offer != null && offer.quest != null)
-                body = QuestOfferText.Body(body, ArchiveText.Resolve(offer.quest.description));
-            if (string.IsNullOrEmpty(body))
-                return "";
-            body = body.Replace("\r", "").Trim();
-            if (body.Length > MaxBodyChars)
-                body = body.Substring(0, MaxBodyChars) + "...";
-            return body;
         }
 
         // ChoicesOf is the options the letter's dialog would draw, read from
