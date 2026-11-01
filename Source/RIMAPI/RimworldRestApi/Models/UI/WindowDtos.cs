@@ -59,6 +59,13 @@ namespace RIMAPI.Models
         public string Title { get; set; }
         public string Text { get; set; }
         public List<string> Buttons { get; set; } = new List<string>();
+        // The names a naming dialog (Dialog_GiveName and its faction,
+        // settlement and gravship subclasses) holds right now, fox ticket
+        // #3929. Name is the faction (or the only name the dialog asks for),
+        // SecondName the settlement. Empty on every other window, and on a
+        // naming dialog whose field the game left empty.
+        public string Name { get; set; }
+        public string SecondName { get; set; }
     }
 
     // Press the accept button of one open window. WindowTypes is matched
@@ -67,6 +74,13 @@ namespace RIMAPI.Models
     public class WindowAcceptRequestDto
     {
         public List<string> WindowTypes { get; set; }
+
+        // The names a naming dialog should be given before its OK runs (fox
+        // ticket #3929). Empty keeps the name the dialog already holds, which
+        // is the game's generated one. Name is the faction (or the only name
+        // the dialog asks for), SecondName the settlement.
+        public string Name { get; set; }
+        public string SecondName { get; set; }
     }
 
     public class WindowAcceptResultDto
@@ -75,6 +89,9 @@ namespace RIMAPI.Models
         public List<string> AcceptedWindows { get; set; } = new List<string>();
         // The label of the button each accepted window got, in the same order.
         public List<string> Buttons { get; set; } = new List<string>();
+        // The names a naming dialog was given, in the order the dialog asks
+        // them, so the caller can compare them with what the game holds.
+        public List<string> Names { get; set; } = new List<string>();
         // Windows that matched but could not be pressed; Reason says why.
         public List<string> StillOpen { get; set; } = new List<string>();
         public string Reason { get; set; }

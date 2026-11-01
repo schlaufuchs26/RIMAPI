@@ -41,9 +41,16 @@ namespace RIMAPI.Helpers
         // starting pawns their ideo.
         public static void Apply(NewGameStartRequestDto request)
         {
+            bool named = !string.IsNullOrEmpty(request.IdeoName);
+            bool naming = !string.IsNullOrEmpty(request.NewIdeoName);
+            if (named && naming)
+            {
+                throw new Exception(
+                    "a saved ideoligion keeps its own name: pass either ideo (start under a saved one) or ideo_name (name the one this call builds), not both");
+            }
             if (!ModsConfig.IdeologyActive)
             {
-                if (!string.IsNullOrEmpty(request.IdeoName))
+                if (named || naming)
                 {
                     throw new Exception(
                         "an ideoligion was named, but the Ideology expansion is not active");
@@ -61,9 +68,17 @@ namespace RIMAPI.Helpers
                 throw new Exception("the world has no ideoligion manager yet");
             }
 
-            Ideo ideo = string.IsNullOrEmpty(request.IdeoName)
-                ? BuildDefault()
-                : FindSaved(request.IdeoName);
+            Ideo ideo = named
+                ? FindSaved(request.IdeoName)
+                : BuildDefault();
+
+            // A colony that names its own belief (fox ticket #3929): the name
+            // is checked before the ideo is added, so a refused name leaves
+            // the world exactly as it was.
+            if (!named && naming)
+            {
+                NameNew(ideo, request.NewIdeoName);
+            }
 
             // The random ideo world generation made for the player is dropped
             // rather than kept as a minor ideo: the colony starts with exactly
@@ -77,6 +92,46 @@ namespace RIMAPI.Helpers
             ideo.initialPlayerIdeo = true;
             player.ideos.SetPrimary(ideo);
             Find.IdeoManager.RemoveUnusedStartingIdeos();
+        }
+
+        // NameNew gives the freshly built ideo the name the call asked for
+        // (fox ticket #3929). The checks live in IdeoNameRules so they run in
+        // the unit suite; the game's own text for an empty name is translated
+        // here, because the helper carries no RimWorld types.
+        private static void NameNew(Ideo ideo, string wanted)
+        {
+            string problem = IdeoNameRules.Check(wanted, ExistingNames(), EmptyNameMessage());
+            if (problem != null)
+            {
+                throw new Exception(problem);
+            }
+            ideo.name = wanted.Trim();
+        }
+
+        // ExistingNames is every name the game keeps, so a duplicate is
+        // refused before the colony carries two beliefs with one name.
+        private static List<string> ExistingNames()
+        {
+            var names = new List<string>();
+            if (Find.IdeoManager == null)
+            {
+                return names;
+            }
+            foreach (Ideo other in Find.IdeoManager.IdeosListForReading)
+            {
+                if (other != null && !string.IsNullOrEmpty(other.name))
+                {
+                    names.Add(other.name);
+                }
+            }
+            return names;
+        }
+
+        private static string EmptyNameMessage()
+        {
+            return IdeoNameRules.EmptyKey.CanTranslate()
+                ? IdeoNameRules.EmptyKey.Translate().Resolve()
+                : null;
         }
 
         // FindSaved resolves a name against the ideoligions the game keeps

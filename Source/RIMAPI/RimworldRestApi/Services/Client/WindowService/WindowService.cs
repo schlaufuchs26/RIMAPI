@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
@@ -28,6 +29,8 @@ namespace RIMAPI.Services
                             Title = WindowTitle(w),
                             Text = WindowText(w),
                             Buttons = WindowButtons(w),
+                            Name = WindowName(w),
+                            SecondName = WindowSecondName(w),
                         });
                     }
                 }
@@ -77,11 +80,13 @@ namespace RIMAPI.Services
 
                 string button;
                 string reason;
-                if (TryPressAccept(target, out button, out reason))
+                List<string> names;
+                if (TryPressAccept(target, request, out button, out names, out reason))
                 {
                     result.AcceptedCount = 1;
                     result.AcceptedWindows.Add(target.GetType().Name);
                     result.Buttons.Add(button);
+                    result.Names.AddRange(names);
                     LogApi.Info($"[WindowService] Pressed {button} on {target.GetType().Name}");
                 }
                 else
@@ -102,10 +107,12 @@ namespace RIMAPI.Services
         // dialog's action (naming the faction, choosing the option) happens
         // instead of the window being pulled off the stack. A window type the
         // bridge does not know reports why instead of pretending to click.
-        private static bool TryPressAccept(Window window, out string button, out string reason)
+        private static bool TryPressAccept(Window window, WindowAcceptRequestDto request,
+            out string button, out List<string> names, out string reason)
         {
             button = "";
             reason = null;
+            names = new List<string>();
 
             var box = window as Dialog_MessageBox;
             if (box != null)
@@ -151,36 +158,56 @@ namespace RIMAPI.Services
             // NamedSecond, shows the gained-name message and removes the window
             // (Dialog_GiveName.DoWindowContents). The text fields write into
             // curName / curSecondName, so the same steps run from here with the
-            // name the dialog already holds; which is the generated one until
-            // someone types another. Without this the dialog held the clock and
-            // only a screen click could answer it (ticket #3138).
+            // names this call asked for, else the ones the dialog already
+            // holds; which is the generated one until someone types another.
+            // Without this the dialog held the clock and only a screen click
+            // could answer it (ticket #3138), and the generated name was the
+            // only name a colony ever got (fox ticket #3929).
             var giveName = window as Dialog_GiveName;
             if (giveName != null)
             {
-                var name = ReadString(giveName, "curName").Trim();
-                var second = ReadString(giveName, "curSecondName").Trim();
                 bool useSecond = ReadBool(giveName, "useSecondName");
-                if (!InvokeBool(giveName, "IsValidName", name))
+                string problem;
+                List<string> plan = NameDialogRules.Plan(
+                    useSecond,
+                    request == null ? null : request.Name,
+                    request == null ? null : request.SecondName,
+                    ReadString(giveName, "curName"),
+                    ReadString(giveName, "curSecondName"),
+                    out problem);
+                if (problem != null)
                 {
-                    reason = string.IsNullOrEmpty(name)
-                        ? "the dialog's name field is empty"
-                        : $"the dialog rejects the name \"{name}\"";
+                    reason = problem;
                     return false;
                 }
-                if (useSecond && !InvokeBool(giveName, "IsValidSecondName", second))
-                {
-                    reason = string.IsNullOrEmpty(second)
-                        ? "the dialog's settlement name field is empty"
-                        : $"the dialog rejects the settlement name \"{second}\"";
-                    return false;
-                }
-                Invoke(giveName, "Named", name);
+                // The fields are set before the validation and Named run, so
+                // the dialog names the colony with exactly what this call
+                // asked for, and a read after the press sees the same.
+                SetField(giveName, "curName", plan[0]);
                 if (useSecond)
-                    Invoke(giveName, "NamedSecond", second);
+                    SetField(giveName, "curSecondName", plan[1]);
+                if (!InvokeBool(giveName, "IsValidName", plan[0]))
+                {
+                    reason = NameDialogRules.Refusal(
+                        NameDialogRules.FieldLabel(false, useSecond), plan[0],
+                        InvalidNameMessage(giveName, false));
+                    return false;
+                }
+                if (useSecond && !InvokeBool(giveName, "IsValidSecondName", plan[1]))
+                {
+                    reason = NameDialogRules.Refusal(
+                        NameDialogRules.FieldLabel(true, true), plan[1],
+                        InvalidNameMessage(giveName, true));
+                    return false;
+                }
+                Invoke(giveName, "Named", plan[0]);
+                if (useSecond)
+                    Invoke(giveName, "NamedSecond", plan[1]);
+                names.AddRange(plan);
                 var gained = ReadString(giveName, "gainedNameMessageKey");
                 if (!string.IsNullOrEmpty(gained))
                 {
-                    var text = useSecond ? gained.Translate(name, second) : gained.Translate(name);
+                    var text = useSecond ? gained.Translate(plan[0], plan[1]) : gained.Translate(plan[0]);
                     Messages.Message(text, MessageTypeDefOf.TaskCompletion, false);
                 }
                 button = "OK";
@@ -227,7 +254,66 @@ namespace RIMAPI.Services
                 var node = FindField(tree, "curNode")?.GetValue(tree) as DiaNode;
                 return node != null ? node.text.Resolve() : "";
             }
+            var giveName = w as Dialog_GiveName;
+            if (giveName != null)
+            {
+                // The naming dialogs show the game's own question ("... thinks
+                // that you should give your faction a name"), and that text is
+                // what tells a caller which names the box wants (fox ticket
+                // #3929). Both halves are read for the pair dialog.
+                string text = DialogMessage(giveName, false);
+                if (ReadBool(giveName, "useSecondName"))
+                {
+                    string second = DialogMessage(giveName, true);
+                    if (!string.IsNullOrEmpty(second))
+                        text = string.IsNullOrEmpty(text) ? second : text + " " + second;
+                }
+                return text;
+            }
             return "";
+        }
+
+        // DialogMessage translates the game's own message key of a naming
+        // dialog, with the pawn the dialog suggests the name for.
+        private static string DialogMessage(Dialog_GiveName dialog, bool second)
+        {
+            string key = ReadString(dialog, second ? "secondNameMessageKey" : "nameMessageKey");
+            if (string.IsNullOrEmpty(key))
+                return "";
+            var pawn = FindField(dialog, "suggestingPawn")?.GetValue(dialog) as Pawn;
+            if (pawn != null)
+                return key.Translate(pawn.LabelShort, pawn).Resolve();
+            return key.Translate().Resolve();
+        }
+
+        // WindowName is the name a naming dialog holds in its first field: the
+        // faction for the pair dialog, the only name for the others.
+        private static string WindowName(Window w)
+        {
+            var giveName = w as Dialog_GiveName;
+            if (giveName == null)
+                return "";
+            return ReadString(giveName, "curName").Trim();
+        }
+
+        // WindowSecondName is the settlement a pair dialog holds; empty on a
+        // dialog that asks one name.
+        private static string WindowSecondName(Window w)
+        {
+            var giveName = w as Dialog_GiveName;
+            if (giveName == null || !ReadBool(giveName, "useSecondName"))
+                return "";
+            return ReadString(giveName, "curSecondName").Trim();
+        }
+
+        // InvalidNameMessage is the game's own reason for a rejected name, so
+        // a refusal repeats what the dialog itself would have shown.
+        private static string InvalidNameMessage(Dialog_GiveName dialog, bool second)
+        {
+            string key = ReadString(dialog, second ? "invalidSecondNameMessageKey" : "invalidNameMessageKey");
+            if (string.IsNullOrEmpty(key) || !key.CanTranslate())
+                return "";
+            return key.Translate().Resolve();
         }
 
         private static List<string> WindowButtons(Window w)
@@ -291,6 +377,18 @@ namespace RIMAPI.Services
         {
             var value = FindField(obj, name)?.GetValue(obj);
             return value is bool && (bool)value;
+        }
+
+        // SetField writes a field the game reads, which is how a wanted name
+        // reaches the dialog's own OK (fox ticket #3929). A missing field is
+        // an error, not a silent no-op: the bridge would be running a game
+        // build it does not know.
+        private static void SetField(object obj, string name, string value)
+        {
+            var field = FindField(obj, name);
+            if (field == null)
+                throw new MissingFieldException(obj.GetType().Name, name);
+            field.SetValue(obj, value);
         }
 
         // Dialog_GiveName's validation and naming methods are family (protected)

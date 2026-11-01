@@ -79,6 +79,12 @@ namespace RIMAPI.Models
         // fox default (Helpers/IdeoSetup.cs, ticket #3612).
         public string IdeoName { get; set; }
 
+        // NewIdeoName names the ideoligion this call builds (fox ticket
+        // #3929). Empty leaves the game's generated name in place, and it is
+        // refused together with IdeoName: a saved ideoligion keeps its own
+        // name. GET /api/v1/ideo reads back what the colony ended up with.
+        public string NewIdeoName { get; set; }
+
         // Scenario names the starting scenario by defName or label (ticket
         // #3930); empty keeps the game's Crashlanded default. The list the
         // installed game offers is GET /api/v1/game/scenarios.

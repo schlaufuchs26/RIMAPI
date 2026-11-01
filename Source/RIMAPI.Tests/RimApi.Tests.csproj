@@ -42,6 +42,11 @@
     <!-- The arithmetic of a starting-colonist batch (fox ticket #3924): the
          seed it is reproduced from and the bounds a pick is checked against. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PawnBatchRules.cs" Link="Linked\PawnBatchRules.cs" />
+    <!-- The names a naming dialog takes and the checks on a new
+         ideoligion's name (fox ticket #3929): plain C#, so the refusals are
+         tested without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\NameDialogRules.cs" Link="Linked\NameDialogRules.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IdeoNameRules.cs" Link="Linked\IdeoNameRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
     <!-- Whether the game lets a pawn board a shuttle (fox ticket #3862): the
          refusal wording is plain C#. -->
