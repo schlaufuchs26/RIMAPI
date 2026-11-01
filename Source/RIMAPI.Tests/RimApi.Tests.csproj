@@ -52,6 +52,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationEntry.cs" Link="Linked\DesignationEntry.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\DesignationDto.cs" Link="Linked\DesignationDto.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\BlueprintEntryDto.cs" Link="Linked\BlueprintEntryDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TradeHoldingText.cs" Link="Linked\TradeHoldingText.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FirefightPlan.cs" Link="Linked\FirefightPlan.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogState.cs" Link="Linked\JobLogState.cs" />

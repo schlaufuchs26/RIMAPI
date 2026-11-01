@@ -27,6 +27,15 @@ namespace RIMAPI.Models.Map
 
         public int Z { get; set; }
 
+        /// <summary>
+        /// The footprint of what the plan builds, unrotated: a 2x1 bench reads
+        /// (2,1) and a 1x2 bed (1,2). The caller swaps it for the east and west
+        /// rotations, the same way it reads a building's size. Without it a plan
+        /// covered only the cell the game calls its position, so a map art drew
+        /// a multi-cell plan as its corner (ticket #3608).
+        /// </summary>
+        public PositionDto Size { get; set; }
+
         /// <summary>The game's Rot4: 0 north, 1 east, 2 south, 3 west.</summary>
         public int Rotation { get; set; }
 
