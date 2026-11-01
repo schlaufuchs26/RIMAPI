@@ -35,6 +35,33 @@ namespace RIMAPI.Models
         // prisoner bed from a colonist bed, which is the difference between an
         // arrest that lands and one that is refused for "no prisoner bed".
         public BedDto Bed { get; set; }
+
+        // Grave carries a casket's assignment and contents and is null for
+        // every other building (fox ticket #3784). A grave built by `build`
+        // comes up unassigned, but the game also lets a grave be assigned to
+        // one colonist, and an assigned grave takes only that colonist's
+        // corpse: three such graves stood empty while a dead colonist stayed
+        // unburied, and no read said which grave was whose.
+        public GraveDto Grave { get; set; }
+    }
+
+    public class GraveDto
+    {
+        // AssignedPawn is the colonist the grave belongs to, empty when the
+        // grave takes any corpse.
+        public string AssignedPawn { get; set; }
+        public int AssignedPawnId { get; set; }
+
+        // Holds is the corpse inside, with the game's own "(dead)" suffix, and
+        // HoldsPawn the dead pawn's name on its own. Empty while the grave is
+        // free.
+        public string Holds { get; set; }
+        public string HoldsPawn { get; set; }
+
+        // Filter is the grave's storage filter as the game summarises it
+        // ("corpses"). An assigned grave ignores it, and the refusal names it
+        // when the filter is what said no.
+        public string Filter { get; set; }
     }
 
     public class BedDto

@@ -23,6 +23,29 @@ namespace RIMAPI.Helpers
                 },
                 Type = building.GetType().Name,
                 Bed = BedDtoOf(building),
+                Grave = GraveDtoOf(building),
+            };
+        }
+
+        // GraveDtoOf describes a casket's assignment, its contents and its
+        // filter, and answers null for every other building (fox ticket
+        // #3784). A grave assigned to one colonist takes only that colonist's
+        // corpse, and that fact was invisible: three empty graves refused the
+        // colony's dead while the read printed the building and stopped.
+        public static GraveDto GraveDtoOf(Building building)
+        {
+            Building_CorpseCasket casket = building as Building_CorpseCasket;
+            if (casket == null) return null;
+            Building_Grave grave = building as Building_Grave;
+            Pawn assigned = grave?.AssignedPawn;
+            Corpse corpse = casket.Corpse;
+            return new GraveDto
+            {
+                AssignedPawn = assigned?.LabelShort ?? "",
+                AssignedPawnId = assigned?.thingIDNumber ?? 0,
+                Holds = corpse?.LabelShort ?? "",
+                HoldsPawn = corpse?.InnerPawn?.LabelShort ?? "",
+                Filter = casket.GetStoreSettings()?.filter?.Summary ?? "",
             };
         }
 

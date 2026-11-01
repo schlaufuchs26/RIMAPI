@@ -341,6 +341,7 @@ namespace RIMAPI.Tests
             {
                 "bed",
                 "def",
+                "grave",
                 "id",
                 "label",
                 "position",
@@ -352,6 +353,18 @@ namespace RIMAPI.Tests
             JObject json = Json(new BuildingDto());
 
             Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            // A grave's assignment is what made three empty graves refuse the
+            // colony's dead (fox ticket #3784), so the block keeps these keys.
+            Assert.Equal(
+                new[]
+                {
+                    "assigned_pawn",
+                    "assigned_pawn_id",
+                    "filter",
+                    "holds",
+                    "holds_pawn",
+                },
+                Json(new GraveDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             Assert.Equal(
                 new[] { "cell", "for_prisoners", "for_slaves", "medical", "owner" },
                 Json(new BedDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));

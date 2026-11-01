@@ -602,8 +602,23 @@ namespace RIMAPI.Services
             }
             if (!destination.Accepts(thing))
             {
+                // A casket names which of its checks said no (fox ticket
+                // #3784): the corpse already inside, the colonist the grave
+                // is assigned to, or its filter. The general sentence stays
+                // for a destination whose own facts explain nothing.
+                Building_CorpseCasket casket = dest as Building_CorpseCasket;
+                string cause =
+                    casket != null
+                        ? CasketRefusal.Cause(
+                            CasketFacts(casket),
+                            thing.LabelShort,
+                            thing is Corpse,
+                            (thing as Corpse)?.InnerPawn?.LabelShort ?? ""
+                        )
+                        : null;
                 refusal =
-                    $"{dest.LabelShort} does not accept {thing.LabelShort}: the storage filter, the grave's assignment or the item's own settings say no";
+                    cause
+                    ?? $"{dest.LabelShort} does not accept {thing.LabelShort}: the storage filter, the grave's assignment or the item's own settings say no";
                 return null;
             }
             try
@@ -631,6 +646,22 @@ namespace RIMAPI.Services
                     $"Failed to build the haul job for thing {thing.thingIDNumber} into {dest.thingIDNumber}: {ex.GetType().Name}: {ex.Message}";
                 return null;
             }
+        }
+
+        // CasketFacts is what the refusal needs from a grave: its name and id,
+        // the corpse inside, the colonist it is assigned to and its filter
+        // (fox ticket #3784).
+        private static CasketRefusal.Casket CasketFacts(Building_CorpseCasket casket)
+        {
+            Building_Grave grave = casket as Building_Grave;
+            return new CasketRefusal.Casket
+            {
+                Label = casket.LabelShort,
+                Id = casket.thingIDNumber,
+                Holds = casket.Corpse?.LabelShort ?? "",
+                AssignedPawn = grave?.AssignedPawn?.LabelShort ?? "",
+                Filter = casket.GetStoreSettings()?.filter?.Summary ?? "",
+            };
         }
 
         // FirstStoreCell is the cell of a slot group the pawn would put the
