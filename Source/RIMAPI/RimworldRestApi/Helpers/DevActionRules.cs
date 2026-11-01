@@ -49,6 +49,7 @@ namespace RIMAPI.Helpers
             "spawn",
             "spawn_animal",
             "spawn_pawn",
+            "shuttle",
             "mental",
             "skill",
             "trait",
@@ -183,6 +184,17 @@ namespace RIMAPI.Helpers
                             + ", not "
                             + count
                             + "; place more in several calls";
+                    }
+                    break;
+                case "shuttle":
+                    // count is the shuttle's requiredColonistCount here: 0 (or
+                    // no count) means it waits for no colonist in particular.
+                    if (count != null && (count < 0 || count > MaxSpawn))
+                    {
+                        return "shuttle takes count as the number of colonists it waits for, 0 to "
+                            + MaxSpawn
+                            + ", not "
+                            + count;
                     }
                     break;
                 case "skill":

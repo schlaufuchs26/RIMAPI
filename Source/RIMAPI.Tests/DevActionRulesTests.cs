@@ -18,6 +18,7 @@ namespace RIMAPI.Tests
         [InlineData("spawn")]
         [InlineData("spawn_animal")]
         [InlineData("spawn_pawn")]
+        [InlineData("shuttle")]
         [InlineData("mental")]
         [InlineData("skill")]
         [InlineData("trait")]
@@ -69,6 +70,21 @@ namespace RIMAPI.Tests
             // 1000 is the cap; past it the number is a typo, not a hit.
             Assert.Null(DevActionRules.Problem("damage", 3, null, DevActionRules.MaxDamage, null, null, null));
             Assert.Contains("1000", DevActionRules.Problem("damage", 3, null, 1001f, null, null, null));
+        }
+
+        [Fact]
+        public void AShuttleNeedsNoPawnAndTakesAColonistCount()
+        {
+            // The shuttle op names a pawn only when it should wait for one, so
+            // the id stays optional; count is how many colonists it wants, and
+            // 0 (or none) is a shuttle that waits for nobody in particular.
+            Assert.Null(DevActionRules.Problem("shuttle", null, null, null, null, null, null));
+            Assert.Null(DevActionRules.Problem("shuttle", 12, null, null, null, null, null));
+            Assert.Null(DevActionRules.Problem("shuttle", null, null, null, null, 0, null));
+            Assert.Contains("colonists", DevActionRules.Problem("shuttle", null, null, null, null, -1, null));
+            Assert.Contains(
+                DevActionRules.MaxSpawn.ToString(),
+                DevActionRules.Problem("shuttle", null, null, null, null, DevActionRules.MaxSpawn + 1, null));
         }
 
         [Fact]

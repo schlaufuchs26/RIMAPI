@@ -101,6 +101,9 @@ namespace RIMAPI.Services
                     case "spawn_pawn":
                         result = SpawnPawnKind(map, request);
                         break;
+                    case "shuttle":
+                        result = SpawnShuttle(map, request);
+                        break;
                     case "mental":
                         result = Mental(request);
                         break;
