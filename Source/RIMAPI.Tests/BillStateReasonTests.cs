@@ -84,6 +84,80 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void AMissingIngredientTheFilterDropsIsNamedWithItsDefName()
+        {
+            // "nothing to work with: no twisted meat" reads the same whether the
+            // colony is out of twisted meat or the bill's own filter keeps it
+            // out, and the two fixes are opposite: haul meat, or let it in
+            // (fox ticket #3931).
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "twisted meat" };
+            facts.FilterExcluded = new List<BillStateReason.ExcludedMaterial>
+            {
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Twisted", Count = 12 },
+            };
+
+            var state = BillStateReason.Describe(facts);
+
+            Assert.Equal(BillStateReason.MissingIngredients, state.Name);
+            Assert.Equal(
+                "nothing to work with: no twisted meat; the filter keeps out Meat_Twisted (12 in the colony)",
+                state.Reason);
+        }
+
+        [Fact]
+        public void AFilterThatDropsNothingTheColonyHasAddsNoSentence()
+        {
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "leather" };
+            facts.FilterExcluded = new List<BillStateReason.ExcludedMaterial>();
+
+            Assert.Equal("nothing to work with: no leather",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
+        public void ABillThatRunsNeverCarriesTheFilterNote()
+        {
+            // The note is about a bill that cannot start. A running bill whose
+            // filter drops something the colony has plenty of is not stuck, and
+            // its reason stays empty.
+            var facts = Facts();
+            facts.FilterExcluded = new List<BillStateReason.ExcludedMaterial>
+            {
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Twisted", Count = 12 },
+            };
+
+            var state = BillStateReason.Describe(facts);
+
+            Assert.Equal(BillStateReason.Running, state.Name);
+            Assert.Null(state.Reason);
+        }
+
+        [Fact]
+        public void OnlyTheFirstFewExcludedMaterialsAreNamed()
+        {
+            // A broad filter can drop dozens of things the colony has; the line
+            // names three and counts the rest, like the filter read does.
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "twisted meat" };
+            facts.FilterExcluded = new List<BillStateReason.ExcludedMaterial>
+            {
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Twisted", Count = 12 },
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Boar", Count = 3 },
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Caribou", Count = 2 },
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Hare", Count = 1 },
+                new BillStateReason.ExcludedMaterial { DefName = "Meat_Muffalo", Count = 1 },
+            };
+
+            Assert.Equal(
+                "nothing to work with: no twisted meat; the filter keeps out "
+                + "Meat_Twisted (12 in the colony), Meat_Boar (3 in the colony), "
+                + "Meat_Caribou (2 in the colony), +2 more",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
         public void ARecipeNobodyCanDoNamesTheSkillAndTheBestColonist()
         {
             var facts = Facts();

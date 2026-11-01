@@ -43,6 +43,12 @@ namespace RIMAPI.Helpers
             // MissingIngredients names the ingredients of which the colony has
             // none at all, in the recipe's own labels.
             public IList<string> MissingIngredients;
+            // FilterExcluded names what the colony has in stock and the recipe
+            // takes, but the bill's own ingredient filter drops (fox ticket
+            // #3931). Without it "nothing to work with: no twisted meat" reads
+            // the same whether the colony is out of twisted meat or the filter
+            // keeps it out, and the fixes are opposite.
+            public IList<ExcludedMaterial> FilterExcluded;
             // Skill is the recipe's skill requirement, null when it has none;
             // SkilledColonists is how many free colonists meet it, BestSkill
             // the highest level any of them has.
@@ -67,6 +73,16 @@ namespace RIMAPI.Helpers
         {
             public string Name;
             public string Reason;
+        }
+
+        // ExcludedMaterial is one thing the colony has in stock that the bill's
+        // own filter keeps out of the recipe. DefName is the form the filter
+        // read and `bill op=set allow=` use, so the line names the lever and
+        // not only the label.
+        public struct ExcludedMaterial
+        {
+            public string DefName;
+            public int Count;
         }
 
         // Describe answers the state and, when the bill is not simply running,
@@ -100,7 +116,11 @@ namespace RIMAPI.Helpers
             }
             if (f.MissingIngredients != null && f.MissingIngredients.Count > 0)
             {
-                return new State { Name = MissingIngredients, Reason = MissingText(f) };
+                return new State
+                {
+                    Name = MissingIngredients,
+                    Reason = Join(MissingText(f), FilterExcludedText(f)),
+                };
             }
             // The assignment comes before the skill: a bench whose work type
             // nobody works gives no job to anybody, however good they are.
@@ -140,5 +160,35 @@ namespace RIMAPI.Helpers
         {
             return second == null ? first : first + "; " + second;
         }
+
+        // FilterExcludedText names what the filter keeps out of a bill that has
+        // no material (fox ticket #3931): the defName the filter read and
+        // `bill op=set allow=` take, with how much of it sits in the colony, so
+        // one line says whether hauling helps or the filter has to change.
+        private static string FilterExcludedText(Facts f)
+        {
+            if (f.FilterExcluded == null || f.FilterExcluded.Count == 0)
+            {
+                return null;
+            }
+
+            var parts = new List<string>();
+            int named = 0;
+            foreach (ExcludedMaterial material in f.FilterExcluded)
+            {
+                if (named == FilterExcludedCap)
+                {
+                    parts.Add(string.Format("+{0} more", f.FilterExcluded.Count - named));
+                    break;
+                }
+                parts.Add(string.Format("{0} ({1} in the colony)", material.DefName, material.Count));
+                named++;
+            }
+            return "the filter keeps out " + string.Join(", ", parts);
+        }
+
+        // FilterExcludedCap keeps the sentence short: a broad filter can drop
+        // dozens of things the colony has, and the rest is counted.
+        private const int FilterExcludedCap = 3;
     }
 }

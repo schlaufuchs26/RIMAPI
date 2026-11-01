@@ -75,7 +75,10 @@ namespace RIMAPI.Helpers
             ThingDef product = recipe.ProducedThingDef;
             int have = product == null ? 0 : CountInColony(bill, product, map);
             dto.ProductsInColony = have;
-            dto.MissingIngredients = MissingIngredients(recipe, map);
+            List<string> missing;
+            List<BillStateReason.ExcludedMaterial> excluded;
+            BillIngredients(bill, map, out missing, out excluded);
+            dto.MissingIngredients = missing;
 
             var facts = new BillStateReason.Facts
             {
@@ -85,7 +88,8 @@ namespace RIMAPI.Helpers
                     && product != null
                     && have >= bill.targetCount,
                 TargetText = TargetText(bill, product, have),
-                MissingIngredients = dto.MissingIngredients,
+                MissingIngredients = missing,
+                FilterExcluded = excluded,
                 PowerFault = BenchPowerFault(bill),
             };
 
@@ -265,18 +269,84 @@ namespace RIMAPI.Helpers
             return string.Format("{0} of {1} {2} in the colony", have, bill.targetCount, product.label);
         }
 
-        // MissingIngredients names the ingredients the colony has none of at
-        // all, in the recipe's own labels. The game's own helper answers the
-        // defs, so a filter that no stored thing matches counts as missing.
-        private static List<string> MissingIngredients(RecipeDef recipe, Map map)
+        // BillIngredients answers what the bill is short of, asking the bill's
+        // own ingredient filter (fox ticket #3931). The game's own
+        // PotentiallyMissingIngredients asks the recipe's filter, so a bill
+        // whose filter keeps out the only meat in the store claimed to run
+        // while it could never get a job, and "nothing to work with: no
+        // twisted meat" read the same whether the colony was out of it or the
+        // filter refused it. missing names the ingredients the bill has
+        // nothing usable of, in the recipe's own labels; excluded names what
+        // the colony has in stock and the recipe takes but the bill's filter
+        // drops, biggest stock first, with the defName the filter read and
+        // `bill op=set allow=` take.
+        private static void BillIngredients(
+            Bill_Production bill, Map map,
+            out List<string> missing, out List<BillStateReason.ExcludedMaterial> excluded)
         {
-            var missing = new List<string>();
-            foreach (ThingDef def in recipe.PotentiallyMissingIngredients(null, map))
+            missing = new List<string>();
+            excluded = new List<BillStateReason.ExcludedMaterial>();
+            RecipeDef recipe = bill.recipe;
+            if (recipe?.ingredients == null || map.listerThings == null)
+                return;
+
+            var seen = new HashSet<string>();
+            foreach (IngredientCount ingredient in recipe.ingredients)
             {
-                if (def != null)
-                    missing.Add(def.label);
+                if (ingredient?.filter == null)
+                    continue;
+
+                bool usable = false;
+                string label = null;
+                foreach (ThingDef def in ingredient.filter.AllowedThingDefs)
+                {
+                    if (def == null)
+                        continue;
+                    int count = CountUsable(map, def);
+                    if (bill.ingredientFilter == null || bill.ingredientFilter.Allows(def))
+                    {
+                        // The first def the bill would take is the one to name
+                        // when the slot has nothing: hauling that ends the gap.
+                        if (label == null)
+                            label = def.label;
+                        if (count > 0)
+                            usable = true;
+                    }
+                    else if (count > 0 && seen.Add(def.defName))
+                    {
+                        excluded.Add(new BillStateReason.ExcludedMaterial
+                        {
+                            DefName = def.defName,
+                            Count = count,
+                        });
+                    }
+                }
+                if (!usable)
+                {
+                    missing.Add(label
+                        ?? ingredient.filter.AnyAllowedDef?.label
+                        ?? recipe.label);
+                }
             }
-            return missing;
+            excluded.Sort((a, b) => b.Count.CompareTo(a.Count));
+        }
+
+        // CountUsable is what the game's own PotentiallyMissingIngredients
+        // counts: the haulable things of one def on the map that the colony may
+        // use (Verse.RecipeDef.PotentiallyMissingIngredients scans
+        // listerThings.ThingsInGroup(HaulableEver) and skips a forbidden thing).
+        // Map.resourceCounter answers a stale number for a stack that appeared
+        // after the load, which would hide the material a bill waits for.
+        private static int CountUsable(Map map, ThingDef def)
+        {
+            int count = 0;
+            foreach (Thing thing in map.listerThings.ThingsOfDef(def))
+            {
+                if (thing.IsForbidden(Faction.OfPlayer))
+                    continue;
+                count += thing.stackCount;
+            }
+            return count;
         }
 
         public static RecipeDto ToRecipeDto(RecipeDef recipe)
