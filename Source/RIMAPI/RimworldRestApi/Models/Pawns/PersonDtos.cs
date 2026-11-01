@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RIMAPI.Models
 {
     // A humanlike pawn who is not a free colonist: the people a colony can
@@ -49,6 +51,19 @@ namespace RIMAPI.Models
         public string Note { get; set; }
     }
 
+    // One colonist the game's own check turned down for an order, with the
+    // check that stopped them (fox #3625). A skill gate reads as "needs
+    // Animals 7"; a free handler tomorrow does not clear it, so the answer
+    // must not read as a wait.
+    public class HandlerRefusalDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Skill { get; set; }
+        public string SkillLabel { get; set; }
+        public string Reason { get; set; }
+    }
+
     // What a tame order did: which handler took it, or that the designation
     // stands and no handler is free right now.
     public class TameResultDto
@@ -60,6 +75,10 @@ namespace RIMAPI.Models
         public string Job { get; set; }
         public bool Queued { get; set; }
         public string Note { get; set; }
+        // Every handler candidate the game's check turned down, best first
+        // (fox #3625). Empty when a handler took the job or on a build older
+        // than #3625.
+        public List<HandlerRefusalDto> Refusals { get; set; } = new List<HandlerRefusalDto>();
     }
 
     // What a slaughter order did: which handler took it, or that the Slaughter
@@ -73,6 +92,9 @@ namespace RIMAPI.Models
         public string Job { get; set; }
         public bool Queued { get; set; }
         public string Note { get; set; }
+        // Every handler candidate the game's check turned down, best first
+        // (fox #3625).
+        public List<HandlerRefusalDto> Refusals { get; set; } = new List<HandlerRefusalDto>();
     }
 
     // What an arrest order did: the job the game got (Arrest or Capture), the

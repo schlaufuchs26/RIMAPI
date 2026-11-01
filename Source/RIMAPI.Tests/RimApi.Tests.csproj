@@ -50,6 +50,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TerrainRect.cs" Link="Linked\TerrainRect.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RoofTiling.cs" Link="Linked\RoofTiling.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationRules.cs" Link="Linked\DesignationRules.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkAcceptanceRules.cs" Link="Linked\WorkAcceptanceRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationEntry.cs" Link="Linked\DesignationEntry.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\DesignationDto.cs" Link="Linked\DesignationDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\BlueprintEntryDto.cs" Link="Linked\BlueprintEntryDto.cs" />

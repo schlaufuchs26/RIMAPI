@@ -56,6 +56,10 @@ namespace RIMAPI.Services
                         job = candidateJob;
                         break;
                     }
+                    // The check that turned this handler down, best first, so
+                    // "no handler can take it now" reads as either a wait or a
+                    // wall (fox #3625).
+                    result.Refusals.Add(TameRefusal(candidate, target));
                 }
 
                 if (job == null)
@@ -79,6 +83,57 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.Message);
             }
+        }
+
+        // TameRefusal names the check that kept a handler off the tame job, in
+        // the order WorkGiver_Tame.JobOnThing applies them (fox #3625). The
+        // skill gate is the one that reads like a wait in the old answer and
+        // never clears by waiting: taming a wild man needs Animals 7, and no
+        // free handler gets there on its own.
+        private static HandlerRefusalDto TameRefusal(Pawn pawn, Pawn target)
+        {
+            int need = TrainableUtility.MinimumHandlingSkill(target);
+            int level = pawn.skills?.GetSkill(SkillDefOf.Animals)?.Level ?? 0;
+            string reason;
+            if (need > level)
+            {
+                reason = "needs Animals " + need;
+            }
+            else if (!WorkGiver_InteractAnimal.CanInteractWithAnimal(pawn, target, out string why, true, false))
+            {
+                reason = InteractionRefusal(why);
+            }
+            else if (TameUtility.TriedToTameTooRecently(target))
+            {
+                reason = "someone tried to tame him less than half a day ago";
+            }
+            else
+            {
+                // JobOnThing checks nothing else after this: the handler has no
+                // food for the animal in his inventory and none on the map he
+                // would take.
+                reason = "no food for it in his inventory and none on the map he would take";
+            }
+            return new HandlerRefusalDto
+            {
+                Id = pawn.thingIDNumber,
+                Name = pawn.LabelShort,
+                Skill = level,
+                SkillLabel = SkillDefOf.Animals.label,
+                Reason = reason,
+            };
+        }
+
+        // InteractionRefusal turns WorkGiver_InteractAnimal's own reason into a
+        // phrase that reads after a colonist's name. A null reason is the
+        // reservation or reach check, which sets no text of its own.
+        private static string InteractionRefusal(string why)
+        {
+            if (string.IsNullOrEmpty(why)) return "cannot reserve or reach him";
+            if (why == "animal downed") return "the animal is downed";
+            if (why == "animal sleeping") return "the animal is asleep";
+            if (why == "animal busy") return "the animal is busy";
+            return why;
         }
 
         // Arrest is the growth path a captured raider needs, and the game's own

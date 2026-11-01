@@ -53,13 +53,17 @@ namespace RIMAPI.Services
                 Pawn handler = null;
                 foreach (Pawn candidate in HandlingPawns(map))
                 {
-                    Job candidateJob = giver.JobOnThing(candidate, target, true);
-                    if (candidateJob != null)
+                    // WorkGiver_Slaughter.JobOnThing only builds the job; the
+                    // acceptance check (capable of violence, reserve, beliefs)
+                    // is HasJobOnThing, so asking JobOnThing alone would hand
+                    // the order to a colonist who cannot do it (fox #3625).
+                    if (giver.HasJobOnThing(candidate, target, true))
                     {
                         handler = candidate;
-                        job = candidateJob;
+                        job = giver.JobOnThing(candidate, target, true);
                         break;
                     }
+                    result.Refusals.Add(SlaughterRefusal(candidate, target));
                 }
 
                 if (job == null)
@@ -83,6 +87,40 @@ namespace RIMAPI.Services
             {
                 return ApiResult.Fail(ex.Message);
             }
+        }
+
+        // SlaughterRefusal names the check that kept a handler off the order,
+        // in the order WorkGiver_Slaughter.HasJobOnThing applies them (fox
+        // #3625): a colonist incapable of violence never slaughters, and that
+        // is not a wait for a free handler.
+        private static HandlerRefusalDto SlaughterRefusal(Pawn pawn, Pawn animal)
+        {
+            int level = pawn.skills?.GetSkill(SkillDefOf.Animals)?.Level ?? 0;
+            string reason;
+            if (pawn.WorkTagIsDisabled(WorkTags.Violent))
+            {
+                reason = "incapable of violence";
+            }
+            else if (!pawn.CanReserve(animal, 1, -1, null, true))
+            {
+                reason = pawn.CanReach(animal, PathEndMode.OnCell, Danger.Deadly)
+                    ? "another colonist has him reserved"
+                    : "cannot reach him";
+            }
+            else
+            {
+                // What remains of HasJobOnThing: the colony's own animal is
+                // venerated, so the handler's beliefs keep him off it.
+                reason = "his beliefs forbid slaughtering this animal";
+            }
+            return new HandlerRefusalDto
+            {
+                Id = pawn.thingIDNumber,
+                Name = pawn.LabelShort,
+                Skill = level,
+                SkillLabel = SkillDefOf.Animals.label,
+                Reason = reason,
+            };
         }
     }
 }

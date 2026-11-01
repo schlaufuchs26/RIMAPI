@@ -31,4 +31,26 @@ namespace RIMAPI.Models
         /// <summary>The targeted thing's short label, null for a cell designation.</summary>
         public string ThingLabel { get; set; }
     }
+
+    /// <summary>
+    /// One colonist's verdict on the work a designation leaves behind (fox
+    /// #3625). The work loop hands a designation out only to a colonist whose
+    /// work type is on and who is capable of it, so "the order stands" could
+    /// mean "wait" or "nobody will ever". The reason is the game's own check.
+    /// </summary>
+    public class WorkVerdictDto
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        /// <summary>The level in the work type's own skill (Plants for plant cutting), 0 when it has none.</summary>
+        public int Skill { get; set; }
+
+        /// <summary>The skill's label, e.g. Plants; null when the work type has no skill.</summary>
+        public string SkillLabel { get; set; }
+
+        /// <summary>Why the colonist will not take the job; null for a worker.</summary>
+        public string Reason { get; set; }
+    }
 }

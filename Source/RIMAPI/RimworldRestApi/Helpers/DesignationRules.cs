@@ -48,6 +48,35 @@ namespace RIMAPI.Helpers
             return blighted;
         }
 
+
+        /// <summary>
+        /// The designation a designate order leaves behind, by the word the
+        /// order came in as: chop, cut and blight all mark CutPlant; harvest
+        /// marks HarvestPlant; mine, deconstruct and hunt mark their own defs.
+        /// Null for a word with no designation (remove-all, or an unknown one),
+        /// so a caller can tell "no such order" from "no target".
+        /// </summary>
+        public static string DefNameForOrder(string type)
+        {
+            switch ((type ?? string.Empty).ToLowerInvariant())
+            {
+                case "chop":
+                case "cut":
+                case "blight":
+                    return "CutPlant";
+                case "harvest":
+                    return "HarvestPlant";
+                case "mine":
+                    return "Mine";
+                case "deconstruct":
+                    return "Deconstruct";
+                case "hunt":
+                    return "Hunt";
+                default:
+                    return null;
+            }
+        }
+
         /// <summary>
         /// Whether a rectangle touches a target's footprint, which is how a
         /// clear call finds what a designate call marked: designate walks the

@@ -129,3 +129,39 @@ namespace RIMAPI.Tests
         }
     }
 }
+
+namespace RIMAPI.Tests
+{
+    using RIMAPI.Helpers;
+    using Xunit;
+
+    // fox #3625: the order word decides which designation a designate call
+    // leaves behind, and that designation decides which work giver hands the
+    // job out. Chop, cut and blight are the same CutPlant order.
+    public class DesignationOrderTests
+    {
+        [Theory]
+        [InlineData("chop", "CutPlant")]
+        [InlineData("Chop", "CutPlant")]
+        [InlineData("cut", "CutPlant")]
+        [InlineData("blight", "CutPlant")]
+        [InlineData("harvest", "HarvestPlant")]
+        [InlineData("mine", "Mine")]
+        [InlineData("deconstruct", "Deconstruct")]
+        [InlineData("hunt", "Hunt")]
+        public void TheOrderWordNamesItsDesignation(string type, string defName)
+        {
+            Assert.Equal(defName, DesignationRules.DefNameForOrder(type));
+        }
+
+        [Theory]
+        [InlineData("remove-all")]
+        [InlineData("plant")]
+        [InlineData("")]
+        [InlineData(null)]
+        public void AnOrderWithoutADesignationNamesNone(string type)
+        {
+            Assert.Null(DesignationRules.DefNameForOrder(type));
+        }
+    }
+}

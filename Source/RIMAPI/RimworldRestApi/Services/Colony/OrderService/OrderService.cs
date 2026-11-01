@@ -32,6 +32,15 @@ public partial class OrderService : IOrderService
         // sends, so a caller sees what it marked instead of only how many
         // (fox ticket #3530).
         List<DesignationDto> designated = new List<DesignationDto>();
+        // The marked targets, for the verdict walk at the end (fox #3625): who
+        // will do the work this order leaves behind, and why the rest will not.
+        // A sweep can mark hundreds of cells and WorkAcceptance samples a
+        // dozen, so a handful of targets is enough to ask.
+        List<LocalTargetInfo> targets = new List<LocalTargetInfo>();
+        void NoteTarget(LocalTargetInfo target)
+        {
+            if (targets.Count < 24) targets.Add(target);
+        }
         string type = request.Type.ToLower(); // Cache lowercase type
         // The plant orders walk each cell's things anyway, so they count the
         // blight in that walk; only the other orders need a pass of their own
@@ -75,6 +84,7 @@ public partial class OrderService : IOrderService
                         ? DesignationRules.IsBlightTarget(plant.Blighted)
                         : DesignationRules.IsChopTarget(plant.def.plant.IsTree);
                     if (!wanted) continue;
+                    NoteTarget(plant);
                     if (map.designationManager.DesignationOn(plant, DesignationDefOf.CutPlant) != null)
                     {
                         already++;
@@ -92,6 +102,7 @@ public partial class OrderService : IOrderService
                 var edifice = c.GetEdifice(map);
                 if (edifice != null && edifice.def.mineable)
                 {
+                    NoteTarget(new LocalTargetInfo(c));
                     if (map.designationManager.DesignationAt(c, DesignationDefOf.Mine) != null)
                     {
                         already++;
@@ -112,6 +123,7 @@ public partial class OrderService : IOrderService
                 foreach (var t in things)
                 {
                     if (t.def.category != ThingCategory.Building) continue;
+                    NoteTarget(t);
                     if (map.designationManager.DesignationOn(t, DesignationDefOf.Deconstruct) != null)
                     {
                         already++;
@@ -132,6 +144,7 @@ public partial class OrderService : IOrderService
                     // plus the "Standard" harvest tag; a tree carries "Wood"
                     // and belongs to the chop order (fox ticket #3425).
                     if (!DesignationRules.IsHarvestTarget(p.HarvestableNow, p.def.plant.harvestTag)) continue;
+                    NoteTarget(p);
                     if (map.designationManager.DesignationOn(p, DesignationDefOf.HarvestPlant) != null)
                     {
                         already++;
@@ -151,6 +164,7 @@ public partial class OrderService : IOrderService
                 {
                     // Check if it's an animal, not our colony pet, and not already marked
                     if (!p.RaceProps.Animal || p.Faction == Faction.OfPlayer) continue;
+                    NoteTarget(p);
                     if (map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null)
                     {
                         already++;
@@ -173,11 +187,34 @@ public partial class OrderService : IOrderService
             }
         }
 
+        // Who will do the work the order leaves behind (fox #3625): the work
+        // giver the game would use is asked once per free colonist, so the
+        // answer names the colonists whose own check accepts the marked
+        // targets and, for the rest, the check that refuses them. A build
+        // before #3625 reports neither list, and the caller then keeps its
+        // generic sentence.
+        List<WorkVerdictDto> workers = new List<WorkVerdictDto>();
+        List<WorkVerdictDto> refusals = new List<WorkVerdictDto>();
+        WorkGiver_Scanner giver = WorkAcceptance.ScannerFor(DesignationRules.DefNameForOrder(type));
+        foreach (WorkAcceptance.Verdict verdict in WorkAcceptance.Walk(map, giver, targets))
+        {
+            WorkVerdictDto dto = new WorkVerdictDto
+            {
+                Id = verdict.Pawn.thingIDNumber,
+                Name = verdict.Pawn.LabelShort,
+                Skill = verdict.Skill,
+                SkillLabel = verdict.SkillLabel,
+                Reason = verdict.Refusal,
+            };
+            if (verdict.Refusal == null) workers.Add(dto);
+            else refusals.Add(dto);
+        }
+
         // The caller cannot see what was marked, so it gets the numbers: how many
         // cells the rectangle covered, how many designations were added, and how
         // many targets already carried this order. Fox ticket #3530 adds the
         // added entries themselves and the blighted plants the rectangle
         // covers, so a sweep that marked nothing can say why.
-        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted });
+        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, workers, refusals });
     }
 }
