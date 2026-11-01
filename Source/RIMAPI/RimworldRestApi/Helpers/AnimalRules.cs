@@ -27,18 +27,43 @@ namespace RIMAPI.Helpers
             return animal != null && animal.Side == Wild;
         }
 
+        // Listed says whether the animals read lists a pawn. A carried animal is
+        // despawned into its carrier's hands, so the spawned-only filter dropped
+        // it and a rescue looked like a death for as long as it lasted (fox
+        // #3668). Dead and destroyed pawns stay out, and so does one that is on
+        // no map and in nobody's hands: a caravan animal is not on this map.
+        public static bool Listed(bool spawned, bool carried, bool dead, bool destroyed)
+        {
+            if (dead || destroyed) return false;
+            return spawned || carried;
+        }
+
+        // DestinationOf names where a carried pawn is heading, taken from the
+        // carrier's own job: the label of the thing its target B names (the bed
+        // a rescue walks to), else that target's cell, else "" when the job
+        // names neither (fox #3668).
+        public static string DestinationOf(string targetLabel, bool cellKnown, int x, int z)
+        {
+            if (!string.IsNullOrEmpty(targetLabel)) return targetLabel;
+            if (cellKnown) return $"{x},{z}";
+            return "";
+        }
+
         // Rank puts the animals a run has to decide about first: a manhunter
-        // attacks on sight, so it leads; then a quest guest, which a run must
-        // leave alone; then the wild ones, which are what hunting and taming are
-        // about; the colony's own herd last (fox #3611).
+        // attacks on sight, so it leads; then an animal in somebody's hands,
+        // which is the one a run watching a rescue is looking for (fox #3668);
+        // then a quest guest, which a run must leave alone; then the wild ones,
+        // which are what hunting and taming are about; the colony's own herd
+        // last (fox #3611).
         public static int Rank(AnimalDto animal)
         {
-            if (animal == null) return 4;
+            if (animal == null) return 5;
             if (animal.Manhunter) return 0;
-            if (animal.QuestLodger) return 1;
-            if (animal.Side == Wild) return 2;
-            if (animal.Side == Tame) return 4;
-            return 3;
+            if (!string.IsNullOrEmpty(animal.CarriedBy)) return 1;
+            if (animal.QuestLodger) return 2;
+            if (animal.Side == Wild) return 3;
+            if (animal.Side == Tame) return 5;
+            return 4;
         }
 
         // Sort orders the list in place, by rank and then by label and id so two

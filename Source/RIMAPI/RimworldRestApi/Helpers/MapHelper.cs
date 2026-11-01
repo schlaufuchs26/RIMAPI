@@ -233,7 +233,10 @@ namespace RIMAPI.Helpers
 
                 animals = map
                     .mapPawns.AllPawns.Where(p => p.RaceProps?.Animal == true)
-                    .Where(p => p != null && !p.Dead && !p.Destroyed && p.Spawned)
+                    // A carried animal is despawned into its carrier's hands:
+                    // the spawned-only filter dropped it and a rescue looked
+                    // like a death (fox #3668).
+                    .Where(p => p != null && AnimalRules.Listed(p.Spawned, p.CarriedBy != null, p.Dead, p.Destroyed))
                     .Select(p => AnimalDtoOf(map, p))
                     .ToList();
 
@@ -253,6 +256,15 @@ namespace RIMAPI.Helpers
 
         private static AnimalDto AnimalDtoOf(Map map, Pawn p)
         {
+            // A carried animal keeps the cell its carrier picked it up at; where
+            // it is now is the carrier's cell, and the destination is what the
+            // carrier's job heads for (fox #3668).
+            Pawn carrier = p.CarriedBy;
+            IntVec3 cell = carrier != null ? carrier.Position : p.Position;
+            LocalTargetInfo target = carrier?.CurJob != null
+                ? carrier.CurJob.targetB
+                : LocalTargetInfo.Invalid;
+
             return new AnimalDto
             {
                 Id = p.thingIDNumber,
@@ -276,7 +288,13 @@ namespace RIMAPI.Helpers
                 // old line put the map's z into Y, so every animal cell read
                 // "157,0" and a run could not build at the animal's position
                 // (fox ticket #3519).
-                Position = new PositionDto { X = p.Position.x, Y = p.Position.y, Z = p.Position.z },
+                Position = new PositionDto { X = cell.x, Y = cell.y, Z = cell.z },
+                CarriedBy = carrier?.LabelShort ?? "",
+                CarriedTo = AnimalRules.DestinationOf(
+                    target.Thing?.LabelShort,
+                    target.IsValid && target.Cell.IsValid,
+                    target.Cell.x,
+                    target.Cell.z),
                 Trainer = p
                     .relations?.DirectRelations.Where(r => r.def == PawnRelationDefOf.Bond)
                     .Select(r => r.otherPawn?.thingIDNumber)

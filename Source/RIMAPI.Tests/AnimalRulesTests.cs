@@ -106,5 +106,68 @@ namespace RIMAPI.Tests
             Assert.Equal("No animal stands on map 0: nothing to hunt, tame or pen.",
                 AnimalRules.Summary(0, new List<AnimalDto>()));
         }
+
+        // A downed animal a colonist carries has left the map's spawned things
+        // but not the colony: Felicia was listed, the rescue started, and for
+        // the 53 minutes of the carry the read answered 50 animals and "No
+        // animal matches Sheep", which reads like a death (fox #3668).
+        [Fact]
+        public void ACarriedAnimalIsStillListed()
+        {
+            Assert.True(AnimalRules.Listed(spawned: false, carried: true, dead: false, destroyed: false));
+        }
+
+        [Fact]
+        public void ASpawnedAnimalIsListed()
+        {
+            Assert.True(AnimalRules.Listed(spawned: true, carried: false, dead: false, destroyed: false));
+        }
+
+        [Fact]
+        public void ADeadOrDestroyedAnimalIsNotListed()
+        {
+            Assert.False(AnimalRules.Listed(spawned: true, carried: false, dead: true, destroyed: false));
+            Assert.False(AnimalRules.Listed(spawned: true, carried: false, dead: false, destroyed: true));
+        }
+
+        [Fact]
+        public void AnAnimalOnNoMapAndInNoHandsIsNotListed()
+        {
+            Assert.False(AnimalRules.Listed(spawned: false, carried: false, dead: false, destroyed: false));
+        }
+
+        // The destination is the thing the carrier's job heads for: the bed a
+        // rescue walks to.
+        [Fact]
+        public void TheDestinationIsTheJobsTargetThing()
+        {
+            Assert.Equal("animal sleeping spot", AnimalRules.DestinationOf("animal sleeping spot", false, 0, 0));
+        }
+
+        [Fact]
+        public void ADestinationThatIsOnlyACellPrintsTheCell()
+        {
+            Assert.Equal("100,50", AnimalRules.DestinationOf(null, true, 100, 50));
+        }
+
+        [Fact]
+        public void AJobWithoutATargetNamesNoDestination()
+        {
+            Assert.Equal("", AnimalRules.DestinationOf(null, false, 0, 0));
+        }
+
+        // The animal in somebody's hands is the one a run watching a rescue
+        // looks for, so it leads the herd it belongs to (fox #3668).
+        [Fact]
+        public void ACarriedAnimalLeadsTheHerd()
+        {
+            var own = new AnimalDto { Id = 3, Label = "sheep", Side = AnimalRules.Tame };
+            var carried = new AnimalDto { Id = 5, Label = "sheep", Side = AnimalRules.Tame, CarriedBy = "Bucky" };
+            var list = new List<AnimalDto> { own, carried };
+
+            AnimalRules.Sort(list);
+
+            Assert.Equal(new[] { 5, 3 }, new[] { list[0].Id, list[1].Id });
+        }
     }
 }

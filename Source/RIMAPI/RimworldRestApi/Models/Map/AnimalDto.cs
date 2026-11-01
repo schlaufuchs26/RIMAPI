@@ -52,5 +52,12 @@ namespace RIMAPI.Models
         // still is not the colony's to kill. Colony 14 slaughtered such a sheep,
         // the quest failed and the guest faction dropped to -7 (fox #3611).
         public bool QuestLodger { get; set; }
+
+        // CarriedBy names the pawn whose hands hold this animal, empty when
+        // nobody does, and CarriedTo where that carrier's job is heading (fox
+        // #3668). A carried pawn is despawned into the carrier's hands, so the
+        // read used to drop it and a rescue looked like a death.
+        public string CarriedBy { get; set; }
+        public string CarriedTo { get; set; }
     }
 }
