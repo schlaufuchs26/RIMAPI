@@ -13,6 +13,24 @@ namespace RIMAPI.Models
         // The reward kinds in the choice (Reward_Items, Reward_Goodwill, ...),
         // enough to tell "some silver" from "a new colonist".
         public List<string> Rewards { get; set; } = new List<string>();
+        // What the choice's item rewards hold: a Reward_Items names only its
+        // kind, so without this a caller picks a choice blind (fox ticket
+        // #3950). Empty for a choice with no item reward, and for one the game
+        // already handed out, whose items are gone.
+        public List<QuestChoiceItemDto> Items { get; set; } = new List<QuestChoiceItemDto>();
+    }
+
+    // One thing inside a reward choice's item reward, as the game would drop
+    // it: the label the Quests tab shows, the stack size and the game's own
+    // market value for the stack.
+    public class QuestChoiceItemDto
+    {
+        public string Label { get; set; }
+        public int Count { get; set; }
+        public float MarketValue { get; set; }
+        // The quality label when the thing has one (QualityUtility.GetLabel),
+        // empty for a thing without quality.
+        public string Quality { get; set; }
     }
 
     // Accept one quest by the id the quests read prints. pawn_id names the

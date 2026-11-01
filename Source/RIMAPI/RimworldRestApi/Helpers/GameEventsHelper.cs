@@ -70,11 +70,40 @@ namespace RIMAPI.Helpers
                             continue;
                         dto.TotalMarketValue += reward.TotalMarketValue;
                         dto.Rewards.Add(reward.GetType().Name);
+                        dto.Items.AddRange(GetRewardItems(reward));
                     }
                 }
                 choices.Add(dto);
             }
             return choices;
+        }
+
+        // GetRewardItems names the things a Reward_Items holds. The class
+        // generates them when the quest is drawn (Reward_Items.InitFromValue
+        // fills `items` from ThingSetMakerDefOf.Reward_ItemsStandard), so a
+        // quest on offer has them; a reward the game already used keeps only
+        // its remembered labels, so this answers nothing for it rather than
+        // guessing (fox ticket #3950).
+        public static List<QuestChoiceItemDto> GetRewardItems(Reward reward)
+        {
+            var items = new List<QuestChoiceItemDto>();
+            if (!(reward is Reward_Items rewardItems))
+                return items;
+            foreach (var thing in rewardItems.ItemsListForReading)
+            {
+                if (thing == null || thing.Destroyed)
+                    continue;
+                var inner = thing.GetInnerIfMinified() ?? thing;
+                var item = new QuestChoiceItemDto
+                {
+                    Label = inner.LabelNoCount,
+                    Count = thing.stackCount,
+                    MarketValue = inner.MarketValue * thing.stackCount,
+                    Quality = inner.TryGetQuality(out var quality) ? quality.GetLabel() : "",
+                };
+                items.Add(item);
+            }
+            return items;
         }
 
         public static List<string> GetQuestRewardString(Quest quest)
