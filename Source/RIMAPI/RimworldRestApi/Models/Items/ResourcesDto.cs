@@ -32,6 +32,44 @@ namespace RIMAPI.Models
         public int MedicineTotal { get; set; }
         public int WeaponCount { get; set; }
         public double WeaponValue { get; set; }
+
+        // FuelSummary is the wood and the tanks (fox ticket #3678). A colony
+        // ran its stove dry without a single read saying so: the stock line
+        // listed food, medicine and weapons, and cooking simply stopped.
+        public FuelSummaryDto FuelSummary { get; set; }
+    }
+
+    // FuelSummaryDto is the colony's fuel: what lies loose on the map, and
+    // every building whose tank holds it. Wood is both the fuel and the
+    // cheapest building material, so it is named even at zero.
+    public class FuelSummaryDto
+    {
+        public List<FuelStockDto> Stocks { get; set; } = new List<FuelStockDto>();
+        public List<FuelBuildingDto> Buildings { get; set; } = new List<FuelBuildingDto>();
+    }
+
+    public class FuelStockDto
+    {
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public int Count { get; set; }
+    }
+
+    // FuelBuildingDto is one building with a fuel tank (a fueled stove, a
+    // fueled generator, a torch). HasFuel is the component's own verdict, so a
+    // caller never has to compare Fuel against zero itself; MealBills tells a
+    // stove from a lamp, because only a stove's bills make meals.
+    public class FuelBuildingDto
+    {
+        public int Id { get; set; }
+        public string DefName { get; set; }
+        public string Label { get; set; }
+        public float Fuel { get; set; }
+        public float FuelCapacity { get; set; }
+        public string FuelType { get; set; }
+        public bool HasFuel { get; set; }
+        public int Bills { get; set; }
+        public int MealBills { get; set; }
     }
 
     public class ResourcesFoodSummaryDto

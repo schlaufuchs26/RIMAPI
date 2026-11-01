@@ -54,7 +54,87 @@ namespace RIMAPI.Helpers
             critical.WeaponCount = weapons.Count;
             critical.WeaponValue = weapons.Sum(t => t.MarketValue);
 
+            // Fuel analysis (fox ticket #3678): the wood in the stockpile and
+            // every tank that burns it.
+            critical.FuelSummary = GetFuelSummary(map, allItems);
+
             return critical;
+        }
+
+        // WoodLogDef is the defName every colony burns first: a fueled stove,
+        // a fueled generator and a torch all take it, and it is the cheapest
+        // building material. It is named even at zero.
+        public const string WoodLogDef = "WoodLog";
+
+        // GetFuelSummary answers the two halves of the fuel question: how much
+        // fuel lies on the map, and which tanks are empty. A fueled building
+        // with an empty tank works on nothing and says so in no alert, which
+        // is how a colony cooked nothing for a game day while its bills read
+        // "running" (fox ticket #3678).
+        public static FuelSummaryDto GetFuelSummary(Map map, List<Thing> allItems)
+        {
+            var summary = new FuelSummaryDto();
+            var fuelDefs = new List<string> { WoodLogDef };
+            var seen = new HashSet<string> { WoodLogDef };
+
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                var comp = building.TryGetComp<CompRefuelable>();
+                if (comp == null)
+                    continue;
+
+                string fuelType = comp.Props?.fuelFilter?.AnyAllowedDef?.defName;
+                if (!string.IsNullOrEmpty(fuelType) && seen.Add(fuelType))
+                    fuelDefs.Add(fuelType);
+
+                int bills = 0;
+                int mealBills = 0;
+                var giver = building as IBillGiver;
+                if (giver != null)
+                {
+                    foreach (var bill in giver.BillStack)
+                    {
+                        bills++;
+                        // A stove's bills make meals; a generator's do not, so
+                        // the recipe is what tells "cooking has stopped" from
+                        // "a lamp is dark" (Recipes_Meals.xml, CookMeal*).
+                        if (bill.recipe?.defName != null && bill.recipe.defName.StartsWith("CookMeal"))
+                            mealBills++;
+                    }
+                }
+
+                summary.Buildings.Add(new FuelBuildingDto
+                {
+                    Id = building.thingIDNumber,
+                    DefName = building.def?.defName,
+                    Label = building.Label,
+                    Fuel = comp.Fuel,
+                    FuelCapacity = comp.Props?.fuelCapacity ?? 0f,
+                    FuelType = fuelType,
+                    HasFuel = comp.HasFuel,
+                    Bills = bills,
+                    MealBills = mealBills,
+                });
+            }
+
+            // Sorted by id so two reads of the same colony agree.
+            summary.Buildings = summary.Buildings.OrderBy(b => b.Id).ToList();
+
+            foreach (var defName in fuelDefs)
+            {
+                int count = allItems
+                    .Where(t => t.def?.defName == defName)
+                    .Sum(t => t.stackCount);
+                var def = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+                summary.Stocks.Add(new FuelStockDto
+                {
+                    DefName = defName,
+                    Label = def?.label ?? defName,
+                    Count = count,
+                });
+            }
+
+            return summary;
         }
 
         public static ResourcesFoodSummaryDto GetResourcesFoodSummary(Map map, List<Thing> allItems)

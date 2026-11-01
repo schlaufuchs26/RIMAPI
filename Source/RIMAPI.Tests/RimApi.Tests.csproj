@@ -99,6 +99,9 @@
          risk, and the keys the tool decodes. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\RottingFoodDto.cs" Link="Linked\RottingFoodDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RottingFoodRules.cs" Link="Linked\RottingFoodRules.cs" />
+    <!-- The resources DTOs carry the fuel summary (fox ticket #3678): plain C#,
+         so the keys the digest decodes are testable here. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Items\ResourcesDto.cs" Link="Linked\ResourcesDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
   </ItemGroup>
 </Project>

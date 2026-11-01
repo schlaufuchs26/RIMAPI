@@ -403,6 +403,53 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryFuelFieldKeepsTheKeyTheToolReads()
+        {
+            // The fuel summary rides on the resources answer (fox ticket
+            // #3678): the stock line names wood, and a stove whose tank is
+            // empty is what a run has to act on. These are the keys the fox's
+            // digest decodes.
+            JObject json = Json(new FuelSummaryDto
+            {
+                Stocks = new List<FuelStockDto>
+                {
+                    new FuelStockDto { DefName = "WoodLog", Label = "wood", Count = 1200 },
+                },
+                Buildings = new List<FuelBuildingDto>
+                {
+                    new FuelBuildingDto
+                    {
+                        Id = 412,
+                        DefName = "FueledStove",
+                        Label = "fueled stove",
+                        Fuel = 0f,
+                        FuelCapacity = 30f,
+                        FuelType = "WoodLog",
+                        HasFuel = false,
+                        Bills = 2,
+                        MealBills = 2,
+                    },
+                },
+            });
+
+            Assert.Equal(
+                new[] { "buildings", "stocks" },
+                json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal(
+                new[] { "count", "def_name", "label" },
+                ((JObject)json["stocks"][0]).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal(
+                new[]
+                {
+                    "bills", "def_name", "fuel", "fuel_capacity", "fuel_type", "has_fuel", "id",
+                    "label", "meal_bills",
+                },
+                ((JObject)json["buildings"][0]).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.False((bool)json["buildings"][0]["has_fuel"]);
+            Assert.Equal(2, (int)json["buildings"][0]["meal_bills"]);
+        }
+
+        [Fact]
         public void NoLinkedDtoFieldResolvesToAKeyWithACapitalLetter()
         {
             // A guard for the files linked in the csproj: whatever a future DTO
@@ -420,6 +467,9 @@ namespace RIMAPI.Tests
                 typeof(FloatRange),
                 typeof(CreateBillRequest),
                 typeof(UpdateBillRequest),
+                typeof(FuelSummaryDto),
+                typeof(FuelStockDto),
+                typeof(FuelBuildingDto),
             };
 
             var bad = new List<string>();
