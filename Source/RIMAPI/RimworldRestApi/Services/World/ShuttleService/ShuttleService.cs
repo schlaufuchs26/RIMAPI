@@ -78,6 +78,7 @@ namespace RIMAPI.Services
                 }
 
                 bool tookJob = false;
+                string orderedJob = "";
                 if (!contained)
                 {
                     // The float menu's own two steps, in its order.
@@ -88,11 +89,13 @@ namespace RIMAPI.Services
                         Job carry = JobMaker.MakeJob(JobDefOf.HaulToTransporter, pawn, shuttle);
                         carry.ignoreForbidden = true;
                         carry.count = 1;
+                        orderedJob = carry.def.defName;
                         tookJob = carrier.jobs.TryTakeOrderedJob(carry, JobTag.Misc);
                     }
                     else
                     {
                         Job job = JobMaker.MakeJob(JobDefOf.EnterTransporter, shuttle);
+                        orderedJob = job.def.defName;
                         tookJob = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
                     }
                 }
@@ -120,9 +123,10 @@ namespace RIMAPI.Services
                     CarriedBy = carrier != null ? carrier.LabelShortCap : "",
                     Contained = nowContained,
                     Required = comp.requiredPawns.Contains(pawn),
-                    // A carried pawn's own job is "Pray"; the job that moves
-                    // him is the carrier's, so the answer names that one.
-                    Job = JobOf(carrier ?? pawn),
+                    // The job this call queued, not the one the pawn holds
+                    // right now: the game interrupts the old job on its next
+                    // tick, so reading it back would name "Pray" instead.
+                    Job = orderedJob,
                     ShuttleState = ShuttleDtoOf(shuttle, map),
                 };
                 return ApiResult<ShuttleEnterResultDto>.Ok(result);
@@ -221,14 +225,6 @@ namespace RIMAPI.Services
                 AtColonistLimit = comp.maxColonistCount >= 0
                     && CountBoarding(transporter, shuttle, pawn) >= comp.maxColonistCount,
             };
-        }
-
-        // JobOf names the job a pawn holds, empty when it holds none.
-        private static string JobOf(Pawn pawn)
-        {
-            return pawn != null && pawn.jobs != null && pawn.jobs.curJob != null
-                ? pawn.jobs.curJob.def.defName
-                : "";
         }
 
         // CarrierFor finds a colonist who can carry a pawn that cannot walk into
