@@ -160,6 +160,8 @@ namespace RIMAPI.Services
                 {
                     result.RejectedBedId = rejected.thingIDNumber;
                     result.RejectedBed = rejected.Label;
+                    Room rejectedRoom = BedPick.BedRoom(map, rejected);
+                    if (rejectedRoom != null) result.RejectedBedRoomLabel = rejectedRoom.GetRoomRoleLabel();
                     result.RejectedBedTempC = rejectedTempC;
                     result.RejectedBedRoomHasFire = rejectedFire;
                 }

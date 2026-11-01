@@ -124,6 +124,9 @@ namespace RIMAPI.Models
         // one instead; zero when the game's choice was the one used.
         public int RejectedBedId { get; set; }
         public string RejectedBed { get; set; }
+        // The refused bed's own room (ticket #3623): the answer names where the
+        // bed the game picked first stands, not only how hot it is.
+        public string RejectedBedRoomLabel { get; set; }
         public float RejectedBedTempC { get; set; }
         public bool RejectedBedRoomHasFire { get; set; }
     }
@@ -173,6 +176,8 @@ namespace RIMAPI.Models
         // one instead; zero when the game's choice was the one used.
         public int RejectedBedId { get; set; }
         public string RejectedBed { get; set; }
+        // The refused bed's own room (ticket #3623), as in ArrestResultDto.
+        public string RejectedBedRoomLabel { get; set; }
         public float RejectedBedTempC { get; set; }
         public bool RejectedBedRoomHasFire { get; set; }
     }
