@@ -134,6 +134,18 @@ namespace RIMAPI.Services
                         }
                         Job job = OrderedJob(giver, pawn, candidate);
                         if (job == null || job.def == null) continue;
+                        // A job that targets an animal needs the animal itself:
+                        // handed a cell or some other thing, the hunt giver
+                        // built a Hunt whose target is no pawn, and the game's
+                        // own JobDriver_Hunt threw "Specified cast is not valid"
+                        // inside TryTakeOrderedJob, which read as a broken route
+                        // (fox #3908). The animal on the cell is a target of its
+                        // own, so nothing is lost here.
+                        if (PriorityTargetRules.IsAnimalJob(job.def.defName)
+                            && !IsAnimalPawn(candidate.Thing))
+                        {
+                            continue;
+                        }
                         offered.Add(job.def.defName);
                         if (!string.IsNullOrEmpty(jobName) && !PriorityJobRules.Matches(jobName, job.def.defName))
                         {
