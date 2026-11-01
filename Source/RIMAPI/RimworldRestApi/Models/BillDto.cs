@@ -40,7 +40,16 @@ namespace RIMAPI.Models
         public string PlayerCustomName { get; set; }
         public int? SlotGroupId { get; set; }
         public List<string> AllowedMaterials { get; set; } = new List<string>();
+        // AvailableMaterials is everything the recipe can take
+        // (RecipeDef.fixedIngredientFilter), DefaultMaterials what a fresh bill
+        // of the recipe starts with (RecipeDef.defaultIngredientFilter, which
+        // Bill..ctor copies into a new bill). The two differ: a butcher bill
+        // starts with the 115 animal corpses of 127 the recipe offers, because
+        // the recipe's default filter names CorpsesAnimal. Reporting the fixed
+        // filter as the default made "restore the default" widen a filter
+        // instead of restoring it (fox ticket #4027).
         public List<string> AvailableMaterials { get; set; } = new List<string>();
+        public List<string> DefaultMaterials { get; set; } = new List<string>();
         // HumanlikeMaterials are the defNames among AvailableMaterials whose
         // corpse belonged to a humanlike pawn, which is the game's own test
         // (ThingDefGenerator_Corpses files them under CorpsesHumanlike, and

@@ -131,6 +131,7 @@ namespace RIMAPI.Tests
                 "available_materials",
                 "best_skill",
                 "best_skill_pawn",
+                "default_materials",
                 "hp_range",
                 "humanlike_materials",
                 "include_equipped",

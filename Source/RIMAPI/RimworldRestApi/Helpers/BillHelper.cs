@@ -49,6 +49,11 @@ namespace RIMAPI.Helpers
                     SlotGroupId = null,
                     AllowedMaterials = bill.ingredientFilter?.AllowedThingDefs?.Select(d => d.defName).ToList() ?? new List<string>(),
                     AvailableMaterials = bill.recipe.fixedIngredientFilter?.AllowedThingDefs?.Select(d => d.defName).ToList() ?? new List<string>(),
+                    // The game's own default for a new bill: Bill..ctor copies
+                    // recipe.defaultIngredientFilter into the bill's filter, and
+                    // ResolveReferences fills that in from fixedIngredientFilter
+                    // only when the recipe names none (fox ticket #4027).
+                    DefaultMaterials = bill.recipe.defaultIngredientFilter?.AllowedThingDefs?.Select(d => d.defName).ToList() ?? new List<string>(),
                     HumanlikeMaterials = bill.recipe.fixedIngredientFilter?.AllowedThingDefs?
                         .Where(d => d.race?.Humanlike == true)
                         .Select(d => d.defName).ToList() ?? new List<string>(),
