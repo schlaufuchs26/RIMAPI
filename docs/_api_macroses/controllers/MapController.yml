@@ -741,13 +741,30 @@ desc: |-
   method: GET
 /api/v1/map/rooms:
   desc: |-
-    Retrieves a list of all colonists in the player's faction, including
-    their skills, traits, health, mood, and current activities.
+    Returns every room the map's region grid knows: an enclosed area of cells with
+    its own role, temperature and roof. The outdoors is a room too, so the list
+    holds the open map beside the built rooms.
+
+    - `role_label`: the game's own role for the room, e.g. `bedroom`, `tomb`,
+              `prison cell`, or `room` for a plain enclosed area. `none` means the
+              room has no role, which is what the outdoors and a corridor report.
+    - `cells_count`: how many cells the room covers. The outdoors is one room, so
+              a very large number there is normal.
+    - `temperature`: the room's own temperature in °C, which differs from the
+              map's outdoors temperature once a room is heated.
+    - `is_doorway`: a one-cell room that is a door, listed beside the rooms it
+              joins.
+    - `open_roof_count`: how many of the room's cells have no roof.
+    - `contained_beds_ids`: the beds standing inside this room, by the thing id
+              the `things` read prints. A bed is listed under the room the bed
+              itself stands in, not under a doorway beside it.
+    - `contained_pawns_ids`: the humanlike pawns standing in the room right now,
+              by the pawn id the `colonists` read prints. Animals are left out.
   curl: |-
     **Example:**
     ```bash
-    curl --request POST \
-    --url http://localhost:8765/api/v1/map/rooms?map_id=0
+    curl --request GET \
+    --url 'http://localhost:8765/api/v1/map/rooms?map_id=0'
     ```
   request: ''
   response: |-
@@ -758,28 +775,37 @@ desc: |-
         "data": {
             "rooms": [
             {
-                "id": 5,
+                "id": 112,
                 "role_label": "none",
-                "temperature": 4.217273,
-                "cells_count": 0,
+                "temperature": 39.75,
+                "cells_count": 56306,
+                "touches_map_edge": true,
+                "is_prison_cell": false,
+                "is_doorway": false,
+                "open_roof_count": 56257,
+                "contained_beds_ids": [
+                146810,
+                140206,
+                140198,
+                140215
+                ],
+                "contained_pawns_ids": [
+                140572
+                ]
+            },
+            {
+                "id": 139,
+                "role_label": "bedroom",
+                "temperature": 38.25,
+                "cells_count": 9,
                 "touches_map_edge": false,
                 "is_prison_cell": false,
                 "is_doorway": false,
                 "open_roof_count": 0,
-                "contained_beds_ids": []
-            },
-            {
-                "id": 61,
-                "role_label": "bedroom",
-                "temperature": 4.217273,
-                "cells_count": 6,
-                "touches_map_edge": false,
-                "is_prison_cell": false,
-                "is_doorway": false,
-                "open_roof_count": 6,
                 "contained_beds_ids": [
-                8408
-                ]
+                78244
+                ],
+                "contained_pawns_ids": []
             }
             ]
         },
