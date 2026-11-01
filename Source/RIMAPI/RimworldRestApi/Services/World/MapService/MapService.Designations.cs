@@ -22,10 +22,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<List<DesignationDto>> GetMapDesignations(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out Map map, out string error))
             {
-                return ApiResult<List<DesignationDto>>.Fail($"Map not found: {mapId}");
+                return ApiResult<List<DesignationDto>>.Fail(error);
             }
 
             var result = new List<DesignationDto>();
@@ -58,10 +57,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<List<BlueprintEntryDto>> GetMapBlueprints(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out Map map, out string error))
             {
-                return ApiResult<List<BlueprintEntryDto>>.Fail($"Map not found: {mapId}");
+                return ApiResult<List<BlueprintEntryDto>>.Fail(error);
             }
 
             var result = new List<BlueprintEntryDto>();

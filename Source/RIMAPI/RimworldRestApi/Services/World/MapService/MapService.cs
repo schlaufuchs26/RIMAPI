@@ -15,6 +15,19 @@ namespace RIMAPI.Services
     {
         public MapService() { }
 
+        /// <summary>
+        /// The map a route asked for, or null with the reason in
+        /// <paramref name="error"/> (fox ticket #3658). Every map route
+        /// resolves here, so a wrong map id answers the same sentence
+        /// everywhere instead of throwing inside a helper or reading as an
+        /// empty map.
+        /// </summary>
+        private static bool TryMap(int mapId, out Map map, out string error)
+        {
+            map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out error);
+            return map != null;
+        }
+
         public static int GetMapTileId(Map map) => MapHelper.GetMapTileId(map);
 
         public ApiResult<MapTimeDto> GetCurrentMapDatetime()

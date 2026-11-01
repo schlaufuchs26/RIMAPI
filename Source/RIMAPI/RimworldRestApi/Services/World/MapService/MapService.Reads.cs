@@ -22,12 +22,22 @@ namespace RIMAPI.Services
 
         public ApiResult<List<ThingDto>> GetMapThings(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<List<ThingDto>>.Fail(error);
+            }
+
             var result = MapHelper.GetMapThings(mapId);
             return ApiResult<List<ThingDto>>.Ok(result);
         }
 
         public ApiResult<List<ThingDto>> GetMapThingsInRadius(int mapId, int x, int z, int radius)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<List<ThingDto>>.Fail(error);
+            }
+
             var result = MapHelper.GetMapThingsInRadius(mapId, x, z, radius);
             return ApiResult<List<ThingDto>>.Ok(result);
         }
@@ -44,7 +54,7 @@ namespace RIMAPI.Services
                 var map = MapHelper.GetMapByID(body.MapId);
                 if (map == null)
                 {
-                    return ApiResult<List<ThingDto>>.Fail($"Map with ID {body.MapId} not found.");
+                    return ApiResult<List<ThingDto>>.Fail(MapLookup.MapNotFound(body.MapId));
                 }
 
                 if (body.Position == null)
@@ -75,43 +85,77 @@ namespace RIMAPI.Services
 
         public ApiResult<List<BuildingDto>> GetMapBuildings(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<List<BuildingDto>>.Fail(error);
+            }
+
             var result = MapHelper.GetMapBuildings(mapId);
             return ApiResult<List<BuildingDto>>.Ok(result);
         }
 
         public ApiResult<MapCreaturesSummaryDto> GetMapCreaturesSummary(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<MapCreaturesSummaryDto>.Fail(error);
+            }
+
             var result = MapHelper.GetMapCreaturesSummary(mapId);
             return ApiResult<MapCreaturesSummaryDto>.Ok(result);
         }
 
         public ApiResult<MapPowerInfoDto> GetMapPowerInfo(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<MapPowerInfoDto>.Fail(error);
+            }
+
             var result = MapHelper.GetMapPowerInfoInternal(mapId);
             return ApiResult<MapPowerInfoDto>.Ok(result);
         }
 
         public ApiResult<OreDataDto> GetMapOre(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<OreDataDto>.Fail(error);
+            }
+
             var result = MapHelper.GetOreData(mapId);
             return ApiResult<OreDataDto>.Ok(result);
         }
 
         public ApiResult<MapRoomsDto> GetMapRooms(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
+            if (!TryMap(mapId, out Map map, out string error))
+            {
+                return ApiResult<MapRoomsDto>.Fail(error);
+            }
+
             var result = MapHelper.GetRooms(map);
             return ApiResult<MapRoomsDto>.Ok(result);
         }
 
         public ApiResult<MapTerrainDto> GetMapTerrain(int mapId, TerrainRect.Box? box)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<MapTerrainDto>.Fail(error);
+            }
+
             var result = MapHelper.GetMapTerrain(mapId, box);
             return ApiResult<MapTerrainDto>.Ok(result);
         }
 
         public ApiResult<List<AnimalDto>> GetMapAnimals(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<List<AnimalDto>>.Fail(error);
+            }
+
             var result = MapHelper.GetMapAnimals(mapId);
             return ApiResult<List<AnimalDto>>.Ok(result);
         }
@@ -121,7 +165,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<FogGridDto>.Fail($"Map {mapId} not found.");
+                if (map == null) return ApiResult<FogGridDto>.Fail(MapLookup.MapNotFound(mapId));
 
                 int totalCells = map.cellIndices.NumGridCells;
                 FogGrid fogGrid = map.fogGrid;
@@ -178,7 +222,11 @@ namespace RIMAPI.Services
 
         public ApiResult<MapWeatherDto> GetWeather(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
+            if (!TryMap(mapId, out Map map, out string error))
+            {
+                return ApiResult<MapWeatherDto>.Fail(error);
+            }
+
             var result = new MapWeatherDto
             {
                 Weather = map.weatherManager?.curWeather?.defName,
@@ -191,7 +239,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                var map = MapHelper.GetMapByID(mapId);
+                if (!TryMap(mapId, out Map map, out string error))
+                {
+                    return ApiResult.Fail(error);
+                }
 
                 WeatherDef weatherDef = DefDatabase<WeatherDef>.GetNamed(weatherDefName, false);
                 if (weatherDef == null)

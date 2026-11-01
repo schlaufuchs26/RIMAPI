@@ -10,7 +10,9 @@ namespace RIMAPI.Helpers
     /// </summary>
     public static class GrowingZoneLookup
     {
-        public static string MapNotFound(int mapId) => $"Map not found: {mapId}";
+        // The sentence is MapLookup's, so the zone read and every other map
+        // route name a wrong map id the same way (ticket #3658).
+        public static string MapNotFound(int mapId) => MapLookup.MapNotFound(mapId);
 
         public static string ZoneNotFound(int mapId, int zoneId) =>
             $"No growing zone with id {zoneId} on map {mapId}";

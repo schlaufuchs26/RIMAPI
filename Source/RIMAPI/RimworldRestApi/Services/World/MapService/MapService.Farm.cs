@@ -23,10 +23,9 @@ namespace RIMAPI.Services
 
         public ApiResult<GrowingZoneDto> GetGrowingZoneById(int mapId, int zoneId)
         {
-            var map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out Map map, out string error))
             {
-                return ApiResult<GrowingZoneDto>.Fail(GrowingZoneLookup.MapNotFound(mapId));
+                return ApiResult<GrowingZoneDto>.Fail(error);
             }
 
             var result = FarmHelper.GetGrowingZoneById(map, zoneId);
@@ -41,10 +40,9 @@ namespace RIMAPI.Services
 
         public ApiResult<GrowingZoneDto> CreateGrowingZone(CreateGrowingZoneRequestDto request)
         {
-            var map = MapHelper.GetMapByID(request.MapId);
-            if (map == null)
+            if (!TryMap(request.MapId, out Map map, out string mapError))
             {
-                return ApiResult<GrowingZoneDto>.Fail(GrowingZoneLookup.MapNotFound(request.MapId));
+                return ApiResult<GrowingZoneDto>.Fail(mapError);
             }
 
             var minX = Math.Min(request.PointA.X, request.PointB.X);
@@ -67,6 +65,11 @@ namespace RIMAPI.Services
 
         public ApiResult<List<ThingDto>> GetMapPlants(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<List<ThingDto>>.Fail(error);
+            }
+
             var result = MapHelper.GetMapPlants(mapId);
             return ApiResult<List<ThingDto>>.Ok(result);
         }
@@ -79,19 +82,18 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<List<PlantDto>> GetMapPlantsInRect(int mapId, int x1, int z1, int x2, int z2)
         {
-            if (MapHelper.GetMapByID(mapId) == null)
+            if (!TryMap(mapId, out _, out string error))
             {
-                return ApiResult<List<PlantDto>>.Fail($"Map not found: {mapId}");
+                return ApiResult<List<PlantDto>>.Fail(error);
             }
             return ApiResult<List<PlantDto>>.Ok(MapHelper.GetMapPlantsInRect(mapId, x1, z1, x2, z2));
         }
 
         public ApiResult<UnwantedFoodDto> GetUnwantedFood(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out _, out string error))
             {
-                return ApiResult<UnwantedFoodDto>.Fail($"Map not found: {mapId}");
+                return ApiResult<UnwantedFoodDto>.Fail(error);
             }
             return ApiResult<UnwantedFoodDto>.Ok(MapHelper.GetUnwantedFood(mapId));
         }
@@ -105,9 +107,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<MapRottingFoodDto> GetRottingFood(int mapId)
         {
-            if (MapHelper.GetMapByID(mapId) == null)
+            if (!TryMap(mapId, out _, out string error))
             {
-                return ApiResult<MapRottingFoodDto>.Fail($"Map not found: {mapId}");
+                return ApiResult<MapRottingFoodDto>.Fail(error);
             }
             try
             {

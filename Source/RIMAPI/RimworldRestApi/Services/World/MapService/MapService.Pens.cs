@@ -22,10 +22,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<List<PenDto>> GetMapPens(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out Map map, out string error))
             {
-                return ApiResult<List<PenDto>>.Fail($"Map not found: {mapId}");
+                return ApiResult<List<PenDto>>.Fail(error);
             }
 
             var result = new List<PenDto>();

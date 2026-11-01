@@ -1301,7 +1301,7 @@ namespace RIMAPI.Helpers
                     return new StockpileResponseDto
                     {
                         Success = false,
-                        Message = $"Map with ID {request.MapId} not found."
+                        Message = MapLookup.MapNotFound(request.MapId)
                     };
                 }
 

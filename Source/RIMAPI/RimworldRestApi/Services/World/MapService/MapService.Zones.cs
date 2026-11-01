@@ -15,6 +15,11 @@ namespace RIMAPI.Services
     {
         public ApiResult<MapZonesDto> GetMapZones(int mapId)
         {
+            if (!TryMap(mapId, out _, out string error))
+            {
+                return ApiResult<MapZonesDto>.Fail(error);
+            }
+
             MapZonesDto mapZones = new MapZonesDto();
             mapZones.Zones = MapHelper.GetMapZones(mapId);
             mapZones.Areas = MapHelper.GetMapAreas(mapId);
@@ -23,10 +28,9 @@ namespace RIMAPI.Services
 
         public ApiResult<AreaCellsDto> GetMapArea(int mapId, string label)
         {
-            Map map = MapHelper.GetMapByID(mapId);
-            if (map == null)
+            if (!TryMap(mapId, out Map map, out string mapError))
             {
-                return ApiResult<AreaCellsDto>.Fail($"Map not found: {mapId}");
+                return ApiResult<AreaCellsDto>.Fail(mapError);
             }
 
             Area area = MapHelper.FindArea(map, label, out string error);
@@ -45,10 +49,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<AreaCellsDto> ExpandMapArea(AreaExpandRequestDto request)
         {
-            Map map = MapHelper.GetMapByID(request.MapId);
-            if (map == null)
+            if (!TryMap(request.MapId, out Map map, out string mapError))
             {
-                return ApiResult<AreaCellsDto>.Fail($"Map not found: {request.MapId}");
+                return ApiResult<AreaCellsDto>.Fail(mapError);
             }
             if (request.PointA == null || request.PointB == null)
             {
@@ -76,9 +79,9 @@ namespace RIMAPI.Services
         /// </summary>
         public ApiResult<StorageCapacityDto> GetStorageCapacity(int mapId, string defName)
         {
-            if (MapHelper.GetMapByID(mapId) == null)
+            if (!TryMap(mapId, out _, out string error))
             {
-                return ApiResult<StorageCapacityDto>.Fail($"Map not found: {mapId}");
+                return ApiResult<StorageCapacityDto>.Fail(error);
             }
             try
             {

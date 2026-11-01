@@ -23,7 +23,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult.Fail($"Map with ID {mapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(mapId));
 
                 // Fetch all corpses efficiently using the map's ThingLister
                 // ToList() is required because we are modifying the collection while iterating
@@ -55,7 +55,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult.Fail($"Map with ID {mapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(mapId));
 
                 // "HaulableEver" covers almost all items (resources, weapons, apparel)
                 var items = map.listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver);
@@ -100,7 +100,7 @@ namespace RIMAPI.Services
                     return ApiResult.Fail("PointA and PointB must be defined.");
 
                 var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map with ID {request.MapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(request.MapId));
 
                 // Create the rectangle defined by the two points
                 IntVec3 start = new IntVec3(request.PointA.X, 0, request.PointA.Z);
@@ -142,7 +142,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map {request.MapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(request.MapId));
 
                 int count = 0;
                 foreach (var posDto in request.Positions)
@@ -163,7 +163,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map {request.MapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(request.MapId));
 
                 IntVec3 start = new IntVec3(request.PointA.X, 0, request.PointA.Z);
                 IntVec3 end = new IntVec3(request.PointB.X, 0, request.PointB.Z);
@@ -205,7 +205,7 @@ namespace RIMAPI.Services
             try
             {
                 var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map {request.MapId} not found.");
+                if (map == null) return ApiResult.Fail(MapLookup.MapNotFound(request.MapId));
 
                 IntVec3 pos = new IntVec3(request.Position.X, 0, request.Position.Z);
                 if (!pos.InBounds(map)) return ApiResult.Fail("Position out of bounds.");
