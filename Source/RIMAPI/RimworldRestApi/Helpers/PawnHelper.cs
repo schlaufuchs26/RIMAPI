@@ -72,7 +72,23 @@ namespace RIMAPI.Helpers
                 // the map the pawn stands on; an unspawned pawn has none.
                 AllowedArea = pawn.Spawned ? pawn.playerSettings?.AreaRestrictionInPawnCurrentMap?.Label : null,
                 AllowedAreaCells = pawn.Spawned ? pawn.playerSettings?.AreaRestrictionInPawnCurrentMap?.TrueCount ?? 0 : 0,
+                CarriedBy = pawn.CarriedBy?.LabelShort ?? "",
             };
+        }
+
+        // FindPawnForOrder resolves the pawn an order names the way the reads
+        // do (fox ticket #3665): listerThings holds only spawned things, and a
+        // carried pawn is despawned into his carrier's hands, so `rescue` and
+        // `tend` answered "Pawn with ID=1063 not found" for a colonist the
+        // colonists read listed while a raider carried him off the map. The
+        // map's own pawn list keeps him, and it stays per-map: a pawn in a
+        // caravan is on no map and is still reported as not found.
+        public static Pawn FindPawnForOrder(Map map, int pawnId)
+        {
+            Pawn spawned = map.listerThings.AllThings.OfType<Pawn>()
+                .FirstOrDefault(p => p.thingIDNumber == pawnId);
+            if (spawned != null) return spawned;
+            return map.mapPawns.AllPawns.FirstOrDefault(p => p.thingIDNumber == pawnId);
         }
 
         public static bool AssignJob(Pawn pawn, JobDef jobDef, LocalTargetInfo target)

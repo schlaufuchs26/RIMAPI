@@ -302,20 +302,22 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail($"Map with ID={mapId} not found");
                 }
-                Pawn doctor = map
-                    .listerThings.AllThings.OfType<Pawn>()
-                    .FirstOrDefault(p => p.thingIDNumber == pawnId);
+                Pawn doctor = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (doctor == null)
                 {
                     return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                 }
-                Pawn patient = map
-                    .listerThings.AllThings.OfType<Pawn>()
-                    .FirstOrDefault(p => p.thingIDNumber == patientId);
+                Pawn patient = PawnHelper.FindPawnForOrder(map, patientId);
                 if (patient == null)
                 {
                     return ApiResult.Fail($"Patient with ID={patientId} not found");
                 }
+                // A carried patient is out of everyone's reach, and the old
+                // lookup answered "not found" for him while a raider walked him
+                // off the map (fox #3665).
+                string carriedPatient = CombatRefusal.CarriedRefusal(
+                    Describe(patient), patient.CarriedBy?.LabelShort, "tend");
+                if (carriedPatient != null) return ApiResult.Fail(carriedPatient);
                 // A pawn ordered to tend itself is the game's own self-tend:
                 // the Health tab's Self-tend option is what WorkGiver_TendSelf
                 // reads before it hands the job out, and JobDriver_TendPatient

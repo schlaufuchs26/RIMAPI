@@ -32,8 +32,12 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn target = FindPawnOnMap(map, pawnId);
+                Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried pawn is despawned into his carrier's hands, so he
+                // resolves here but no rescuer can reach him yet (fox #3665).
+                string carried = CombatRefusal.CarriedRefusal(Describe(target), target.CarriedBy?.LabelShort, "rescue");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 if (target.Dead) return ApiResult.Fail($"{Describe(target)} is dead");
                 if (target.InBed()) return ApiResult.Fail($"{Describe(target)} already lies in a bed");

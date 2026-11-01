@@ -74,8 +74,16 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
-        public void A_colonist_off_the_map_is_not_a_foreigner()
+        public void A_carried_pawn_is_refused_with_the_carrier_not_as_a_wrong_id()
         {
+            Assert.Equal(
+                "Lane (id 1063) is being carried by Jack, so nobody can rescue him until he is put down",
+                CombatRefusal.CarriedRefusal("Lane (id 1063)", "Jack", "rescue"));
+            Assert.Null(CombatRefusal.CarriedRefusal("Lane (id 1063)", "", "tend"));
+        }
+
+        [Fact]
+        public void A_colonist_off_the_map_is_not_a_foreigner()        {
             CombatRefusal.PawnState pawn = Colonist();
             pawn.Spawned = false;
 

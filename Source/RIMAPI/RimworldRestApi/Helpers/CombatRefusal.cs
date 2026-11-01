@@ -100,6 +100,22 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// The whole sentence an order that has to reach the pawn is refused
+        /// with while someone carries him, or null when nobody does (fox ticket
+        /// #3665). A carried pawn is despawned into his carrier's hands, so he
+        /// sits outside the map's thing lists: `rescue` and `tend` answered
+        /// "Pawn with ID=1063 not found" for a bleeding colonist a raider was
+        /// carrying off the map, which reads as a wrong id rather than as an
+        /// order that cannot reach him yet.
+        /// </summary>
+        public static string CarriedRefusal(string name, string carriedBy, string verb)
+        {
+            if (string.IsNullOrEmpty(carriedBy)) return null;
+            return name + " is being carried by " + carriedBy
+                + ", so nobody can " + verb + " him until he is put down";
+        }
+
+        /// <summary>
         /// The state's own name: its label when it has one ("tantrum") and its
         /// defName otherwise ("Berserk"), so a state without a label still
         /// reads.

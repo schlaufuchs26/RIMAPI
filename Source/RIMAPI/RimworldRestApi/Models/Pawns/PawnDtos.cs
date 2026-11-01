@@ -18,6 +18,12 @@ namespace RIMAPI.Models
         // pawn is unrestricted, which is the game's default.
         public string AllowedArea { get; set; }
         public int AllowedAreaCells { get; set; }
+
+        // CarriedBy names the pawn carrying this one, empty when nobody does
+        // (fox ticket #3665). A carried pawn is detached from the map's thing
+        // lists, so a read printed his last cell and his old job while a raider
+        // walked him off the map, and every order on him answered "not found".
+        public string CarriedBy { get; set; }
     }
 
     // AllowedAreaDto is what setting a pawn's allowed area answers (fox ticket
