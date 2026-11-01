@@ -330,6 +330,9 @@ namespace RIMAPI.Services
         private static string TameRefusal(Pawn pawn)
         {
             if (!pawn.AnimalOrWildMan()) return "only animals and wild people are tamed";
+            // A quest guest counts as the colony's animal, so CanTame refuses it
+            // without saying why (fox #3611).
+            if (pawn.IsQuestLodger()) return "he is a quest guest, so the quest keeps him until it ends";
             if (pawn.Faction != null && pawn.Faction.def.humanlikeFaction)
                 return $"he belongs to {pawn.Faction.Name}, so he is captured or arrested, not tamed";
             if (pawn.GetStatValue(StatDefOf.Wildness) >= 1f)

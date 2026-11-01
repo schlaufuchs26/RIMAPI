@@ -244,6 +244,7 @@ namespace RIMAPI.Helpers
                 HuntDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null,
                 Manhunter = Hostility.IsManhunter(p),
                 Predator = p.RaceProps.predator,
+                QuestLodger = p.IsQuestLodger(),
                 // X, Y and Z as the map means them: Y is the altitude (0 for a
                 // pawn on the ground) and Z the second ground coordinate. The
                 // old line put the map's z into Y, so every animal cell read

@@ -45,6 +45,19 @@ namespace RIMAPI.Tests
             Assert.Contains("only animals", refusal);
         }
 
+        // A quest lodger is the colony's by faction and still not the colony's
+        // to kill: colony 14 slaughtered a quest sheep, the quest failed and
+        // the guest faction dropped to -7 (fox #3611).
+        [Fact]
+        public void AQuestGuestIsRefusedBeforeTheOrderGoesOut()
+        {
+            var guest = ColonyAnimal();
+            guest.QuestLodger = true;
+            string refusal = SlaughterRules.Refusal(guest);
+            Assert.Contains("quest guest", refusal);
+            Assert.Contains("fails the quest", refusal);
+        }
+
         [Fact]
         public void ADeadAnimalIsNamedAsDead()
         {

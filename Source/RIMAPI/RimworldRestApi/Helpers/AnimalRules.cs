@@ -28,15 +28,17 @@ namespace RIMAPI.Helpers
         }
 
         // Rank puts the animals a run has to decide about first: a manhunter
-        // attacks on sight, so it leads; then the wild ones, which are what
-        // hunting and taming are about; the colony's own herd last.
+        // attacks on sight, so it leads; then a quest guest, which a run must
+        // leave alone; then the wild ones, which are what hunting and taming are
+        // about; the colony's own herd last (fox #3611).
         public static int Rank(AnimalDto animal)
         {
-            if (animal == null) return 3;
+            if (animal == null) return 4;
             if (animal.Manhunter) return 0;
-            if (animal.Side == Wild) return 1;
-            if (animal.Side == Tame) return 3;
-            return 2;
+            if (animal.QuestLodger) return 1;
+            if (animal.Side == Wild) return 2;
+            if (animal.Side == Tame) return 4;
+            return 3;
         }
 
         // Sort orders the list in place, by rank and then by label and id so two

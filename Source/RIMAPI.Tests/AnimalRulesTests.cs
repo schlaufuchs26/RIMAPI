@@ -44,6 +44,21 @@ namespace RIMAPI.Tests
             Assert.Equal(new[] { 1, 2, 3 }, new[] { list[0].Id, list[1].Id, list[2].Id });
         }
 
+        // A quest guest is listed before the colony's own herd: a run that picks
+        // the first tame animal for slaughter must not pick the one the quest
+        // charged it to protect (fox #3611).
+        [Fact]
+        public void AQuestGuestComesBeforeTheOwnHerd()
+        {
+            var own = new AnimalDto { Id = 3, Label = "sheep", Side = AnimalRules.Tame };
+            var guest = new AnimalDto { Id = 4, Label = "sheep", Side = AnimalRules.Tame, QuestLodger = true };
+            var list = new List<AnimalDto> { own, guest };
+
+            AnimalRules.Sort(list);
+
+            Assert.Equal(new[] { 4, 3 }, new[] { list[0].Id, list[1].Id });
+        }
+
         [Fact]
         public void TheSameAnimalsComeBackInTheSameOrder()
         {

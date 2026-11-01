@@ -35,6 +35,7 @@ namespace RIMAPI.Services
                     PlayerFaction = target.Faction != null && target.Faction.IsPlayer,
                     FactionName = target.Faction?.Name,
                     MentalState = target.MentalStateDef?.defName,
+                    QuestLodger = target.IsQuestLodger(),
                 });
                 if (refusal != null)
                 {

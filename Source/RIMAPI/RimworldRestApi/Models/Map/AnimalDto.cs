@@ -46,5 +46,11 @@ namespace RIMAPI.Models
         // race's flag, so a warg reads as the danger it is before it attacks.
         public bool Manhunter { get; set; }
         public bool Predator { get; set; }
+
+        // QuestLodger is Pawn.IsQuestLodger: the animal stands on the map
+        // because a quest sent it, so it counts as the colony's by faction and
+        // still is not the colony's to kill. Colony 14 slaughtered such a sheep,
+        // the quest failed and the guest faction dropped to -7 (fox #3611).
+        public bool QuestLodger { get; set; }
     }
 }

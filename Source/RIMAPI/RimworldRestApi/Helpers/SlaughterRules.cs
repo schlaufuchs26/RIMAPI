@@ -17,6 +17,11 @@ namespace RIMAPI.Helpers
             public string FactionName;
             /// <summary>The mental state's name ("manhunter"), empty when sane.</summary>
             public string MentalState;
+            /// <summary>
+            /// The animal stands here because a quest sent it: the colony's by
+            /// faction, and killing it fails that quest (fox #3611).
+            /// </summary>
+            public bool QuestLodger;
         }
 
         /// <summary>
@@ -30,6 +35,8 @@ namespace RIMAPI.Helpers
             if (!animal.Animal)
                 return "only animals are slaughtered; a humanlike pawn is arrested or rescued";
             if (animal.Dead) return "he is already dead";
+            if (animal.QuestLodger)
+                return "he is a quest guest, so killing him fails the quest: leave him alive until it ends";
             if (!animal.PlayerFaction)
             {
                 if (string.IsNullOrEmpty(animal.FactionName))
