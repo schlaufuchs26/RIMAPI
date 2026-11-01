@@ -27,7 +27,7 @@ namespace RIMAPI.Helpers
             Map map = MapHelper.GetMapByID(mapId);
             if (map == null)
             {
-                throw new System.Exception($"Map not found: {mapId}");
+                throw new System.Exception(MapLookup.MapNotFound(mapId));
             }
 
             var dto = new MapRottingFoodDto();

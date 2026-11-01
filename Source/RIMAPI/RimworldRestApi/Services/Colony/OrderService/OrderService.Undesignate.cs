@@ -15,10 +15,10 @@ public partial class OrderService
     // the call that went wrong with the other verb.
     public ApiResult UndesignateArea(DesignateRequestDto request)
     {
-        Map map = MapHelper.GetMapByID(request.MapId);
+        Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
         if (map == null)
         {
-            return ApiResult.Fail($"Map with id: {request.MapId} not found");
+            return ApiResult.Fail(mapError);
         }
         if (request.PointA == null || request.PointB == null)
         {

@@ -231,9 +231,12 @@ namespace RIMAPI.Services
                 if (request.ThingIds == null || request.ThingIds.Count == 0)
                     return ApiResult.Fail("thing_ids list is required and must not be empty");
 
-                var map = Find.Maps.FirstOrDefault(m => m.uniqueID == request.MapId);
+                var map = MapLookup.Resolve(
+                    request.MapId,
+                    id => Find.Maps.FirstOrDefault(m => m.uniqueID == id),
+                    out string mapError);
                 if (map == null)
-                    return ApiResult.Fail($"Map {request.MapId} not found");
+                    return ApiResult.Fail(mapError);
 
                 var warnings = new List<string>();
                 int updated = 0;

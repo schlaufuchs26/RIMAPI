@@ -29,8 +29,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<CombatStateDto>.Fail($"Map {mapId} not found.");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<CombatStateDto>.Fail(mapError);
 
                 CombatStateDto state = new CombatStateDto
                 {

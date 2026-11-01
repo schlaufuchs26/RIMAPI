@@ -29,8 +29,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult.Fail(mapError);
                 Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                 // A carried pawn is despawned into his carrier's hands, so the
@@ -159,8 +159,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult.Fail(mapError);
                 Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                 // A carried pawn cannot be reached by an arrestor yet (fox

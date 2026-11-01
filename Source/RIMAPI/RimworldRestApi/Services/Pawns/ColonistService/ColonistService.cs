@@ -297,10 +297,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult.Fail($"Map with ID={mapId} not found");
+                    return ApiResult.Fail(mapError);
                 }
                 Pawn doctor = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (doctor == null)
@@ -452,10 +452,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult.Fail($"Map with ID={mapId} not found");
+                    return ApiResult.Fail(mapError);
                 }
 
                 Thing thing = map
@@ -756,10 +756,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult.Fail($"Map with ID={mapId} not found");
+                    return ApiResult.Fail(mapError);
                 }
                 Pawn pawn = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (pawn == null)

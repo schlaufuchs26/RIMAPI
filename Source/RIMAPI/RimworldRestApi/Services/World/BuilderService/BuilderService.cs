@@ -16,8 +16,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult<BlueprintDto>.Fail($"Map {request.MapId} not found.");
+                var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<BlueprintDto>.Fail(mapError);
 
                 // Normalize Coordinates (ensure min/max are correct regardless of A/B order)
                 int minX = Mathf.Min(request.PointA.X, request.PointB.X);
@@ -93,8 +93,8 @@ namespace RIMAPI.Services
             {
                 if (request.Blueprint == null) return ApiResult.Fail("Blueprint is null");
 
-                var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult.Fail($"Map {request.MapId} not found.");
+                var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult.Fail(mapError);
 
                 int anchorX = request.Position.X;
                 int anchorZ = request.Position.Z;
@@ -202,8 +202,8 @@ namespace RIMAPI.Services
             {
                 if (request.Blueprint == null) return ApiResult<PlaceResultDto>.Fail("Blueprint is null");
 
-                var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult<PlaceResultDto>.Fail($"Map {request.MapId} not found.");
+                var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<PlaceResultDto>.Fail(mapError);
 
                 int anchorX = request.Position.X;
                 int anchorZ = request.Position.Z;
@@ -374,8 +374,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult<CancelResultDto>.Fail($"Map {request.MapId} not found.");
+                var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<CancelResultDto>.Fail(mapError);
                 if (request.PointA == null || request.PointB == null)
                 {
                     return ApiResult<CancelResultDto>.Fail("PointA and PointB are required.");
@@ -471,8 +471,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                var map = MapHelper.GetMapByID(request.MapId);
-                if (map == null) return ApiResult<CheckZoneResultDto>.Fail($"Map {request.MapId} not found.");
+                var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<CheckZoneResultDto>.Fail(mapError);
 
                 if (request.PointA == null || request.PointB == null)
                     return ApiResult<CheckZoneResultDto>.Fail("PointA and PointB are required.");

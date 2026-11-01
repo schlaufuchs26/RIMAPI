@@ -11,8 +11,8 @@ public partial class OrderService : IOrderService
 {
     public ApiResult DesignateArea(DesignateRequestDto request)
     {
-        var map = MapHelper.GetMapByID(request.MapId);
-        if (map == null) return ApiResult.Fail($"Map with id: {request.MapId} not found");
+        var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+        if (map == null) return ApiResult.Fail(mapError);
 
         IntVec3 start = new IntVec3(request.PointA.X, 0, request.PointA.Z);
         IntVec3 end = new IntVec3(request.PointB.X, 0, request.PointB.Z);

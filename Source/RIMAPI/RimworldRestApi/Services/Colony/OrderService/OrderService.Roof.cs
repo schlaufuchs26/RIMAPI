@@ -30,10 +30,10 @@ public partial class OrderService
     {
         try
         {
-            Map map = MapHelper.GetMapByID(request.MapId);
+            Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
             if (map == null)
             {
-                return ApiResult<RoofResultDto>.Fail($"Map with id: {request.MapId} not found");
+                return ApiResult<RoofResultDto>.Fail(mapError);
             }
             if (request.PointA == null || request.PointB == null)
             {

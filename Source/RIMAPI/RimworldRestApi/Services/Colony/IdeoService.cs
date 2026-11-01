@@ -24,8 +24,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<IdeoRolesDto>.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<IdeoRolesDto>.Fail(mapError);
 
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<IdeoRolesDto>.Fail(reason);
@@ -107,8 +107,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<RoleAssignResultDto>.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<RoleAssignResultDto>.Fail(mapError);
 
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<RoleAssignResultDto>.Fail(reason);
@@ -190,8 +190,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<IdeoRitualsDto>.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<IdeoRitualsDto>.Fail(mapError);
 
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<IdeoRitualsDto>.Fail(reason);
@@ -227,8 +227,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<RitualStartResultDto>.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<RitualStartResultDto>.Fail(mapError);
 
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<RitualStartResultDto>.Fail(reason);
@@ -709,8 +709,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<RitualEndResultDto>.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<RitualEndResultDto>.Fail(mapError);
 
                 Ideo ideo = PlayerIdeo(out string reason);
                 if (ideo == null) return ApiResult<RitualEndResultDto>.Fail(reason);

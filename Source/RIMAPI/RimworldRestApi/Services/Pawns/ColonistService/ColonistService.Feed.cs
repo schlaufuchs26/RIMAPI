@@ -21,8 +21,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult.Fail(mapError);
                 Pawn patient = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (patient == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                 // A carried patient is despawned into the carrier's hands, so the

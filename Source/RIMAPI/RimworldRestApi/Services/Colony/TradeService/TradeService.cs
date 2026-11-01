@@ -157,10 +157,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult<List<TraderDto>>.Fail($"Map {mapId} not found.");
+                    return ApiResult<List<TraderDto>>.Fail(mapError);
                 }
 
                 Pawn negotiator = FindNegotiator(map);
@@ -204,10 +204,10 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult<List<TradeBeaconDto>>.Fail($"Map {mapId} not found.");
+                    return ApiResult<List<TradeBeaconDto>>.Fail(mapError);
                 }
                 return ApiResult<List<TradeBeaconDto>>.Ok(BeaconsOf(map));
             }
@@ -233,10 +233,10 @@ namespace RIMAPI.Services
                 {
                     return ApiResult<TradeResultDto>.Fail("no request body");
                 }
-                Map map = MapHelper.GetMapByID(request.MapId);
+                Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
                 if (map == null)
                 {
-                    return ApiResult<TradeResultDto>.Fail($"Map {request.MapId} not found.");
+                    return ApiResult<TradeResultDto>.Fail(mapError);
                 }
                 string op = (request.Op ?? "").Trim().ToLowerInvariant();
                 if (op != "buy" && op != "sell")

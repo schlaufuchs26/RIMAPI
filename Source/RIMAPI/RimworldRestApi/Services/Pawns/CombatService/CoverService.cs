@@ -38,8 +38,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<CoverStateDto>.Fail($"Map {mapId} not found.");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<CoverStateDto>.Fail(mapError);
 
                 Pawn pawn = null;
                 IntVec3 center;

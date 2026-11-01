@@ -25,10 +25,10 @@ public partial class OrderService
     {
         try
         {
-            Map map = MapHelper.GetMapByID(request.MapId);
+            Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
             if (map == null)
             {
-                return ApiResult<FirefightResultDto>.Fail($"Map with id: {request.MapId} not found");
+                return ApiResult<FirefightResultDto>.Fail(mapError);
             }
 
             string area = (request.Area ?? "").Trim();

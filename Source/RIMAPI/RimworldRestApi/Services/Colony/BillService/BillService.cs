@@ -220,9 +220,10 @@ namespace RIMAPI.Services
 
         public ApiResult<List<WorkTableDto>> GetWorkTables(int mapId)
         {
-            var map = Find.Maps.FirstOrDefault(m => m.uniqueID == mapId);
+            var map = MapLookup.Resolve(
+                mapId, id => Find.Maps.FirstOrDefault(m => m.uniqueID == id), out string mapError);
             if (map == null)
-                return ApiResult<List<WorkTableDto>>.Fail($"Map {mapId} not found");
+                return ApiResult<List<WorkTableDto>>.Fail(mapError);
 
             var workTables = map.listerBuildings.allBuildingsColonist
                 .OfType<Building_WorkTable>()

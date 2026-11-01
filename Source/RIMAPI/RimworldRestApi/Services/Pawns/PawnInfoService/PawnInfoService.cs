@@ -15,8 +15,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                var map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<List<PawnDto>>.Fail($"Map {mapId} not found.");
+                var map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<List<PawnDto>>.Fail(mapError);
 
                 var result = new List<PawnDto>();
 
@@ -77,8 +77,8 @@ namespace RIMAPI.Services
         {
             try
             {
-                Map map = MapHelper.GetMapByID(mapId);
-                if (map == null) return ApiResult<List<PersonDto>>.Fail($"Map {mapId} not found.");
+                Map map = MapLookup.Resolve(mapId, MapHelper.GetMapByID, out string mapError);
+                if (map == null) return ApiResult<List<PersonDto>>.Fail(mapError);
 
                 List<PersonDto> result = new List<PersonDto>();
                 foreach (Pawn pawn in map.mapPawns.AllPawns)
