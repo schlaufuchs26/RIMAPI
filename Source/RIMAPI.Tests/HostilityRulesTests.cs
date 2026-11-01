@@ -60,6 +60,56 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void APredatorHuntingAColonistIsAThreat()
+        {
+            // fox #3872, measured in colony 16: a wild cougar hunted Trocas with
+            // the game's own PredatorHunt job (the letter said "a cougar is
+            // hunting Trocas for food"), no manhunter state on it at all. The
+            // fight read said "0 hostiles" while it bit him.
+            var cougar = new HostilityRules.PawnState
+            {
+                Animal = true,
+                JobDef = "PredatorHunt",
+                JobTargetsColony = true,
+            };
+            Assert.True(HostilityRules.ThreatensColony(cougar));
+        }
+
+        [Fact]
+        public void APredatorHuntingAWildAnimalIsNoThreat()
+        {
+            // A cougar after a hare is the map's business, not the colony's.
+            var cougar = new HostilityRules.PawnState { Animal = true, JobDef = "PredatorHunt" };
+            Assert.False(HostilityRules.ThreatensColony(cougar));
+        }
+
+        [Fact]
+        public void AColonistsOwnHuntIsNoHuntingJob()
+        {
+            // The colony's hunter is in "Hunt", not in the predator's job; the
+            // animal rule must not read that as a predator.
+            Assert.True(HostilityRules.IsHuntingJob("PredatorHunt"));
+            Assert.False(HostilityRules.IsHuntingJob("Hunt"));
+            Assert.False(HostilityRules.IsHuntingJob("AttackMelee"));
+            Assert.False(HostilityRules.IsHuntingJob(""));
+            Assert.False(HostilityRules.IsHuntingJob(null));
+        }
+
+        [Fact]
+        public void AHuntingPredatorIsNamedAsOne()
+        {
+            // "factionless" said nothing about why the cougar was in the list
+            // (the same complaint as #3690 about the wild man).
+            var cougar = new HostilityRules.PawnState
+            {
+                Animal = true,
+                JobDef = "PredatorHunt",
+                JobTargetsColony = true,
+            };
+            Assert.Equal("hunting predator", HostilityRules.KindOf(cougar));
+        }
+
+        [Fact]
         public void ABerserkGuestIsAThreat()
         {
             var guest = new HostilityRules.PawnState { MentalState = "Berserk" };

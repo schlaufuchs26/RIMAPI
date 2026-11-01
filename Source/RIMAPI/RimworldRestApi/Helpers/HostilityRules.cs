@@ -6,7 +6,8 @@ namespace RIMAPI.Helpers
     // faction, so colony 14's DiLeo (id 54348) beat Veniamin from 100% to 40%
     // health while the fight read said "0 hostiles" and the wait ran its full
     // hour. A pawn's own job says what it is doing, so an attack on the colony
-    // counts as hostility.
+    // counts as hostility, and so does a predator's hunt (fox #3872: a cougar
+    // hunting Trocas read as no threat at all).
     //
     // The checks stay free of game types so Source/RIMAPI.Tests can state them;
     // Hostility maps a Pawn onto PawnState.
@@ -52,6 +53,9 @@ namespace RIMAPI.Helpers
         {
             if (pawn.Animal && IsManhunterState(pawn.MentalState)) return "manhunter";
             if (pawn.WildMan) return "wild man";
+            // A wild predator that picked colony prey is not a manhunter: the
+            // game turned nothing insane, it is hunting for food (fox #3872).
+            if (pawn.Animal && IsHuntingJob(pawn.JobDef) && pawn.JobTargetsColony) return "hunting predator";
             if (pawn.Prisoner) return "prisoner";
             if (pawn.Slave) return "slave";
             if (pawn.Guest) return "guest";
@@ -72,7 +76,7 @@ namespace RIMAPI.Helpers
             if (pawn.EnemyFaction) return true;
             if (IsManhunterState(pawn.MentalState)) return true;
             if (IsAggroState(pawn.MentalState)) return true;
-            if (IsAttackJob(pawn.JobDef) && pawn.JobTargetsColony) return true;
+            if (pawn.JobTargetsColony && (IsAttackJob(pawn.JobDef) || IsHuntingJob(pawn.JobDef))) return true;
             return IsAssaultingLord(pawn.LordJob);
         }
 
@@ -115,6 +119,20 @@ namespace RIMAPI.Helpers
             if (string.IsNullOrEmpty(jobDef)) return false;
             if (jobDef == "AttackMelee" || jobDef == "AttackStatic") return true;
             return jobDef.IndexOf("Attack", System.StringComparison.Ordinal) >= 0;
+        }
+
+        /// <summary>
+        /// True for the game's hunting job, which is what a wild predator is in
+        /// while it chases and bites its prey: JobDriver_PredatorHunt keeps the
+        /// prey in targetA (fox #3872). The name is not an "Attack" one, so the
+        /// attack rule missed the cougar that hunted Trocas in colony 16: the
+        /// fight read said "0 hostiles" while the animal bit, and `order attack`
+        /// refused it with "not hostile". A colonist's own hunt is "Hunt" and is
+        /// left out; it targets a wild animal anyway.
+        /// </summary>
+        public static bool IsHuntingJob(string jobDef)
+        {
+            return jobDef == "PredatorHunt";
         }
 
         /// <summary>
