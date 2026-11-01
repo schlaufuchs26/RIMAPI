@@ -51,6 +51,13 @@ namespace RIMAPI.Models
         // can tell Crashlanded from Lost Tribe without remembering the call.
         public string Scenario { get; set; }
         public string ScenarioLabel { get; set; }
+
+        // What a founding installed from a candidate batch (ticket #3924):
+        // the picked candidates as "#7 Mia (34), #11 Tam (31)", or why the
+        // pick was refused and the scenario's own random colonists stayed.
+        // Empty on a founding that named no picks.
+        public string PickedPawns { get; set; }
+        public string PickProblem { get; set; }
     }
 
     public class NewGameStartRequestDto
@@ -95,6 +102,13 @@ namespace RIMAPI.Models
         // SiteVary takes the Nth best tile instead of the best, so a run can
         // found a deliberately different colony on purpose.
         public int SiteVary { get; set; }
+
+        // CandidateCount is how many candidates a batch call draws (ticket
+        // #3924); StartingPawns is the pick a founding installs, 1-based ids
+        // from the batch answer. The candidates are rebuilt from the world
+        // seed, so the ids stay valid across the two calls.
+        public int CandidateCount { get; set; }
+        public List<int> StartingPawns { get; set; }
     }
 
     public class GameSettingsDto

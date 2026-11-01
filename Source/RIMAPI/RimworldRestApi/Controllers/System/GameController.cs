@@ -251,6 +251,23 @@ namespace RIMAPI.Controllers
                 ApiResult<List<ScenarioOptionDto>>.Ok(LandingSitePick.ScenarioOptions()));
         }
 
+        // A batch of starting colonists to pick from (ticket #3924): the POST
+        // starts the draw and answers at once, the GET hands the candidates
+        // back once the world and the pawns exist.
+        [Post("/api/v1/game/start/candidates")]
+        public async Task StartCandidateBatch(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<NewGameStartRequestDto>();
+            var result = _gameStateService.StartCandidateBatch(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Get("/api/v1/game/start/candidates")]
+        public async Task GetCandidateBatch(HttpListenerContext context)
+        {
+            await context.SendJsonResponse(ApiResult<CandidateBatchDto>.Ok(_gameStateService.GetCandidateBatch()));
+        }
+
         [Post("/api/v1/game/start")]
         public async Task GameStart(HttpListenerContext context)
         {

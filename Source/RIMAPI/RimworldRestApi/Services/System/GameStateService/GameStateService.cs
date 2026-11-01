@@ -37,6 +37,9 @@ namespace RIMAPI.Services
 
         public ApiResult GoToMainMenu()
         {
+            // A batch belongs to the world it was drawn in; leaving that world
+            // makes its candidates stale (ticket #3924).
+            PawnBatch.Reset();
             LongEventHandler.ExecuteWhenFinished(() => GenScene.GoToMainMenu());
             return ApiResult.Ok();
         }
@@ -83,6 +86,7 @@ namespace RIMAPI.Services
                 string filePath = GenFilePaths.FilePathForSavedGame(body.FileName);
                 if (!System.IO.File.Exists(filePath)) return ApiResult.Fail($"Save file not found: {body.FileName}.rws");
 
+                PawnBatch.Reset();
                 LongEventHandler.ExecuteWhenFinished(() =>
                 {
                     if (!body.CheckVersion)
@@ -131,6 +135,13 @@ namespace RIMAPI.Services
                 // unknown biome or scenario would otherwise fail into the log
                 // and leave no colony (ticket #3930).
                 string problem = LandingSitePick.Problem(request);
+                // A pick has to name batch ids that exist (ticket #3924); the
+                // count it is checked against comes with the batch answer, and
+                // the mod checks it against the scenario as well.
+                if (problem == "")
+                {
+                    problem = PawnBatchRules.PicksProblem(request.StartingPawns, request.CandidateCount);
+                }
                 if (problem != "")
                 {
                     return ApiResult.Fail(problem);
@@ -143,6 +154,47 @@ namespace RIMAPI.Services
                 return ApiResult.Ok();
             }
             catch (Exception ex) { return ApiResult.Fail(ex.Message); }
+        }
+
+        // StartCandidateBatch draws the candidates a founding can pick from
+        // (ticket #3924). It builds the same world a founding would, because a
+        // starting colonist only exists under the player faction and its
+        // ideoligion; the pawns come from the world seed alone, so the start
+        // call rebuilds the very same list and installs the picked ones.
+        public ApiResult StartCandidateBatch(NewGameStartRequestDto request)
+        {
+            try
+            {
+                if (request == null) return ApiResult.Fail("Request body is missing.");
+                if (string.IsNullOrEmpty(request.WorldSeed))
+                    return ApiResult.Fail("A candidate batch needs the world seed it is drawn from: pass world_seed, the same one the founding will use.");
+                string problem = LandingSitePick.Problem(request);
+                if (problem != "") return ApiResult.Fail(problem);
+                problem = PawnBatchRules.BatchProblem(request.CandidateCount, 0);
+                if (problem != "") return ApiResult.Fail(problem);
+                if (PawnBatch.Generating)
+                    return ApiResult.Fail("A candidate batch is already being generated; read it with GET /api/v1/game/start/candidates.");
+                PawnBatch.Begin(request, request.CandidateCount);
+                LongEventHandler.QueueLongEvent(() =>
+                {
+                    GamePlayHelper.InitGameFromConfiguration(request);
+                    PawnBatch.Generate(request, request.CandidateCount);
+                }, "GeneratingMap", true, GameAndMapInitExceptionHandlers.ErrorWhileGeneratingMap);
+                return ApiResult.Ok();
+            }
+            catch (Exception ex) { return ApiResult.Fail(ex.Message); }
+        }
+
+        // GetCandidateBatch answers what the batch call produced: "none",
+        // "generating", "ready" or "failed". A long event cannot answer its
+        // caller, so the batch is polled like a founding's world is.
+        public CandidateBatchDto GetCandidateBatch()
+        {
+            return PawnBatch.Last ?? new CandidateBatchDto
+            {
+                State = "none",
+                Candidates = new System.Collections.Generic.List<PawnCandidateDto>(),
+            };
         }
 
         public ApiResult<GameSettingsDto> GetCurrentSettings()

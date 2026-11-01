@@ -13,6 +13,10 @@ namespace RIMAPI.Services
         ApiResult GoToMainMenu();
         ApiResult QuitGame();
         ApiResult GameStart(NewGameStartRequestDto body);
+
+        // The starting-colonist batch a founding picks from (ticket #3924).
+        ApiResult StartCandidateBatch(NewGameStartRequestDto body);
+        CandidateBatchDto GetCandidateBatch();
         ApiResult<GameSettingsDto> GetCurrentSettings();
         ApiResult<bool> ToggleRunInBackground();
         ApiResult<bool> GetRunInBackground();

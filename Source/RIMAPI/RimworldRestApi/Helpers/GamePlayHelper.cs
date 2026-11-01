@@ -13,6 +13,26 @@ namespace RIMAPI.Helpers
     {
         public static void InitGameFromConfiguration(NewGameStartRequestDto request)
         {
+            // The whole setup draws from one state seeded by the world seed, so
+            // the scenario's own colonists, the ideoligion and the candidate
+            // batch are the same on every call with that seed. Without this the
+            // name generator's used-name retries consume a different number of
+            // draws each time and the batch after the first pawn differs
+            // (ticket #3924).
+            string batchSeed = (request?.WorldSeed ?? "").ToLowerInvariant();
+            Rand.PushState(PawnBatchRules.SeedOf(batchSeed));
+            try
+            {
+                InitGameFromConfigurationSeeded(request);
+            }
+            finally
+            {
+                Rand.PopState();
+            }
+        }
+
+        private static void InitGameFromConfigurationSeeded(NewGameStartRequestDto request)
+        {
             StorytellerDef storytellerDef = DefDatabase<StorytellerDef>.GetNamed(request.StorytellerName);
             DifficultyDef difficultyDef = DefDatabase<DifficultyDef>.GetNamed(request.DifficultyName);
 
@@ -78,6 +98,10 @@ namespace RIMAPI.Helpers
             // world generation rolled for it (ticket #3612).
             IdeoSetup.Apply(request);
             Find.Scenario.PostIdeoChosen();
+            // PostIdeoChosen drew the scenario's own colonists; a founding that
+            // picked candidates from a batch replaces them here, before the map
+            // is generated (ticket #3924).
+            PawnBatch.Install(request);
         }
 
         public static GameStateDto GetGameStateDto()
@@ -108,6 +132,8 @@ namespace RIMAPI.Helpers
                 state.Storyteller = Current.Game.storyteller?.def?.defName ?? "Unknown";
                 state.Scenario = LandingSitePick.ScenarioDefName ?? "";
                 state.ScenarioLabel = LandingSitePick.ScenarioLabel ?? "";
+                state.PickedPawns = PawnBatch.PickedNote ?? "";
+                state.PickProblem = PawnBatch.PickProblem ?? "";
                 state.MapCount = Find.Maps.Count;
                 state.ProgramState = Current.ProgramState.ToString();
                 // #3098: the flags that say what is loaded, instead of a

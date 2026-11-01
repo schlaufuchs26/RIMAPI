@@ -39,6 +39,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LandingSiteRules.cs" Link="Linked\LandingSiteRules.cs" />
+    <!-- The arithmetic of a starting-colonist batch (fox ticket #3924): the
+         seed it is reproduced from and the bounds a pick is checked against. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PawnBatchRules.cs" Link="Linked\PawnBatchRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
     <!-- Whether the game lets a pawn board a shuttle (fox ticket #3862): the
          refusal wording is plain C#. -->
