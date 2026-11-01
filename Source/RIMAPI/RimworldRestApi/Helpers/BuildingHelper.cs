@@ -56,12 +56,14 @@ namespace RIMAPI.Helpers
         {
             Building_Bed bed = building as Building_Bed;
             if (bed == null || bed.def?.building == null || !bed.def.building.bed_humanlike) return null;
+            Pawn owner = bed.OwnersForReading?.FirstOrDefault();
             return new BedDto
             {
                 ForPrisoners = bed.ForPrisoners,
                 ForSlaves = bed.ForSlaves,
                 Medical = bed.Medical,
-                Owner = bed.OwnersForReading?.FirstOrDefault()?.LabelShort,
+                Owner = owner?.LabelShort,
+                OwnerId = owner?.thingIDNumber ?? 0,
                 Cell = BedCellOf(bed),
             };
         }

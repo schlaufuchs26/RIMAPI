@@ -38,6 +38,7 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Hooks\LetterOpenTargets.cs" Link="Linked\LetterOpenTargets.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\UnbuiltBuildingReason.cs" Link="Linked\UnbuiltBuildingReason.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedSafety.cs" Link="Linked\BedSafety.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FrameConstruction.cs" Link="Linked\FrameConstruction.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CombatRefusal.cs" Link="Linked\CombatRefusal.cs" />
     <!-- Why an ordered attack does not land (fox ticket #3737): the wording of

@@ -71,12 +71,37 @@ namespace RIMAPI.Models
         public bool Medical { get; set; }
         public string Owner { get; set; }
 
+        // OwnerId is that owner's pawn id, 0 for a free bed (fox ticket #3771):
+        // a name alone cannot be handed back to `set`, which names a pawn by id
+        // or by name and needs the id to tell two colonists apart.
+        public int OwnerId { get; set; }
+
         // Cell is the room the bed stands in, as a prison cell (fox ticket
         // #3743). The toggle alone answers "set for prisoners" while the game
         // still refuses the room, so a run learned about a bed at the map edge
         // or in an open room only when an arrest refused later. Null when the
         // bed is on no map.
         public BedCellDto Cell { get; set; }
+    }
+
+    // BedOwnerDto is what one bed assignment answers (fox ticket #3771): the
+    // bed as it stands afterwards, the pawn the caller named, and the bed that
+    // pawn left. Without the previous bed a run cannot tell an assignment that
+    // moved a colonist out of the barracks from one that only added a second
+    // bed to him.
+    public class BedOwnerDto
+    {
+        public BedDto Bed { get; set; }
+        public int PawnId { get; set; }
+        public string Pawn { get; set; }
+
+        // PreviousBed is the bed the pawn owned before this call, empty when he
+        // owned none or already owned this one.
+        public int PreviousBedId { get; set; }
+        public string PreviousBed { get; set; }
+
+        // Changed is false when the bed already read what the call asked for.
+        public bool Changed { get; set; }
     }
 
     public class BedCellDto

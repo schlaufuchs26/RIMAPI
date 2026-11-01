@@ -338,6 +338,22 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // A bed's owner: the game's own bed assignment (fox ticket #3771).
+        // `pawnId` names the colonist who takes the bed; a call without one
+        // clears the bed's owner, so a colonist comes off a bed without the bed
+        // being taken apart.
+        [Post("/api/v1/map/building/bed-owner")]
+        [EndpointMetadata("Assign a humanlike bed to a colonist, or clear its owner")]
+        public async Task SetBedOwner(HttpListenerContext context)
+        {
+            var buildingId = RequestParser.GetIntParameter(context, "buildingId");
+            var pawnId = RequestParser.HasParameter(context, "pawnId")
+                ? RequestParser.GetIntParameter(context, "pawnId")
+                : 0;
+            var result = _buildingService.SetBedOwner(buildingId, pawnId);
+            await context.SendJsonResponse(result);
+        }
+
         // A cooler's and a heater's target temperature (fox ticket #3744): the
         // one setting that decides whether a room freezes. A call without
         // `target` reads it, with `target` it sets it and reads it back.

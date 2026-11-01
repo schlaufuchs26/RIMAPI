@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RIMAPI.Models;
@@ -122,6 +124,141 @@ namespace RIMAPI.Services
             {
                 return ApiResult<BedDto>.Fail(ex.ToString());
             }
+        }
+
+        // A bed's owner is the game's own bed assignment (fox ticket #3771):
+        // colony 16 had three free bedroom beds while their intended owners
+        // slept in the barracks, and the only way out was to deconstruct the
+        // barracks beds. This is the bed tab's "Assign" choice: a colonist
+        // takes a free humanlike bed and the game moves him off the bed he had,
+        // and pawnId 0 clears the owner, which is how a colonist comes off a
+        // bed without taking the bed apart.
+        public ApiResult<BedOwnerDto> SetBedOwner(int buildingId, int pawnId)
+        {
+            try
+            {
+                Building building = BuildingHelper.FindBuildingByID(buildingId);
+                if (building == null)
+                {
+                    return ApiResult<BedOwnerDto>.Fail(
+                        ThingHolderHelper.DescribeUnbuilt(
+                            buildingId,
+                            "only a built bed on the map takes an owner"
+                        ) ?? $"Building not found: {buildingId}"
+                    );
+                }
+                Building_Bed bed = building as Building_Bed;
+                if (bed == null)
+                {
+                    return ApiResult<BedOwnerDto>.Fail(
+                        $"{building.Label} (id {buildingId}) is not a bed: it is a {building.def.defName}");
+                }
+                if (pawnId <= 0) return ClearBedOwner(bed);
+
+                Pawn pawn = PawnHelper.FindPawnById(pawnId);
+                if (pawn == null)
+                {
+                    return ApiResult<BedOwnerDto>.Fail($"Pawn with ID={pawnId} not found");
+                }
+
+                Building_Bed previous = pawn.ownership != null ? pawn.ownership.OwnedBed : null;
+                Pawn current = bed.OwnersForReading != null ? bed.OwnersForReading.FirstOrDefault() : null;
+                BedOwnerRules.State state = new BedOwnerRules.State
+                {
+                    BedIsHumanlike = bed.def?.building != null && bed.def.building.bed_humanlike,
+                    BedForPrisoners = bed.ForPrisoners,
+                    BedForSlaves = bed.ForSlaves,
+                    BedOwner = current?.LabelShort ?? "",
+                    BedOwnerId = current?.thingIDNumber ?? 0,
+                    Pawn = pawn.LabelShort,
+                    PawnId = pawn.thingIDNumber,
+                    PawnIsColonist = pawn.IsColonist,
+                    PawnKind = PawnKindOf(pawn),
+                };
+                string problem = BedOwnerRules.Problem(state);
+                if (problem != null)
+                {
+                    return ApiResult<BedOwnerDto>.Fail($"{bed.Label} (id {buildingId}): {problem}");
+                }
+
+                bool changed = state.BedOwnerId != pawn.thingIDNumber;
+                if (changed)
+                {
+                    // The bed tab's own path: it assigns the pawn and the game
+                    // moves him off the bed he owned before.
+                    bed.CompAssignableToPawn.TryAssignPawn(pawn);
+                }
+
+                BedDto after = BuildingHelper.BedDtoOf(bed);
+                if (after == null || after.OwnerId != pawn.thingIDNumber)
+                {
+                    // Say what the game reads instead of an acknowledgement: a
+                    // bed that refuses its owner is the whole reason this call
+                    // exists.
+                    string reads = after == null || string.IsNullOrEmpty(after.Owner)
+                        ? "no owner"
+                        : $"owner {after.Owner} (id {after.OwnerId})";
+                    return ApiResult<BedOwnerDto>.Fail(
+                        $"{bed.Label} (id {buildingId}) did not take {pawn.LabelShort} as its owner: it reads {reads}");
+                }
+                bool moved = previous != null && previous != bed;
+                return ApiResult<BedOwnerDto>.Ok(
+                    new BedOwnerDto
+                    {
+                        Bed = after,
+                        PawnId = pawn.thingIDNumber,
+                        Pawn = pawn.LabelShort,
+                        PreviousBedId = moved ? previous.thingIDNumber : 0,
+                        PreviousBed = moved ? previous.LabelShort : "",
+                        Changed = changed,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<BedOwnerDto>.Fail(ex.ToString());
+            }
+        }
+
+        // ClearBedOwner takes every owner off a bed (a double bed holds two) and
+        // answers what the game reads afterwards.
+        private static ApiResult<BedOwnerDto> ClearBedOwner(Building_Bed bed)
+        {
+            List<Pawn> owners = bed.OwnersForReading != null
+                ? new List<Pawn>(bed.OwnersForReading)
+                : new List<Pawn>();
+            foreach (Pawn owner in owners)
+            {
+                bed.CompAssignableToPawn.TryUnassignPawn(owner);
+            }
+
+            BedDto after = BuildingHelper.BedDtoOf(bed);
+            if (after != null && after.OwnerId != 0)
+            {
+                return ApiResult<BedOwnerDto>.Fail(
+                    $"{bed.Label} (id {bed.thingIDNumber}) still belongs to {after.Owner}: the game did not clear it");
+            }
+            return ApiResult<BedOwnerDto>.Ok(
+                new BedOwnerDto
+                {
+                    Bed = after,
+                    PawnId = owners.Count > 0 ? owners[0].thingIDNumber : 0,
+                    Pawn = owners.Count > 0 ? owners[0].LabelShort : "",
+                    Changed = owners.Count > 0,
+                }
+            );
+        }
+
+        // PawnKindOf says what a pawn is instead of a colonist, for the refusal
+        // that keeps a prisoner, a guest or an animal out of a colonist's bed.
+        private static string PawnKindOf(Pawn pawn)
+        {
+            if (pawn.RaceProps != null && pawn.RaceProps.Animal) return "an animal";
+            if (pawn.IsPrisoner) return "a prisoner";
+            if (pawn.IsSlave) return "a slave";
+            if (pawn.IsWildMan()) return "a wild man";
+            if (pawn.guest != null && pawn.guest.HostFaction == Faction.OfPlayer) return "a guest";
+            return "not a colonist";
         }
 
         // A cooler's and a heater's target temperature (fox ticket #3744): the

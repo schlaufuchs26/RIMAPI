@@ -8,6 +8,7 @@ namespace RIMAPI.Services
         ApiResult<BuildingDto> GetBuildingInfo(int buildingId);
         ApiResult SetBuildingPower(int buildingId, bool powerOn);
         ApiResult<BedDto> SetBedForPrisoners(int buildingId, bool forPrisoners);
+        ApiResult<BedOwnerDto> SetBedOwner(int buildingId, int pawnId);
         ApiResult<TemperatureTargetDto> SetTemperatureTarget(int buildingId, float? target);
     }
 }

@@ -366,8 +366,22 @@ namespace RIMAPI.Tests
                 },
                 Json(new GraveDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             Assert.Equal(
-                new[] { "cell", "for_prisoners", "for_slaves", "medical", "owner" },
+                new[] { "cell", "for_prisoners", "for_slaves", "medical", "owner", "owner_id" },
                 Json(new BedDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            // The assignment's own answer (fox ticket #3771) carries the bed as
+            // it stands afterwards and the bed the pawn left, so a run can tell
+            // a move out of the barracks from a second bed.
+            Assert.Equal(
+                new[]
+                {
+                    "bed",
+                    "changed",
+                    "pawn",
+                    "pawn_id",
+                    "previous_bed",
+                    "previous_bed_id",
+                },
+                Json(new BedOwnerDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             // The cell block is what the bed order's answer reads to say
             // whether the room is a prison cell at all (fox ticket #3743),
             // and the cause is the label its list marker prints (#3750).
