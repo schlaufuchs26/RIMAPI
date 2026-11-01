@@ -389,7 +389,7 @@ namespace RIMAPI.Helpers
                             Label = zone.label,
                             BaseLabel = zone.BaseLabel,
                             Type = zone.GetType().Name,
-                            Storage = stockpile == null ? null : GetStockpileFilter(stockpile),
+                            Storage = stockpile == null ? null : GetStorageFilter(stockpile.settings),
                             Growing = GetZoneGrowing(zone as Zone_Growing, map),
                         }
                     );
@@ -537,17 +537,22 @@ namespace RIMAPI.Helpers
             return plants.OrderBy(p => p.Z).ThenBy(p => p.X).ToList();
         }
 
-        // GetStockpileFilter describes one stockpile's filter the way a player
-        // reads it off the storage tab (ticket #3181): the priority, and whether
-        // it takes food, raw food and meals. The filter is a def list, so the
+        // GetStorageFilter describes one storage's filter the way a player reads
+        // it off the storage tab (ticket #3181): the priority, and whether it
+        // takes food, raw food and meals. The filter is a def list, so the
         // question is asked of the game's own def database: does it allow any def
         // that gives nutrition, any meal, any raw food.
-        public static StockpileFilterDto GetStockpileFilter(Zone_Stockpile stockpile)
+        //
+        // It takes the settings rather than a stockpile, because a shelf, a
+        // hopper and a grave keep the same block (fox ticket #3888): the two
+        // answers are one function so a container's filter cannot read
+        // differently from a stockpile's.
+        public static StockpileFilterDto GetStorageFilter(StorageSettings settings)
         {
-            ThingFilter filter = stockpile.settings.filter;
+            ThingFilter filter = settings.filter;
             return new StockpileFilterDto
             {
-                Priority = stockpile.settings.Priority.ToString(),
+                Priority = settings.Priority.ToString(),
                 AcceptsFood = FilterAllowsAny(filter, IsFoodDef),
                 AcceptsMeals = FilterAllowsAny(filter, IsMealDef),
                 AcceptsRawFood = FilterAllowsAny(filter, def => IsFoodDef(def) && !IsMealDef(def)),
@@ -1509,7 +1514,7 @@ namespace RIMAPI.Helpers
                     AppliedDefs = appliedDefs,
                     AppliedCategories = appliedCategories,
                     Unknown = unknown,
-                    Filter = GetStockpileFilter(stockpile)
+                    Filter = GetStorageFilter(stockpile.settings)
                 };
             }
             catch (Exception ex)
@@ -1867,13 +1872,148 @@ namespace RIMAPI.Helpers
                     AppliedDefs = appliedDefs,
                     AppliedCategories = appliedCategories,
                     Unknown = unknown,
-                    Filter = GetStockpileFilter(stockpile),
+                    Filter = GetStorageFilter(stockpile.settings),
                 });
             }
             catch (Exception ex)
             {
                 LogApi.Error($"Error updating stockpile: {ex}");
                 return ApiResult<StockpileResponseDto>.Fail($"Failed to update stockpile: {ex.Message}");
+            }
+        }
+
+        // UpdateThingStorage writes a container's own storage settings (fox
+        // ticket #3888): the priority and the defs and categories it takes, on
+        // a shelf, a hopper, a grave or any other thing with a storage tab.
+        // Until this existed only zones were writable, so a nutrient paste
+        // dispenser's hopper stayed empty beside a Critical stockpile that took
+        // the same potatoes, and the colonist ate raw food.
+        //
+        // The thing is found by the id the `things` read prints, and a call
+        // without a priority and without names only reads the settings back:
+        // the storage tab and the write then answer the same call. The game's
+        // own setters notify the container (ThingFilter.SetAllow calls
+        // Notify_SettingsChanged), which is what makes a widened filter a haul
+        // job on the next tick.
+        public static ApiResult<StorageSettingsDto> UpdateThingStorage(UpdateStorageRequestDto request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return ApiResult<StorageSettingsDto>.Fail("Request cannot be null.");
+                }
+
+                Map map = MapLookup.Resolve(
+                    request.MapId,
+                    id => Find.Maps.FirstOrDefault(m => m.uniqueID == id),
+                    out string mapError
+                );
+                if (map == null)
+                {
+                    return ApiResult<StorageSettingsDto>.Fail(mapError);
+                }
+
+                Thing thing = map.listerThings.AllThings.FirstOrDefault(
+                    t => t.thingIDNumber == request.ThingId
+                );
+                if (thing == null)
+                {
+                    return ApiResult<StorageSettingsDto>.Fail(
+                        StorageSettingsRules.NoSuchThing(request.ThingId)
+                    );
+                }
+
+                IStoreSettingsParent parent = thing as IStoreSettingsParent;
+                if (parent == null || !parent.StorageTabVisible)
+                {
+                    return ApiResult<StorageSettingsDto>.Fail(
+                        StorageSettingsRules.NotAStorage(thing.def.defName, thing.LabelShort)
+                    );
+                }
+
+                StorageSettings settings = parent.GetStoreSettings();
+                if (settings == null || settings.filter == null)
+                {
+                    return ApiResult<StorageSettingsDto>.Fail(
+                        StorageSettingsRules.NotAStorage(thing.def.defName, thing.LabelShort)
+                    );
+                }
+
+                var appliedDefs = new List<string>();
+                var appliedCategories = new List<string>();
+                var unknown = new List<string>();
+
+                if (request.Priority.HasValue)
+                {
+                    int priorityValue = request.Priority.Value;
+                    if (!StorageSettingsRules.PriorityInRange(priorityValue))
+                    {
+                        return ApiResult<StorageSettingsDto>.Fail(
+                            StorageSettingsRules.PriorityOutOfRange(priorityValue)
+                        );
+                    }
+                    settings.Priority = (StoragePriority)priorityValue;
+                }
+
+                ApplyFilterNames(
+                    settings.filter,
+                    request.RemoveItemDefs,
+                    false,
+                    appliedDefs,
+                    appliedCategories,
+                    unknown
+                );
+                ApplyFilterNames(
+                    settings.filter,
+                    request.AddItemDefs,
+                    true,
+                    appliedDefs,
+                    appliedCategories,
+                    unknown
+                );
+                ApplyFilterNames(
+                    settings.filter,
+                    request.RemoveItemCategories,
+                    false,
+                    appliedDefs,
+                    appliedCategories,
+                    unknown
+                );
+                ApplyFilterNames(
+                    settings.filter,
+                    request.AddItemCategories,
+                    true,
+                    appliedDefs,
+                    appliedCategories,
+                    unknown
+                );
+
+                LogApi.Info(
+                    $"Updated storage of {thing.def.defName} (ID: {request.ThingId}), priority {(int)settings.Priority}"
+                );
+
+                return ApiResult<StorageSettingsDto>.Ok(
+                    new StorageSettingsDto
+                    {
+                        ThingId = thing.thingIDNumber,
+                        Def = thing.def.defName,
+                        Label = thing.LabelShort,
+                        Priority = (int)settings.Priority,
+                        PriorityName = settings.Priority.ToString(),
+                        Filter = GetStorageFilter(settings),
+                        AppliedDefs = appliedDefs,
+                        AppliedCategories = appliedCategories,
+                        Unknown = unknown,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"Error updating storage: {ex}");
+                return ApiResult<StorageSettingsDto>.Fail(
+                    $"Failed to update storage: {ex.Message}"
+                );
             }
         }
     }

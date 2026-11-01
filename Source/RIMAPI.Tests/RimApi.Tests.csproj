@@ -175,5 +175,8 @@
     <!-- Which cell counts belong to the crop (fox ticket #3805): a wild plant
          in a growing zone used to read as sown crop. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\GrowingZoneCells.cs" Link="Linked\GrowingZoneCells.cs" />
+    <!-- A container's storage write (fox ticket #3888): the priority scale and
+         the two refusals are plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\StorageSettingsRules.cs" Link="Linked\StorageSettingsRules.cs" />
   </ItemGroup>
 </Project>

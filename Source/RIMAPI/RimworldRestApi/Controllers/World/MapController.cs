@@ -480,6 +480,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/map/storage/update")]
+        [EndpointMetadata("Read or write a container's storage priority and filter by thing ID")]
+        public async Task UpdateStorage(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<UpdateStorageRequestDto>();
+            var result = _mapService.UpdateThingStorage(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/datetime")]
         [EndpointMetadata("Get in-game date and time")]
         public async Task GetCurrentMapDatetime(HttpListenerContext context)

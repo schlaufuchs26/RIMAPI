@@ -47,6 +47,7 @@ namespace RIMAPI.Services
         ApiResult DeleteStockpile(int zoneId);
         ApiResult DeleteZone(int zoneId);
         ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request);
+        ApiResult<StorageSettingsDto> UpdateThingStorage(UpdateStorageRequestDto request);
 
         ApiResult<MapTimeDto> GetCurrentMapDatetime();
         ApiResult<MapTimeDto> GetWorldTileDatetime(int tileID);
