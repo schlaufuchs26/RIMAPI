@@ -29,6 +29,24 @@ namespace RIMAPI.Helpers
             return everWork ? Readiness.Ready : Readiness.NeedsInitialization;
         }
 
+        // Name is the state as the read sends it (fox #3604). `initialized`
+        // alone is false for both NoSettings and NeedsInitialization, and the
+        // two need different advice: only the second can be initialized by a
+        // write, the first is refused by the game. An older tool that does not
+        // know the field still reads `initialized` and keeps its old wording.
+        public static string Name(Readiness readiness)
+        {
+            switch (readiness)
+            {
+                case Readiness.NoSettings:
+                    return "no_settings";
+                case Readiness.NeedsInitialization:
+                    return "needs_initialization";
+                default:
+                    return "ready";
+            }
+        }
+
         // NoSettingsRefusal names the pawn, so a run does not have to guess
         // which of its colonists the refusal was about.
         public static string NoSettingsRefusal(string pawnLabel)

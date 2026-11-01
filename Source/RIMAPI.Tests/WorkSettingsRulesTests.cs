@@ -44,5 +44,19 @@ namespace RIMAPI.Tests
         {
             Assert.Contains("Theo", WorkSettingsRules.NoSettingsRefusal("Theo"));
         }
+
+        // fox #3604: the read carries all three states, because the tool words
+        // its advice differently for a pawn the game can initialize and one it
+        // cannot.
+        [Fact]
+        public void EachReadinessHasItsOwnWireName()
+        {
+            Assert.Equal("no_settings", WorkSettingsRules.Name(WorkSettingsRules.Readiness.NoSettings));
+            Assert.Equal(
+                "needs_initialization",
+                WorkSettingsRules.Name(WorkSettingsRules.Readiness.NeedsInitialization)
+            );
+            Assert.Equal("ready", WorkSettingsRules.Name(WorkSettingsRules.Readiness.Ready));
+        }
     }
 }

@@ -265,6 +265,11 @@ namespace RIMAPI.Models
         public string PawnName { get; set; }
         public bool ManualPriorities { get; set; }
         public bool Initialized { get; set; }
+        // Readiness separates the two ways Initialized can be false (fox
+        // #3604): "needs_initialization" is a settings component whose levels
+        // the game creates on the first write, "no_settings" is a pawn without
+        // the component at all, which the game refuses. "ready" is Initialized.
+        public string Readiness { get; set; }
         public List<WorkPriorityEntryDto> Work { get; set; } = new List<WorkPriorityEntryDto>();
     }
 

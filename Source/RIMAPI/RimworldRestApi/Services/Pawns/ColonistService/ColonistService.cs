@@ -222,6 +222,7 @@ namespace RIMAPI.Services
                     PawnName = pawn.LabelShortCap,
                     ManualPriorities = Find.PlaySettings?.useWorkPriorities ?? false,
                     Initialized = readiness == WorkSettingsRules.Readiness.Ready,
+                    Readiness = WorkSettingsRules.Name(readiness),
                 };
 
                 if (!result.Initialized)
