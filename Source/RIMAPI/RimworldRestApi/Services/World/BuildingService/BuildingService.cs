@@ -120,5 +120,63 @@ namespace RIMAPI.Services
                 return ApiResult<BedDto>.Fail(ex.ToString());
             }
         }
+
+        // A cooler's and a heater's target temperature (fox ticket #3744): the
+        // setting lives on the building's own tab, and nothing in the tool read
+        // or set it. Colony 15 built a powered cooler into a walled, roofed
+        // room and the room stayed at 16 C, the PassiveCooler's floor, because
+        // the machine still stood at its default 21 C. A call without a target
+        // is the read; with one it sets the setting and answers what the game
+        // holds afterwards, so a value the game drops reads as such.
+        public ApiResult<TemperatureTargetDto> SetTemperatureTarget(int buildingId, float? target)
+        {
+            try
+            {
+                Building building = BuildingHelper.FindBuildingByID(buildingId);
+                if (building == null)
+                {
+                    return ApiResult<TemperatureTargetDto>.Fail(
+                        ThingHolderHelper.DescribeUnbuilt(
+                            buildingId,
+                            "only a built building on the map has a thermostat"
+                        ) ?? $"Building not found: {buildingId}"
+                    );
+                }
+                CompTempControl comp = building.TryGetComp<CompTempControl>();
+                if (comp == null)
+                {
+                    return ApiResult<TemperatureTargetDto>.Fail(
+                        $"{building.Label} (id {buildingId}) has no thermostat: a heater and a "
+                            + $"cooler have one, a {building.def?.defName} does not"
+                    );
+                }
+
+                float previous = comp.targetTemperature;
+                if (target.HasValue)
+                {
+                    string problem = TemperatureTargetRules.Problem(target.Value);
+                    if (problem != null)
+                    {
+                        return ApiResult<TemperatureTargetDto>.Fail(problem);
+                    }
+                    comp.targetTemperature = target.Value;
+                }
+
+                TemperatureTargetDto dto = Thermostat.Describe(building);
+                dto.PreviousTarget = previous;
+                if (target.HasValue && !TemperatureTargetRules.Took(target.Value, dto.Target))
+                {
+                    return ApiResult<TemperatureTargetDto>.Fail(
+                        $"{building.Label} (id {buildingId}) did not take {target.Value} C: it reads "
+                            + $"{dto.Target} C, so the game reset the setting"
+                    );
+                }
+                return ApiResult<TemperatureTargetDto>.Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<TemperatureTargetDto>.Fail(ex.ToString());
+            }
+        }
     }
 }

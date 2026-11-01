@@ -106,6 +106,10 @@
          risk, and the keys the tool decodes. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\RottingFoodDto.cs" Link="Linked\RottingFoodDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RottingFoodRules.cs" Link="Linked\RottingFoodRules.cs" />
+    <!-- The thermostat's numbers (fox ticket #3744): which targets the game's
+         scale holds, whether a setting took, which room beside a cooler is the
+         one it chills. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TemperatureTargetRules.cs" Link="Linked\TemperatureTargetRules.cs" />
     <!-- The resources DTOs carry the fuel summary (fox ticket #3678): plain C#,
          so the keys the digest decodes are testable here. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Items\ResourcesDto.cs" Link="Linked\ResourcesDto.cs" />

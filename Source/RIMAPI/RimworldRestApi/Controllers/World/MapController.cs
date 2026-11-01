@@ -336,6 +336,21 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // A cooler's and a heater's target temperature (fox ticket #3744): the
+        // one setting that decides whether a room freezes. A call without
+        // `target` reads it, with `target` it sets it and reads it back.
+        [Post("/api/v1/map/building/temperature-target")]
+        [EndpointMetadata("Read or set a cooler's or heater's target temperature")]
+        public async Task SetTemperatureTarget(HttpListenerContext context)
+        {
+            var buildingId = RequestParser.GetIntParameter(context, "buildingId");
+            float? target = RequestParser.HasParameter(context, "target")
+                ? (float?)RequestParser.GetFloatParameter(context, "target")
+                : null;
+            var result = _buildingService.SetTemperatureTarget(buildingId, target);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/weather/change")]
         [EndpointMetadata("Set weather on the map")]
         public async Task SetWeather(HttpListenerContext context)
