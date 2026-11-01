@@ -23,6 +23,7 @@ namespace RIMAPI.Tests
             {
                 { "GetMapId", "map_id" },
                 { "GetZoneId", "zone_id" },
+                { "GetBuildingId", "building_id" },
             };
 
         // Presence checks, not reads: `HasParameter(context, "x") ? GetIntParameter(context, "x") : -1`
@@ -79,6 +80,28 @@ namespace RIMAPI.Tests
             Assert.True(
                 reads.SequenceEqual(new[] { "map_id", "zone_id" }),
                 $"{route.Location} reads [{string.Join(", ", reads)}] instead of [map_id, zone_id]");
+        }
+
+        /// <summary>
+        /// The building read answers for one building, so it asks for a building
+        /// id. The stock route read `map_id`, the name every other route uses
+        /// for a map, so a caller sending a building id was refused with a
+        /// missing parameter (fox ticket #3705).
+        /// </summary>
+        [Fact]
+        public void TheBuildingInfoRouteAsksForABuildingId()
+        {
+            string root = SourceTree.RepoRoot();
+            SourceMethod route = SourceTree
+                .Methods(SourceTree.Sources(root, "RimworldRestApi", "Controllers"), root)
+                .SingleOrDefault(method => method.Name == "GetBuildingInfo");
+
+            Assert.True(route != null, "no controller method named GetBuildingInfo");
+
+            List<string> reads = Reads(route).Distinct().OrderBy(name => name, StringComparer.Ordinal).ToList();
+            Assert.True(
+                reads.SequenceEqual(new[] { "building_id" }),
+                $"{route.Location} reads [{string.Join(", ", reads)}] instead of [building_id]");
         }
 
         /// <summary>The query parameters a method reads, one entry per call.</summary>

@@ -25,6 +25,34 @@ namespace RIMAPI.Http
         }
 
         /// <summary>
+        /// Gets the building id of a building route (fox ticket #3705).
+        /// </summary>
+        /// <remarks>
+        /// The stock building-info route read its id as `map_id`, the name every
+        /// other route uses for a map, so a caller sending `building_id` was
+        /// refused with a missing parameter and one sending `map_id` could not
+        /// tell the two apart. Both spellings are accepted, `building_id` wins,
+        /// and an old call keeps working.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+        /// <exception cref="ParameterNotFoundException">Thrown when neither name is given.</exception>
+        /// <exception cref="ParameterFormatException">Thrown when the value is no number.</exception>
+        public static int GetBuildingId(HttpListenerContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            string value = GetQueryStringValue(context, "building_id", false);
+            if (string.IsNullOrEmpty(value))
+                return GetMapId(context);
+
+            if (!int.TryParse(value, out int result))
+                throw new ParameterFormatException("building_id", value, typeof(int));
+
+            return result;
+        }
+
+        /// <summary>
         /// Gets the zone ID from the request query parameters.
         /// </summary>
         /// <param name="context">The HTTP listener context.</param>

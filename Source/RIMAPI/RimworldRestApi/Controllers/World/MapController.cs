@@ -309,8 +309,10 @@ namespace RIMAPI.Controllers
         [EndpointMetadata("Get building info")]
         public async Task GetBuildingInfo(HttpListenerContext context)
         {
-            var mapId = RequestParser.GetMapId(context);
-            var result = _buildingService.GetBuildingInfo(mapId);
+            // The route answers for one building, so it reads a building id;
+            // `map_id` was the stock spelling and still works (fox #3705).
+            var buildingId = RequestParser.GetBuildingId(context);
+            var result = _buildingService.GetBuildingInfo(buildingId);
             await context.SendJsonResponse(result);
         }
 
