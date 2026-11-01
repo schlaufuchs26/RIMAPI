@@ -110,9 +110,10 @@ namespace RIMAPI.Helpers
                 // wood for reads as covered, and a tank the game refuses to
                 // refuel carries the game's reason.
                 bool refuelAvailable = false;
+                bool refuelForced = false;
                 string refuelBlocked = null;
                 if (!comp.HasFuel)
-                    refuelAvailable = AnyColonistWouldRefuel(map, building, out refuelBlocked);
+                    ReadRefuelVerdict(map, building, out refuelAvailable, out refuelForced, out refuelBlocked);
 
                 summary.Buildings.Add(new FuelBuildingDto
                 {
@@ -124,6 +125,7 @@ namespace RIMAPI.Helpers
                     FuelType = fuelType,
                     HasFuel = comp.HasFuel,
                     RefuelAvailable = refuelAvailable,
+                    RefuelForced = refuelForced,
                     RefuelBlocked = refuelBlocked,
                     Bills = bills,
                     MealBills = mealBills,
@@ -150,30 +152,43 @@ namespace RIMAPI.Helpers
             return summary;
         }
 
-        // AnyColonistWouldRefuel answers "would the colony refill this tank by
-        // itself" with the game's own gate: RefuelWorkGiverUtility.CanRefuel is
-        // what WorkGiver_Refuel asks before it hands out the job, so a false
-        // answer means the tank stays empty until a player does something
-        // (fox ticket #3731). The refusal is the game's own wording, e.g.
-        // "No fuel to refuel (wood)".
+        // ReadRefuelVerdict answers the two questions a digest asks about an
+        // empty tank, with the game's own gate: RefuelWorkGiverUtility.CanRefuel
+        // is what WorkGiver_Refuel asks before it hands out the job (fox ticket
+        // #3731).
+        //
+        //   auto   - the colony refuels this by itself: nothing to do.
+        //   forced - a colonist would refuel it if told to (the game's
+        //            right-click entry), so the tank's auto-refuel is off.
+        //   blocked- neither, and the game said why, e.g.
+        //            "No fuel to refuel (wood)".
+        //
+        // A building the game neither refuels nor explains is one whose tank
+        // needs no fuel at all (a passive cooler reports a refuelable comp with
+        // a target of zero, so it is full at zero): nothing to report.
         //
         // CanRefuel writes its refusal into JobFailReason, a process-wide
         // string the UI shows; the previous value is put back so a read does
         // not leave a stale reason behind.
-        private static bool AnyColonistWouldRefuel(Map map, Thing building, out string blocked)
+        private static void ReadRefuelVerdict(Map map, Thing building, out bool auto, out bool forced, out string blocked)
         {
+            auto = false;
+            forced = false;
             blocked = null;
             string previousReason = JobFailReason.Reason;
             try
             {
                 foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
                 {
-                    if (RefuelWorkGiverUtility.CanRefuel(pawn, building, false))
-                        return true;
+                    if (!auto && RefuelWorkGiverUtility.CanRefuel(pawn, building, false))
+                        auto = true;
+                    // A tank the colony refuels by itself is refuelable when
+                    // told to as well; the forced check is the wider gate.
+                    if (!forced && (auto || RefuelWorkGiverUtility.CanRefuel(pawn, building, true)))
+                        forced = true;
                     if (blocked == null && !string.IsNullOrEmpty(JobFailReason.Reason))
                         blocked = JobFailReason.Reason;
                 }
-                return false;
             }
             finally
             {

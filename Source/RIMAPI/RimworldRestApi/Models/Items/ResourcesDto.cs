@@ -62,8 +62,10 @@ namespace RIMAPI.Models
     //
     // RefuelAvailable is the game's own answer to "would a colonist refill this
     // tank now" (WorkGiver_Refuel's check, fox ticket #3731): an empty tank
-    // nobody refuels is the one worth a line, and RefuelBlocked carries the
-    // game's refusal for it ("No fuel to refuel (wood)"). Only filled for an
+    // nobody refuels is the one worth a line. RefuelForced is the wider gate:
+    // a colonist would refill it if told to, so only the building's own
+    // auto-refuel is off. RefuelBlocked carries the game's refusal when neither
+    // holds ("No fuel to refuel (wood)"). All three are only filled for an
     // empty tank.
     public class FuelBuildingDto
     {
@@ -75,6 +77,7 @@ namespace RIMAPI.Models
         public string FuelType { get; set; }
         public bool HasFuel { get; set; }
         public bool RefuelAvailable { get; set; }
+        public bool RefuelForced { get; set; }
         public string RefuelBlocked { get; set; }
         public int Bills { get; set; }
         public int MealBills { get; set; }

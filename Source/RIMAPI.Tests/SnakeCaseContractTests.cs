@@ -427,6 +427,7 @@ namespace RIMAPI.Tests
                         FuelType = "WoodLog",
                         HasFuel = false,
                         RefuelAvailable = false,
+                        RefuelForced = true,
                         RefuelBlocked = "No fuel to refuel (wood)",
                         Bills = 2,
                         MealBills = 2,
@@ -444,11 +445,12 @@ namespace RIMAPI.Tests
                 new[]
                 {
                     "bills", "def_name", "fuel", "fuel_capacity", "fuel_type", "has_fuel", "id",
-                    "label", "meal_bills", "refuel_available", "refuel_blocked",
+                    "label", "meal_bills", "refuel_available", "refuel_blocked", "refuel_forced",
                 },
                 ((JObject)json["buildings"][0]).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             Assert.False((bool)json["buildings"][0]["has_fuel"]);
             Assert.False((bool)json["buildings"][0]["refuel_available"]);
+            Assert.True((bool)json["buildings"][0]["refuel_forced"]);
             Assert.Equal("No fuel to refuel (wood)", (string)json["buildings"][0]["refuel_blocked"]);
             Assert.Equal(2, (int)json["buildings"][0]["meal_bills"]);
         }
