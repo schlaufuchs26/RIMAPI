@@ -61,6 +61,10 @@ namespace RIMAPI.Helpers
 
             initData.mapSize = request.MapSize;
             initData.permadeath = request.Permadeath;
+            // The setup page that picks an ideoligion is skipped by this path,
+            // so the ideo is chosen here; without it the faction keeps the one
+            // world generation rolled for it (ticket #3612).
+            IdeoSetup.Apply(request);
             Find.Scenario.PostIdeoChosen();
         }
 

@@ -16,5 +16,9 @@ namespace RIMAPI.Services
         ApiResult<RitualStartResultDto> StartRitual(
             int mapId, string ritualName, int pawnId, int targetThingId, int x, int z, bool hasCell);
         ApiResult<RitualEndResultDto> EndRitual(int mapId, string ritualName);
+
+        // GetIdeo names the colony's ideoligion with its structure, its memes
+        // and precepts, and whether it can be reformed (ticket #3612).
+        ApiResult<IdeoSummaryDto> GetIdeo(int mapId);
     }
 }

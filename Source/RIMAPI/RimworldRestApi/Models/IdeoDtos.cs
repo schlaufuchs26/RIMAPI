@@ -35,6 +35,25 @@ namespace RIMAPI.Models
         public List<RolePawnDto> Eligible { get; set; }
     }
 
+    // What GET /api/v1/ideo answers (ticket #3612): the colony's ideoligion
+    // as the game holds it. Fluid is the reformable kind; Reformable is the
+    // game's own verdict for this moment (a fluid ideo still needs its
+    // development points before a reform is possible). Structure is the
+    // structure meme's label, the word the ideoligion window shows.
+    public class IdeoSummaryDto
+    {
+        public string Ideo { get; set; }
+        public string Structure { get; set; }
+        public bool Fluid { get; set; }
+        public bool Reformable { get; set; }
+        public int Points { get; set; }
+        public int ReformPoints { get; set; }
+        public int ReformCount { get; set; }
+        public int Believers { get; set; }
+        public List<string> Memes { get; set; }
+        public List<string> Precepts { get; set; }
+    }
+
     // What GET /api/v1/ideo/roles answers: the colony's ideoligion and its
     // roles with the pawns that fill them.
     public class IdeoRolesDto

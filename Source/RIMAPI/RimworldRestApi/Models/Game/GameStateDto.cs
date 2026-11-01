@@ -51,6 +51,10 @@ namespace RIMAPI.Models
         public int OverallTemperature { get; set; }
         public int OverallPopulation { get; set; }
         public int LandmarkDensity { get; set; }
+
+        // IdeoName picks a saved ideoligion by its name; empty builds the
+        // fox default (Helpers/IdeoSetup.cs, ticket #3612).
+        public string IdeoName { get; set; }
     }
 
     public class GameSettingsDto

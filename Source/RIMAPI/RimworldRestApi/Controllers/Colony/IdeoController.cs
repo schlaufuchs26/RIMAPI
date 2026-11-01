@@ -19,6 +19,15 @@ namespace RIMAPI.Controllers
             _ideoService = ideoService;
         }
 
+        [Get("/api/v1/ideo")]
+        [EndpointMetadata("The colony ideoligion: name, structure, memes, precepts and whether it can be reformed")]
+        public async Task GetIdeo(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            var result = _ideoService.GetIdeo(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/ideo/roles")]
         [EndpointMetadata("The colony ideoligion's roles with the pawns that fill them")]
         public async Task GetRoles(HttpListenerContext context)

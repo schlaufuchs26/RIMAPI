@@ -72,6 +72,37 @@ namespace RIMAPI.Services
             }
         }
 
+        public ApiResult<IdeoSummaryDto> GetIdeo(int mapId)
+        {
+            try
+            {
+                Ideo ideo = PlayerIdeo(out string reason);
+                if (ideo == null) return ApiResult<IdeoSummaryDto>.Fail(reason);
+
+                IdeoSummaryDto result = new IdeoSummaryDto
+                {
+                    Ideo = ideo.name,
+                    Structure = ideo.StructureMeme != null ? ideo.StructureMeme.label : "",
+                    Fluid = ideo.Fluid,
+                    Memes = ideo.memes.Select(m => m.label).ToList(),
+                    Precepts = ideo.PreceptsListForReading.Select(p => p.Label).ToList(),
+                    Believers = ideo.ColonistBelieverCountCached,
+                };
+                if (ideo.Fluid && ideo.development != null)
+                {
+                    result.Points = ideo.development.Points;
+                    result.ReformPoints = ideo.development.NextReformationDevelopmentPoints;
+                    result.ReformCount = ideo.development.reformCount;
+                    result.Reformable = ideo.development.CanReformNow;
+                }
+                return ApiResult<IdeoSummaryDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<IdeoSummaryDto>.Fail(ex.ToString());
+            }
+        }
+
         public ApiResult<RoleAssignResultDto> AssignRole(int mapId, int pawnId, string roleName)
         {
             try
