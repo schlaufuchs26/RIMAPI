@@ -28,8 +28,20 @@ namespace RIMAPI.Models
         /// <summary>True when the building draws power at all, so a caller can tell a cold room from an unpowered cooler.</summary>
         public bool HasPower { get; set; }
 
-        /// <summary>The power switch's state, as the power component reports it.</summary>
+        /// <summary>True while the power component has power now. It is false for a machine whose switch is off as well as for one on a dead net, so the switch has its own fields below.</summary>
         public bool Powered { get; set; }
+
+        /// <summary>
+        /// True when the building has a power switch the player can flip (fox
+        /// ticket #3898). A heater switched off reads exactly like one on a dead
+        /// net in <see cref="Powered"/>, and a run that was told "the switch is
+        /// off" for a wiring fault (or the other way round) fixes the wrong
+        /// thing.
+        /// </summary>
+        public bool HasSwitch { get; set; }
+
+        /// <summary>The switch's own state: true when the player left it on, whatever the net gives.</summary>
+        public bool SwitchedOn { get; set; }
 
         public PositionDto Position { get; set; }
 

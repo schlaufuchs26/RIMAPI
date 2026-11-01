@@ -52,7 +52,12 @@ namespace RIMAPI.Services
             }
         }
 
-        public ApiResult SetBuildingPower(int buildingId, bool powerOn)
+        // A building's power switch (stock route, fox ticket #3898): the answer
+        // carries the state the game holds afterwards, because "the call
+        // succeeded" is not "the machine now runs". A heater switched off and a
+        // heater on a dead net both read powered=false, and only the first is
+        // fixed by this call.
+        public ApiResult<PoweredBuildingDto> SetBuildingPower(int buildingId, bool powerOn)
         {
             Building building = BuildingHelper.FindBuildingByID(buildingId);
             if (building == null)
@@ -61,7 +66,7 @@ namespace RIMAPI.Services
                 // building on the map at all: a container holds it, or it is a
                 // stored building that has to be installed first. Say which
                 // instead of a bare "not found" (tickets #3200, #3235).
-                return ApiResult.Fail(
+                return ApiResult<PoweredBuildingDto>.Fail(
                     ThingHolderHelper.DescribeUnbuilt(
                         buildingId,
                         "only a built building on the map has a power switch"
@@ -72,9 +77,12 @@ namespace RIMAPI.Services
             bool success = BuildingHelper.SetBuildingPower(building, powerOn);
             if (!success)
             {
-                return ApiResult.Fail($"Building {buildingId} has no flickable power component");
+                return ApiResult<PoweredBuildingDto>.Fail(
+                    $"{building.Label} (id {buildingId}) has no flickable power component: "
+                        + "only a machine with a switch of its own can be flipped"
+                );
             }
-            return ApiResult.Ok();
+            return ApiResult<PoweredBuildingDto>.Ok(PowerGrid.Describe(building));
         }
 
         // A bed set to prisoners is what an arrest or a capture needs to land

@@ -55,6 +55,11 @@ namespace RIMAPI.Helpers
                 dto.HasPower = true;
                 dto.Powered = power.PowerOn;
             }
+            // The switch is not the power comp's PowerOn: a machine switched
+            // off and one on a dead net both read PowerOn false, and only the
+            // first is fixed by flipping the switch (fox ticket #3898).
+            dto.HasSwitch = building.TryGetComp<CompFlickable>() != null;
+            dto.SwitchedOn = FlickUtility.WantsToBeOn(building);
             return dto;
         }
 

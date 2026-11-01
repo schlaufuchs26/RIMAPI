@@ -58,6 +58,18 @@ namespace RIMAPI.Helpers
             return best;
         }
 
+        // Describe answers one building's row in the same shape the list holds
+        // (fox ticket #3898). The power switch write answers with it, so a run
+        // reads the state it just wrote: a switch that flipped and a net that
+        // still gives nothing are two facts, and only the first is the call's.
+        public static PoweredBuildingDto Describe(Building building)
+        {
+            if (building == null)
+                return null;
+            CompPower power = building.TryGetComp<CompPower>();
+            return Row(building, power, ConduitCells(building.Map));
+        }
+
         private static PoweredBuildingDto Row(Building building, CompPower power, List<IntVec3> conduits)
         {
             CompPowerTrader trader = building.TryGetComp<CompPowerTrader>();
@@ -90,14 +102,16 @@ namespace RIMAPI.Helpers
                 Consumes = consumes,
                 Produces = plant != null ? plant.PowerOutput : 0f,
                 Nominal = plant != null ? System.Math.Abs(plant.Props.PowerConsumption) : 0f,
-                Connected = power.PowerNet != null,
+                Connected = power != null && power.PowerNet != null,
                 // A building without a trader has no "power on" of its own (a
-                // conduit): the net reaching it is the whole question.
-                Powered = trader != null ? trader.PowerOn : power.PowerNet != null,
+                // conduit): the net reaching it is the whole question. A
+                // flickable building without a power comp (a switch, a vent)
+                // has no net either and is still on or off by its switch.
+                Powered = trader != null ? trader.PowerOn : power != null && power.PowerNet != null,
                 SwitchedOn = FlickUtility.WantsToBeOn(building),
                 ConduitDistance = distance,
             };
-            if (power.PowerNet != null)
+            if (power != null && power.PowerNet != null)
             {
                 dto.NetProduction = power.PowerNet.CurrentEnergyGainRate();
                 dto.NetStored = power.PowerNet.CurrentStoredEnergy();
