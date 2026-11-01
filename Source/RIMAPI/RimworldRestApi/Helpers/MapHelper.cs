@@ -422,14 +422,21 @@ namespace RIMAPI.Helpers
                     dto.HarvestableCells++;
                 }
                 // Mature is the game's own stage, not a growth threshold of
-                // ours: the zone harvest asks plant.LifeStage == Mature.
-                if (plant.LifeStage == PlantLifeStage.Mature)
+                // ours: the zone harvest asks plant.LifeStage == Mature. Both
+                // this count and the ripest growth stay on the zone's own crop
+                // (fox ticket #3677): a wild grass in the field is mature, so
+                // the field read "1 fully grown" and "ripest 100 %" while every
+                // rice plant stood at 94 %.
+                if (plantDef == null || plant.def == plantDef)
                 {
-                    dto.MatureCells++;
-                }
-                if (plant.Growth > dto.MaxGrowth)
-                {
-                    dto.MaxGrowth = plant.Growth;
+                    if (plant.LifeStage == PlantLifeStage.Mature)
+                    {
+                        dto.MatureCells++;
+                    }
+                    if (plant.Growth > dto.MaxGrowth)
+                    {
+                        dto.MaxGrowth = plant.Growth;
+                    }
                 }
             }
 
