@@ -100,6 +100,18 @@ namespace RIMAPI.Models
         /// <summary>True when the walk reached the menu's end, so Walked is the whole menu.</summary>
         public bool Complete { get; set; }
 
+        /// <summary>
+        /// `debug_action` only: true when the colony's own counts and pawn states
+        /// moved between the call's before and after (ticket #3922). An entry
+        /// that needs something a call cannot give it runs without changing
+        /// anything, and this is how the caller tells that apart from a built
+        /// state.
+        /// </summary>
+        public bool Changed { get; set; }
+
+        /// <summary>What moved, one phrase per counter, e.g. "pawns 12 -> 13"; empty when nothing did.</summary>
+        public List<string> Differences { get; set; } = new List<string>();
+
         public List<DevActionNodeDto> Nodes { get; set; } = new List<DevActionNodeDto>();
     }
 

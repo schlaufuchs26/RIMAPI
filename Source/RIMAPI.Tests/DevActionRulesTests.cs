@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RIMAPI.Helpers;
 using Xunit;
 
@@ -178,6 +179,87 @@ namespace RIMAPI.Tests
             Assert.Equal(100, DevActionRules.ListLimit(null));
             Assert.Equal(7, DevActionRules.ListLimit(7));
             Assert.Equal(DevActionRules.MaxListed, DevActionRules.ListLimit(DevActionRules.MaxListed + 1));
+        }
+
+        // A dev entry that needs something a call cannot give it runs and
+        // changes nothing, and used to answer "ran X" all the same (ticket
+        // #3922). The stamps around the call are what tells the two apart.
+        [Fact]
+        public void AnEntryThatChangedNothingReportsNoDifference()
+        {
+            DevActionRules.ColonyStamp before = Stamp(12, 3412, 0);
+            DevActionRules.ColonyStamp after = Stamp(12, 3412, 0);
+
+            List<string> moved = DevActionRules.Difference(before, before, after);
+
+            Assert.Empty(moved);
+            Assert.Contains("12 pawns", DevActionRules.UnchangedDetail(@"Actions\Add Prisoner", before));
+            Assert.Contains("nothing selected", DevActionRules.UnchangedDetail(@"Actions\Add Prisoner", before));
+        }
+
+        [Fact]
+        public void ASpawnedPawnAndItsOwnStateAreBothNamed()
+        {
+            DevActionRules.ColonyStamp before = Stamp(12, 3412, 0);
+            DevActionRules.ColonyStamp after = Stamp(13, 3413, 0);
+            after.PawnDigest = before.PawnDigest + 1;
+
+            List<string> moved = DevActionRules.Difference(before, before, after);
+
+            Assert.Contains("pawns 12 -> 13", moved);
+            Assert.Contains("things 3412 -> 3413", moved);
+            Assert.Contains("a pawn's own state", moved);
+            Assert.Contains("pawns 12 -> 13", DevActionRules.ChangedDetail(@"Actions\Add Prisoner", moved));
+        }
+
+        // A counter that already moved between the two stamps taken before the
+        // entry is the game ticking: reporting it would call every call a
+        // change in a colony that keeps running.
+        [Fact]
+        public void ACounterThatMovesOnItsOwnIsNoEvidence()
+        {
+            DevActionRules.ColonyStamp quiet = Stamp(12, 3412, 0);
+            DevActionRules.ColonyStamp before = Stamp(12, 3412, 0);
+            DevActionRules.ColonyStamp after = Stamp(12, 3412, 0);
+            // The letter stack grew between the two control reads.
+            quiet.Letters = 3;
+            before.Letters = 4;
+            after.Letters = 5;
+            after.PawnDigest = before.PawnDigest + 7;
+
+            List<string> moved = DevActionRules.Difference(quiet, before, after);
+
+            Assert.DoesNotContain(moved, m => m.StartsWith("letters"));
+            Assert.Contains("a pawn's own state", moved);
+        }
+
+        [Fact]
+        public void AnEntryThatOpenedNothingElseIsStillAChange()
+        {
+            DevActionRules.ColonyStamp before = Stamp(12, 3412, 0);
+            DevActionRules.ColonyStamp after = Stamp(12, 3412, 0);
+            after.Bills = before.Bills + 1;
+            after.Designations = before.Designations + 4;
+
+            List<string> moved = DevActionRules.Difference(before, before, after);
+
+            Assert.Contains("bills 0 -> 1", moved);
+            Assert.Contains("designations 0 -> 4", moved);
+        }
+
+        /// <summary>A stamp with the counters a call moves, and stable digests.</summary>
+        private static DevActionRules.ColonyStamp Stamp(int pawns, int things, int selected)
+        {
+            return new DevActionRules.ColonyStamp
+            {
+                Pawns = pawns,
+                Things = things,
+                Selected = selected,
+                Maps = 1,
+                PawnDigest = 1234,
+                ThingDigest = 5678,
+                Letters = 0,
+            };
         }
     }
 }

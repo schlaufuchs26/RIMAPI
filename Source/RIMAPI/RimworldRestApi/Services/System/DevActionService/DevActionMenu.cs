@@ -160,6 +160,11 @@ namespace RIMAPI.Services
                 );
             }
             int windows = Find.WindowStack.Windows.Count;
+            // Two stamps before the entry and one after (ticket #3922): a
+            // counter that already moved between the first two is the game
+            // ticking, not the entry, so the comparison leaves it out.
+            DevActionRules.ColonyStamp quiet = Stamp();
+            DevActionRules.ColonyStamp before = Stamp();
             node.action();
             List<Window> opened = Find.WindowStack.Windows.Skip(windows).ToList();
             if (opened.Count > 0)
@@ -178,6 +183,7 @@ namespace RIMAPI.Services
                         + "), which a call cannot drive; nothing was applied"
                 );
             }
+            List<string> moved = DevActionRules.Difference(quiet, before, Stamp());
             DevActionResultDto result = new DevActionResultDto
             {
                 Op = request.Op,
@@ -187,10 +193,15 @@ namespace RIMAPI.Services
                     Walked = walk.Walked,
                     Shown = 1,
                     Complete = walk.Complete,
+                    Changed = moved.Count > 0,
+                    Differences = moved,
                     Nodes = new List<DevActionNodeDto> { DescribeNode(node) },
                 },
             };
-            result.Detail = "ran " + node.Path + " (the game's own dev action)";
+            result.Detail =
+                moved.Count > 0
+                    ? DevActionRules.ChangedDetail(node.Path, moved)
+                    : DevActionRules.UnchangedDetail(node.Path, before);
             return result;
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace RIMAPI.Helpers
 {
@@ -313,6 +314,144 @@ namespace RIMAPI.Helpers
             if (want.Length == 0) return true;
             string node = ActionPath(nodePath);
             return node.IndexOf(want, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // ---- did the entry change anything (ticket #3922) ------------------
+
+        /// <summary>
+        /// A cheap fingerprint of the colony, taken around a `debug_action` call
+        /// (ticket #3922). An entry that needs something a call cannot give it
+        /// (a selected pawn, a free prison bed, a clicked cell) returns without
+        /// a word, so without this the answer read "ran X" for a state that was
+        /// never built.
+        ///
+        /// The counts are what a spawn or a new letter moves; the digests stand
+        /// for one thing or one pawn whose own state moved. Deliberately not
+        /// here: a pawn's position and current job, which a running game changes
+        /// on its own between two reads.
+        /// </summary>
+        public sealed class ColonyStamp
+        {
+            /// <summary>Things on every map, pawns included.</summary>
+            public int Things;
+
+            /// <summary>Pawns on every map.</summary>
+            public int Pawns;
+
+            /// <summary>Every pawn's own state, hashed: health, hediffs, faction, guest status, mood, skills.</summary>
+            public int PawnDigest;
+
+            /// <summary>Every thing's own state, hashed: id, stack count, hit points.</summary>
+            public int ThingDigest;
+
+            public int Maps;
+            public int Designations;
+            public int Zones;
+            public int Bills;
+            public int Letters;
+            public int Selected;
+            public int Windows;
+
+            /// <summary>The current weather per map, hashed.</summary>
+            public int Weather;
+
+            /// <summary>The running research project and its progress, hashed.</summary>
+            public int Research;
+        }
+
+        /// <summary>
+        /// What moved between two stamps, one phrase per counter that differs;
+        /// empty when the entry changed nothing the game shows (ticket #3922).
+        ///
+        /// `quiet` is the control stamp taken just before `before`: a counter
+        /// that already moved between those two is moving on its own (the game
+        /// keeps ticking while the call runs), so it says nothing about the
+        /// entry and is left out. Without that control, a running colony would
+        /// report a change for every call.
+        /// </summary>
+        public static List<string> Difference(ColonyStamp quiet, ColonyStamp before, ColonyStamp after)
+        {
+            List<string> moved = new List<string>();
+            if (before == null || after == null) return moved;
+            ColonyStamp control = quiet ?? before;
+            Count(moved, "maps", control.Maps, before.Maps, after.Maps);
+            Count(moved, "things", control.Things, before.Things, after.Things);
+            Count(moved, "pawns", control.Pawns, before.Pawns, after.Pawns);
+            Flag(moved, "a pawn's own state", control.PawnDigest, before.PawnDigest, after.PawnDigest);
+            Flag(moved, "an item or building", control.ThingDigest, before.ThingDigest, after.ThingDigest);
+            Count(moved, "designations", control.Designations, before.Designations, after.Designations);
+            Count(moved, "zones", control.Zones, before.Zones, after.Zones);
+            Count(moved, "bills", control.Bills, before.Bills, after.Bills);
+            Count(moved, "letters", control.Letters, before.Letters, after.Letters);
+            Count(moved, "selected things", control.Selected, before.Selected, after.Selected);
+            Count(moved, "windows", control.Windows, before.Windows, after.Windows);
+            Flag(moved, "the weather", control.Weather, before.Weather, after.Weather);
+            Flag(moved, "the research progress", control.Research, before.Research, after.Research);
+            return moved;
+        }
+
+        /// <summary>
+        /// A counted counter that moved during the call and stood still before
+        /// it; one that already moved between the control stamp and `before` is
+        /// the game ticking, not the entry.
+        /// </summary>
+        private static void Count(List<string> moved, string label, int control, int before, int after)
+        {
+            if (before == after || control != before) return;
+            moved.Add(label + " " + before + " -> " + after);
+        }
+
+        /// <summary>A hashed counter: its numbers mean nothing, so the phrase only names it.</summary>
+        private static void Flag(List<string> moved, string label, int control, int before, int after)
+        {
+            if (before == after || control != before) return;
+            moved.Add(label);
+        }
+
+        /// <summary>
+        /// The colony as the caller can see it: what a no-op entry left exactly
+        /// as it was, and whether it had anything selected to act on.
+        /// </summary>
+        public static string Summary(ColonyStamp stamp)
+        {
+            if (stamp == null) return "the colony";
+            return stamp.Pawns
+                + (stamp.Pawns == 1 ? " pawn" : " pawns")
+                + ", "
+                + stamp.Things
+                + " things"
+                + ", "
+                + stamp.Letters
+                + (stamp.Letters == 1 ? " letter" : " letters")
+                + (stamp.Selected == 0 ? ", nothing selected" : ", " + stamp.Selected + " selected");
+        }
+
+        /// <summary>
+        /// The answer for an entry that changed something: the game took the
+        /// call and here is what moved (ticket #3922).
+        /// </summary>
+        public static string ChangedDetail(string path, List<string> moved)
+        {
+            return "ran "
+                + path
+                + " (the game's own dev action); the colony changed: "
+                + string.Join(", ", moved);
+        }
+
+        /// <summary>
+        /// The answer for an entry that ran without moving anything: the call
+        /// went through, the colony reads exactly as before, so the caller
+        /// learns the state was not built instead of reading "ran X" for a
+        /// silent no-op (ticket #3922).
+        /// </summary>
+        public static string UnchangedDetail(string path, ColonyStamp before)
+        {
+            return "ran "
+                + path
+                + " (the game's own dev action), but the colony reads exactly as before: "
+                + Summary(before)
+                + ". An entry that needs something a call cannot give it (a selected pawn, "
+                + "a free prison bed, a cell) does nothing and says nothing";
         }
     }
 }
