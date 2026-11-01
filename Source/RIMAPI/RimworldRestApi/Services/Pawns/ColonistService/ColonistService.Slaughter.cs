@@ -25,8 +25,13 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn target = FindPawnOnMap(map, pawnId);
+                Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried animal is despawned into the carrier's hands, so the
+                // old lookup answered "not found" for him (fox #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(target), target.CarriedBy?.LabelShort, "slaughter");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 string refusal = SlaughterRules.Refusal(new SlaughterRules.AnimalState
                 {

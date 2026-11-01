@@ -23,8 +23,13 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn patient = FindPawnOnMap(map, pawnId);
+                Pawn patient = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (patient == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried patient is despawned into the carrier's hands, so the
+                // old lookup answered "not found" for him (fox #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(patient), patient.CarriedBy?.LabelShort, "feed");
+                if (carried != null) return ApiResult.Fail(carried);
                 if (patient.Dead) return ApiResult.Fail($"{Describe(patient)} is dead");
                 if (!patient.Downed)
                 {
@@ -64,7 +69,7 @@ namespace RIMAPI.Services
                         (patient.needs.food.PercentageThreshHungry + 0.02f) * 100f, meals, stacks));
                 }
 
-                Pawn feeder = feederId > 0 ? FindPawnOnMap(map, feederId) : PickFeeder(map, patient);
+                Pawn feeder = feederId > 0 ? PawnHelper.FindPawnForOrder(map, feederId) : PickFeeder(map, patient);
                 if (feeder == null)
                 {
                     return ApiResult.Fail(

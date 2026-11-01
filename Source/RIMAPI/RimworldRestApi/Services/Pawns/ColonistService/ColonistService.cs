@@ -487,13 +487,16 @@ namespace RIMAPI.Services
                 Pawn pawn;
                 if (pawnId > 0)
                 {
-                    pawn = map
-                        .listerThings.AllThings.OfType<Pawn>()
-                        .FirstOrDefault(p => p.thingIDNumber == pawnId);
+                    pawn = PawnHelper.FindPawnForOrder(map, pawnId);
                     if (pawn == null)
                     {
                         return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                     }
+                    // A carried colonist can haul nothing, and the old lookup
+                    // answered "not found" for him (fox #3719).
+                    string carried = CombatRefusal.ActorRefusal(
+                        Describe(pawn), "haul", PawnHelper.RefusalStateOf(pawn));
+                    if (carried != null) return ApiResult.Fail(carried);
                 }
                 else
                 {
@@ -727,13 +730,16 @@ namespace RIMAPI.Services
                 {
                     return ApiResult.Fail($"Map with ID={mapId} not found");
                 }
-                Pawn pawn = map
-                    .listerThings.AllThings.OfType<Pawn>()
-                    .FirstOrDefault(p => p.thingIDNumber == pawnId);
+                Pawn pawn = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (pawn == null)
                 {
                     return ApiResult.Fail($"Pawn with ID={pawnId} not found");
                 }
+                // A carried pawn has no hands free for a new weapon, and the old
+                // lookup answered "not found" for him (fox #3719).
+                string carried = CombatRefusal.ActorRefusal(
+                    Describe(pawn), "equip", PawnHelper.RefusalStateOf(pawn));
+                if (carried != null) return ApiResult.Fail(carried);
 
                 Thing foundThing = map.listerThings.AllThings.FirstOrDefault(t =>
                     t.thingIDNumber == equipmentId

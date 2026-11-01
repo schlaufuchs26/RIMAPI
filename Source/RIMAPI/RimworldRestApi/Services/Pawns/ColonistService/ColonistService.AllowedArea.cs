@@ -29,8 +29,13 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn pawn = FindPawnOnMap(map, pawnId);
+                Pawn pawn = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (pawn == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found on map {mapId}");
+                // A carried pawn has no allowed area: the game keeps the
+                // restriction per map and he stands on none (fox #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(pawn), pawn.CarriedBy?.LabelShort, "restrict");
+                if (carried != null) return ApiResult.Fail(carried);
                 if (!pawn.Spawned)
                 {
                     return ApiResult.Fail($"{Describe(pawn)} is not on the map, so the game keeps no allowed area for him");

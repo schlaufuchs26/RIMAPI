@@ -27,8 +27,13 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn target = FindPawnOnMap(map, pawnId);
+                Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried visitor is out of reach of any chatter, and the old
+                // lookup answered "not found" for him (fox #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(target), target.CarriedBy?.LabelShort, "chat with");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 Pawn_CreepJoinerTracker joiner = target.creepjoiner;
                 if (joiner == null)
@@ -49,7 +54,7 @@ namespace RIMAPI.Services
                         + "(`letters` lists it, `letter_answer` presses accept or reject)");
                 }
 
-                Pawn chatter = chatterId > 0 ? FindPawnOnMap(map, chatterId) : PickChatter(map, target);
+                Pawn chatter = chatterId > 0 ? PawnHelper.FindPawnForOrder(map, chatterId) : PickChatter(map, target);
                 ChatResultDto result = new ChatResultDto { PawnId = pawnId, Name = target.LabelShort };
                 if (chatter == null)
                 {

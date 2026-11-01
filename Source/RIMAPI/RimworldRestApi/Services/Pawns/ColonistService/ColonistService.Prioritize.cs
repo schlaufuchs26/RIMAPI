@@ -35,8 +35,13 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn pawn = FindPawnOnMap(map, pawnId);
+                Pawn pawn = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (pawn == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried colonist takes no order, and the old lookup answered
+                // "not found" for him (fox #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(pawn), pawn.CarriedBy?.LabelShort, "order");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 PriorityJobResultDto result = new PriorityJobResultDto
                 {

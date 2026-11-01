@@ -54,7 +54,7 @@ namespace RIMAPI.Services
                         + "`arrest` captures him into a prisoner bed instead");
                 }
 
-                Pawn rescuer = rescuerId > 0 ? FindPawnOnMap(map, rescuerId) : PickRescuer(map, target);
+                Pawn rescuer = rescuerId > 0 ? PawnHelper.FindPawnForOrder(map, rescuerId) : PickRescuer(map, target);
                 if (rescuer == null)
                 {
                     return ApiResult.Fail(

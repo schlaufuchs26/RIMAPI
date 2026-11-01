@@ -31,8 +31,14 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn target = FindPawnOnMap(map, pawnId);
+                Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried pawn is despawned into his carrier's hands, so the
+                // spawned-things lookup answered "not found" for him (fox
+                // #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(target), target.CarriedBy?.LabelShort, "tame");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 if (!TameUtility.CanTame(target))
                 {
@@ -155,11 +161,16 @@ namespace RIMAPI.Services
             {
                 Map map = MapHelper.GetMapByID(mapId);
                 if (map == null) return ApiResult.Fail($"Map with ID={mapId} not found");
-                Pawn target = FindPawnOnMap(map, pawnId);
+                Pawn target = PawnHelper.FindPawnForOrder(map, pawnId);
                 if (target == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A carried pawn cannot be reached by an arrestor yet (fox
+                // #3719); the old lookup answered "not found" instead.
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(target), target.CarriedBy?.LabelShort, "arrest");
+                if (carried != null) return ApiResult.Fail(carried);
 
                 Pawn arrestor = arrestorId > 0
-                    ? FindPawnOnMap(map, arrestorId)
+                    ? PawnHelper.FindPawnForOrder(map, arrestorId)
                     : PickArrestor(map, target);
                 if (arrestor == null)
                 {
@@ -296,6 +307,12 @@ namespace RIMAPI.Services
             {
                 Pawn pawn = PawnHelper.FindPawnById(pawnId);
                 if (pawn == null) return ApiResult.Fail($"Pawn with ID={pawnId} not found");
+                // A pawn on his way to the prisoner bed is not a prisoner yet,
+                // and the game takes no policy for him while he is carried (fox
+                // #3719).
+                string carried = CombatRefusal.CarriedRefusal(
+                    Describe(pawn), pawn.CarriedBy?.LabelShort, "set a recruitment policy for");
+                if (carried != null) return ApiResult.Fail(carried);
                 if (!pawn.IsPrisonerOfColony)
                 {
                     return ApiResult.Fail($"{Describe(pawn)} is not a prisoner of the colony");
@@ -390,12 +407,9 @@ namespace RIMAPI.Services
                 .FirstOrDefault();
         }
 
-        private static Pawn FindPawnOnMap(Map map, int pawnId)
-        {
-            return map.listerThings.AllThings.OfType<Pawn>()
-                .FirstOrDefault(p => p.thingIDNumber == pawnId);
-        }
-
+        // Every order route resolves its pawn through PawnHelper.FindPawnForOrder,
+        // which also reaches a pawn who is despawned into a carrier's hands
+        // (fox #3719); this service keeps no second lookup of its own.
         private static string Describe(Pawn pawn)
         {
             return $"{pawn.LabelShort} (id {pawn.thingIDNumber})";
