@@ -19,6 +19,16 @@ namespace RIMAPI.Helpers
             public bool Colonist;
             /// <summary>An animal, the only kind the manhunter states apply to.</summary>
             public bool Animal;
+            /// <summary>A humanlike of no faction who lives wild on the map.</summary>
+            public bool WildMan;
+            /// <summary>The colony holds the pawn prisoner.</summary>
+            public bool Prisoner;
+            /// <summary>The colony holds the pawn as a slave.</summary>
+            public bool Slave;
+            /// <summary>The pawn is a guest of the colony.</summary>
+            public bool Guest;
+            /// <summary>The pawn belongs to some faction at all.</summary>
+            public bool HasFaction;
             /// <summary>The pawn's faction is hostile to the colony.</summary>
             public bool EnemyFaction;
             /// <summary>The mental state's name ("Berserk"), empty when sane.</summary>
@@ -29,6 +39,25 @@ namespace RIMAPI.Helpers
             public bool JobTargetsColony;
             /// <summary>The lord job's class name (LordJob_AssaultColony), empty for none.</summary>
             public string LordJob;
+        }
+
+        /// <summary>
+        /// The side a pawn is on, in the words the tool prints: "manhunter",
+        /// "wild man", "prisoner", "slave", "guest", "hostile", "factionless"
+        /// or "neutral". One label for the whole tool (fox ticket #3690): the
+        /// fight list called a wild man "factionless", which says nothing about
+        /// why he is a threat or that he can be arrested or tamed.
+        /// </summary>
+        public static string KindOf(PawnState pawn)
+        {
+            if (pawn.Animal && IsManhunterState(pawn.MentalState)) return "manhunter";
+            if (pawn.WildMan) return "wild man";
+            if (pawn.Prisoner) return "prisoner";
+            if (pawn.Slave) return "slave";
+            if (pawn.Guest) return "guest";
+            if (!pawn.HasFaction) return "factionless";
+            if (pawn.EnemyFaction) return "hostile";
+            return "neutral";
         }
 
         /// <summary>

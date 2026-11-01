@@ -116,5 +116,50 @@ namespace RIMAPI.Tests
             Assert.False(HostilityRules.IsAssaultingLord("LordJob_TradeWithColony"));
             Assert.False(HostilityRules.IsAssaultingLord(null));
         }
+
+        // fox #3690: the fight list called DiLeo "factionless" while he beat
+        // Veniamin, which says neither why he is a threat nor that the colony
+        // could arrest or tame him. One label for the whole tool.
+        [Fact]
+        public void AWildManIsNamedAWildMan()
+        {
+            var wildMan = new HostilityRules.PawnState { WildMan = true };
+            Assert.Equal("wild man", HostilityRules.KindOf(wildMan));
+        }
+
+        [Fact]
+        public void AFactionlessWandererStaysFactionless()
+        {
+            var wanderer = new HostilityRules.PawnState { JobDef = "GotoWander" };
+            Assert.Equal("factionless", HostilityRules.KindOf(wanderer));
+        }
+
+        [Fact]
+        public void ARaiderIsNamedHostile()
+        {
+            var raider = new HostilityRules.PawnState { EnemyFaction = true, HasFaction = true };
+            Assert.Equal("hostile", HostilityRules.KindOf(raider));
+        }
+
+        [Fact]
+        public void AManhunterAnimalIsNamedManhunter()
+        {
+            var warg = new HostilityRules.PawnState { Animal = true, MentalState = "Manhunter" };
+            Assert.Equal("manhunter", HostilityRules.KindOf(warg));
+        }
+
+        [Fact]
+        public void APrisonerKeepsHisOwnLabelWhateverHisFactionIs()
+        {
+            var prisoner = new HostilityRules.PawnState { Prisoner = true, EnemyFaction = true, HasFaction = true };
+            Assert.Equal("prisoner", HostilityRules.KindOf(prisoner));
+        }
+
+        [Fact]
+        public void ANeutralTraderIsNeitherHostileNorFactionless()
+        {
+            var trader = new HostilityRules.PawnState { HasFaction = true };
+            Assert.Equal("neutral", HostilityRules.KindOf(trader));
+        }
     }
 }

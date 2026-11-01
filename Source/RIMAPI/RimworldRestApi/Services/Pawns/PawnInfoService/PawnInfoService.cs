@@ -129,16 +129,11 @@ namespace RIMAPI.Services
 
         // PersonKind names the side a pawn is on in the words the tool uses:
         // a wild man is factionless like a wanderer, and a prisoner's own
-        // faction is not the one holding him.
+        // faction is not the one holding him. The rule is HostilityRules.KindOf,
+        // so the fight list and the people read print one label (ticket #3690).
         private static string PersonKind(Pawn pawn)
         {
-            if (pawn.IsWildMan()) return "wild";
-            if (pawn.IsPrisonerOfColony) return "prisoner";
-            if (pawn.IsSlaveOfColony) return "slave";
-            if (pawn.HostFaction == Faction.OfPlayer) return "guest";
-            if (pawn.Faction != null && pawn.Faction.HostileTo(Faction.OfPlayer)) return "hostile";
-            if (pawn.Faction == null) return "factionless";
-            return "neutral";
+            return Hostility.KindOf(pawn);
         }
 
         // --- Internal Mappers ---

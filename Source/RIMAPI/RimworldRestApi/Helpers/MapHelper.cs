@@ -84,6 +84,7 @@ namespace RIMAPI.Helpers
                     MechanoidsCount = map.mapPawns.AllPawnsSpawned.Count(p =>
                         p != null && p.RaceProps != null && p.RaceProps.IsMechanoid
                     ),
+                    Attackers = AttackersOf(map),
                 };
             }
             catch (Exception ex)
@@ -91,6 +92,31 @@ namespace RIMAPI.Helpers
                 Core.LogApi.Error($"Error - {ex}");
                 return new MapCreaturesSummaryDto();
             }
+        }
+
+        // AttackersOf names the hostiles whose current job acts on a colony pawn
+        // (fox ticket #3690). The count alone left a run guessing: DiLeo the wild
+        // man beat Veniamin while the digest said "1 hostile on the map" and the
+        // fight list called him factionless.
+        public static List<CreatureAttackerDto> AttackersOf(Map map)
+        {
+            var attackers = new List<CreatureAttackerDto>();
+            foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
+            {
+                if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned) continue;
+                if (!Hostility.IsHostileToColony(pawn)) continue;
+                Pawn victim = Hostility.AttackedColonist(pawn);
+                if (victim == null) continue;
+                attackers.Add(new CreatureAttackerDto
+                {
+                    Id = pawn.thingIDNumber,
+                    Name = pawn.LabelShort,
+                    Kind = Hostility.KindOf(pawn),
+                    TargetId = victim.thingIDNumber,
+                    Target = victim.LabelShort,
+                });
+            }
+            return attackers;
         }
 
         public static MapTimeDto GetDatetimeAt(int tileID)

@@ -48,6 +48,11 @@ namespace RIMAPI.Helpers
             {
                 Colonist = pawn.IsColonist,
                 Animal = pawn.RaceProps != null && pawn.RaceProps.Animal,
+                WildMan = pawn.IsWildMan(),
+                Prisoner = pawn.IsPrisonerOfColony,
+                Slave = pawn.IsSlaveOfColony,
+                Guest = pawn.HostFaction == Faction.OfPlayer,
+                HasFaction = pawn.Faction != null,
                 EnemyFaction = pawn.Faction != null && pawn.Faction.HostileTo(Faction.OfPlayer),
                 MentalState = pawn.MentalStateDef != null ? pawn.MentalStateDef.defName : "",
                 JobDef = pawn.CurJobDef != null ? pawn.CurJobDef.defName : "",
@@ -55,6 +60,25 @@ namespace RIMAPI.Helpers
             };
             state.JobTargetsColony = JobTargetsColony(pawn.CurJob);
             return state;
+        }
+
+        /// <summary>The side the tool prints for this pawn; see HostilityRules.KindOf.</summary>
+        public static string KindOf(Pawn pawn)
+        {
+            if (pawn == null) return "";
+            return HostilityRules.KindOf(StateOf(pawn));
+        }
+
+        /// <summary>
+        /// The colony pawn the hostile's current job acts on, or null (fox
+        /// ticket #3690). A digest line that names the victim tells a raid from
+        /// a wild man at the barracks door without a second read.
+        /// </summary>
+        public static Pawn AttackedColonist(Pawn pawn)
+        {
+            if (pawn == null || pawn.CurJob == null) return null;
+            Pawn victim = pawn.CurJob.targetA.Thing as Pawn;
+            return victim != null && victim.IsColonist ? victim : null;
         }
 
         /// <summary>

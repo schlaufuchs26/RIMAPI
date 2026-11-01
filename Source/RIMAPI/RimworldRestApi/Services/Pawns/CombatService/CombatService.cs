@@ -763,21 +763,11 @@ namespace RIMAPI.Services
             return Hostility.IsHostileToColony(pawn);
         }
 
-        private static bool IsManhunter(Pawn pawn)
-        {
-            return Hostility.IsManhunter(pawn);
-        }
-
-        // KindOf names the side a pawn is on for a hostile line.
+        // KindOf names the side a pawn is on for a hostile line; the rule is
+        // HostilityRules.KindOf, shared with the creature summary (ticket #3690).
         private static string KindOf(Pawn pawn)
         {
-            if (IsManhunter(pawn)) return "manhunter";
-            if (pawn.IsPrisonerOfColony) return "prisoner";
-            if (pawn.IsSlaveOfColony) return "slave";
-            if (pawn.HostFaction == Faction.OfPlayer) return "guest";
-            if (pawn.Faction == null) return "factionless";
-            if (pawn.Faction.HostileTo(Faction.OfPlayer)) return "hostile";
-            return "neutral";
+            return Hostility.KindOf(pawn);
         }
 
     }

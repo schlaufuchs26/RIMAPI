@@ -46,6 +46,20 @@ namespace RIMAPI.Models
         public int AnimalsCount { get; set; }
         public int InsectoidsCount { get; set; }
         public int MechanoidsCount { get; set; }
+        // Attackers names the hostiles whose current job acts on a colony pawn
+        // (fox ticket #3690): the digest's danger line then says who is being
+        // beaten, which is the difference between a raid and a wild man at the
+        // barracks door.
+        public List<CreatureAttackerDto> Attackers { get; set; } = new List<CreatureAttackerDto>();
+    }
+
+    public class CreatureAttackerDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Kind { get; set; }
+        public int TargetId { get; set; }
+        public string Target { get; set; }
     }
 
     public class MapFarmSummaryDto
