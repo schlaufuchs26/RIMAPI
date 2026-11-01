@@ -11,11 +11,13 @@ namespace RIMAPI.Controllers
     {
         private readonly ICombatService _combatService;
         private readonly ICoverService _coverService;
+        private readonly IDeathService _deathService;
 
-        public CombatController(ICombatService combatService, ICoverService coverService)
+        public CombatController(ICombatService combatService, ICoverService coverService, IDeathService deathService)
         {
             _combatService = combatService;
             _coverService = coverService;
+            _deathService = deathService;
         }
 
         [Get("/api/v1/map/combat")]
@@ -24,6 +26,23 @@ namespace RIMAPI.Controllers
         {
             int mapId = RequestParser.GetMapId(context);
             var result = _combatService.GetCombat(mapId);
+            await context.SendJsonResponse(result);
+        }
+
+        // The kills the game recorded (fox ticket #3643): the tale a kill
+        // writes names killer, victim and the weapon's def, which is what a
+        // report needs to tell a dead raider from one who fled the map.
+        [Get("/api/v1/map/deaths")]
+        [EndpointMetadata("Kills the game recorded: killer, victim, weapon and the tale's kind")]
+        public async Task GetDeaths(HttpListenerContext context)
+        {
+            int since = RequestParser.HasParameter(context, "since")
+                ? RequestParser.GetIntParameter(context, "since")
+                : 0;
+            int limit = RequestParser.HasParameter(context, "limit")
+                ? RequestParser.GetIntParameter(context, "limit")
+                : 0;
+            var result = _deathService.ListDeaths(since, limit);
             await context.SendJsonResponse(result);
         }
 
