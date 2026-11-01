@@ -352,8 +352,13 @@ namespace RIMAPI.Tests
 
             Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             Assert.Equal(
-                new[] { "for_prisoners", "for_slaves", "medical", "owner" },
+                new[] { "cell", "for_prisoners", "for_slaves", "medical", "owner" },
                 Json(new BedDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            // The cell block is what the bed order's answer reads to say
+            // whether the room is a prison cell at all (fox ticket #3743).
+            Assert.Equal(
+                new[] { "cells_count", "is_prison_cell", "no_cell_reason", "role_label" },
+                Json(new BedCellDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
         }
 
         [Fact]
@@ -469,6 +474,7 @@ namespace RIMAPI.Tests
                 typeof(BillDto),
                 typeof(BuildingDto),
                 typeof(BedDto),
+                typeof(BedCellDto),
                 typeof(TurretInfoDto),
                 typeof(IntRangeDto),
                 typeof(FloatRange),

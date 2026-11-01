@@ -182,11 +182,12 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// The first condition that keeps the game from using this prisoner bed,
-        /// in the order the game's own check reads them (RestUtility.
-        /// CanUseBedNow and IsValidBedFor).
+        /// Why the game would refuse this bed's room as a prison cell, or ""
+        /// when it would not (fox ticket #3743). The cell half of the arrest
+        /// refusal, shared with the bed order's own answer so the two never
+        /// disagree.
         /// </summary>
-        private static string WhyNoPrisonerBed(Map map, Building_Bed bed, Pawn arrestor)
+        public static string CellRefusal(Map map, Building_Bed bed)
         {
             Room room = BedRoom(map, bed);
             string noCell = BedSafety.NotPrisonCellReason(
@@ -194,14 +195,26 @@ namespace RIMAPI.Helpers
                 room != null && room.TouchesMapEdge,
                 room != null && room.IsHuge,
                 room != null && room.ProperRoom);
-            if (noCell != null) return "is no prison bed: " + noCell;
+            if (noCell != null) return noCell;
             if (!bed.Position.IsInPrisonCell(map))
             {
                 // A proper room whose flag the game has not re-read since the
                 // bed changed; the arrest route refreshes these before its
                 // lookup, so only a foreign change reaches this line.
-                return "stands in a room the game has not re-read as a prison cell";
+                return "its room has not been re-read as a prison cell";
             }
+            return "";
+        }
+
+        /// <summary>
+        /// The first condition that keeps the game from using this prisoner bed,
+        /// in the order the game's own check reads them (RestUtility.
+        /// CanUseBedNow and IsValidBedFor).
+        /// </summary>
+        private static string WhyNoPrisonerBed(Map map, Building_Bed bed, Pawn arrestor)
+        {
+            string noCell = CellRefusal(map, bed);
+            if (noCell != "") return "is no prison bed: " + noCell;
             if (!bed.AnyUnoccupiedSleepingSlot) return "has no free sleeping slot";
             if (bed.IsBurning()) return "is on fire";
             if (bed.IsForbidden(arrestor)) return "is forbidden";

@@ -39,6 +39,26 @@ namespace RIMAPI.Helpers
                 ForSlaves = bed.ForSlaves,
                 Medical = bed.Medical,
                 Owner = bed.OwnersForReading?.FirstOrDefault()?.LabelShort,
+                Cell = BedCellOf(bed),
+            };
+        }
+
+        // BedCellOf is the room the bed stands in, as a prison cell (fox ticket
+        // #3743): the flag the game's bed lookup reads, the room's role label
+        // and its cell count, and why the game would refuse the room. A bed
+        // order that answers only "set for prisoners" leaves a run believing
+        // the cell is ready, so the room's refusal has to ride along.
+        public static BedCellDto BedCellOf(Building_Bed bed)
+        {
+            Map map = bed.Map;
+            if (map == null) return null;
+            Room room = BedPick.BedRoom(map, bed);
+            return new BedCellDto
+            {
+                IsPrisonCell = room != null && room.IsPrisonCell,
+                RoleLabel = BedPick.RoomLabel(room),
+                CellsCount = room != null ? room.CellCount : 0,
+                NoCellReason = bed.ForPrisoners ? BedPick.CellRefusal(map, bed) : "",
             };
         }
 

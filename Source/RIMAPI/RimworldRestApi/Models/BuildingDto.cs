@@ -43,6 +43,27 @@ namespace RIMAPI.Models
         public bool ForSlaves { get; set; }
         public bool Medical { get; set; }
         public string Owner { get; set; }
+
+        // Cell is the room the bed stands in, as a prison cell (fox ticket
+        // #3743). The toggle alone answers "set for prisoners" while the game
+        // still refuses the room, so a run learned about a bed at the map edge
+        // or in an open room only when an arrest refused later. Null when the
+        // bed is on no map.
+        public BedCellDto Cell { get; set; }
+    }
+
+    public class BedCellDto
+    {
+        // IsPrisonCell is the game's own flag (Room.IsPrisonCell), the one its
+        // bed lookup reads.
+        public bool IsPrisonCell { get; set; }
+        public string RoleLabel { get; set; }
+        public int CellsCount { get; set; }
+
+        // NoCellReason says why the game would refuse this room as a cell,
+        // empty when it would not. Filled only for a bed set to prisoners: a
+        // colonist bed is not meant to be one.
+        public string NoCellReason { get; set; }
     }
 
     public class PowerGeneratorInfoDto : BuildingDto
