@@ -25,6 +25,7 @@ namespace RIMAPI.Services
         ApiResult<MapZonesDto> GetMapZones(int mapId);
         ApiResult<UnwantedFoodDto> GetUnwantedFood(int mapId);
         ApiResult<StorageCapacityDto> GetStorageCapacity(int mapId, string defName);
+        ApiResult<MapRottingFoodDto> GetRottingFood(int mapId);
         ApiResult<AreaCellsDto> GetMapArea(int mapId, string label);
         ApiResult<AreaCellsDto> ExpandMapArea(AreaExpandRequestDto request);
         ApiResult<MapRoomsDto> GetMapRooms(int mapId);

@@ -95,6 +95,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\JobLogDtos.cs" Link="Linked\JobLogDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\ColonistDto.cs" Link="Linked\ColonistDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\PersonDtos.cs" Link="Linked\PersonDtos.cs" />
+    <!-- The rotting-food answer (fox ticket #3672): which food counts as a rot
+         risk, and the keys the tool decodes. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\RottingFoodDto.cs" Link="Linked\RottingFoodDto.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\RottingFoodRules.cs" Link="Linked\RottingFoodRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
   </ItemGroup>
 </Project>

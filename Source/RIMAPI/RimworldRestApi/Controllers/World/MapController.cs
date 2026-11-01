@@ -224,6 +224,15 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/food/rotting")]
+        [EndpointMetadata("Get the perishable food in rooms above 0 C, with its room and the hours it has left")]
+        public async Task GetRottingFood(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var result = _mapService.GetRottingFood(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/rooms")]
         public async Task GetMapRooms(HttpListenerContext context)
         {

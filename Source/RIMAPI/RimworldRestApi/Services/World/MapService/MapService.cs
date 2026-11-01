@@ -435,6 +435,29 @@ namespace RIMAPI.Services
             }
         }
 
+        /// <summary>
+        /// The perishable food in rooms above 0 C (fox ticket #3672). Colony
+        /// 14 lost 59 horse meat overnight in a room held at 16 C by a
+        /// PassiveCooler, and no read said a word before the game's own rot
+        /// message: the rooms carry their temperature and the things their
+        /// stack, but nothing joined the two.
+        /// </summary>
+        public ApiResult<MapRottingFoodDto> GetRottingFood(int mapId)
+        {
+            if (MapHelper.GetMapByID(mapId) == null)
+            {
+                return ApiResult<MapRottingFoodDto>.Fail($"Map not found: {mapId}");
+            }
+            try
+            {
+                return ApiResult<MapRottingFoodDto>.Ok(RottingFood.ForMap(mapId));
+            }
+            catch (System.Exception ex)
+            {
+                return ApiResult<MapRottingFoodDto>.Fail(ex.Message);
+            }
+        }
+
         public ApiResult<AreaCellsDto> GetMapArea(int mapId, string label)
         {
             Map map = MapHelper.GetMapByID(mapId);
