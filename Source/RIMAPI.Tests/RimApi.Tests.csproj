@@ -53,6 +53,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkAcceptanceRules.cs" Link="Linked\WorkAcceptanceRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationEntry.cs" Link="Linked\DesignationEntry.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\DesignationDto.cs" Link="Linked\DesignationDto.cs" />
+    <!-- The storage-capacity answer and its two refusals are plain C#, so the
+         keys and the wording are testable here (fox ticket #3648). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\StorageCapacityDto.cs" Link="Linked\StorageCapacityDto.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\StorageCapacityText.cs" Link="Linked\StorageCapacityText.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\BlueprintEntryDto.cs" Link="Linked\BlueprintEntryDto.cs" />
     <!-- The trade DTOs are plain C# (Newtonsoft attributes only), so the
          beacon keys the tool decodes are testable here (fox ticket #3632). -->

@@ -37,6 +37,11 @@ public partial class OrderService : IOrderService
         // A sweep can mark hundreds of cells and WorkAcceptance samples a
         // dozen, so a handful of targets is enough to ask.
         List<LocalTargetInfo> targets = new List<LocalTargetInfo>();
+        // The products a harvest sweep marked, by def (fox ticket #3648): the
+        // caller asks the storage read how much room the map has for them, so
+        // a field that stands ripe with a full store says so in the same
+        // answer instead of leaving the harvest's fate to a second read.
+        List<string> harvestDefs = new List<string>();
         void NoteTarget(LocalTargetInfo target)
         {
             if (targets.Count < 24) targets.Add(target);
@@ -144,6 +149,8 @@ public partial class OrderService : IOrderService
                     // plus the "Standard" harvest tag; a tree carries "Wood"
                     // and belongs to the chop order (fox ticket #3425).
                     if (!DesignationRules.IsHarvestTarget(p.HarvestableNow, p.def.plant.harvestTag)) continue;
+                    ThingDef product = p.def.plant.harvestedThingDef;
+                    if (product != null && !harvestDefs.Contains(product.defName)) harvestDefs.Add(product.defName);
                     NoteTarget(p);
                     if (map.designationManager.DesignationOn(p, DesignationDefOf.HarvestPlant) != null)
                     {
@@ -214,7 +221,9 @@ public partial class OrderService : IOrderService
         // cells the rectangle covered, how many designations were added, and how
         // many targets already carried this order. Fox ticket #3530 adds the
         // added entries themselves and the blighted plants the rectangle
-        // covers, so a sweep that marked nothing can say why.
-        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, workers, refusals });
+        // covers, so a sweep that marked nothing can say why. Fox ticket #3648
+        // adds the products the marked plants yield, so the caller can ask the
+        // storage read whether the harvest has anywhere to go.
+        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, workers, refusals, harvest_thing_defs = harvestDefs });
     }
 }

@@ -214,6 +214,16 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/storage/capacity")]
+        [EndpointMetadata("Get the storage room the map has for one product")]
+        public async Task GetStorageCapacity(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            string defName = RequestParser.GetStringParameter(context, "def");
+            var result = _mapService.GetStorageCapacity(mapId, defName);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/rooms")]
         public async Task GetMapRooms(HttpListenerContext context)
         {

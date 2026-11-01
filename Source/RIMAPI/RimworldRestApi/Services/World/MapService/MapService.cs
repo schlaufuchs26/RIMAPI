@@ -419,6 +419,22 @@ namespace RIMAPI.Services
         /// that decides where colonists haul, so a build order outside it never
         /// happens; this read is how a caller checks before it places one.
         /// </summary>
+        public ApiResult<StorageCapacityDto> GetStorageCapacity(int mapId, string defName)
+        {
+            if (MapHelper.GetMapByID(mapId) == null)
+            {
+                return ApiResult<StorageCapacityDto>.Fail($"Map not found: {mapId}");
+            }
+            try
+            {
+                return ApiResult<StorageCapacityDto>.Ok(StorageCapacity.ForDef(mapId, defName));
+            }
+            catch (System.Exception ex)
+            {
+                return ApiResult<StorageCapacityDto>.Fail(ex.Message);
+            }
+        }
+
         public ApiResult<AreaCellsDto> GetMapArea(int mapId, string label)
         {
             Map map = MapHelper.GetMapByID(mapId);
