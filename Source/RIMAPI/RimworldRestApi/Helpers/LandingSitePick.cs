@@ -252,18 +252,34 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// Days a year whose average temperature allows plant growth, from the
-        /// game's own seasonal curve: the same 0..58 C window
-        /// PlantUtility.GrowthSeasonNow reads.
+        /// The length of the tile's growing season in the game's own unit: days
+        /// of the 60-day year in which plants grow. The answer is read from
+        /// GrowingQuadrumsDescription, which is the line the world info shows
+        /// ("40/60 days (1st of Aprimay - 11th of Septober)"), so a wish and the
+        /// tile panel cannot disagree. A tile whose season the game describes
+        /// in words instead of numbers reads 60 for all year and 0 for never.
         /// </summary>
         public static int GrowingDays(int tileId)
         {
-            var twelfths = GenTemperature.TwelfthsInAverageTemperatureRange(tileId, 0f, 58f);
-            if (twelfths == null)
+            string description = Zone_Growing.GrowingQuadrumsDescription(tileId);
+            if (string.IsNullOrEmpty(description))
             {
                 return 0;
             }
-            return (int)Math.Round(twelfths.Count * 365f / 12f);
+            if (description.StartsWith("all year", StringComparison.OrdinalIgnoreCase))
+            {
+                return 60;
+            }
+            if (description.StartsWith("never", StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+            int slash = description.IndexOf('/');
+            if (slash > 0 && int.TryParse(description.Substring(0, slash).Trim(), out int days))
+            {
+                return days;
+            }
+            return 0;
         }
 
         private static string ScenarioProblem(string name)
