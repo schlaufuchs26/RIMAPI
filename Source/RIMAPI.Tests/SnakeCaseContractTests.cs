@@ -193,6 +193,7 @@ namespace RIMAPI.Tests
             // The arrest and rescue answers name where the bed stands (ticket
             // #3421, #3383): the room, its temperature, a fire in it, and the
             // roof answer that tells "outdoors" from a roleless room (#3622).
+            // The refused bed carries its own room label since #3623.
             var arrest = new[]
             {
                 "arrestor",
@@ -211,6 +212,7 @@ namespace RIMAPI.Tests
                 "rejected_bed",
                 "rejected_bed_id",
                 "rejected_bed_room_has_fire",
+                "rejected_bed_room_label",
                 "rejected_bed_temp_c",
             };
             JObject json = Json(new ArrestResultDto());
@@ -233,6 +235,7 @@ namespace RIMAPI.Tests
                 "rejected_bed",
                 "rejected_bed_id",
                 "rejected_bed_room_has_fire",
+                "rejected_bed_room_label",
                 "rejected_bed_temp_c",
                 "rescuer",
                 "rescuer_id",
