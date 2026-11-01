@@ -177,6 +177,12 @@ namespace RIMAPI.Models
         // which the caller reads as "no projection" rather than a guess.
         public float SeverityPerDay { get; set; }
 
+        // ImmunityPerDay is the immunity the def's Immunizable comp states per
+        // day while the disease is present (fox, #3682): the second clock, so
+        // the digest compares the two clocks instead of a share of one figure.
+        // 0 means the def states no rate.
+        public float ImmunityPerDay { get; set; }
+
         // Immunity is the pawn's immunity progress against this very hediff,
         // 0 to 1 (fox, #3618). The game keeps one ImmunityRecord per disease in
         // the pawn's ImmunityHandler, so this figure belongs on the infection

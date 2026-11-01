@@ -436,6 +436,7 @@ namespace RIMAPI.Helpers
 
                 IsInfection = hediff.def?.isInfection ?? false,
                 SeverityPerDay = HediffRateOf(hediff.def),
+                ImmunityPerDay = HediffImmunityRateOf(hediff.def),
                 Immunity = ImmunityOf(hediff),
 
                 SourceDefName = hediff.sourceDef?.defName,
@@ -469,6 +470,22 @@ namespace RIMAPI.Helpers
             return HediffRate.Pick(
                 immunizable?.severityPerDayNotImmune ?? 0f,
                 perDay?.severityPerDay ?? 0f);
+        }
+
+        /// <summary>
+        /// The immunity a def's Immunizable comp states per day while the
+        /// disease is present (fox, #3682). It is the second clock of the
+        /// race: severity climbs at severityPerDayNotImmune, immunity at
+        /// immunityPerDaySick, and whichever reaches 1.0 first decides the
+        /// pawn. 0 means the def states no rate.
+        /// </summary>
+        public static float HediffImmunityRateOf(HediffDef def)
+        {
+            if (def == null)
+                return 0f;
+
+            var immunizable = def.CompProps<HediffCompProperties_Immunizable>();
+            return HediffRate.PickImmunity(immunizable?.immunityPerDaySick ?? 0f);
         }
 
         /// <summary>

@@ -268,6 +268,7 @@ namespace RIMAPI.Tests
                 "cur_stage_label",
                 "def_name",
                 "immunity",
+                "immunity_per_day",
                 "is_currently_life_threatening",
                 "is_infection",
                 "is_lethal",

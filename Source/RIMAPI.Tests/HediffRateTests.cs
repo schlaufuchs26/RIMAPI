@@ -41,6 +41,23 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void AnImmunizableInfectionStatesItsImmunityClock()
+        {
+            // WoundInfection: immunityPerDaySick 0.6441, the second clock of
+            // the race against severity (fox, #3682).
+            Assert.Equal(0.6441f, HediffRate.PickImmunity(0.6441f));
+        }
+
+        [Fact]
+        public void ANonPositiveImmunityRateIsNoClock()
+        {
+            // A def without an Immunizable comp, or one whose immunity only
+            // shrinks, gives no second clock: the digest must not invent one.
+            Assert.Equal(0f, HediffRate.PickImmunity(0f));
+            Assert.Equal(0f, HediffRate.PickImmunity(-0.4f));
+        }
+
+        [Fact]
         public void ANegativeRateIsNoRate()
         {
             // A def that shrinks by itself says nothing about how fast it

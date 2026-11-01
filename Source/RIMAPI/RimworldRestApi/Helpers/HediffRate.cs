@@ -20,5 +20,17 @@ namespace RIMAPI.Helpers
             if (immunizableNotImmune > 0f) return immunizableNotImmune;
             return severityPerDay > 0f ? severityPerDay : 0f;
         }
+
+        /// <summary>
+        /// The immunity an Immunizable comp states per day while the disease is
+        /// present (fox, #3682): the second clock of the race, so the digest
+        /// compares severity reaching 1.0 against immunity reaching 1.0 instead
+        /// of the old share of one figure. 0 means the def states no rate and
+        /// the caller must not invent one.
+        /// </summary>
+        public static float PickImmunity(float immunityPerDaySick)
+        {
+            return immunityPerDaySick > 0f ? immunityPerDaySick : 0f;
+        }
     }
 }
