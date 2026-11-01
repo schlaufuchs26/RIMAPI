@@ -43,6 +43,15 @@ namespace RIMAPI.Helpers
                         "ConstructDeliverResourcesToBlueprints",
                         "ConstructDeliverResourcesToFrames",
                     } },
+                // "construct" is the work type's own name, which is what a
+                // caller reads in the answer and then names back; the game
+                // builds three job defs under it (fox ticket #3708).
+                { "construct", new[]
+                    {
+                        "ConstructFinishFrames",
+                        "ConstructDeliverResourcesToBlueprints",
+                        "ConstructDeliverResourcesToFrames",
+                    } },
                 { "firefight", new[] { "BeatFire" } },
                 { "extinguish", new[] { "BeatFire" } },
                 { "arrest", new[] { "Arrest", "Capture" } },

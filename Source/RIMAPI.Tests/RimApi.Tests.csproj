@@ -83,6 +83,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Client\LetterService\GrowthChoiceRules.cs" Link="Linked\GrowthChoiceRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\WorkSettingsRules.cs" Link="Linked\WorkSettingsRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PriorityJobRules.cs" Link="Linked\PriorityJobRules.cs" />
+    <!-- Which target a cell names (fox ticket #3708): its blueprints first,
+         the cell last. Plain C#, so the ordering is tested here. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PriorityTargetRules.cs" Link="Linked\PriorityTargetRules.cs" />
     <!-- The area words of `allowed_area` (fox ticket #3645): the matching
          between a caller's word and the map's areas is plain C#. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AllowedAreaRules.cs" Link="Linked\AllowedAreaRules.cs" />

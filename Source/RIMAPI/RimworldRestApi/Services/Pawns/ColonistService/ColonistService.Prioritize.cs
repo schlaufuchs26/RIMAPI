@@ -21,7 +21,11 @@ namespace RIMAPI.Services
         //
         // The job is not built from a table here: the pawn's own work givers
         // are asked, the same list the float menu is drawn from, so the game's
-        // checks decide and its refusal is what a run reads back.
+        // checks decide and its refusal is what a run reads back. A cell target
+        // goes through the things standing on it first, its blueprints and
+        // frames ahead of everything else (ticket #3708): the construct givers
+        // answer only for a thing, so a cell-only scan reached the roof giver
+        // and left a wall frame standing.
         public ApiResult MakeJobPrioritize(
             int mapId,
             int pawnId,
@@ -101,18 +105,32 @@ namespace RIMAPI.Services
                 List<string> offered = new List<string>();
                 Job chosen = null;
                 WorkGiver chosenGiver = null;
-                foreach (WorkGiver giver in OrderableGivers(pawn, workType))
+                foreach (JobTarget candidate in JobTargets(map, thing, cell))
                 {
-                    Job job = OrderedJob(giver, pawn, thing, cell);
-                    if (job == null || job.def == null) continue;
-                    offered.Add(job.def.defName);
-                    if (!string.IsNullOrEmpty(jobName) && !PriorityJobRules.Matches(jobName, job.def.defName))
+                    foreach (WorkGiver giver in OrderableGivers(pawn, workType))
                     {
-                        continue;
+                        Job job = OrderedJob(giver, pawn, candidate.Thing, candidate.Cell);
+                        if (job == null || job.def == null) continue;
+                        offered.Add(job.def.defName);
+                        if (!string.IsNullOrEmpty(jobName) && !PriorityJobRules.Matches(jobName, job.def.defName))
+                        {
+                            continue;
+                        }
+                        // A blueprint or frame is what the build jobs are for;
+                        // a caller who named no job there gets that build, not
+                        // the roof above the cell and not the deconstruct of
+                        // the player's own plan (ticket #3708).
+                        if (candidate.Thing is Blueprint_Build
+                            && string.IsNullOrEmpty(jobName)
+                            && !PriorityTargetRules.IsConstructJob(job.def.defName))
+                        {
+                            continue;
+                        }
+                        chosen = job;
+                        chosenGiver = giver;
+                        break;
                     }
-                    chosen = job;
-                    chosenGiver = giver;
-                    break;
+                    if (chosen != null) break;
                 }
 
                 if (chosen == null)
@@ -176,6 +194,40 @@ namespace RIMAPI.Services
             return thing != null
                 ? scanner.JobOnThing(pawn, thing, true)
                 : scanner.JobOnCell(pawn, cell, true);
+        }
+
+        // JobTarget is one thing or one cell the order is tried against. A
+        // named thing is a target of its own; a cell is tried through the
+        // things standing on it first, because the construct givers answer only
+        // for a thing (fox ticket #3708).
+        private struct JobTarget
+        {
+            public Thing Thing;
+            public IntVec3 Cell;
+        }
+
+        // JobTargets is the order the game's own menu would offer at the target:
+        // a named thing alone, or the things on the cell with its blueprints and
+        // frames first and the cell itself last, so a wall frame's cell builds
+        // the wall instead of the roof above it. Pawns are left out: a cell that
+        // holds one is not a target for his own jobs.
+        private static List<JobTarget> JobTargets(Map map, Thing thing, IntVec3 cell)
+        {
+            List<JobTarget> targets = new List<JobTarget>();
+            if (thing != null)
+            {
+                targets.Add(new JobTarget { Thing = thing });
+                return targets;
+            }
+            List<Thing> standing = map.thingGrid.ThingsListAt(cell)
+                .Where(t => t != null && !(t is Pawn))
+                .ToList();
+            foreach (Thing onCell in PriorityTargetRules.ConstructiblesFirst(standing, t => t is Blueprint_Build))
+            {
+                targets.Add(new JobTarget { Thing = onCell });
+            }
+            targets.Add(new JobTarget { Cell = cell });
+            return targets;
         }
 
         private static WorkTypeDef FindWorkType(string name)

@@ -38,6 +38,17 @@ namespace RIMAPI.Tests
             Assert.True(PriorityJobRules.Matches("build", "ConstructFinishFrames"));
         }
 
+        // The work type's own name is what an answer prints in brackets, so a
+        // run names it back; it has to reach the same three job defs (fox
+        // ticket #3708).
+        [Fact]
+        public void TheWorkTypesNameReachesItsJobs()
+        {
+            Assert.True(PriorityJobRules.Matches("construct", "ConstructFinishFrames"));
+            Assert.True(PriorityJobRules.Matches("Construct", "ConstructDeliverResourcesToBlueprints"));
+            Assert.False(PriorityJobRules.Matches("construct", "BuildRoof"));
+        }
+
         [Fact]
         public void SpacesAndHyphensReadLikeTheMenu()
         {
