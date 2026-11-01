@@ -46,15 +46,17 @@ namespace RIMAPI.Tests
             Assert.Empty(PriorityTargetRules.ConstructiblesFirst<string>(null, t => true));
         }
 
-        // Exactly one job builds a planned build, and it is FinishFrame. The
-        // WorkGiverDef names are not JobDefs, so a prefix test on "Construct"
-        // recognised no build at all and skipped the job it meant to protect
-        // (fox #3706).
+        // Two jobs build a planned build: FinishFrame for a plan that needs
+        // material, PlaceNoCostFrame for one that costs nothing (a sleeping
+        // spot). The WorkGiverDef names are not JobDefs, so a prefix test on
+        // "Construct" recognised no build at all and skipped the job it meant
+        // to protect (fox #3706, the no-cost plan from #3708).
         [Fact]
-        public void Only_the_finish_frame_job_builds_a_blueprint()
+        public void Only_the_build_jobs_build_a_blueprint()
         {
             Assert.True(PriorityTargetRules.IsConstructJob("FinishFrame"));
             Assert.True(PriorityTargetRules.IsConstructJob("finishframe"));
+            Assert.True(PriorityTargetRules.IsConstructJob("PlaceNoCostFrame"));
             Assert.False(PriorityTargetRules.IsConstructJob("ConstructFinishFrames"));
             Assert.False(PriorityTargetRules.IsConstructJob("BuildRoof"));
             Assert.False(PriorityTargetRules.IsConstructJob("DeconstructForBlueprint"));

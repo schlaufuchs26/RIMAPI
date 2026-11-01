@@ -43,15 +43,18 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// IsConstructJob reports whether a job finishes a blueprint or a frame.
-        /// The game builds exactly one job for that, FinishFrame; the
-        /// WorkGiverDef names (ConstructFinishFrames, ConstructDeliverResources*)
-        /// are not JobDefs, so a prefix test on "Construct" matched no job at
-        /// all and skipped the build it was meant to protect (fox #3706).
+        /// IsConstructJob reports whether a job builds a blueprint or a frame.
+        /// The game builds two of them: FinishFrame for a plan that needs
+        /// material, PlaceNoCostFrame for one that costs nothing (a sleeping
+        /// spot). The WorkGiverDef names (ConstructFinishFrames,
+        /// ConstructDeliverResources*) are not JobDefs, so a prefix test on
+        /// "Construct" matched no job at all and skipped the build it was meant
+        /// to protect (fox tickets #3706, #3708).
         /// </summary>
         public static bool IsConstructJob(string jobDefName)
         {
-            return string.Equals(jobDefName, "FinishFrame", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(jobDefName, "FinishFrame", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(jobDefName, "PlaceNoCostFrame", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

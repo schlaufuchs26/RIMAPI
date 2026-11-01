@@ -41,16 +41,17 @@ namespace RIMAPI.Helpers
                 { "cut", new[] { "CutPlant" } },
                 { "clean", new[] { "Clean" } },
                 { "repair", new[] { "Repair" } },
-                // The job that finishes a blueprint or a frame is FinishFrame;
+                // The job that finishes a blueprint or a frame is FinishFrame,
+                // and a plan that costs nothing is built by PlaceNoCostFrame;
                 // the names in the WorkGiverDef files (ConstructFinishFrames and
                 // the two delivery givers) are not JobDefs, so a table keyed on
                 // them matched nothing and "build" fell through to the refusal
                 // (fox #3706). A delivery is a haul, so it keeps its own word.
-                { "build", new[] { "FinishFrame" } },
+                { "build", new[] { "FinishFrame", "PlaceNoCostFrame" } },
                 // "construct" is the work type's own name, which is what a
                 // caller reads in the answer and then names back; the build
-                // under it is the same one job (fox tickets #3708, #3706).
-                { "construct", new[] { "FinishFrame" } },
+                // under it is the same jobs (fox tickets #3708, #3706).
+                { "construct", new[] { "FinishFrame", "PlaceNoCostFrame" } },
                 { "firefight", new[] { "BeatFire" } },
                 { "extinguish", new[] { "BeatFire" } },
                 { "arrest", new[] { "Arrest", "Capture" } },
