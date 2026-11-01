@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RIMAPI.Core;
@@ -27,7 +28,19 @@ public static class HttpListenerRequestExtensions
 
         try
         {
-            using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+            // A JSON body is UTF-8 unless its Content-Type names a charset.
+            // HttpListener's ContentEncoding falls back to the platform's
+            // default when none is named, and that turned a UTF-8 body into
+            // question marks: a colony called "Die Füchse" arrived as "Die
+            // F??chse" and the game refused the name (fox ticket #3929).
+            Encoding encoding = request.ContentEncoding ?? Encoding.UTF8;
+            string contentType = request.ContentType;
+            if (contentType == null ||
+                contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                encoding = Encoding.UTF8;
+            }
+            using (var reader = new StreamReader(request.InputStream, encoding))
             {
                 var json = await reader.ReadToEndAsync();
 

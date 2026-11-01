@@ -180,12 +180,9 @@ namespace RIMAPI.Services
                     reason = problem;
                     return false;
                 }
-                // The fields are set before the validation and Named run, so
-                // the dialog names the colony with exactly what this call
-                // asked for, and a read after the press sees the same.
-                SetField(giveName, "curName", plan[0]);
-                if (useSecond)
-                    SetField(giveName, "curSecondName", plan[1]);
+                // The names are validated before the fields are written, so a
+                // refused name leaves the box holding what it held: the
+                // generated name stays readable and a retry starts from it.
                 if (!InvokeBool(giveName, "IsValidName", plan[0]))
                 {
                     reason = NameDialogRules.Refusal(
@@ -200,6 +197,12 @@ namespace RIMAPI.Services
                         InvalidNameMessage(giveName, true));
                     return false;
                 }
+                // The fields are set before Named runs, so the dialog names the
+                // colony with exactly what this call asked for, and a read
+                // after the press sees the same.
+                SetField(giveName, "curName", plan[0]);
+                if (useSecond)
+                    SetField(giveName, "curSecondName", plan[1]);
                 Invoke(giveName, "Named", plan[0]);
                 if (useSecond)
                     Invoke(giveName, "NamedSecond", plan[1]);
