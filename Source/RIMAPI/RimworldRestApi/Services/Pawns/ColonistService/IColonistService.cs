@@ -50,6 +50,11 @@ namespace RIMAPI.Services
 
         ApiResult MakeJobHaul(int mapId, int pawnId, int itemId, int destId);
 
+        // Prioritize orders one job on one named colonist now, the way the
+        // player's right-click "Prioritize X" entry does (fox ticket #3626).
+        ApiResult MakeJobPrioritize(
+            int mapId, int pawnId, string jobName, int thingId, int x, int z, string workName);
+
         ApiResult<List<OutfitDto>> GetOutfits();
         ApiResult<ImageDto> GetPawnPortraitImage(
             int pawnId,

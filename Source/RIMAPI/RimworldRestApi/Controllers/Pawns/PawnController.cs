@@ -279,6 +279,38 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // One job on one named colonist now: the player's right-click
+        // "Prioritize X" entry (fox ticket #3626). thing_id or x/z names the
+        // target, job the menu's word for it (tame, harvest, mine), work
+        // narrows the scan to one work type. Every field but pawn_id and the
+        // target is optional.
+        [Post("/api/v1/jobs/make/prioritize")]
+        [EndpointMetadata("Order one job on one named colonist now, the way the right-click menu does")]
+        public async Task MakeJobPrioritize(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
+            var job = RequestParser.GetStringParameter(context, "job", false);
+            var work = RequestParser.GetStringParameter(context, "work", false);
+            var thingId = RequestParser.HasParameter(context, "thing_id")
+                ? RequestParser.GetIntParameter(context, "thing_id")
+                : 0;
+            var x = RequestParser.HasParameter(context, "x")
+                ? RequestParser.GetIntParameter(context, "x")
+                : 0;
+            var z = RequestParser.HasParameter(context, "z")
+                ? RequestParser.GetIntParameter(context, "z")
+                : 0;
+            if (thingId <= 0 && !RequestParser.HasParameter(context, "x"))
+            {
+                await context.SendJsonResponse(
+                    ApiResult.Fail("prioritize needs a target: thing_id, or x and z for a cell"));
+                return;
+            }
+            var result = _colonistService.MakeJobPrioritize(mapId, pawnId, job, thingId, x, z, work);
+            await context.SendJsonResponse(result);
+        }
+
         // Taming a wild person or an animal: the mod adds the game's Tame
         // designation and queues the tame job on the best handler, because the
         // job's driver only runs while the designation stands (ticket #3137).
