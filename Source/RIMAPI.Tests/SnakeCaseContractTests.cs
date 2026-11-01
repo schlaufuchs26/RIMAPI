@@ -496,6 +496,48 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryPoweredBuildingFieldKeepsTheKeyTheToolReads()
+        {
+            // The power row is what tells a dead machine why its net carries
+            // nothing (fox tickets #3762, #3902): the keys below are what the
+            // fox's digest decodes, so a rename here has to be a deliberate
+            // edit of this list.
+            JObject json = Json(new PoweredBuildingDto
+            {
+                Id = 129115,
+                DefName = "WoodFiredGenerator",
+                Label = "wood-fired generator",
+                Position = new PositionDto { X = 129, Z = 115 },
+                Consumes = 0f,
+                Produces = 0f,
+                Nominal = 1000f,
+                Connected = true,
+                Powered = true,
+                SwitchedOn = true,
+                NetProduction = 0f,
+                NetStored = 0f,
+                ConduitDistance = 0,
+                ConduitPosition = new PositionDto { X = 129, Z = 115 },
+                NetId = 3,
+                Plant = "CompPowerPlant",
+                BrokenDown = false,
+            });
+
+            Assert.Equal(
+                new[]
+                {
+                    "broken_down", "conduit_distance", "conduit_position", "connected",
+                    "consumes", "def_name", "id", "label", "net_id", "net_production",
+                    "net_stored", "nominal", "plant", "position", "powered", "produces",
+                    "switched_on",
+                },
+                json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal(3, (int)json["net_id"]);
+            Assert.Equal("CompPowerPlant", (string)json["plant"]);
+            Assert.False((bool)json["broken_down"]);
+        }
+
+        [Fact]
         public void NoLinkedDtoFieldResolvesToAKeyWithACapitalLetter()
         {
             // A guard for the files linked in the csproj: whatever a future DTO

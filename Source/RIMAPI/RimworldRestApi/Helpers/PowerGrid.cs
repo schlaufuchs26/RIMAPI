@@ -30,7 +30,7 @@ namespace RIMAPI.Helpers
                 if (power == null)
                     continue;
 
-                rows.Add(Row(building, power, conduits));
+                rows.Add(Row(map, building, power, conduits));
             }
 
             return rows.OrderBy(r => r.Id).ToList();
@@ -67,13 +67,14 @@ namespace RIMAPI.Helpers
             if (building == null)
                 return null;
             CompPower power = building.TryGetComp<CompPower>();
-            return Row(building, power, ConduitCells(building.Map));
+            return Row(building.Map, building, power, ConduitCells(building.Map));
         }
 
-        private static PoweredBuildingDto Row(Building building, CompPower power, List<IntVec3> conduits)
+        private static PoweredBuildingDto Row(Map map, Building building, CompPower power, List<IntVec3> conduits)
         {
             CompPowerTrader trader = building.TryGetComp<CompPowerTrader>();
             CompPowerPlant plant = building.TryGetComp<CompPowerPlant>();
+            CompBreakdownable breakdown = building.TryGetComp<CompBreakdownable>();
 
             // A plant's own PowerConsumption is its nominal output, negative in
             // the game's sign, so only a positive one is a machine that draws.
@@ -110,6 +111,10 @@ namespace RIMAPI.Helpers
                 Powered = trader != null ? trader.PowerOn : power != null && power.PowerNet != null,
                 SwitchedOn = FlickUtility.WantsToBeOn(building),
                 ConduitDistance = distance,
+                // NetId 0 stays "no net reaches it" (fox ticket #3902).
+                NetId = power.PowerNet != null ? NetIdOf(map, power.PowerNet) : 0,
+                Plant = plant != null ? plant.GetType().Name : "",
+                BrokenDown = breakdown != null && breakdown.BrokenDown,
             };
             if (power != null && power.PowerNet != null)
             {
@@ -121,6 +126,17 @@ namespace RIMAPI.Helpers
                 dto.ConduitPosition = new PositionDto { X = nearest.x, Z = nearest.z };
             }
             return dto;
+        }
+
+        // NetIdOf numbers a net by its place in the map's own list plus one, so
+        // 0 keeps meaning "no net" and two rows of one read can be compared
+        // (fox ticket #3902). A net the manager does not list is 0 as well.
+        private static int NetIdOf(Map map, PowerNet net)
+        {
+            if (map?.powerNetManager == null || net == null)
+                return 0;
+            int index = map.powerNetManager.AllNetsListForReading.IndexOf(net);
+            return index < 0 ? 0 : index + 1;
         }
 
         // ConduitCells collects every cell a built conduit stands on. Conduits

@@ -78,6 +78,25 @@ namespace RIMAPI.Models
         // stands, -1 when the map holds none; ConduitPosition names that cell.
         public int ConduitDistance { get; set; }
         public PositionDto ConduitPosition { get; set; }
+
+        // NetId numbers the net the building stands on: its index in the map's
+        // own net list plus one, 0 when no net reaches it (fox ticket #3902).
+        // Two rows are on the same net when their ids match; the figures alone
+        // cannot tell two dead nets apart, so a consumer on one net would name
+        // a producer standing on another as its cause.
+        public int NetId { get; set; }
+
+        // Plant names the power plant comp when the building is a producer
+        // ("CompPowerPlantSolar", "CompPowerPlantWind"), empty for anything
+        // else (fox ticket #3902). It is what separates a solar panel that is
+        // dark from a generator that ran dry: both give 0 W, and the cure
+        // differs.
+        public string Plant { get; set; }
+
+        // BrokenDown is the game's own "this one needs repair" (fox ticket
+        // #3902): a broken generator gives 0 W and reads exactly like one out
+        // of fuel until this field says which it is.
+        public bool BrokenDown { get; set; }
     }
 
     public class MapTimeDto
