@@ -206,7 +206,9 @@ namespace RIMAPI.Models
 
     // ZoneGrowingDto is one growing zone's plant and its cell counts. Unsown
     // cells are the cells without a plant: no soil, out of season, or a dead
-    // plant still standing there.
+    // plant still standing there. ForeignCells are cells holding a plant that
+    // is not the zone's crop (fox ticket #3805), and ForeignPlants names them,
+    // so the three counts add up to the zone's cells.
     public class ZoneGrowingDto
     {
         public string PlantDefName { get; set; }
@@ -215,6 +217,8 @@ namespace RIMAPI.Models
         public bool InSeason { get; set; }
         public int SownCells { get; set; }
         public int UnsownCells { get; set; }
+        public int ForeignCells { get; set; }
+        public List<string> ForeignPlants { get; set; }
         public int DyingCells { get; set; }
         public int BlightedCells { get; set; }
         public int HarvestableCells { get; set; }

@@ -153,5 +153,8 @@
          the power figures are written by the tick, and the loader's own tick
          still reads 0 W, so a fresh load must be visible as such. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LoadedTick.cs" Link="Linked\LoadedTick.cs" />
+    <!-- Which cell counts belong to the crop (fox ticket #3805): a wild plant
+         in a growing zone used to read as sown crop. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\GrowingZoneCells.cs" Link="Linked\GrowingZoneCells.cs" />
   </ItemGroup>
 </Project>
