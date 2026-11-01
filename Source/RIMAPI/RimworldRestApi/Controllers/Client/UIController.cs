@@ -118,6 +118,15 @@ namespace RIMAPI.BaseControllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/ui/letter/growth")]
+        [EndpointMetadata("Take the choice a growth letter asks for: a child's 'became an adult' letter (ChoiceLetter_GrowthMoment) wants a skill that gains a passion and, usually, one trait. Body: {id, passion, trait}, where passion names a skill from passion_choices or its 0-based index, and trait names one of trait_choices or 'none' for the letter's own no-trait option. A call with only id answers what the letter offers and applies nothing. The choice runs the game's own MakeChoices, the method the letter's dialog calls when its confirm button is pressed, so the pawn gains the passion and the trait and the letter leaves the stack.")]
+        public async Task ApplyGrowthChoice(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<LetterGrowthRequestDto>();
+            var result = _letterService.ApplyGrowthChoice(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/ui/window/close")]        [EndpointMetadata("Close open windows by type name, or (default) every force-pause window — used to auto-dismiss the colony-name and debug-log popups during unattended runs.")]
         public async Task CloseWindows(HttpListenerContext context)
         {

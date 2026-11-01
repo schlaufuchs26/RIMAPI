@@ -96,8 +96,9 @@ namespace RIMAPI.Tests
             // deliberate edit of this list.
             var expected = new[]
             {
-                "body", "can_dismiss", "def", "id", "label", "new", "options",
-                "pauses", "quest_id", "text", "tick",
+                "body", "can_dismiss", "def", "id", "label", "new", "no_trait_option",
+                "options", "passion_choices", "passion_gains", "pauses", "quest_id",
+                "text", "tick", "trait_choices",
             };
 
             JObject json = Json(new LetterDto

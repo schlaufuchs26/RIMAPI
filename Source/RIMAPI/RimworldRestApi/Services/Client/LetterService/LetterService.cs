@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RIMAPI.Models;
+using RimWorld;
 using Verse;
 
 namespace RIMAPI.Services
@@ -127,8 +129,13 @@ namespace RIMAPI.Services
                 // read, and dropping it silently would throw the offer away.
                 if (!letter.CanDismissWithRightClick)
                 {
-                    result.Reason =
-                        "the game offers no dismiss for this letter: it needs an answer, so its popup holds the clock (ui/window/accept presses its button)";
+                    // A growth letter has no button the window read can press
+                    // either: its dialog asks for a skill and a trait with its
+                    // own widgets (ticket #3714), so the refusal names that
+                    // instead of a popup nothing would take.
+                    result.Reason = letter is ChoiceLetter_GrowthMoment
+                        ? "the game offers no dismiss for this letter: it asks for a growth choice (a skill that gains a passion and a trait), which its own dialog Dialog_GrowthMomentChoices takes"
+                        : "the game offers no dismiss for this letter: it needs an answer, so its popup holds the clock (ui/window/accept presses its button)";
                     result.Remaining = StackLetters().Count;
                     return ApiResult<LetterDismissResultDto>.Ok(result);
                 }
@@ -171,8 +178,13 @@ namespace RIMAPI.Services
                 var choice = letter as ChoiceLetter;
                 if (choice == null)
                 {
-                    result.Reason =
-                        $"{letter.GetType().Name} is not a choice letter, so it has no option to press";
+                    // A growth letter is the one letter whose dialog offers no
+                    // DiaOption at all: naming the window it really opens is
+                    // what lets a run stop looking for an option (ticket
+                    // #3714).
+                    result.Reason = letter is ChoiceLetter_GrowthMoment
+                        ? "ChoiceLetter_GrowthMoment is not a choice letter: it opens Dialog_GrowthMomentChoices, which asks for a skill that gains a passion and for a trait, so it has no option to press; the growth call makes that choice"
+                        : $"{letter.GetType().Name} is not a choice letter, so it has no option to press";
                     result.Remaining = StackLetters().Count;
                     return ApiResult<LetterAnswerResultDto>.Ok(result);
                 }
@@ -242,6 +254,231 @@ namespace RIMAPI.Services
             catch (Exception ex)
             {
                 return ApiResult<LetterAnswerResultDto>.Fail(ex.Message);
+            }
+        }
+
+        // ApplyGrowthChoice makes the choice a growth letter asks for (ticket
+        // #3714). The letter is a ChoiceLetter_GrowthMoment, which is not a
+        // ChoiceLetter: its dialog (Dialog_GrowthMomentChoices) draws skills and
+        // traits with its own widgets, so there is no DiaOption to press. This
+        // runs the game's own MakeChoices, the method that dialog's confirm
+        // button calls, with the same arguments, and then does what that button
+        // does: close the dialog and take the letter off the stack. The pawn's
+        // growth points are reset by the game inside MakeChoices.
+        //
+        // A call without a passion asks only what the letter offers: a letter
+        // that was never opened may not have generated its choices yet, and the
+        // read cannot do that without acting on it.
+        public ApiResult<LetterGrowthResultDto> ApplyGrowthChoice(LetterGrowthRequestDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return ApiResult<LetterGrowthResultDto>.Fail("the request needs the letter's id");
+                var stack = Find.LetterStack;
+                if (stack == null)
+                    return ApiResult<LetterGrowthResultDto>.Fail("no letter stack: no colony is loaded");
+                var letter = StackLetters().FirstOrDefault(l => l.ID == request.Id);
+                if (letter == null)
+                    return ApiResult<LetterGrowthResultDto>.Fail(
+                        $"no letter with id {request.Id} stands; the letters read prints the ids");
+
+                var result = new LetterGrowthResultDto
+                {
+                    Label = letter.Label,
+                    Remaining = StackLetters().Count,
+                };
+                var growth = letter as ChoiceLetter_GrowthMoment;
+                if (growth == null)
+                {
+                    result.Reason = $"{letter.GetType().Name} is not a growth letter, so it has no growth choice to make";
+                    return ApiResult<LetterGrowthResultDto>.Ok(result);
+                }
+
+                var pawn = ArchiveText.Read(growth, "pawn") as Pawn;
+                result.Pawn = pawn != null ? pawn.LabelShort : "";
+
+                var offer = ReadGrowth(growth);
+                if (offer.PassionList == null || offer.TraitList == null)
+                {
+                    // The game generates the choices the first time the letter is
+                    // opened; a caller that got here first gets them now, without
+                    // a window (TrySetChoices builds no UI).
+                    ArchiveText.Call(growth, "TrySetChoices");
+                    offer = ReadGrowth(growth);
+                }
+                result.PassionChoices = offer.Passions;
+                result.TraitChoices = offer.Traits;
+                result.NoTraitOption = offer.NoTrait;
+                result.PassionGains = offer.Gains;
+
+                if (ArchiveText.Read(growth, "choiceMade") is bool made && made)
+                {
+                    result.Reason = "the growth choice is already made: the letter only waits to leave the stack";
+                    return ApiResult<LetterGrowthResultDto>.Ok(result);
+                }
+
+                var words = GrowthChoiceRules.Words(request.Passion);
+                if (words.Count == 0)
+                {
+                    result.Reason = offer.Gains > 1
+                        ? $"the letter asks for {offer.Gains} passions: name that many of the offered skills, or their indexes, in passion"
+                        : "name the skill that gains the passion, or its index, in passion";
+                    return ApiResult<LetterGrowthResultDto>.Ok(result);
+                }
+                if (offer.Gains > 0 && words.Count != offer.Gains)
+                {
+                    result.Reason = $"the letter asks for {offer.Gains} passion(s) and {words.Count} were named";
+                    return ApiResult<LetterGrowthResultDto>.Ok(result);
+                }
+
+                var indices = new List<int>(words.Count);
+                foreach (var word in words)
+                {
+                    var index = GrowthChoiceRules.Resolve(offer.Passions, word, out var problem);
+                    if (index < 0)
+                    {
+                        result.Reason = problem;
+                        return ApiResult<LetterGrowthResultDto>.Ok(result);
+                    }
+                    indices.Add(index);
+                }
+
+                var traitWord = (request.Trait ?? "").Trim();
+                object chosenTrait = null;
+                if (GrowthChoiceRules.IsNoTrait(traitWord))
+                {
+                    if (!offer.NoTrait)
+                    {
+                        result.Reason = "this letter offers no \"no trait\" option: name one of "
+                            + GrowthChoiceRules.OfferList(offer.Traits);
+                        return ApiResult<LetterGrowthResultDto>.Ok(result);
+                    }
+                }
+                else if (traitWord.Length > 0)
+                {
+                    var traitIndex = GrowthChoiceRules.Resolve(offer.Traits, traitWord, out var problem);
+                    if (traitIndex < 0)
+                    {
+                        result.Reason = problem;
+                        return ApiResult<LetterGrowthResultDto>.Ok(result);
+                    }
+                    chosenTrait = offer.TraitList[traitIndex];
+                }
+                else if (offer.Traits.Count > 0 && !offer.NoTrait)
+                {
+                    result.Reason = "the letter asks for a trait: name one of "
+                        + GrowthChoiceRules.OfferList(offer.Traits);
+                    return ApiResult<LetterGrowthResultDto>.Ok(result);
+                }
+
+                var make = growth.GetType().GetMethod("MakeChoices",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (make == null)
+                    return ApiResult<LetterGrowthResultDto>.Fail(
+                        "ChoiceLetter_GrowthMoment.MakeChoices was not found in this game build");
+                var chosen = SkillList(make.GetParameters()[0].ParameterType, offer.PassionList, indices);
+                make.Invoke(growth, new[] { chosen, chosenTrait });
+                result.Applied = true;
+
+                foreach (var index in indices)
+                {
+                    var skill = offer.PassionList[index] as SkillDef;
+                    if (skill == null || pawn == null || pawn.skills == null)
+                        continue;
+                    var record = pawn.skills.GetSkill(skill);
+                    var label = ArchiveText.Resolve(ArchiveText.Read(skill, "LabelCap"));
+                    var passion = record != null ? ArchiveText.Resolve(ArchiveText.Read(record, "passion")) : "";
+                    result.ChosenPassions.Add(passion.Length > 0 ? label + " (" + passion + ")" : label);
+                }
+                if (chosenTrait is Trait gained)
+                    result.ChosenTrait = ArchiveText.Resolve(ArchiveText.Read(gained, "LabelCap"));
+
+                // The game's own confirm closes the dialog first and then takes
+                // the letter off the stack; a dialog left open would hold the
+                // clock on a letter that no longer stands.
+                CloseGrowthDialog(growth);
+                Find.LetterStack?.RemoveLetter(letter);
+                result.Remaining = StackLetters().Count;
+                LogApi.Info($"[LetterService] Growth choice for letter {letter.ID} {letter.Label}: {pawn?.LabelShort}");
+                return ApiResult<LetterGrowthResultDto>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<LetterGrowthResultDto>.Fail(ex.Message);
+            }
+        }
+
+        // GrowthOffer is what a growth letter offers, read without touching the
+        // game's state: the skills that may gain a passion, the traits, whether
+        // "no trait" is one of them and how many passions the letter asks for.
+        private sealed class GrowthOffer
+        {
+            public IList PassionList;
+            public IList TraitList;
+            public List<string> Passions = new List<string>();
+            public List<string> Traits = new List<string>();
+            public bool NoTrait;
+            public int Gains;
+        }
+
+        private static GrowthOffer ReadGrowth(ChoiceLetter_GrowthMoment growth)
+        {
+            var offer = new GrowthOffer
+            {
+                PassionList = ArchiveText.Read(growth, "passionChoices") as IList,
+                TraitList = ArchiveText.Read(growth, "traitChoices") as IList,
+            };
+            offer.Passions = LabelsOf(offer.PassionList);
+            offer.Traits = LabelsOf(offer.TraitList);
+            offer.NoTrait = ArchiveText.Read(growth, "noTraitOptionShown") is bool noTrait && noTrait;
+            offer.Gains = ArchiveText.Read(growth, "passionGainsCount") is int gains ? gains : 0;
+            return offer;
+        }
+
+        // LabelsOf names the entries a caller picks from: the label the game
+        // draws for a skill (Shooting) or a trait (Tough).
+        private static List<string> LabelsOf(IList entries)
+        {
+            var labels = new List<string>();
+            if (entries == null)
+                return labels;
+            foreach (var entry in entries)
+                labels.Add(ArchiveText.Resolve(ArchiveText.Read(entry, "LabelCap")));
+            return labels;
+        }
+
+        // SkillList builds the argument MakeChoices takes, in the element type
+        // this game build declares, so a build that changed the list's type
+        // costs no compile-time guess.
+        private static object SkillList(Type parameterType, IList source, List<int> indices)
+        {
+            var listType = parameterType != null && parameterType.IsGenericType
+                ? parameterType
+                : typeof(List<SkillDef>);
+            if (!listType.IsClass || listType.IsAbstract)
+                listType = typeof(List<SkillDef>);
+            var list = (IList)Activator.CreateInstance(listType);
+            foreach (var index in indices)
+                list.Add(source[index]);
+            return list;
+        }
+
+        // CloseGrowthDialog takes this letter's own growth dialog off the stack,
+        // the way the confirm button closes it. A dialog a player opened and
+        // this call answered must not stay up.
+        private static void CloseGrowthDialog(ChoiceLetter_GrowthMoment growth)
+        {
+            var windows = Find.WindowStack?.Windows;
+            if (windows == null)
+                return;
+            foreach (var window in windows.OfType<Dialog_GrowthMomentChoices>())
+            {
+                if (ArchiveText.Read(window, "letter") == growth)
+                {
+                    Find.WindowStack.TryRemove(window, doCloseSound: false);
+                    return;
+                }
             }
         }
 
@@ -386,7 +623,7 @@ namespace RIMAPI.Services
 
         private static LetterDto ToDto(Letter letter)
         {
-            return new LetterDto
+            var dto = new LetterDto
             {
                 Id = letter.ID,
                 Label = ArchiveText.FirstLine(letter.Label),
@@ -399,6 +636,19 @@ namespace RIMAPI.Services
                 QuestId = QuestIdOf(letter),
                 Pauses = PausesGame(letter),
             };
+            // A growth letter has no DiaOption to press, so its choices travel
+            // in their own fields: the skill that gains a passion, the traits
+            // and the letter's own "no trait" option (ticket #3714).
+            var growth = letter as ChoiceLetter_GrowthMoment;
+            if (growth != null)
+            {
+                var offer = ReadGrowth(growth);
+                dto.PassionChoices = offer.Passions;
+                dto.TraitChoices = offer.Traits;
+                dto.NoTraitOption = offer.NoTrait;
+                dto.PassionGains = offer.Gains;
+            }
+            return dto;
         }
 
         // BodyText is the whole body, not the first line: the wait report

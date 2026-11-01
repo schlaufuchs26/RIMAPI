@@ -16,5 +16,8 @@ namespace RIMAPI.Services
         ApiResult<List<LetterDto>> ListArchivedLetters(int since, int limit);
         ApiResult<LetterDismissResultDto> DismissLetter(LetterDismissRequestDto request);
         ApiResult<LetterAnswerResultDto> AnswerLetter(LetterAnswerRequestDto request);
+        // ApplyGrowthChoice takes the choice a growth letter asks for: a skill
+        // that gains a passion and at most one trait (ticket #3714).
+        ApiResult<LetterGrowthResultDto> ApplyGrowthChoice(LetterGrowthRequestDto request);
     }
 }

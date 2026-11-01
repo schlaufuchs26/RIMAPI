@@ -47,6 +47,17 @@ namespace RIMAPI.Models
         // and no letter on the stack is a letter that paused the game and then
         // left the stack, and this flag is what names it (ticket #3357).
         public bool Pauses { get; set; }
+        // PassionChoices are the skills a growth letter offers for the child's
+        // new passion, in the order its dialog draws them: the index is what
+        // the growth call takes (ticket #3714). Empty for every other letter.
+        public List<string> PassionChoices { get; set; } = new List<string>();
+        // TraitChoices are the traits a growth letter offers.
+        public List<string> TraitChoices { get; set; } = new List<string>();
+        // NoTraitOption says a growth letter also offers "no trait".
+        public bool NoTraitOption { get; set; }
+        // PassionGains is how many of the offered skills the growth letter
+        // asks for: one, in practice.
+        public int PassionGains { get; set; }
     }
 
     // Dismiss one letter by the id the letters read prints.
@@ -95,5 +106,46 @@ namespace RIMAPI.Models
         // now offers.
         public bool StillOpen { get; set; }
         public string OpenWindow { get; set; }
+    }
+
+    // Take the choice a growth letter asks for (ticket #3714): the skill that
+    // gains a passion and, when the letter offers traits, one trait or "none".
+    // Both halves are matched against the labels the letter's own dialog
+    // draws, and either a label or the 0-based index works.
+    public class LetterGrowthRequestDto
+    {
+        public int Id { get; set; }
+        // Passion names the skill that gains a passion, or the index the
+        // letters read prints. Empty asks only what the letter offers.
+        public string Passion { get; set; }
+        // Trait names the trait, or "none" for the letter's own no-trait
+        // option. Empty when the letter offers no trait.
+        public string Trait { get; set; }
+    }
+
+    public class LetterGrowthResultDto
+    {
+        // Applied is true when the game made the choice: the skill gained its
+        // passion, the trait was gained and the letter left the stack.
+        public bool Applied { get; set; }
+        public string Label { get; set; }
+        // Pawn is the child whose growth moment this is.
+        public string Pawn { get; set; }
+        // PassionChoices are the skills the letter offers, one per index.
+        public List<string> PassionChoices { get; set; } = new List<string>();
+        // TraitChoices are the traits the letter offers.
+        public List<string> TraitChoices { get; set; } = new List<string>();
+        // NoTraitOption says the letter offers "no trait" as well.
+        public bool NoTraitOption { get; set; }
+        // PassionGains is how many of the offered skills the letter asks for.
+        public int PassionGains { get; set; }
+        // ChosenPassions names what was gained, e.g. "Shooting (Major)".
+        public List<string> ChosenPassions { get; set; } = new List<string>();
+        // ChosenTrait is the trait gained, empty when the child gained none.
+        public string ChosenTrait { get; set; }
+        // Why nothing was applied, empty on success.
+        public string Reason { get; set; }
+        // How many letters stand afterwards.
+        public int Remaining { get; set; }
     }
 }
