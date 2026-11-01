@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.CameraStreamer;
 using RIMAPI.Controllers;
+using RIMAPI.Helpers;
 using RIMAPI.Services;
 using Verse;
 
@@ -64,9 +65,14 @@ namespace RIMAPI.Core
                 LogApi.Info("Initializing HTTP components...");
                 _listener = new HttpListener();
 
-                string hostBinding = ServerIP == "0.0.0.0" ? "+" : ServerIP;
-                string listenerPrefix = $"http://{hostBinding}:{Port}/";
-                _listener.Prefixes.Add(listenerPrefix);
+                // A loopback setting binds both loopback addresses, so a client
+                // that dials 127.0.0.1 is not refused while localhost answers
+                // (fox ticket #3767).
+                foreach (string listenerPrefix in ListenPrefixes.For(ServerIP, Port))
+                {
+                    _listener.Prefixes.Add(listenerPrefix);
+                    LogApi.Info($"Listening on {listenerPrefix}");
+                }
 
                 _router = new Router();
                 _requestQueue = new Queue<HttpListenerContext>();

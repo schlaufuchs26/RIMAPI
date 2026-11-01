@@ -78,6 +78,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\LoadedSave.cs" Link="Linked\LoadedSave.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AnimalRules.cs" Link="Linked\AnimalRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ListenPort.cs" Link="Linked\ListenPort.cs" />
+    <!-- Which addresses the bridge binds (fox ticket #3767): a loopback setting
+         has to answer on 127.0.0.1 as well as on localhost. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ListenPrefixes.cs" Link="Linked\ListenPrefixes.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HostilityRules.cs" Link="Linked\HostilityRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />
