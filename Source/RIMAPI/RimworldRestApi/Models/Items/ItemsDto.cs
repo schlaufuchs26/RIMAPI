@@ -40,6 +40,12 @@ namespace RIMAPI.Models
         public float InsulationCold { get; set; }
         public float InsulationHeat { get; set; }
 
+        // StuffStats holds the same armor and insulation numbers once per
+        // material the def accepts, and only for apparel (ticket #3615): an
+        // apparel's protection is mostly its material's, so the abstract value
+        // above answers a stuffable def with the game's 0.
+        public List<StuffStatDto> StuffStats { get; set; }
+
         public static ThingDefDto ToDto(ThingDef thing)
         {
             return new ThingDefDto
@@ -85,8 +91,69 @@ namespace RIMAPI.Models
                 ArmorRatingHeat = thing.GetStatValueAbstract(StatDefOf.ArmorRating_Heat),
                 InsulationCold = thing.GetStatValueAbstract(StatDefOf.Insulation_Cold),
                 InsulationHeat = thing.GetStatValueAbstract(StatDefOf.Insulation_Heat),
+                StuffStats = StuffStatsFor(thing),
             };
         }
+
+        /// <summary>
+        /// The armor and insulation for every material the def accepts, so a
+        /// reader can tell a wool parka from a cloth one (ticket #3615).
+        /// </summary>
+        /// <remarks>
+        /// The material's share of these two stats is a StatPart_Stuff
+        /// (Insulation_Cold takes the material's StuffPower_Insulation_Cold
+        /// times the def's StuffEffectMultiplierInsulation_Cold), so the value
+        /// has to come from the stat worker with the material in the request:
+        /// the abstract value has no material and reports 0 for a stuffable
+        /// apparel. Only apparel is answered per material, because apparel is
+        /// what a run chooses between and a list on every stuffable building
+        /// would grow a catalog that is already 2.6 MB.
+        /// </remarks>
+        private static List<StuffStatDto> StuffStatsFor(ThingDef thing)
+        {
+            if (!thing.IsApparel || thing.stuffCategories == null || thing.stuffCategories.Count == 0)
+                return null;
+
+            var stats = new List<StuffStatDto>();
+            var stuffs = DefDatabase<ThingDef>
+                .AllDefsListForReading.Where(d =>
+                    d != null && d.IsStuff && d.stuffProps != null && d.stuffProps.CanMake(thing)
+                )
+                .OrderBy(d => d.label);
+
+            foreach (ThingDef stuff in stuffs)
+            {
+                StatRequest req = StatRequest.For(thing, stuff);
+                stats.Add(
+                    new StuffStatDto
+                    {
+                        StuffDefName = stuff.defName,
+                        StuffLabel = stuff.label,
+                        ArmorRatingSharp = StatDefOf.ArmorRating_Sharp.Worker.GetValue(req),
+                        ArmorRatingBlunt = StatDefOf.ArmorRating_Blunt.Worker.GetValue(req),
+                        ArmorRatingHeat = StatDefOf.ArmorRating_Heat.Worker.GetValue(req),
+                        InsulationCold = StatDefOf.Insulation_Cold.Worker.GetValue(req),
+                        InsulationHeat = StatDefOf.Insulation_Heat.Worker.GetValue(req),
+                    }
+                );
+            }
+            return stats;
+        }
+    }
+
+    /// <summary>
+    /// One material's answer for a stuffable apparel (ticket #3615): what a
+    /// tuque of cloth and a tuque of sheep wool actually give their wearer.
+    /// </summary>
+    public class StuffStatDto
+    {
+        public string StuffDefName { get; set; }
+        public string StuffLabel { get; set; }
+        public float ArmorRatingSharp { get; set; }
+        public float ArmorRatingBlunt { get; set; }
+        public float ArmorRatingHeat { get; set; }
+        public float InsulationCold { get; set; }
+        public float InsulationHeat { get; set; }
     }
 
     public class SpawnItemRequestDto

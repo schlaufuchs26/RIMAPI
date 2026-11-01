@@ -61,6 +61,54 @@ namespace RIMAPI.Tests
                     + string.Join(", ", unassigned));
         }
 
+        /// <summary>
+        /// A stuffable apparel's armor and insulation come from its material
+        /// (ticket #3615): the tuque's warmth is its 0.50 cold multiplier times
+        /// the material's StuffPower_Insulation_Cold, so the abstract value
+        /// answers 0 for every one of them. The test pins the three things that
+        /// make the per-material answer right: one entry per material the def
+        /// accepts, every member of StuffStatDto filled, and the numbers taken
+        /// from the stat worker with the material in the request rather than
+        /// from the abstract value.
+        /// </summary>
+        [Fact]
+        public void StuffStatsAnswerEachMaterialThroughTheStatWorker()
+        {
+            string source = ItemsSource();
+            string classBody = Block(source, "class StuffStatDto");
+            string method = Block(source, "StuffStatsFor");
+
+            List<string> members = PropertyDeclaration.Matches(classBody).Cast<Match>()
+                .Concat(FieldDeclaration.Matches(classBody).Cast<Match>())
+                .Select(match => match.Groups["name"].Value)
+                .Distinct()
+                .ToList();
+            foreach (string member in new[]
+                     {
+                         "StuffDefName", "StuffLabel", "ArmorRatingSharp", "ArmorRatingBlunt",
+                         "ArmorRatingHeat", "InsulationCold", "InsulationHeat",
+                     })
+            {
+                Assert.Contains(member, members);
+            }
+
+            List<string> unassigned = members
+                .Where(name => !Regex.IsMatch(
+                    method, @"^\s*" + Regex.Escape(name) + @"\s*=", RegexOptions.Multiline))
+                .ToList();
+            Assert.True(
+                unassigned.Count == 0,
+                "StuffStatsFor leaves these StuffStatDto members unset: "
+                    + string.Join(", ", unassigned));
+
+            // The material's share is a StatPart_Stuff, which only the stat
+            // worker applies; GetStatValueAbstract would report the abstract 0.
+            Assert.Contains("StatRequest.For(thing, stuff)", method);
+            Assert.DoesNotContain("GetStatValueAbstract", method);
+            // Every material the def accepts, not the whole stuff catalog.
+            Assert.Contains("CanMake(thing)", method);
+        }
+
         private static string ItemsSource() => File.ReadAllText(Path.Combine(
             SourceTree.RepoRoot(),
             "Source", "RIMAPI", "RimworldRestApi", "Models", "Items", "ItemsDto.cs"));
