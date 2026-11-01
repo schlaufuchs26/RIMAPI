@@ -78,6 +78,36 @@ namespace RIMAPI.Tests
             Assert.False(PriorityTargetRules.NamesRemoval(null));
         }
 
+        // A blueprint that waits for its material is not built first: the game
+        // hauls the material to it, so the delivery is the build's first step
+        // and the guard has to let it through (fox #3777). HaulToCell is the
+        // same delivery to a plan standing on a cell; a plain haul is not.
+        [Fact]
+        public void The_delivery_to_a_planned_build_is_a_build_step()
+        {
+            Assert.True(PriorityTargetRules.IsBuildStepJob("HaulToContainer", "ConstructDeliverResourcesToBlueprints"));
+            Assert.True(PriorityTargetRules.IsBuildStepJob("HaulToCell", "DeliverResourcesToFrames"));
+            Assert.True(PriorityTargetRules.IsBuildStepJob("FinishFrame", "ConstructFinishFrames"));
+            Assert.False(PriorityTargetRules.IsBuildStepJob("HaulToContainer", "HaulGeneral"));
+            Assert.False(PriorityTargetRules.IsBuildStepJob("HaulGeneral", "ConstructDeliverResourcesToBlueprints"));
+            Assert.False(PriorityTargetRules.IsBuildStepJob("BuildRoof", "ConstructDeliverResourcesToBlueprints"));
+            Assert.False(PriorityTargetRules.IsBuildStepJob("", ""));
+            Assert.False(PriorityTargetRules.IsBuildStepJob(null, null));
+        }
+
+        // The four givers that carry material to a plan are named after the job
+        // they do, so the name is what tells a delivery apart from a haul that
+        // happens to end in a container on the same cell (fox #3777).
+        [Fact]
+        public void The_deliver_givers_are_recognised_by_their_defname()
+        {
+            Assert.True(PriorityTargetRules.IsDeliverResourcesGiver("ConstructDeliverResourcesToBlueprints"));
+            Assert.True(PriorityTargetRules.IsDeliverResourcesGiver("DeliverResourcesToFrames"));
+            Assert.False(PriorityTargetRules.IsDeliverResourcesGiver("HaulGeneral"));
+            Assert.False(PriorityTargetRules.IsDeliverResourcesGiver("ConstructFinishFrames"));
+            Assert.False(PriorityTargetRules.IsDeliverResourcesGiver(""));
+        }
+
         // The way-clearing deconstruct is the game's own initiative job; an
         // unnamed order must never take it, because its giver answers for any
         // building once the call is forced (fox #3706).

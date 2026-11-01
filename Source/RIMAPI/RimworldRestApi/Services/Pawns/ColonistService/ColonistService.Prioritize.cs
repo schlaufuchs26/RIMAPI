@@ -105,6 +105,7 @@ namespace RIMAPI.Services
                 List<string> offered = new List<string>();
                 Job chosen = null;
                 WorkGiver chosenGiver = null;
+                Thing chosenPlanned = null;
                 string removalRefusal = null;
                 foreach (JobTarget candidate in JobTargets(map, thing, cell))
                 {
@@ -141,15 +142,22 @@ namespace RIMAPI.Services
                         // A blueprint or frame is what the build jobs are for;
                         // a caller who named no job there gets that build, not
                         // the roof above the cell and not the deconstruct of
-                        // the player's own plan (tickets #3708, #3706).
+                        // the player's own plan (tickets #3708, #3706). The
+                        // delivery that has to come first counts as the build:
+                        // a blueprint with no material on it is hauled to
+                        // before it is finished, and refusing that left the
+                        // call with "no work giver that builds any job" while
+                        // the game's own first step sat in the offered list
+                        // (ticket #3777).
                         if (candidate.Planned != null
                             && string.IsNullOrEmpty(jobName)
-                            && !PriorityTargetRules.IsConstructJob(job.def.defName))
+                            && !PriorityTargetRules.IsBuildStepJob(job.def.defName, giver.def.defName))
                         {
                             continue;
                         }
                         chosen = job;
                         chosenGiver = giver;
+                        chosenPlanned = candidate.Planned;
                         break;
                     }
                     if (chosen != null) break;
@@ -174,6 +182,16 @@ namespace RIMAPI.Services
                     ?? chosenGiver.def.workType?.labelShort
                     ?? string.Empty;
                 result.Queued = true;
+                // A delivery on a planned build is the step before the build,
+                // so the answer says which of the two it queued instead of
+                // leaving the caller to read HaulToContainer as the whole job
+                // (ticket #3777).
+                if (chosenPlanned != null && PriorityTargetRules.IsDeliverResourcesJob(chosen.def.defName))
+                {
+                    string label = chosenPlanned.def != null ? chosenPlanned.def.label : "planned build";
+                    result.Note = $"The {label} still waits for its material, so this is the delivery "
+                        + "the game takes first; the build follows once it is on it.";
+                }
                 result.X = pawn.Position.x;
                 result.Z = pawn.Position.z;
                 return ApiResult.Ok(result);

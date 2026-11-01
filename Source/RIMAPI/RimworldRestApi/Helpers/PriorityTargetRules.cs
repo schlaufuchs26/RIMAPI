@@ -58,6 +58,48 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// IsDeliverResourcesGiver reports whether a work giver carries material
+        /// to a planned build rather than building it. The game has four of
+        /// them: ConstructDeliverResourcesToBlueprints and
+        /// ...ToFrames under Construction, and DeliverResourcesToBlueprints and
+        /// ...ToFrames under Hauling, all named after the delivery they do
+        /// (fox #3777).
+        /// </summary>
+        public static bool IsDeliverResourcesGiver(string giverDefName)
+        {
+            return !string.IsNullOrEmpty(giverDefName)
+                && giverDefName.IndexOf("DeliverResources", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// IsDeliverResourcesJob reports whether a job hands material to a
+        /// planned build: HaulToContainer puts the stack on the blueprint or
+        /// frame, HaulToCell puts it on the cell the plan stands on. A
+        /// blueprint that waits for its material is never built first, so this
+        /// job is the build's first step (fox #3777).
+        /// </summary>
+        public static bool IsDeliverResourcesJob(string jobDefName)
+        {
+            return string.Equals(jobDefName, "HaulToContainer", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(jobDefName, "HaulToCell", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// IsBuildStepJob reports whether a job on a planned build is the build
+        /// or the delivery that has to come first. The guard used to accept only
+        /// the two build job defs, so a blueprint with no material on it was
+        /// refused with "no work giver that builds any job" while the game's own
+        /// first step, the delivery haul, sat in the offered list (fox #3777).
+        /// The giver decides the delivery: a haul into some container that
+        /// happens to stand on the same cell is not this build's step.
+        /// </summary>
+        public static bool IsBuildStepJob(string jobDefName, string giverDefName)
+        {
+            return IsConstructJob(jobDefName)
+                || (IsDeliverResourcesJob(jobDefName) && IsDeliverResourcesGiver(giverDefName));
+        }
+
+        /// <summary>
         /// IsWayClearingJob reports whether a job is the game's own way-clearing
         /// deconstruct: the one a colonist does on his own when a building
         /// stands where a blueprint is planned. Its giver answers for any

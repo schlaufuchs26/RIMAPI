@@ -20,5 +20,9 @@ namespace RIMAPI.Models
         public int Z { get; set; }
         public List<string> Offered { get; set; }
         public string Refusal { get; set; }
+        // Note says which step of the work the job is when the answer would
+        // otherwise mislead: a delivery to a planned build is the step before
+        // the build, not the build itself (fox #3777).
+        public string Note { get; set; }
     }
 }
