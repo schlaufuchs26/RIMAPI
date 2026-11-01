@@ -112,14 +112,16 @@ namespace RIMAPI.Services
                     // A deconstruct on it takes the plan away, and no other job
                     // is what a prioritize call on a planned build means, so a
                     // named removal is refused instead of queued (fox #3706).
-                    if (IsPlannedBuild(candidate.Thing) && PriorityTargetRules.NamesRemoval(jobName))
+                    // A cell counts through the planned build standing on it
+                    // (fox #3708).
+                    if (candidate.Planned != null && PriorityTargetRules.NamesRemoval(jobName))
                     {
-                        removalRefusal = removalRefusal ?? RemovalRefusal(candidate.Thing);
+                        removalRefusal = removalRefusal ?? RemovalRefusal(candidate.Planned);
                         continue;
                     }
                     foreach (WorkGiver giver in OrderableGivers(pawn, workType))
                     {
-                        Job job = OrderedJob(giver, pawn, candidate.Thing, candidate.Cell);
+                        Job job = OrderedJob(giver, pawn, candidate);
                         if (job == null || job.def == null) continue;
                         offered.Add(job.def.defName);
                         if (!string.IsNullOrEmpty(jobName) && !PriorityJobRules.Matches(jobName, job.def.defName))
@@ -130,7 +132,7 @@ namespace RIMAPI.Services
                         // a caller who named no job there gets that build, not
                         // the roof above the cell and not the deconstruct of
                         // the player's own plan (tickets #3708, #3706).
-                        if (IsPlannedBuild(candidate.Thing)
+                        if (candidate.Planned != null
                             && string.IsNullOrEmpty(jobName)
                             && !PriorityTargetRules.IsConstructJob(job.def.defName))
                         {
@@ -191,19 +193,34 @@ namespace RIMAPI.Services
         }
 
         // OrderedJob asks one work giver for the job it would give this pawn on
-        // that thing or cell. Both job entry points live on the scanner base
-        // class, so a giver that is not a scanner offers nothing here, the same
-        // way it offers no float menu entry.
-        private static Job OrderedJob(WorkGiver giver, Pawn pawn, Thing thing, IntVec3 cell)
+        // one target. Both job entry points live on the scanner base class, so
+        // a giver that is not a scanner offers nothing here, the same way it
+        // offers no float menu entry.
+        //
+        // A giver that throws is skipped: the menu only ever hands a giver a
+        // thing from its own scan, and a cell target reaches every thing
+        // standing there, so a scanner that casts the thing without checking
+        // fails on something it would never have been asked about. The log line
+        // names the giver, so a real bug stays visible.
+        private static Job OrderedJob(WorkGiver giver, Pawn pawn, JobTarget target)
         {
             WorkGiver_Scanner scanner = giver as WorkGiver_Scanner;
             if (scanner == null)
             {
                 return null;
             }
-            return thing != null
-                ? scanner.JobOnThing(pawn, thing, true)
-                : scanner.JobOnCell(pawn, cell, true);
+            try
+            {
+                return target.Thing != null
+                    ? scanner.JobOnThing(pawn, target.Thing, true)
+                    : scanner.JobOnCell(pawn, target.Cell, true);
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error(
+                    $"prioritize: {giver.def.defName} threw on {target.Describe()}: {ex.Message}");
+                return null;
+            }
         }
 
         // JobTarget is one thing or one cell the order is tried against. A
@@ -214,6 +231,18 @@ namespace RIMAPI.Services
         {
             public Thing Thing;
             public IntVec3 Cell;
+            // Planned is the blueprint or frame this target stands for: the
+            // thing itself, or the planned build standing on the cell. The
+            // build is what a caller means by such a target (tickets #3708,
+            // #3706).
+            public Thing Planned;
+
+            public string Describe()
+            {
+                return Thing != null
+                    ? $"thing {Thing.thingIDNumber} ({Thing.LabelShort})"
+                    : $"cell {Cell.x},{Cell.z}";
+            }
         }
 
         // JobTargets is the order the game's own menu would offer at the target:
@@ -226,17 +255,23 @@ namespace RIMAPI.Services
             List<JobTarget> targets = new List<JobTarget>();
             if (thing != null)
             {
-                targets.Add(new JobTarget { Thing = thing });
+                Thing planned = IsPlannedBuild(thing) ? thing : null;
+                targets.Add(new JobTarget { Thing = thing, Planned = planned });
                 return targets;
             }
             List<Thing> standing = map.thingGrid.ThingsListAt(cell)
                 .Where(t => t != null && !(t is Pawn))
                 .ToList();
+            Thing plannedHere = standing.FirstOrDefault(IsPlannedBuild);
             foreach (Thing onCell in PriorityTargetRules.ConstructiblesFirst(standing, IsPlannedBuild))
             {
-                targets.Add(new JobTarget { Thing = onCell });
+                targets.Add(new JobTarget
+                {
+                    Thing = onCell,
+                    Planned = IsPlannedBuild(onCell) ? onCell : plannedHere,
+                });
             }
-            targets.Add(new JobTarget { Cell = cell });
+            targets.Add(new JobTarget { Cell = cell, Planned = plannedHere });
             return targets;
         }
 
