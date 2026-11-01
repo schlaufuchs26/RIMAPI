@@ -54,6 +54,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationEntry.cs" Link="Linked\DesignationEntry.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\DesignationDto.cs" Link="Linked\DesignationDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\BlueprintEntryDto.cs" Link="Linked\BlueprintEntryDto.cs" />
+    <!-- The trade DTOs are plain C# (Newtonsoft attributes only), so the
+         beacon keys the tool decodes are testable here (fox ticket #3632). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\TradeDtos.cs" Link="Linked\TradeDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TradeHoldingText.cs" Link="Linked\TradeHoldingText.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FirefightPlan.cs" Link="Linked\FirefightPlan.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\JobLogState.cs" Link="Linked\JobLogState.cs" />

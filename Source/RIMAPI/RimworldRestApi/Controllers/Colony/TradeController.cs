@@ -44,6 +44,18 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // The map's orbital trade beacons, whether or not a trade ship is in
+        // orbit (fox ticket #3632). A beacon is a map fact: a colony reads it
+        // to build, power and stock one before a trader arrives.
+        [Get("/api/v1/traders/beacons")]
+        [EndpointMetadata("Orbital trade beacons on the map with cell and power")]
+        public async Task GetTradeBeacons(HttpListenerContext context)
+        {
+            int mapId = RequestParser.GetMapId(context);
+            var result = _tradeService.GetTradeBeacons(mapId);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/traders/trade")]
         [EndpointMetadata("Buy or sell one def through the game's own trade deal")]
         public async Task Trade(HttpListenerContext context)

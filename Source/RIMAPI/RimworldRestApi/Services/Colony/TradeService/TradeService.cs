@@ -196,6 +196,28 @@ namespace RIMAPI.Services
             }
         }
 
+        // GetTradeBeacons names the map's orbital trade beacons whether or not
+        // a trade ship is in orbit (fox ticket #3632). A beacon is a map fact,
+        // so a colony can find it, build it and see its power before a trader
+        // arrives; the per-trader list above only carried it for a ship.
+        public ApiResult<List<TradeBeaconDto>> GetTradeBeacons(int mapId)
+        {
+            try
+            {
+                Map map = MapHelper.GetMapByID(mapId);
+                if (map == null)
+                {
+                    return ApiResult<List<TradeBeaconDto>>.Fail($"Map {mapId} not found.");
+                }
+                return ApiResult<List<TradeBeaconDto>>.Ok(BeaconsOf(map));
+            }
+            catch (Exception ex)
+            {
+                LogApi.Error($"Error reading trade beacons on map {mapId}: {ex}");
+                return ApiResult<List<TradeBeaconDto>>.Fail(ex.Message);
+            }
+        }
+
         // Trade buys or sells one def through the game's own TradeDeal, the
         // object the trade window fills: the deal holds a Tradeable per def
         // (the trader's stock and the colony's goods), the currency tradeable

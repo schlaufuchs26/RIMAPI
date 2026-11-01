@@ -386,6 +386,23 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryTradeBeaconFieldKeepsTheKeyTheToolReads()
+        {
+            // The beacon read is a map fact the fox's `trade` prints with or
+            // without a ship in orbit (fox ticket #3632), so the three keys are
+            // what its client decodes. A rename here has to be a deliberate
+            // edit of this list.
+            var expected = new[] { "powered", "x", "z" };
+
+            JObject json = Json(new TradeBeaconDto { X = 146, Z = 121, Powered = true });
+
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.True((bool)json["powered"]);
+            Assert.Equal(146, (int)json["x"]);
+            Assert.Equal(121, (int)json["z"]);
+        }
+
+        [Fact]
         public void NoLinkedDtoFieldResolvesToAKeyWithACapitalLetter()
         {
             // A guard for the files linked in the csproj: whatever a future DTO
