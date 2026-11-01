@@ -1,5 +1,7 @@
 using RimWorld;
 using Verse;
+using Verse.AI;
+using Verse.AI.Group;
 
 namespace RIMAPI.Helpers
 {
@@ -13,14 +15,20 @@ namespace RIMAPI.Helpers
     /// The rule is the combat read's: an enemy faction, or an animal the game
     /// has turned manhunter. Mechanoids and hostile insects are covered by the
     /// faction test, which the humanlike filter also used to drop.
+    ///
+    /// Since fox #3630 it is not only the side that counts but what the pawn is
+    /// doing: a wild man has no faction, so DiLeo (id 54348) beating Veniamin
+    /// from 100% to 40% health read as "0 hostiles" and the wait ran its full
+    /// hour. An attack job on a colony target, an aggro mental state and an
+    /// assaulting lord make a pawn a threat as well. The decision itself lives
+    /// in HostilityRules, which is free of game types and unit-tested.
     /// </summary>
     public static class Hostility
     {
         public static bool IsHostileToColony(Pawn pawn)
         {
             if (pawn == null) return false;
-            if (IsManhunter(pawn)) return true;
-            return pawn.Faction != null && pawn.Faction.HostileTo(Faction.OfPlayer);
+            return HostilityRules.ThreatensColony(StateOf(pawn));
         }
 
         public static bool IsManhunter(Pawn pawn)
@@ -28,6 +36,51 @@ namespace RIMAPI.Helpers
             if (pawn == null || pawn.RaceProps == null || !pawn.RaceProps.Animal) return false;
             MentalStateDef state = pawn.MentalStateDef;
             return state == MentalStateDefOf.Manhunter || state == MentalStateDefOf.ManhunterPermanent;
+        }
+
+        /// <summary>
+        /// The pawn as the rule reads it: its side, its mental state, the job it
+        /// is in and whether that job acts on the colony.
+        /// </summary>
+        public static HostilityRules.PawnState StateOf(Pawn pawn)
+        {
+            HostilityRules.PawnState state = new HostilityRules.PawnState
+            {
+                Colonist = pawn.IsColonist,
+                Animal = pawn.RaceProps != null && pawn.RaceProps.Animal,
+                EnemyFaction = pawn.Faction != null && pawn.Faction.HostileTo(Faction.OfPlayer),
+                MentalState = pawn.MentalStateDef != null ? pawn.MentalStateDef.defName : "",
+                JobDef = pawn.CurJobDef != null ? pawn.CurJobDef.defName : "",
+                LordJob = LordJobNameOf(pawn),
+            };
+            state.JobTargetsColony = JobTargetsColony(pawn.CurJob);
+            return state;
+        }
+
+        /// <summary>
+        /// True when one of the job's targets belongs to the colony: the pawn
+        /// being beaten (Veniamin), a colony animal or a colony building. The
+        /// game puts the victim in targetA, but a job may carry the second half
+        /// in targetB, so both are read.
+        /// </summary>
+        private static bool JobTargetsColony(Job job)
+        {
+            if (job == null) return false;
+            return IsColonyThing(job.targetA.Thing) || IsColonyThing(job.targetB.Thing);
+        }
+
+        private static bool IsColonyThing(Thing thing)
+        {
+            if (thing == null) return false;
+            if (thing.Faction == Faction.OfPlayer) return true;
+            Pawn pawn = thing as Pawn;
+            return pawn != null && pawn.IsColonist;
+        }
+
+        private static string LordJobNameOf(Pawn pawn)
+        {
+            Lord lord = pawn.GetLord();
+            return lord != null && lord.LordJob != null ? lord.LordJob.GetType().Name : "";
         }
     }
 }
