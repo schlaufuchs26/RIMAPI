@@ -16,7 +16,11 @@ namespace RIMAPI.Services
     {
         public ApiResult<MapFarmSummaryDto> GenerateFarmSummary(int mapId)
         {
-            var map = MapHelper.GetMapByID(mapId);
+            if (!TryMap(mapId, out Map map, out string error))
+            {
+                return ApiResult<MapFarmSummaryDto>.Fail(error);
+            }
+
             var result = FarmHelper.GenerateFarmSummary(map);
             return ApiResult<MapFarmSummaryDto>.Ok(result);
         }
