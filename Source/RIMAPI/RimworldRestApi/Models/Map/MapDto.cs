@@ -36,6 +36,13 @@ namespace RIMAPI.Models
         // no net reaches is in none of them; this row list is where an
         // unconnected stove or cooler becomes visible.
         public List<PoweredBuildingDto> Buildings = new List<PoweredBuildingDto>();
+
+        // LastNetTick is the game tick of the grid's last update, -1 while it
+        // has not updated since the map loaded (fox ticket #3781). Every figure
+        // above describes that tick, so -1 says they measure nothing yet: a
+        // colony read straight from a save reported 0 W produced of 1700 W
+        // installed, and 1700 W one `wait` later.
+        public int LastNetTick { get; set; } = -1;
     }
 
     public class PoweredBuildingDto

@@ -212,6 +212,11 @@ namespace RIMAPI.Helpers
                 // ticket #3762).
                 powerInfo.Buildings = PowerGrid.Buildings(map);
 
+                // Every figure above is the last tick's, so the answer carries
+                // the tick it came from: -1 while the colony has not ticked
+                // since it loaded (fox ticket #3781).
+                powerInfo.LastNetTick = PowerTick.Last(map.uniqueID);
+
                 return powerInfo;
             }
             catch (Exception ex)
