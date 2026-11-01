@@ -4,9 +4,9 @@ using Xunit;
 
 namespace RIMAPI.Tests
 {
-    // The rules behind `cooler` (fox ticket #3744): which targets the game's
-    // own temperature scale holds, whether a setting took, and which of the
-    // rooms beside a wall-mounted cooler is the one it chills.
+    // The rules behind `cooler` (fox tickets #3744, #3834): which targets the
+    // game's own temperature scale holds, whether a setting took, and which
+    // side of a wall-mounted cooler is the one it chills.
     public class TemperatureTargetRulesTests
     {
         [Theory]
@@ -52,36 +52,56 @@ namespace RIMAPI.Tests
             Assert.False(TemperatureTargetRules.Took(-5f, 21f));
         }
 
-        [Fact]
-        public void TheColdestRoomIsTheOneTheCoolerChills()
+        [Theory]
+        // Rot4.AsInt: 0 north, 1 east, 2 south, 3 west. The cold cell is
+        // IntVec3.South rotated by the rotation, the vent cell IntVec3.North
+        // rotated by it, exactly as Building_Cooler.TickRare computes them.
+        [InlineData(0, 100, 100, 100, 99, 100, 101)]
+        [InlineData(1, 100, 100, 99, 100, 101, 100)]
+        [InlineData(2, 100, 100, 100, 101, 100, 99)]
+        [InlineData(3, 100, 100, 101, 100, 99, 100)]
+        public void TheCoolerChillsOneSideAndVentsIntoTheOther(
+            int rotation,
+            int x,
+            int z,
+            int coldX,
+            int coldZ,
+            int ventX,
+            int ventZ
+        )
         {
-            var rooms = new List<TemperatureTargetRules.RoomReading>
-            {
-                new TemperatureTargetRules.RoomReading { Id = 12, Label = "freezer", Temperature = 16.4f },
-                new TemperatureTargetRules.RoomReading { Id = 13, Label = "corridor", Temperature = 22f },
-            };
-            Assert.Equal(0, TemperatureTargetRules.ColdestIndex(rooms));
+            // The measured case of fox ticket #3834: a cooler built into the
+            // east wall of a freezer, cold side west, reads rotation east. A
+            // read that picked the colder neighbour named the outdoors, so the
+            // sides have to come from the rotation.
+            TemperatureTargetRules.CoolerCells cells = TemperatureTargetRules.CoolerSideCells(
+                x,
+                z,
+                rotation
+            );
+            Assert.Equal(coldX, cells.ColdX);
+            Assert.Equal(coldZ, cells.ColdZ);
+            Assert.Equal(ventX, cells.VentX);
+            Assert.Equal(ventZ, cells.VentZ);
         }
 
         [Fact]
-        public void TheColdestRoomIsTheSecondWhenTheFirstIsWarmer()
+        public void TheTwoSidesAreAlwaysOppositeEachOther()
         {
-            // The exhaust side may come first in the list; the order the cells
-            // are walked must not decide the answer.
-            var rooms = new List<TemperatureTargetRules.RoomReading>
+            for (int rotation = 0; rotation < 4; rotation++)
             {
-                new TemperatureTargetRules.RoomReading { Id = 13, Label = "corridor", Temperature = 22f },
-                new TemperatureTargetRules.RoomReading { Id = 12, Label = "freezer", Temperature = -4f },
-            };
-            Assert.Equal(1, TemperatureTargetRules.ColdestIndex(rooms));
-        }
-
-        [Fact]
-        public void NoRoomsMeansNoColdestRoom()
-        {
-            // A cooler built into an outer wall has nothing on one side.
-            Assert.Equal(-1, TemperatureTargetRules.ColdestIndex(null));
-            Assert.Equal(-1, TemperatureTargetRules.ColdestIndex(new List<TemperatureTargetRules.RoomReading>()));
+                TemperatureTargetRules.CoolerCells cells = TemperatureTargetRules.CoolerSideCells(
+                    50,
+                    60,
+                    rotation
+                );
+                Assert.Equal(50, (cells.ColdX + cells.VentX) / 2);
+                Assert.Equal(60, (cells.ColdZ + cells.VentZ) / 2);
+                Assert.True(
+                    cells.ColdX != cells.VentX || cells.ColdZ != cells.VentZ,
+                    "rotation " + rotation + " puts both sides on one cell"
+                );
+            }
         }
     }
 }

@@ -6,18 +6,31 @@ using Verse;
 namespace RIMAPI.Helpers
 {
     /// <summary>
-    /// Reads a building's thermostat and the rooms beside it (fox ticket
-    /// #3744). A cooler fits into a wall with a room on each side: it chills
-    /// one and dumps the heat into the other, so both temperatures matter and
-    /// the colder one is the room a run has to watch. A heater stands inside
-    /// its own room and touches only that one.
+    /// Reads a building's thermostat and the spaces it works on (fox tickets
+    /// #3744, #3834). A cooler fits into a wall with a room on each side: it
+    /// chills one and dumps the heat into the other. Which one is which comes
+    /// from the machine's rotation, exactly as the game decides it
+    /// (Building_Cooler.TickRare), never from which side happens to be colder:
+    /// a cooler whose cold side is a wall chills nothing, and a read that
+    /// guessed from temperature named the outdoors instead and made a working
+    /// freezer look broken. A heater stands inside its own room and has one
+    /// side.
     /// </summary>
     public static class Thermostat
     {
+        /// <summary>The side name a cooler chills.</summary>
+        public const string ColdSide = "cold";
+
+        /// <summary>The side name a cooler dumps its heat into.</summary>
+        public const string VentSide = "vent";
+
+        /// <summary>The side name of a machine that works on its own room (a heater).</summary>
+        public const string OwnSide = "room";
+
         /// <summary>
-        /// Describe answers what the building is set to and what the rooms
-        /// around it read. The target is whatever the game holds, so a call
-        /// without a new target is a plain read of the machine's own tab.
+        /// Describe answers what the building is set to and what the sides read.
+        /// The target is whatever the game holds, so a call without a new
+        /// target is a plain read of the machine's own tab.
         /// </summary>
         public static TemperatureTargetDto Describe(Building building)
         {
@@ -29,7 +42,7 @@ namespace RIMAPI.Helpers
                 DefName = building.def?.defName,
                 HasThermostat = comp != null,
                 Position = new PositionDto { X = building.Position.x, Z = building.Position.z },
-                Rooms = RoomsBeside(building),
+                Sides = Sides(building),
             };
             if (comp != null)
             {
@@ -46,39 +59,63 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// The distinct rooms the building's own cell and its four cardinal
-        /// neighbours lie in, with the cell each was found from. A wall cell
-        /// belongs to no room, so a cooler's own cell contributes nothing and
-        /// its two sides do the work.
+        /// The spaces the machine works on. A cooler has two: the cell it chills
+        /// and the cell it vents into, both taken from its rotation. Any other
+        /// thermostat has one: its own cell's room. A side whose cell is a wall
+        /// carries no room, because the game moves no heat through it.
         /// </summary>
-        public static List<RoomTemperatureDto> RoomsBeside(Building building)
+        public static List<RoomSideDto> Sides(Building building)
         {
-            var rooms = new List<RoomTemperatureDto>();
-            if (!building.Spawned || building.Map == null) return rooms;
+            var sides = new List<RoomSideDto>();
+            if (!building.Spawned || building.Map == null) return sides;
 
             Map map = building.Map;
-            var seen = new HashSet<int>();
-            var cells = new List<IntVec3> { building.Position };
-            foreach (IntVec3 cell in GenAdj.CellsAdjacentCardinal(building))
+            if (building is Building_Cooler)
             {
-                cells.Add(cell);
-            }
-            foreach (IntVec3 cell in cells)
-            {
-                Room room = cell.GetRoom(map);
-                if (room == null || room.ID < 0 || !seen.Add(room.ID)) continue;
-                rooms.Add(
-                    new RoomTemperatureDto
-                    {
-                        Id = room.ID,
-                        Label = room.GetRoomRoleLabel(),
-                        Temperature = room.Temperature,
-                        Cells = room.CellCount,
-                        Position = new PositionDto { X = cell.x, Z = cell.z },
-                    }
+                TemperatureTargetRules.CoolerCells cells = TemperatureTargetRules.CoolerSideCells(
+                    building.Position.x,
+                    building.Position.z,
+                    building.Rotation.AsInt
                 );
+                sides.Add(Side(ColdSide, new IntVec3(cells.ColdX, 0, cells.ColdZ), map));
+                sides.Add(Side(VentSide, new IntVec3(cells.VentX, 0, cells.VentZ), map));
+                return sides;
             }
-            return rooms;
+            sides.Add(Side(OwnSide, building.Position, map));
+            return sides;
+        }
+
+        /// <summary>One side, read at its cell.</summary>
+        private static RoomSideDto Side(string name, IntVec3 cell, Map map)
+        {
+            var dto = new RoomSideDto
+            {
+                Side = name,
+                Cell = new PositionDto { X = cell.x, Z = cell.z },
+                Impassable = !cell.InBounds(map) || cell.Impassable(map),
+            };
+            if (!dto.Impassable) dto.Room = RoomAt(cell, map);
+            return dto;
+        }
+
+        /// <summary>
+        /// The room a cell lies in, or null for a cell no room covers. Outdoor
+        /// space is a room too, and it says so: the game leaves such a room at
+        /// the outdoor temperature, so a cooler cannot chill it.
+        /// </summary>
+        private static RoomTemperatureDto RoomAt(IntVec3 cell, Map map)
+        {
+            Room room = cell.GetRoom(map);
+            if (room == null) return null;
+            return new RoomTemperatureDto
+            {
+                Id = room.ID,
+                Label = room.GetRoomRoleLabel(),
+                Temperature = room.Temperature,
+                Cells = room.CellCount,
+                Position = new PositionDto { X = cell.x, Z = cell.z },
+                Outdoor = room.UsesOutdoorTemperature,
+            };
         }
     }
 }

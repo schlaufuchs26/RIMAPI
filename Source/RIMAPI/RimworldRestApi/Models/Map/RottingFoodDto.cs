@@ -30,12 +30,21 @@ namespace RIMAPI.Models
 
     /// <summary>
     /// One cooler or heater beside a room in the answer. A cooler fits into a
-    /// wall, so the same machine appears under both rooms it touches; the
-    /// warmer side is the one it dumps its heat into.
+    /// wall, so the same machine appears under both rooms it works on; Side
+    /// says which room it chills and which one it dumps its heat into.
     /// </summary>
     public class RoomThermostatDto
     {
         public int RoomId { get; set; }
+
+        /// <summary>
+        /// Which side of the machine this room is on: "cold" (it chills it),
+        /// "vent" (it dumps its heat into it) or "room" (a heater's own room).
+        /// A cooler that vents into a warm room heats it, so its target is not
+        /// the lever for that room (fox ticket #3834).
+        /// </summary>
+        public string Side { get; set; }
+
         public int BuildingId { get; set; }
         public string Label { get; set; }
         public string DefName { get; set; }

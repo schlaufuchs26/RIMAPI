@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace RIMAPI.Helpers
 {
     /// <summary>
@@ -57,31 +55,60 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// One room beside the building, as the answer reports it: the room the
-        /// machine chills (or warms) and the room it dumps its exhaust into.
+        /// The two cells a cooler works across: the one whose room it chills and
+        /// the one it dumps its heat into, in map coordinates.
         /// </summary>
-        public struct RoomReading
+        public struct CoolerCells
         {
-            public int Id;
-            public string Label;
-            public float Temperature;
+            public int ColdX;
+            public int ColdZ;
+            public int VentX;
+            public int VentZ;
         }
 
         /// <summary>
-        /// The index of the coldest room in the list, or -1 for no rooms. A
-        /// cooler sits in a wall with a room on each side; the one it chills is
-        /// the colder of the two, so this is the room a run has to watch. A
-        /// heater stands inside its own room, which is the only one it touches.
+        /// The cells a cooler chills and vents into, from its own cell and its
+        /// rotation (fox ticket #3834). The game's own rule, read from
+        /// Building_Cooler.TickRare: the cold cell is IntVec3.South rotated by
+        /// the building's rotation and the vent cell is IntVec3.North rotated
+        /// by it. A read that instead guessed from the two rooms' temperatures
+        /// named the outdoors whenever the machine's cold side was a wall, and
+        /// a working freezer then looked broken.
+        ///
+        /// Rotation is Rot4.AsInt: 0 north, 1 east, 2 south, 3 west.
         /// </summary>
-        public static int ColdestIndex(IList<RoomReading> rooms)
+        public static CoolerCells CoolerSideCells(int x, int z, int rotation)
         {
-            if (rooms == null || rooms.Count == 0) return -1;
-            int coldest = 0;
-            for (int i = 1; i < rooms.Count; i++)
+            var cells = new CoolerCells();
+            switch (rotation & 3)
             {
-                if (rooms[i].Temperature < rooms[coldest].Temperature) coldest = i;
+                case 1: // east: south rotated to west, north rotated to east
+                    cells.ColdX = x - 1;
+                    cells.ColdZ = z;
+                    cells.VentX = x + 1;
+                    cells.VentZ = z;
+                    break;
+                case 2: // south
+                    cells.ColdX = x;
+                    cells.ColdZ = z + 1;
+                    cells.VentX = x;
+                    cells.VentZ = z - 1;
+                    break;
+                case 3: // west
+                    cells.ColdX = x + 1;
+                    cells.ColdZ = z;
+                    cells.VentX = x - 1;
+                    cells.VentZ = z;
+                    break;
+                default: // north
+                    cells.ColdX = x;
+                    cells.ColdZ = z - 1;
+                    cells.VentX = x;
+                    cells.VentZ = z + 1;
+                    break;
             }
-            return coldest;
+            return cells;
         }
+
     }
 }

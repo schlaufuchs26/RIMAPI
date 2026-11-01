@@ -91,12 +91,14 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// The coolers and heaters that touch a warm room in the answer (fox
-        /// ticket #3745). The room read names a temperature and the rot read a
-        /// stack, but a warm room reads the same with or without a machine in
-        /// it: colony 15's cooler still stood at its default 21 C, so the room
-        /// never chilled below 21 and the meat would have spoiled beside a
-        /// machine that looked like the fix.
+        /// The coolers and heaters that work on a warm room in the answer (fox
+        /// tickets #3745, #3834). The room read names a temperature and the rot
+        /// read a stack, but a warm room reads the same with or without a
+        /// machine in it: colony 15's cooler still stood at its default 21 C, so
+        /// the room never chilled below 21 and the meat would have spoiled
+        /// beside a machine that looked like the fix. The side says which way
+        /// round the machine sits: a cooler that vents into the warm room heats
+        /// it and cannot be fixed by turning its target down.
         /// </summary>
         private static List<RoomThermostatDto> RoomThermostats(Map map, HashSet<int> roomIds)
         {
@@ -107,13 +109,14 @@ namespace RIMAPI.Helpers
                 CompTempControl comp = building.TryGetComp<CompTempControl>();
                 if (comp == null) continue;
                 CompPowerTrader power = building.TryGetComp<CompPowerTrader>();
-                foreach (RoomTemperatureDto room in Thermostat.RoomsBeside(building))
+                foreach (RoomSideDto side in Thermostat.Sides(building))
                 {
-                    if (!roomIds.Contains(room.Id)) continue;
+                    if (side.Room == null || !roomIds.Contains(side.Room.Id)) continue;
                     found.Add(
                         new RoomThermostatDto
                         {
-                            RoomId = room.Id,
+                            RoomId = side.Room.Id,
+                            Side = side.Side,
                             BuildingId = building.thingIDNumber,
                             Label = building.Label,
                             DefName = building.def?.defName,
