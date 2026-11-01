@@ -64,6 +64,12 @@ namespace RIMAPI.Models
         // empty when it would not. Filled only for a bed set to prisoners: a
         // colonist bed is not meant to be one.
         public string NoCellReason { get; set; }
+
+        // NoCellCause is the same refusal as a label ("map edge", "too large",
+        // "not enclosed", "no room"), for the one-line marker next to a bed id
+        // in the things list (fox ticket #3750). The sentence is 80 characters
+        // and makes that list unreadable.
+        public string NoCellCause { get; set; }
     }
 
     public class PowerGeneratorInfoDto : BuildingDto

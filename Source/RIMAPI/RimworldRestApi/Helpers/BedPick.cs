@@ -182,15 +182,16 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
-        /// Why the game would refuse this bed's room as a prison cell, or ""
+        /// Why the game would refuse this bed's room as a prison cell, or null
         /// when it would not (fox ticket #3743). The cell half of the arrest
         /// refusal, shared with the bed order's own answer so the two never
-        /// disagree.
+        /// disagree. The label travels with the sentence (fox ticket #3750):
+        /// the bed list prints the label, the bed answer the sentence.
         /// </summary>
-        public static string CellRefusal(Map map, Building_Bed bed)
+        public static CellRefusal CellRefusalOf(Map map, Building_Bed bed)
         {
             Room room = BedRoom(map, bed);
-            string noCell = BedSafety.NotPrisonCellReason(
+            CellRefusal noCell = BedSafety.NotPrisonCell(
                 room != null,
                 room != null && room.TouchesMapEdge,
                 room != null && room.IsHuge,
@@ -201,9 +202,18 @@ namespace RIMAPI.Helpers
                 // A proper room whose flag the game has not re-read since the
                 // bed changed; the arrest route refreshes these before its
                 // lookup, so only a foreign change reaches this line.
-                return "its room has not been re-read as a prison cell";
+                return new CellRefusal("not re-read", "its room has not been re-read as a prison cell");
             }
-            return "";
+            return null;
+        }
+
+        /// <summary>
+        /// The same refusal as a sentence, "" when the room would do: the
+        /// refusal line of an arrest reads it mid-answer.
+        /// </summary>
+        public static string CellRefusal(Map map, Building_Bed bed)
+        {
+            return CellRefusalOf(map, bed)?.Reason ?? "";
         }
 
         /// <summary>

@@ -355,9 +355,10 @@ namespace RIMAPI.Tests
                 new[] { "cell", "for_prisoners", "for_slaves", "medical", "owner" },
                 Json(new BedDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
             // The cell block is what the bed order's answer reads to say
-            // whether the room is a prison cell at all (fox ticket #3743).
+            // whether the room is a prison cell at all (fox ticket #3743),
+            // and the cause is the label its list marker prints (#3750).
             Assert.Equal(
-                new[] { "cells_count", "is_prison_cell", "no_cell_reason", "role_label" },
+                new[] { "cells_count", "is_prison_cell", "no_cell_cause", "no_cell_reason", "role_label" },
                 Json(new BedCellDto()).Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
         }
 

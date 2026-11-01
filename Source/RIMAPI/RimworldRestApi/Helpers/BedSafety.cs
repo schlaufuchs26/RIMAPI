@@ -69,14 +69,50 @@ namespace RIMAPI.Helpers
         /// answers "no prisoner bed" although the colony has one. The caller
         /// passes the game's own room answers, so this stays free of game
         /// types and a test can state the rule.
+        ///
+        /// The label rides along with the sentence (fox ticket #3750): the
+        /// sentence is written for prose and about 80 characters long, which
+        /// is too much for a marker next to a bed id in a list.
+        /// </summary>
+        public static CellRefusal NotPrisonCell(bool hasRoom, bool touchesMapEdge, bool huge, bool enclosed)
+        {
+            if (!hasRoom) return new CellRefusal("no room", "it stands in no room");
+            if (touchesMapEdge)
+                return new CellRefusal("map edge",
+                    "its room touches the map edge, which the game never counts as a prison cell");
+            if (huge) return new CellRefusal("too large", "its room is too large to be a prison cell");
+            if (!enclosed) return new CellRefusal("not enclosed", "its room is not enclosed");
+            return null;
+        }
+
+        /// <summary>
+        /// The sentence alone, for a caller that has no room for the label.
         /// </summary>
         public static string NotPrisonCellReason(bool hasRoom, bool touchesMapEdge, bool huge, bool enclosed)
         {
-            if (!hasRoom) return "it stands in no room";
-            if (touchesMapEdge) return "its room touches the map edge, which the game never counts as a prison cell";
-            if (huge) return "its room is too large to be a prison cell";
-            if (!enclosed) return "its room is not enclosed";
-            return null;
+            return NotPrisonCell(hasRoom, touchesMapEdge, huge, enclosed)?.Reason;
         }
+    }
+
+    /// <summary>
+    /// A room the game refuses as a prison cell, as the short label and the
+    /// sentence that explains it (fox ticket #3750). The two travel together,
+    /// so the compact marker in a list and the prose answer never disagree
+    /// about the cause.
+    /// </summary>
+    public sealed class CellRefusal
+    {
+        public CellRefusal(string cause, string reason)
+        {
+            Cause = cause;
+            Reason = reason;
+        }
+
+        /// <summary>The label a marker prints, e.g. "map edge".</summary>
+        public string Cause { get; }
+
+        /// <summary>The sentence an answer prints, e.g. "its room touches the
+        /// map edge, which the game never counts as a prison cell".</summary>
+        public string Reason { get; }
     }
 }

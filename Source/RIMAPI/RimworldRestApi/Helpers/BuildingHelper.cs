@@ -53,12 +53,14 @@ namespace RIMAPI.Helpers
             Map map = bed.Map;
             if (map == null) return null;
             Room room = BedPick.BedRoom(map, bed);
+            CellRefusal refusal = bed.ForPrisoners ? BedPick.CellRefusalOf(map, bed) : null;
             return new BedCellDto
             {
                 IsPrisonCell = room != null && room.IsPrisonCell,
                 RoleLabel = BedPick.RoomLabel(room),
                 CellsCount = room != null ? room.CellCount : 0,
-                NoCellReason = bed.ForPrisoners ? BedPick.CellRefusal(map, bed) : "",
+                NoCellReason = refusal?.Reason ?? "",
+                NoCellCause = refusal?.Cause ?? "",
             };
         }
 

@@ -83,5 +83,17 @@ namespace RIMAPI.Tests
             Assert.Equal("its room is not enclosed",
                 BedSafety.NotPrisonCellReason(true, false, false, false));
         }
+
+        // The bed list prints the label instead of the sentence (fox ticket
+        // #3750): 80 characters per refused bed made the list unreadable.
+        [Fact]
+        public void Every_refusal_carries_a_short_label_beside_its_sentence()
+        {
+            Assert.Null(BedSafety.NotPrisonCell(true, false, false, true));
+            Assert.Equal("no room", BedSafety.NotPrisonCell(false, false, false, false).Cause);
+            Assert.Equal("map edge", BedSafety.NotPrisonCell(true, true, false, true).Cause);
+            Assert.Equal("too large", BedSafety.NotPrisonCell(true, false, true, true).Cause);
+            Assert.Equal("not enclosed", BedSafety.NotPrisonCell(true, false, false, false).Cause);
+        }
     }
 }
