@@ -994,6 +994,10 @@ namespace RIMAPI.Helpers
                         },
                         Type = building.GetType().Name,
                         Bed = BuildingHelper.BedDtoOf(building),
+                        // A grave's assignment and contents, the same block
+                        // BuildingHelper.BuildingToDto fills (fox ticket
+                        // #3784): this list is the one `things` reads.
+                        Grave = BuildingHelper.GraveDtoOf(building),
                     }
                 );
             }
