@@ -263,6 +263,19 @@ namespace RIMAPI.Tests
             Assert.Contains("designations 0 -> 4", moved);
         }
 
+        [Fact]
+        public void AQuestOfferSendsItsLetterUnlessTheScriptOrTheQuestSaysNo()
+        {
+            // The game's own rule (IncidentWorker_GiveQuest): a quest that was
+            // just made available gets an offer letter only when it is not
+            // hidden and its script wants one. A check reads that letter, so a
+            // dev offer that stays silent leaves nothing to read (ticket #3951).
+            Assert.True(DevActionRules.SendsAvailableLetter(hidden: false, scriptWantsLetter: true));
+            Assert.False(DevActionRules.SendsAvailableLetter(hidden: true, scriptWantsLetter: true));
+            Assert.False(DevActionRules.SendsAvailableLetter(hidden: false, scriptWantsLetter: false));
+            Assert.False(DevActionRules.SendsAvailableLetter(hidden: true, scriptWantsLetter: false));
+        }
+
         /// <summary>A stamp with the counters a call moves, and stable digests.</summary>
         private static DevActionRules.ColonyStamp Stamp(int pawns, int things, int selected)
         {

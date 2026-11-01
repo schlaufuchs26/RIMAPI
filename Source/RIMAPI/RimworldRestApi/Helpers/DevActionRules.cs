@@ -328,6 +328,19 @@ namespace RIMAPI.Helpers
             return node.IndexOf(want, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        /// <summary>
+        /// Whether the offer letter goes out for a quest the `quest` op just made
+        /// available (ticket #3951). The game's own rule, copied from
+        /// IncidentWorker_GiveQuest: GenerateQuestAndMakeAvailable only adds the
+        /// quest, so without this call a check reads a quest with no letter to
+        /// open. A hidden quest and a script that wants no letter stay silent,
+        /// as they do in the game.
+        /// </summary>
+        public static bool SendsAvailableLetter(bool hidden, bool scriptWantsLetter)
+        {
+            return !hidden && scriptWantsLetter;
+        }
+
         // ---- did the entry change anything (ticket #3922) ------------------
 
         /// <summary>

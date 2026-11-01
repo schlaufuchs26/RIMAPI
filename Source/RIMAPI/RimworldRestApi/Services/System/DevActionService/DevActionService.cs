@@ -663,6 +663,12 @@ namespace RIMAPI.Services
                 StorytellerUtility.DefaultThreatPointsNow(map)
             );
             bool made = quest != null;
+            // GenerateQuestAndMakeAvailable only adds the quest; the offer
+            // letter is the caller's job (ticket #3951), and a check that wants
+            // to open it has nothing to read without this.
+            bool letter =
+                made && DevActionRules.SendsAvailableLetter(quest.hidden, script.sendAvailableLetter);
+            if (letter) QuestUtility.SendLetterQuestAvailable(quest);
             DevActionResultDto result = new DevActionResultDto
             {
                 Op = request.Op,
@@ -675,6 +681,11 @@ namespace RIMAPI.Services
                     : "the game made no quest from ")
                 + script.defName
                 + (made ? " (quest id " + quest.id + ")" : "")
+                + (made
+                    ? letter
+                        ? " with its offer letter"
+                        : " but sent no offer letter (the quest is hidden or the script wants none)"
+                    : "")
                 + "; "
                 + result.Incident.Letters
                 + " letters standing, "
