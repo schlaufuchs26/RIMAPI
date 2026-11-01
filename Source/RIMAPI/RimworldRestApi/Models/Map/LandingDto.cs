@@ -16,7 +16,7 @@ namespace RIMAPI.Models
         public string Biome { get; set; }
         public string Hilliness { get; set; }
         public float Temperature { get; set; }
-        /// <summary>Days a year whose average temperature allows plant growth.</summary>
+        /// <summary>Days of the game's 60-day year in which plants grow.</summary>
         public int GrowingDays { get; set; }
         public bool Road { get; set; }
         public bool River { get; set; }
