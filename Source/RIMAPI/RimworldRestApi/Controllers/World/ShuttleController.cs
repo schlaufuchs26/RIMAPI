@@ -2,6 +2,7 @@ using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
 using RIMAPI.Http;
+using RIMAPI.Models;
 using RIMAPI.Services;
 
 namespace RIMAPI.Controllers
@@ -35,10 +36,13 @@ namespace RIMAPI.Controllers
         [EndpointMetadata("Send a named pawn onto a landed shuttle, the game's own right-click boarding order")]
         public async Task EnterShuttle(HttpListenerContext context)
         {
-            var pawnId = RequestParser.GetIntParameter(context, "pawnId");
-            var shuttleId = RequestParser.HasParameter(context, "shuttleId")
-                ? RequestParser.GetIntParameter(context, "shuttleId")
-                : 0;
+            // The ids travel in the JSON body, as on every other write of the
+            // mod; the query string is the fallback for a hand-run curl.
+            var body = await context.Request.ReadBodyAsync<ShuttleEnterRequestDto>();
+            int pawnId = body != null && body.PawnId > 0 ? body.PawnId : RequestParser.GetIntParameter(context, "pawnId");
+            int shuttleId = body != null && body.ShuttleId > 0 ? body.ShuttleId : 0;
+            if (shuttleId == 0 && RequestParser.HasParameter(context, "shuttleId"))
+                shuttleId = RequestParser.GetIntParameter(context, "shuttleId");
             var result = _shuttleService.Enter(pawnId, shuttleId);
             await context.SendJsonResponse(result);
         }
