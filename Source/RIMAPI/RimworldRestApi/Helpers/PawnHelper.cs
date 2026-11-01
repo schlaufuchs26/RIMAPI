@@ -420,6 +420,7 @@ namespace RIMAPI.Helpers
 
                 IsInfection = hediff.def?.isInfection ?? false,
                 SeverityPerDay = HediffRateOf(hediff.def),
+                Immunity = ImmunityOf(hediff),
 
                 SourceDefName = hediff.sourceDef?.defName,
                 SourceLabel = hediff.sourceDef?.label,
@@ -452,6 +453,32 @@ namespace RIMAPI.Helpers
             return HediffRate.Pick(
                 immunizable?.severityPerDayNotImmune ?? 0f,
                 perDay?.severityPerDay ?? 0f);
+        }
+
+        /// <summary>
+        /// The pawn's immunity progress against one hediff, 0 to 1 (fox,
+        /// #3618). The game keeps one ImmunityRecord per disease in
+        /// Pawn_HealthTracker's ImmunityHandler, so the race is per infection;
+        /// the digest had nothing to race against and never printed a death
+        /// date. 0 is what the game itself answers for a hediff with no record
+        /// yet, which is the truth on the day an infection starts.
+        /// </summary>
+        public static float ImmunityOf(Hediff hediff)
+        {
+            var handler = hediff?.pawn?.health?.immunity;
+            var def = hediff?.def;
+            if (handler == null || def == null)
+                return 0f;
+
+            try
+            {
+                return handler.GetImmunity(def);
+            }
+            catch (Exception ex)
+            {
+                Core.LogApi.Error($"Error reading the immunity of {hediff} - {ex}");
+                return 0f;
+            }
         }
 
         // GetMoodInfo lists the thoughts the game currently counts toward this

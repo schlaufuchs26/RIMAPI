@@ -177,6 +177,15 @@ namespace RIMAPI.Models
         // which the caller reads as "no projection" rather than a guess.
         public float SeverityPerDay { get; set; }
 
+        // Immunity is the pawn's immunity progress against this very hediff,
+        // 0 to 1 (fox, #3618). The game keeps one ImmunityRecord per disease in
+        // the pawn's ImmunityHandler, so this figure belongs on the infection
+        // and not on the pawn. The digest races it against the severity; it
+        // used to look for a hediff named "Immunity", which the game has no def
+        // for, so its race line and its death date never appeared. 0 means no
+        // record yet, which is the truth on the day an infection starts.
+        public float Immunity { get; set; }
+
         // Source information
         public string SourceDefName { get; set; }
         public string SourceLabel { get; set; }

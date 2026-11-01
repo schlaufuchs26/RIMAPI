@@ -205,6 +205,7 @@ namespace RIMAPI.Tests
                 "cur_stage_index",
                 "cur_stage_label",
                 "def_name",
+                "immunity",
                 "is_currently_life_threatening",
                 "is_infection",
                 "is_lethal",
