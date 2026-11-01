@@ -166,7 +166,8 @@ namespace RIMAPI.Services
                 if (chosen == null)
                 {
                     result.Offered = PriorityJobRules.OfferList(offered);
-                    result.Refusal = removalRefusal ?? NoOfferReason(pawn, jobName, workType, target);
+                    string cellNote = thing == null ? CellNote(map, cell, jobName) : null;
+                    result.Refusal = removalRefusal ?? NoOfferReason(pawn, jobName, workType, target, cellNote);
                     return ApiResult.Ok(result);
                 }
 
@@ -276,8 +277,11 @@ namespace RIMAPI.Services
         // JobTargets is the order the game's own menu would offer at the target:
         // a named thing alone, or the things on the cell with its blueprints and
         // frames first and the cell itself last, so a wall frame's cell builds
-        // the wall instead of the roof above it. Pawns are left out: a cell that
-        // holds one is not a target for his own jobs.
+        // the wall instead of the roof above it. A colonist standing on the cell
+        // is left out: his own cell is not a target for his jobs. An animal is
+        // not: a hunt or a tame names the animal, and a cell was the only key a
+        // caller had for a wild one, which the animal walks off before the call
+        // arrives (fox #3908).
         private static List<JobTarget> JobTargets(Map map, Thing thing, IntVec3 cell)
         {
             List<JobTarget> targets = new List<JobTarget>();
@@ -288,7 +292,7 @@ namespace RIMAPI.Services
                 return targets;
             }
             List<Thing> standing = map.thingGrid.ThingsListAt(cell)
-                .Where(t => t != null && !(t is Pawn))
+                .Where(t => t != null && IsCellTarget(t))
                 .ToList();
             Thing plannedHere = standing.FirstOrDefault(IsPlannedBuild);
             foreach (Thing onCell in PriorityTargetRules.ConstructiblesFirst(standing, IsPlannedBuild))
@@ -301,6 +305,53 @@ namespace RIMAPI.Services
             }
             targets.Add(new JobTarget { Cell = cell, Planned = plannedHere });
             return targets;
+        }
+
+        // IsCellTarget reports whether a thing standing on a cell is a target a
+        // job can be built on: any thing, and an animal among the pawns. A
+        // colonist on the cell is not one of them, and neither is a prisoner or
+        // a raider, whose jobs (capture, strip) a cell order must not pick up by
+        // accident (fox #3908).
+        private static bool IsCellTarget(Thing thing)
+        {
+            Pawn pawn = thing as Pawn;
+            return pawn == null || IsAnimalPawn(pawn);
+        }
+
+        private static bool IsAnimalPawn(Thing thing)
+        {
+            Pawn pawn = thing as Pawn;
+            return pawn != null && pawn.RaceProps != null && pawn.RaceProps.Animal;
+        }
+
+        // CellNote is why the cell itself built no job, which is what a caller
+        // needs when the animal he aimed at walked off: "no animal stands on the
+        // cell" instead of a list of work-type causes that are all false (fox
+        // #3908). Null means the cell is not the cause.
+        private static string CellNote(Map map, IntVec3 cell, string jobName)
+        {
+            bool holdsAnimal = false;
+            bool holdsThing = false;
+            foreach (Thing onCell in map.thingGrid.ThingsListAt(cell))
+            {
+                if (onCell == null || onCell.def == null)
+                {
+                    continue;
+                }
+                if (IsAnimalPawn(onCell))
+                {
+                    holdsAnimal = true;
+                    continue;
+                }
+                // Filth and motes are not what a job is built on, so a bloody
+                // cell still reads as empty.
+                if (onCell is Filth || onCell.def.category == ThingCategory.Mote)
+                {
+                    continue;
+                }
+                holdsThing = true;
+            }
+            return PriorityTargetRules.CellRefusalNote(jobName, holdsAnimal, holdsThing);
         }
 
         // IsPlannedBuild reports whether a thing is a build the colony planned:
@@ -337,14 +388,23 @@ namespace RIMAPI.Services
             return map.listerThings.AllThings.FirstOrDefault(t => t.thingIDNumber == thingId);
         }
 
-        // NoOfferReason says why no giver built a job, in the game's terms.
-        private static string NoOfferReason(Pawn pawn, string jobName, WorkTypeDef workType, string target)
+        // NoOfferReason says why no giver built a job, in the game's terms. A
+        // cell that is the cause says so itself (cellNote): with a hunt named on
+        // a cell the animal had already left, the old sentence blamed the work
+        // type, which sent a run off to check a setting that was never the
+        // problem (fox #3908).
+        private static string NoOfferReason(
+            Pawn pawn, string jobName, WorkTypeDef workType, string target, string cellNote)
         {
             string wanted = string.IsNullOrEmpty(jobName) ? "any job" : $"the {jobName} job";
             string scope = workType != null ? $" under {workType.labelShort}" : string.Empty;
             if (workType != null && pawn.WorkTypeIsDisabled(workType))
             {
                 return $"{Describe(pawn)} is incapable of {workType.labelShort}, so the game offers no job there";
+            }
+            if (!string.IsNullOrEmpty(cellNote))
+            {
+                return $"{Describe(pawn)} has no work giver that builds {wanted}{scope} on {target}: {cellNote}";
             }
             return $"{Describe(pawn)} has no work giver that builds {wanted}{scope} on {target}: "
                 + "the work type is switched off, he cannot reach it, or the thing is forbidden to him";

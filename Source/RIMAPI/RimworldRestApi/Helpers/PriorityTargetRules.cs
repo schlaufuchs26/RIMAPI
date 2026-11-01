@@ -113,6 +113,70 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// The jobs the game builds on an animal rather than on the ground:
+        /// hunting, taming, slaughtering, milking, shearing, training. All six
+        /// take the animal itself, so a cell target on one of them is the wrong
+        /// key the moment the animal walks off it (fox #3908).
+        /// </summary>
+        private static readonly string[] AnimalJobs =
+        {
+            "Hunt",
+            "Tame",
+            "Slaughter",
+            "Milk",
+            "Shear",
+            "Train",
+        };
+
+        /// <summary>
+        /// IsAnimalJob reports whether the caller named a job that targets an
+        /// animal, in the menu's word ("hunt", "tame") or as the JobDef defName
+        /// the game prints.
+        /// </summary>
+        public static bool IsAnimalJob(string requestedJob)
+        {
+            if (string.IsNullOrEmpty(requestedJob))
+            {
+                return false;
+            }
+            foreach (string jobDefName in AnimalJobs)
+            {
+                if (PriorityJobRules.Matches(requestedJob, jobDefName))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// CellRefusalNote says why the cell itself is the reason no job was
+        /// built there, so a refusal stops blaming the work type: an animal job
+        /// with no animal on the cell (the animal walked off, which is what a
+        /// moving target does), or a cell that holds nothing a job is built on.
+        /// Null means the cell is not the cause and the caller keeps the
+        /// game's own wording (fox #3908).
+        /// </summary>
+        public static string CellRefusalNote(string requestedJob, bool cellHoldsAnimal, bool cellHoldsThing)
+        {
+            if (cellHoldsAnimal)
+            {
+                return null;
+            }
+            if (IsAnimalJob(requestedJob))
+            {
+                return "no animal stands on the cell, and a "
+                    + requestedJob.Trim().ToLowerInvariant()
+                    + " job targets the animal itself, so name it by its own thing id";
+            }
+            if (!cellHoldsThing)
+            {
+                return "the cell holds nothing a job can be built on";
+            }
+            return null;
+        }
+
+        /// <summary>
         /// The jobs that take a thing away rather than build it. A caller who
         /// names one of these on the colony's own blueprint or frame is asking
         /// for the plan to be destroyed, which is never what a prioritize call

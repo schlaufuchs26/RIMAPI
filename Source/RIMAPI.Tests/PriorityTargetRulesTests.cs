@@ -120,5 +120,54 @@ namespace RIMAPI.Tests
             Assert.False(PriorityTargetRules.IsWayClearingJob("FinishFrame"));
             Assert.False(PriorityTargetRules.IsWayClearingJob(""));
         }
+
+        // Six jobs are built on an animal rather than on the ground, so a cell
+        // that holds no animal is the reason they cannot be built there (fox
+        // #3908). A ground job is not one of them: a hunt named on a cell with
+        // a hare on it must not be refused as if the hare were the problem.
+        [Fact]
+        public void The_animal_jobs_are_the_ones_that_target_an_animal()
+        {
+            Assert.True(PriorityTargetRules.IsAnimalJob("hunt"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("Hunt"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("tame"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("Tame"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("slaughter"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("milk"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("shear"));
+            Assert.True(PriorityTargetRules.IsAnimalJob("train"));
+            Assert.False(PriorityTargetRules.IsAnimalJob("haul"));
+            Assert.False(PriorityTargetRules.IsAnimalJob("build"));
+            Assert.False(PriorityTargetRules.IsAnimalJob(""));
+            Assert.False(PriorityTargetRules.IsAnimalJob(null));
+        }
+
+        // A cell that held a hare when the run read it and holds nothing when
+        // the call arrives is the case the run hit: the refusal has to name the
+        // animal that is not there and point at the thing id, not at the work
+        // type, which was switched on all along (fox #3908).
+        [Fact]
+        public void An_animal_job_on_a_cell_without_an_animal_names_the_missing_animal()
+        {
+            string note = PriorityTargetRules.CellRefusalNote("hunt", false, true);
+
+            Assert.Contains("no animal stands on the cell", note);
+            Assert.Contains("thing id", note);
+            // An animal standing there is not the cause, and a ground job keeps
+            // the game's own wording.
+            Assert.Null(PriorityTargetRules.CellRefusalNote("hunt", true, true));
+            Assert.Null(PriorityTargetRules.CellRefusalNote("haul", false, true));
+        }
+
+        // An empty cell builds no job of any kind, so that is what the refusal
+        // says instead of listing the work type as a possible cause.
+        [Fact]
+        public void An_empty_cell_says_it_holds_nothing()
+        {
+            string note = PriorityTargetRules.CellRefusalNote("haul", false, false);
+
+            Assert.Contains("holds nothing", note);
+            Assert.Null(PriorityTargetRules.CellRefusalNote("haul", true, false));
+        }
     }
 }
