@@ -113,6 +113,9 @@
          scale holds, whether a setting took, which room beside a cooler is the
          one it chills. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TemperatureTargetRules.cs" Link="Linked\TemperatureTargetRules.cs" />
+    <!-- Which DTO a building read answers with (fox ticket #3705): the plain
+         one used to overwrite the turret and generator answers. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BuildingInfoRules.cs" Link="Linked\BuildingInfoRules.cs" />
     <!-- The resources DTOs carry the fuel summary (fox ticket #3678): plain C#,
          so the keys the digest decodes are testable here. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Items\ResourcesDto.cs" Link="Linked\ResourcesDto.cs" />

@@ -14,7 +14,6 @@ namespace RIMAPI.Services
         public ApiResult<BuildingDto> GetBuildingInfo(int buildingId)
         {
             Building building = BuildingHelper.FindBuildingByID(buildingId);
-            BuildingDto result = null;
 
             if (building == null)
             {
@@ -29,22 +28,26 @@ namespace RIMAPI.Services
                 );
             }
 
-            // Turret Info
-            if (building is Building_Turret)
+            // A turret and a power plant carry state the plain DTO has no field
+            // for, so the specialised answer is the answer: building the plain
+            // DTO afterwards used to overwrite it, and a caller read a machine
+            // as if it had no power at all (fox ticket #3705).
+            switch (
+                BuildingInfoRules.KindOf(
+                    building is Building_Turret,
+                    building.TryGetComp<CompPowerPlant>() != null
+                )
+            )
             {
-                result = BuildingHelper.GetTurretInfo(building);
+                case BuildingInfoKind.Turret:
+                    return ApiResult<BuildingDto>.Ok(BuildingHelper.GetTurretInfo(building));
+                case BuildingInfoKind.PowerGenerator:
+                    return ApiResult<BuildingDto>.Ok(
+                        BuildingHelper.GetPowerGeneratorInfo(building)
+                    );
+                default:
+                    return ApiResult<BuildingDto>.Ok(BuildingHelper.BuildingToDto(building));
             }
-
-            // Generator Info
-            if (building.TryGetComp<CompPowerPlant>() != null)
-            {
-                result = BuildingHelper.GetPowerGeneratorInfo(building);
-            }
-
-            // TODO: Add other buildings info
-
-            result = BuildingHelper.BuildingToDto(building);
-            return ApiResult<BuildingDto>.Ok(result);
         }
 
         public ApiResult SetBuildingPower(int buildingId, bool powerOn)
