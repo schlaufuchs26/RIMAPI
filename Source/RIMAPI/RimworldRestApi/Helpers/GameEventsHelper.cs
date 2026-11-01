@@ -96,7 +96,10 @@ namespace RIMAPI.Helpers
                 var inner = thing.GetInnerIfMinified() ?? thing;
                 var item = new QuestChoiceItemDto
                 {
-                    Label = inner.LabelNoCount,
+                    // The label without the quality: LabelNoCount already
+                    // carries it ("eltex shirt (excellent)"), and the caller
+                    // gets the quality on its own field (fox ticket #3950).
+                    Label = GenLabel.ThingLabel(inner.def, inner.Stuff, 1),
                     Count = thing.stackCount,
                     MarketValue = inner.MarketValue * thing.stackCount,
                     Quality = inner.TryGetQuality(out var quality) ? quality.GetLabel() : "",
