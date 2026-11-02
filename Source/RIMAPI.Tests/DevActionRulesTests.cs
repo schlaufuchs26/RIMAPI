@@ -304,6 +304,23 @@ namespace RIMAPI.Tests
             Assert.False(DevActionRules.SendsAvailableLetter(hidden: true, scriptWantsLetter: false));
         }
 
+        [Fact]
+        public void AQuestChoiceReadsOnlyWithTheAcceptThatTakesIt()
+        {
+            // A choice names the reward option of a quest the same call takes
+            // (ticket #4049); on its own it would read as if the call had
+            // picked one, and on another op it belongs to no quest at all.
+            Assert.Null(DevActionRules.QuestAcceptProblem("quest", accept: true, choice: 0));
+            Assert.Null(DevActionRules.QuestAcceptProblem("quest", accept: true, choice: null));
+            Assert.Null(DevActionRules.QuestAcceptProblem("quest", accept: false, choice: null));
+            string withoutAccept = DevActionRules.QuestAcceptProblem("quest", accept: false, choice: 1);
+            Assert.Contains("accept=true", withoutAccept);
+            string onAnotherOp = DevActionRules.QuestAcceptProblem("damage", accept: true, choice: 1);
+            Assert.Contains("op=quest", onAnotherOp);
+            string negative = DevActionRules.QuestAcceptProblem("quest", accept: true, choice: -1);
+            Assert.Contains("0", negative);
+        }
+
         /// <summary>A stamp with the counters a call moves, and stable digests.</summary>
         private static DevActionRules.ColonyStamp Stamp(int pawns, int things, int selected)
         {

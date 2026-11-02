@@ -60,6 +60,19 @@ namespace RIMAPI.Models
         /// which is what the game's dev spawner does.
         /// </summary>
         public string Faction { get; set; }
+
+        /// <summary>
+        /// `quest` only: take the quest the call just offered, through the same
+        /// accept path the Quests tab runs, so its parts start and a pending
+        /// delay can be found without a second call (fox ticket #4049).
+        /// </summary>
+        public bool? Accept { get; set; }
+
+        /// <summary>
+        /// `quest` with accept only: the reward choice's index when the quest
+        /// offers several, 0 for the first (fox ticket #4049).
+        /// </summary>
+        public int? Choice { get; set; }
     }
 
     /// <summary>

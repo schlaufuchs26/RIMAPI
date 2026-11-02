@@ -266,6 +266,32 @@ namespace RIMAPI.Helpers
             return null;
         }
 
+        /// <summary>
+        /// The refusal for a quest op's accept fields, or null when they read
+        /// (fox ticket #4049). `accept` takes the quest the op just offered and
+        /// `choice` picks its reward option, so neither reads on its own or on
+        /// another op: a choice without an accept would name a reward for a
+        /// quest the call never took.
+        /// </summary>
+        public static string QuestAcceptProblem(string op, bool accept, int? choice)
+        {
+            if (choice == null) return null;
+            if (op != "quest")
+            {
+                return "choice reads only with op=quest and accept=true; the op is "
+                    + (op == null ? "(none)" : "\"" + op + "\"");
+            }
+            if (!accept)
+            {
+                return "choice picks the reward option of the quest the call accepts; pass accept=true too, or leave the choice out";
+            }
+            if (choice.Value < 0)
+            {
+                return "a reward choice index starts at 0, not " + choice.Value;
+            }
+            return null;
+        }
+
         /// <summary>The spawn count a request means: one when it names none.</summary>
         public static int SpawnCount(int? count)
         {

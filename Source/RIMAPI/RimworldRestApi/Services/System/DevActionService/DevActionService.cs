@@ -76,6 +76,15 @@ namespace RIMAPI.Services
                 {
                     return ApiResult<DevActionResultDto>.Fail(problem);
                 }
+                string acceptProblem = DevActionRules.QuestAcceptProblem(
+                    request.Op,
+                    request.Accept == true,
+                    request.Choice
+                );
+                if (acceptProblem != null)
+                {
+                    return ApiResult<DevActionResultDto>.Fail(acceptProblem);
+                }
 
                 DevActionResultDto result;
                 switch (request.Op)
@@ -666,16 +675,64 @@ namespace RIMAPI.Services
                 StorytellerUtility.DefaultThreatPointsNow(map)
             );
             bool made = quest != null;
+            bool acceptRequested = made && request.Accept == true;
+            // Accepting runs the game's own path (ticket #4049), the one
+            // `quest_accept` and the Quests tab run, so the parts, letters and
+            // thoughts are the game's own instead of a state this op invented.
+            // Without a choice the first reward option is taken: a quest that
+            // offers several refuses to be accepted before one is picked, and
+            // a check that wants a quest running means one of them.
+            string acceptLine = "";
+            bool accepted = false;
+            if (acceptRequested)
+            {
+                ApiResult<QuestAcceptResultDto> accept = new QuestService().AcceptQuest(
+                    new QuestAcceptRequestDto
+                    {
+                        Id = quest.id,
+                        PawnId = request.PawnId,
+                        Choice = request.Choice ?? 0,
+                    }
+                );
+                if (!accept.Success)
+                {
+                    acceptLine =
+                        ", and the accept failed: "
+                        + (accept.Errors.Count > 0 ? accept.Errors[0] : "no reason given");
+                }
+                else if (accept.Data.Accepted)
+                {
+                    accepted = true;
+                    acceptLine = ", accepted: state " + accept.Data.State;
+                    if (accept.Data.Choice >= 0) acceptLine += ", reward choice " + accept.Data.Choice;
+                    if (!string.IsNullOrEmpty(accept.Data.Accepter))
+                        acceptLine += " taken by " + accept.Data.Accepter;
+                }
+                else
+                {
+                    acceptLine =
+                        ", but the game refused the accept: "
+                        + (
+                            string.IsNullOrEmpty(accept.Data.Reason)
+                                ? "no reason given"
+                                : accept.Data.Reason
+                        );
+                }
+            }
             // GenerateQuestAndMakeAvailable only adds the quest; the offer
             // letter is the caller's job (ticket #3951), and a check that wants
-            // to open it has nothing to read without this.
+            // to open it has nothing to read without this. A quest this call
+            // took needs no letter: it would announce an offer that is gone
+            // (ticket #4049).
             bool letter =
-                made && DevActionRules.SendsAvailableLetter(quest.hidden, script.sendAvailableLetter);
+                made
+                && !accepted
+                && DevActionRules.SendsAvailableLetter(quest.hidden, script.sendAvailableLetter);
             if (letter) QuestUtility.SendLetterQuestAvailable(quest);
             DevActionResultDto result = new DevActionResultDto
             {
                 Op = request.Op,
-                Done = made,
+                Done = made && (!acceptRequested || accepted),
                 Incident = DescribeIncidents(map, script.defName, made),
             };
             result.Detail =
@@ -687,8 +744,11 @@ namespace RIMAPI.Services
                 + (made
                     ? letter
                         ? " with its offer letter"
-                        : " but sent no offer letter (the quest is hidden or the script wants none)"
+                        : accepted
+                            ? " without an offer letter (this call took it)"
+                            : " but sent no offer letter (the quest is hidden or the script wants none)"
                     : "")
+                + acceptLine
                 + "; "
                 + result.Incident.Letters
                 + " letters standing, "
