@@ -292,6 +292,13 @@ namespace RIMAPI.Services
         // call wants to send away: the game's own readiness flag, the ship job
         // it holds, and the required pawns and items that are still missing,
         // worded the way the refusal needs them.
+        //
+        // AlreadyLeaving is the ship's *current* job, not
+        // TransportShip.LeavingSoonAutomatically: a quest shuttle carries an
+        // Unload and a FlyAway job in its queue while it still waits, so that
+        // property is true on a shuttle nobody has sent yet (measured on the
+        // shuttle-landed probe, 2026-11-02), and reading it here let a launch
+        // through on a shuttle that was missing its pawn.
         private static ShuttleRules.SendState SendStateOf(CompShuttle comp, ShuttleDto state)
         {
             ShuttleRules.SendState send = new ShuttleRules.SendState
@@ -301,7 +308,10 @@ namespace RIMAPI.Services
                 Cell = "(" + state.Position.X + ", " + state.Position.Z + ")",
                 Spawned = state.Spawned,
                 AllRequiredLoaded = state.AllRequiredLoaded,
-                AlreadyLeaving = comp.shipParent != null && comp.shipParent.LeavingSoonAutomatically,
+                AlreadyLeaving = comp.shipParent != null
+                    && comp.shipParent.curJob != null
+                    && ShipJobDefOf.FlyAway != null
+                    && comp.shipParent.curJob.def == ShipJobDefOf.FlyAway,
             };
             int colonists = 0;
             foreach (ShuttlePawnDto p in state.ContainedPawns)
