@@ -88,6 +88,11 @@ namespace RimworldRestApi.Hooks
                 // A new colony is a different game, so the menu the last one
                 // walked is dropped (fox ticket #3946).
                 DevActionService.ForgetActionMenu();
+                // The batch a founding drew from belongs to the world the
+                // setup built; the colony's own world replaces it, so its
+                // candidates no longer name pawns any later founding could
+                // reproduce (fox ticket #4020).
+                PawnBatch.Reset();
                 SendStateEvent("new_game_created", new
                 {
                     scenario = Find.Scenario?.name,
