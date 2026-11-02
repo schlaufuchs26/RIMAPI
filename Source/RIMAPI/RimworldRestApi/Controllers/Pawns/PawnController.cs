@@ -195,6 +195,17 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Every colonist's work levels in one read (fox ticket #4158): the build
+        // path names who would build a plan, and one read per pawn made a
+        // colony of eight pay eight loopback calls per placement.
+        [Get("/api/v1/colonists/work-priorities")]
+        [EndpointMetadata("Read every colonist's work priorities in one call")]
+        public async Task GetColonistsWorkPriorities(HttpListenerContext context)
+        {
+            var result = _colonistService.GetColonistsWorkPriorities();
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/colonist/work-priority")]
         [EndpointMetadata("Set pawn work priorities")]
         public async Task SetColonistWorkPriority(HttpListenerContext context)

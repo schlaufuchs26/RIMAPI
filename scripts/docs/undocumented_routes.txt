@@ -49,6 +49,7 @@ OrderController.cs /api/v1/order/roof
 OrderController.cs /api/v1/order/undesignate/area
 PawnController.cs /api/v1/colonist/self-tend
 PawnController.cs /api/v1/colonist/work-priorities
+PawnController.cs /api/v1/colonists/work-priorities
 PawnController.cs /api/v1/jobs/make/arrest
 PawnController.cs /api/v1/jobs/make/chat
 PawnController.cs /api/v1/jobs/make/feed

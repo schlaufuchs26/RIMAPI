@@ -19,6 +19,8 @@ namespace RIMAPI.Services
         ApiResult<OpinionAboutPawnDto> GetOpinionAboutPawn(int pawnId, int otherPawnId);
         ApiResult<WorkListDto> GetWorkList();
         ApiResult<ColonistWorkPrioritiesDto> GetColonistWorkPriorities(int pawnId);
+        // Every colonist's work levels in one read (fox ticket #4158).
+        ApiResult<ColonistsWorkPrioritiesDto> GetColonistsWorkPriorities();
         ApiResult<List<TimeAssignmentDto>> GetTimeAssignmentsList();
         ApiResult SetColonistWorkPriority(WorkPriorityRequestDto body);
         ApiResult SetColonistsWorkPriority(ColonistsWorkPrioritiesRequestDto body);

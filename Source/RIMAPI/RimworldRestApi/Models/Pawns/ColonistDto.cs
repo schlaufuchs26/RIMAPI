@@ -298,6 +298,15 @@ namespace RIMAPI.Models
         public List<WorkPriorityEntryDto> Work { get; set; } = new List<WorkPriorityEntryDto>();
     }
 
+    // Every colonist's work settings in one answer (fox ticket #4158), so the
+    // build path does not pay one read per pawn to say who would build a plan.
+    // Each entry is the single-pawn answer, unchanged.
+    public class ColonistsWorkPrioritiesDto
+    {
+        public int TotalPawns { get; set; }
+        public List<ColonistWorkPrioritiesDto> Pawns { get; set; } = new List<ColonistWorkPrioritiesDto>();
+    }
+
     public class PawnTimeAssignmentRequestDto
     {
         public int PawnId { get; set; }

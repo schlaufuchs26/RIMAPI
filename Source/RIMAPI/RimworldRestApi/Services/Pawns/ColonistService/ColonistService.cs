@@ -211,43 +211,9 @@ namespace RIMAPI.Services
                     );
                 }
 
-                var readiness = WorkSettingsRules.Of(
-                    hasWorkSettings: pawn.workSettings != null,
-                    everWork: pawn.workSettings != null && pawn.workSettings.EverWork
-                );
-
-                var result = new ColonistWorkPrioritiesDto
-                {
-                    PawnId = pawn.thingIDNumber,
-                    PawnName = pawn.LabelShortCap,
-                    ManualPriorities = Find.PlaySettings?.useWorkPriorities ?? false,
-                    Initialized = readiness == WorkSettingsRules.Readiness.Ready,
-                    Readiness = WorkSettingsRules.Name(readiness),
-                };
-
-                if (!result.Initialized)
-                {
-                    return ApiResult<ColonistWorkPrioritiesDto>.Ok(result);
-                }
-
-                DefMap<WorkTypeDef, int> stored = StoredWorkPriorities(pawn);
-                foreach (WorkTypeDef workType in DefDatabase<WorkTypeDef>.AllDefs)
-                {
-                    if (workType == null)
-                        continue;
-                    int priority = pawn.workSettings.GetPriority(workType);
-                    result.Work.Add(
-                        new WorkPriorityEntryDto
-                        {
-                            WorkType = workType.defName,
-                            Priority = priority,
-                            Stored = stored != null ? stored[workType] : priority,
-                            Disabled = pawn.WorkTypeIsDisabled(workType),
-                        }
-                    );
-                }
-
-                return ApiResult<ColonistWorkPrioritiesDto>.Ok(result);
+                // WorkPrioritiesOf is the shared body of this route and the
+                // colony route (ticket #4158), so the two cannot drift.
+                return ApiResult<ColonistWorkPrioritiesDto>.Ok(WorkPrioritiesOf(pawn));
             }
             catch (Exception ex)
             {
