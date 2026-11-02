@@ -20,6 +20,12 @@ namespace RIMAPI.Core
         public List<string> Errors { get; set; } = new List<string>();
         public List<string> Warnings { get; set; } = new List<string>();
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        // Tick is the game tick this answer describes (fox ticket #4113): the
+        // state behind the payload, stamped when the response goes out. The
+        // fox's colony document keeps it per route, so a read that answered
+        // from older state than the rest is visible instead of being a
+        // disagreement nobody owns. 0 when no game is loaded.
+        public int Tick { get; set; }
 
         public static ApiResult<T> Ok(T data) => new ApiResult<T> { Success = true, Data = data };
 
@@ -44,6 +50,8 @@ namespace RIMAPI.Core
         public List<string> Errors { get; set; } = new List<string>();
         public List<string> Warnings { get; set; } = new List<string>();
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        // Tick: see ApiResult<T>.Tick (fox ticket #4113).
+        public int Tick { get; set; }
 
         public static ApiResult Ok() => new ApiResult { Success = true };
 
@@ -90,14 +98,30 @@ namespace RIMAPI.Core
             ApiResult<T> result
         )
         {
+            result.Tick = AnswerTick();
             var statusCode = DetermineStatusCode(result);
             await WriteResponse(response, statusCode, result);
         }
 
         public static async Task SendApiResult(HttpListenerResponse response, ApiResult result)
         {
+            result.Tick = AnswerTick();
             var statusCode = DetermineStatusCode(result);
             await WriteResponse(response, statusCode, result);
+        }
+
+        // AnswerTick is the game tick every answer is stamped with (fox ticket
+        // #4113): the state the payload describes, read once, here, so no
+        // handler can forget it. 0 on the title screen and while a world
+        // generates, which the fox reads as "not stamped" rather than as tick
+        // zero. An answer served from a cache must carry the tick it was
+        // cached at (CacheEntry.GameTickAdded), not this one; no read path
+        // caches today, so the stamp is the live tick.
+        private static int AnswerTick()
+        {
+            if (Current.Game == null) return 0;
+            TickManager ticks = Find.TickManager;
+            return ticks != null ? ticks.TicksGame : 0;
         }
 
         // Convenience methods for common scenarios
