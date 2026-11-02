@@ -49,6 +49,9 @@ namespace RIMAPI.Helpers
             "/api/v1/faction/change/goodwill",
             // A game started with dev tools on.
             "/api/v1/game/start/devquick",
+            // A letter the game never wrote, injected into the player's stack:
+            // a test aid, since no player can create a letter.
+            "/api/v1/game/send/letter",
             // A lord (raid, party) placed on the map.
             "/api/v1/lords/create",
             // Social interactions and relations written by hand.

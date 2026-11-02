@@ -35,6 +35,7 @@ namespace RIMAPI.Tests
         [InlineData("/api/v1/incident/trigger")]
         [InlineData("/api/v1/faction/change/goodwill")]
         [InlineData("/api/v1/game/start/devquick")]
+        [InlineData("/api/v1/game/send/letter")]
         [InlineData("/api/v1/lords/create")]
         [InlineData("/api/v1/pawns/interactions/force")]
         [InlineData("/api/v1/pawns/relations/add")]
@@ -172,6 +173,7 @@ namespace RIMAPI.Tests
                 "/api/v1/incident/trigger",
                 "/api/v1/faction/change/goodwill",
                 "/api/v1/game/start/devquick",
+                "/api/v1/game/send/letter",
                 "/api/v1/lords/create",
                 "/api/v1/pawns/interactions/force",
                 "/api/v1/pawns/relations/add",
