@@ -25,7 +25,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/outfits/create")]
         [ResponseBody(typeof(ApparelPolicyResultDto))]
         [RequestBody(typeof(ApparelPolicyRequest))]
-        [EndpointMetadata("Create an apparel policy with a label, the Manage outfits dialog's New button")]
+        [EndpointMetadata("Create an apparel policy", Notes = "Create an apparel policy with a label, the Manage outfits dialog's New button")]
         public async Task CreateOutfit(HttpListenerContext context)
         {
             ApparelPolicyRequest body = await ReadBody<ApparelPolicyRequest>(context);
@@ -36,9 +36,7 @@ namespace RIMAPI.Controllers
         [Put("/api/v1/outfits/update")]
         [ResponseBody(typeof(ApparelPolicyResultDto))]
         [RequestBody(typeof(ApparelPolicyRequest))]
-        [EndpointMetadata(
-            "Change an apparel policy: its label, its allowed and disallowed apparel and special filters, its hit points and quality range"
-        )]
+        [EndpointMetadata("Update an apparel policy", Notes = "Change an apparel policy: its label, its allowed and disallowed apparel and special filters, its hit points and quality range")]
         public async Task UpdateOutfit(HttpListenerContext context)
         {
             ApparelPolicyRequest body = await ReadBody<ApparelPolicyRequest>(context);
@@ -49,7 +47,7 @@ namespace RIMAPI.Controllers
         [Delete("/api/v1/outfits/delete")]
         [ResponseBody(typeof(ApparelPolicyResultDto))]
         [QueryParameters("id:integer")]
-        [EndpointMetadata("Delete an apparel policy; the game refuses one a pawn still wears")]
+        [EndpointMetadata("Delete an apparel policy", Notes = "Delete an apparel policy; the game refuses one a pawn still wears")]
         public async Task DeleteOutfit(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");
@@ -60,7 +58,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/pawn/outfit")]
         [ResponseBody(typeof(ApparelPolicyResultDto))]
         [RequestBody(typeof(PawnApparelPolicyRequest))]
-        [EndpointMetadata("Assign an apparel policy to a pawn, the Assign tab's dropdown")]
+        [EndpointMetadata("Assign an apparel policy to a pawn", Notes = "Assign an apparel policy to a pawn, the Assign tab's dropdown")]
         public async Task AssignOutfit(HttpListenerContext context)
         {
             PawnApparelPolicyRequest body = await ReadBody<PawnApparelPolicyRequest>(context);

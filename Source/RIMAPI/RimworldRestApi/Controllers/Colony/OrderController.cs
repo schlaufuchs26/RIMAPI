@@ -18,6 +18,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/order/designate/area")]
         [ResponseBody]
         [RequestBody(typeof(DesignateRequestDto))]
+        [EndpointMetadata("Mark a rectangle for a designation")]
         public async Task DesignateArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DesignateRequestDto>();
@@ -32,7 +33,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/order/designate/cells")]
         [ResponseBody]
         [RequestBody(typeof(DesignateCellsRequestDto))]
-        [EndpointMetadata("Mark an explicit list of cells for one designation kind (chop, cut, blight, harvest, mine, deconstruct, hunt), so a zone that is not a rectangle is marked without the cells beside it")]
+        [EndpointMetadata("Mark cells for a designation", Notes = "Mark an explicit list of cells for one designation kind (chop, cut, blight, harvest, mine, deconstruct, hunt), so a zone that is not a rectangle is marked without the cells beside it")]
         public async Task DesignateCells(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DesignateCellsRequestDto>();
@@ -45,7 +46,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/order/undesignate/area")]
         [ResponseBody]
         [RequestBody(typeof(DesignateRequestDto))]
-        [EndpointMetadata("Remove one designation kind (chop, blight, harvest, mine, deconstruct, hunt) over a rectangle, so a wrong sweep can be cleared")]
+        [EndpointMetadata("Clear a designation over a rectangle", Notes = "Remove one designation kind (chop, blight, harvest, mine, deconstruct, hunt) over a rectangle, so a wrong sweep can be cleared")]
         public async Task UndesignateArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DesignateRequestDto>();
@@ -60,7 +61,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/order/firefight")]
         [ResponseBody(typeof(FirefightResultDto))]
         [RequestBody(typeof(FirefightRequestDto))]
-        [EndpointMetadata("Put a colonist on a named burning cell or on the fires inside the Home area through the game's own BeatFire job")]
+        [EndpointMetadata("Send a colonist to fight a fire", Notes = "Put a colonist on a named burning cell or on the fires inside the Home area through the game's own BeatFire job")]
         public async Task Firefight(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<FirefightRequestDto>();
@@ -74,7 +75,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/order/roof")]
         [ResponseBody(typeof(RoofResultDto))]
         [RequestBody(typeof(RoofRequestDto))]
-        [EndpointMetadata("Mark the Build roof area over a rectangle and queue the game's own build-roof job, so a sealed room gets its roof")]
+        [EndpointMetadata("Mark a roof area", Notes = "Mark the Build roof area over a rectangle and queue the game's own build-roof job, so a sealed room gets its roof")]
         public async Task BuildRoof(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<RoofRequestDto>();

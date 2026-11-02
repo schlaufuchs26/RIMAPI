@@ -18,6 +18,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/item/image")]
         [QueryParameters("name:string")]
+        [EndpointMetadata("Get an item's image")]
         public async Task GetItemImage(HttpListenerContext context)
         {
             var name = RequestParser.GetStringParameter(context, "name");
@@ -27,6 +28,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/terrain/image")]
         [QueryParameters("name:string")]
+        [EndpointMetadata("Get a terrain image")]
         public async Task GetTerrainImage(HttpListenerContext context)
         {
             var name = RequestParser.GetStringParameter(context, "name");
@@ -36,6 +38,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/item/change/image")]
         [RequestBody(typeof(ImageUploadRequest))]
+        [EndpointMetadata("Replace an item's image")]
         public async Task SetItemImage(HttpListenerContext context)
         {
             var requestData = await context.Request.ReadBodyAsync<ImageUploadRequest>();

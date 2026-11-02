@@ -23,7 +23,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonists/job-log")]
         [ResponseBody(typeof(JobLogDto))]
         [QueryParameters("since_tick:string?")]
-        [EndpointMetadata("Job changes of the colony's colonists since a tick: pawn, job def, label, target")]
+        [EndpointMetadata("List the job changes since a tick", Notes = "Job changes of the colony's colonists since a tick: pawn, job def, label, target")]
         public async Task GetJobLog(HttpListenerContext context)
         {
             string raw = RequestParser.GetStringParameter(context, "since_tick", false);

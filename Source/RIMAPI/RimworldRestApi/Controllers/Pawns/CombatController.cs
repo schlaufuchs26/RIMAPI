@@ -24,7 +24,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/map/combat")]
         [ResponseBody(typeof(CombatStateDto))]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Hostiles and colonists with position, weapon, health, drafted state and current job")]
+        [EndpointMetadata("List the hostiles and colonists", Notes = "Hostiles and colonists with position, weapon, health, drafted state and current job")]
         public async Task GetCombat(HttpListenerContext context)
         {
             int mapId = RequestParser.GetMapId(context);
@@ -38,7 +38,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/map/deaths")]
         [ResponseBody(typeof(List<DeathDto>))]
         [QueryParameters("limit:integer", "since:integer")]
-        [EndpointMetadata("Kills the game recorded: killer, victim, weapon and the tale's kind")]
+        [EndpointMetadata("List the recorded kills", Notes = "Kills the game recorded: killer, victim, weapon and the tale's kind")]
         public async Task GetDeaths(HttpListenerContext context)
         {
             int since = RequestParser.HasParameter(context, "since")
@@ -58,7 +58,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/map/cover")]
         [ResponseBody(typeof(CoverStateDto))]
         [QueryParameters("map_id:integer", "pawn_id:integer", "radius:integer", "target_id:integer", "target_x:integer", "target_z:integer", "x:integer", "z:integer")]
-        [EndpointMetadata("Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
+        [EndpointMetadata("Get the cover cells around a point", Notes = "Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
         public async Task GetCover(HttpListenerContext context)
         {
             int mapId = RequestParser.GetMapId(context);
@@ -98,7 +98,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/pawn/order")]
         [ResponseBody(typeof(OrderResultDto))]
         [RequestBody(typeof(OrderRequestDto))]
-        [EndpointMetadata("Order one drafted colonist to move, attack, hold or switch fire-at-will")]
+        [EndpointMetadata("Order a drafted colonist", Notes = "Order one drafted colonist to move, attack, hold or switch fire-at-will")]
         public async Task Order(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<OrderRequestDto>();

@@ -31,9 +31,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/world/caravan/form")]
         [RequestBody(typeof(FormCaravanRequest))]
         [QueryParameters("destination_tile:integer?", "map_id:integer?")]
-        [EndpointMetadata(
-            "Send named pawns and goods off as a caravan to a tile, the game's own form-and-send jobs"
-        )]
+        [EndpointMetadata("Form a caravan", Notes = "Send named pawns and goods off as a caravan to a tile, the game's own form-and-send jobs")]
         public async Task FormCaravan(HttpListenerContext context)
         {
             // map_id is optional here: the body carries it, the query is the
@@ -65,9 +63,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/world/caravan/steer")]
         [RequestBody(typeof(SteerCaravanRequest))]
-        [EndpointMetadata(
-            "Change a formed caravan's destination: a plain tile is a travel order, a settlement is the game's own Visit or Trade arrival action"
-        )]
+        [EndpointMetadata("Steer a caravan", Notes = "Change a formed caravan's destination: a plain tile is a travel order, a settlement is the game's own Visit or Trade arrival action")]
         public async Task SteerCaravan(HttpListenerContext context)
         {
             SteerCaravanRequest body = context.Request.HasEntityBody
@@ -79,9 +75,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/world/caravan/trade")]
         [RequestBody(typeof(CaravanTradeRequest))]
-        [EndpointMetadata(
-            "Trade with a settlement: send the caravan there, or open the game's own trade dialog when it already stands at it"
-        )]
+        [EndpointMetadata("Trade with a settlement", Notes = "Trade with a settlement: send the caravan there, or open the game's own trade dialog when it already stands at it")]
         public async Task TradeCaravan(HttpListenerContext context)
         {
             CaravanTradeRequest body = context.Request.HasEntityBody
@@ -93,9 +87,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/world/caravan/settle")]
         [RequestBody(typeof(SettleCaravanRequest))]
-        [EndpointMetadata(
-            "Settle a new home where the caravan stands, the Settle button of the caravan's own gizmo bar"
-        )]
+        [EndpointMetadata("Settle a caravan", Notes = "Settle a new home where the caravan stands, the Settle button of the caravan's own gizmo bar")]
         public async Task SettleCaravan(HttpListenerContext context)
         {
             SettleCaravanRequest body = context.Request.HasEntityBody

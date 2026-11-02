@@ -19,6 +19,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/pawns/details")]
         [ResponseBody(typeof(PawnDetailedDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one pawn's details")]
         public async Task GetPawnDetails(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "id");
@@ -29,6 +30,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/pawns/inventory")]
         [ResponseBody(typeof(PawnInventoryDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one pawn's inventory")]
         public async Task GetPawnInventory(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "id");

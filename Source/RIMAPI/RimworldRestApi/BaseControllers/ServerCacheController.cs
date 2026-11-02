@@ -15,6 +15,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/cache/enable")]
+        [EndpointMetadata("Enable the response cache")]
         public async Task EnableCache(HttpListenerContext context)
         {
             var result = _cachingService.SetEnabled(true);
@@ -22,6 +23,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/cache/disable")]
+        [EndpointMetadata("Disable the response cache")]
         public async Task DisableCache(HttpListenerContext context)
         {
             var result = _cachingService.SetEnabled(false);
@@ -30,6 +32,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/cache/status")]
         [QueryParameters("detailed:boolean?")]
+        [EndpointMetadata("Get the response cache status")]
         public async Task GetCacheStatus(HttpListenerContext context)
         {
             var isDetailed = RequestParser.GetBooleanParameter(context, "detailed", false);
@@ -40,6 +43,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/cache/clear")]
+        [EndpointMetadata("Clear the response cache")]
         public async Task ClearCache(HttpListenerContext context)
         {
             var result = _cachingService.Clear();

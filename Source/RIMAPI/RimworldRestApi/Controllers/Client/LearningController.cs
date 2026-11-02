@@ -17,6 +17,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/client/learning/defs")]
+        [EndpointMetadata("List the learning concept defs")]
         public async Task GetConceptsDefs(HttpListenerContext context)
         {
             var result = _learningService.GetLearningConceptsDefs();
@@ -24,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/client/learning/all")]
+        [EndpointMetadata("List all learning concepts")]
         public async Task GetAllConcepts(HttpListenerContext context)
         {
             var result = _learningService.GetAllConcepts();
@@ -31,6 +33,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/client/learning/active")]
+        [EndpointMetadata("List the active learning concepts")]
         public async Task GetActiveConcepts(HttpListenerContext context)
         {
             var result = _learningService.GetActiveConcepts();
@@ -39,6 +42,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/client/learning/concept")]
         [QueryParameters("def_name:string")]
+        [EndpointMetadata("Get one learning concept")]
         public async Task GetConcept(HttpListenerContext context)
         {
             var defName = RequestParser.GetStringParameter(context, "def_name");
@@ -48,6 +52,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/client/learning/mark-learned")]
         [RequestBody(typeof(LearningConceptMarkDto))]
+        [EndpointMetadata("Mark a concept learned")]
         public async Task MarkLearned(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<LearningConceptMarkDto>();

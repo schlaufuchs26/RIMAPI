@@ -29,9 +29,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/action")]
         [RequestBody(typeof(DevActionRequest))]
         [QueryParameters("name:string?", "op:string?")]
-        [EndpointMetadata(
-            "Build a test situation in a dev-mode game: damage, heal, hediff, spawn, mental state, skill, trait, incident, quest, wealth, ticks"
-        )]
+        [EndpointMetadata("Build a test situation in a dev game", Notes = "Build a test situation in a dev-mode game: damage, heal, hediff, spawn, mental state, skill, trait, incident, quest, wealth, ticks")]
         public async Task PostDevAction(HttpListenerContext context)
         {
             DevActionRequest body;
@@ -78,6 +76,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/dev/materials-atlas")]
         [ResponseExample(typeof(MaterialsAtlasList))]
+        [EndpointMetadata("List the material atlas pools")]
         public async Task GetMaterialsAtlasList(HttpListenerContext context)
         {
             var result = _devToolsService.GetMaterialsAtlasList();
@@ -85,6 +84,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/materials-atlas/clear")]
+        [EndpointMetadata("Clear the material atlas pools")]
         public async Task PostMaterialsAtlasPoolClear(HttpListenerContext context)
         {
             var result = _devToolsService.MaterialsAtlasPoolClear();
@@ -93,7 +93,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/dev/stuff/color")]
         [RequestBody(typeof(StuffColorRequest))]
-        [EndpointMetadata("Change stuff color")]
+        [EndpointMetadata("Set a stuff colour")]
         public async Task PostStuffColor(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<StuffColorRequest>();
@@ -102,7 +102,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/dev/endpoints")]
-        [EndpointMetadata("Get list of all registered endpoints")]
+        [EndpointMetadata("List the registered endpoints")]
         public async Task GetEndpoints(HttpListenerContext context)
         {
             var result = _devToolsService.GetEndpoints();

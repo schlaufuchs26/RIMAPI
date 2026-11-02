@@ -25,7 +25,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/pawn/operations")]
         [ResponseBody(typeof(PawnOperationsDto))]
         [QueryParameters("pawn_id:integer")]
-        [EndpointMetadata("Read a pawn's operation bills and medicine policy (?pawn_id=N)")]
+        [EndpointMetadata("Get a pawn's operation bills", Notes = "Read a pawn's operation bills and medicine policy (?pawn_id=N)")]
         public async Task GetOperations(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "pawn_id");
@@ -36,7 +36,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/pawn/surgery-recipes")]
         [ResponseBody(typeof(List<SurgeryRecipeDto>))]
         [QueryParameters("pawn_id:integer")]
-        [EndpointMetadata("List the operations a pawn could be given, with the body parts each can target (?pawn_id=N)")]
+        [EndpointMetadata("List the operations a pawn can get", Notes = "List the operations a pawn could be given, with the body parts each can target (?pawn_id=N)")]
         public async Task GetSurgeryRecipes(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "pawn_id");
@@ -47,7 +47,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/pawn/operation")]
         [ResponseBody(typeof(PawnOperationsDto))]
         [RequestBody(typeof(AddOperationRequest))]
-        [EndpointMetadata("Add an operation bill, the health tab's Add bill: pawn_id, recipe, body_part")]
+        [EndpointMetadata("Add an operation bill", Notes = "Add an operation bill, the health tab's Add bill: pawn_id, recipe, body_part")]
         public async Task AddOperation(HttpListenerContext context)
         {
             AddOperationRequest body = await ReadBody<AddOperationRequest>(context);
@@ -70,7 +70,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/pawn/medicine-policy")]
         [ResponseBody(typeof(PawnOperationsDto))]
         [RequestBody(typeof(MedicinePolicyRequest))]
-        [EndpointMetadata("Set a pawn's medicine policy: pawn_id and care (NoCare, NoMeds, HerbalOrWorse, NormalOrWorse, Best)")]
+        [EndpointMetadata("Set a pawn's medicine policy", Notes = "Set a pawn's medicine policy: pawn_id and care (NoCare, NoMeds, HerbalOrWorse, NormalOrWorse, Best)")]
         public async Task SetMedicinePolicy(HttpListenerContext context)
         {
             MedicinePolicyRequest body = await ReadBody<MedicinePolicyRequest>(context);

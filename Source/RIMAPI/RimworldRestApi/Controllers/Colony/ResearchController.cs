@@ -18,6 +18,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/research/progress")]
         [ResponseBody(typeof(ResearchProjectDto))]
+        [EndpointMetadata("Get the research progress")]
         public async Task GetResearchProgress(HttpListenerContext context)
         {
             var result = _researchService.GetResearchProgress();
@@ -26,6 +27,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/research/finished")]
         [ResponseBody(typeof(ResearchFinishedDto))]
+        [EndpointMetadata("List the finished research")]
         public async Task GetResearchFinished(HttpListenerContext context)
         {
             var result = _researchService.GetResearchFinished();
@@ -34,6 +36,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/research/tree")]
         [ResponseBody(typeof(ResearchTreeDto))]
+        [EndpointMetadata("Get the research tree")]
         public async Task GetResearchTree(HttpListenerContext context)
         {
             var result = _researchService.GetResearchTree();
@@ -43,6 +46,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/research/project")]
         [ResponseBody(typeof(ResearchProjectDto))]
         [QueryParameters("name:string")]
+        [EndpointMetadata("Get one research project")]
         public async Task GetResearchProjectByName(HttpListenerContext context)
         {
             var name = RequestParser.GetStringParameter(context, "name");
@@ -52,6 +56,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/research/summary")]
         [ResponseBody(typeof(ResearchSummaryDto))]
+        [EndpointMetadata("Get a research summary")]
         public async Task GetResearchSummary(HttpListenerContext context)
         {
             var result = _researchService.GetResearchSummary();

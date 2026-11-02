@@ -18,6 +18,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/builder/copy")]
         [ResponseBody(typeof(BlueprintDto))]
         [RequestBody(typeof(CopyAreaRequestDto))]
+        [EndpointMetadata("Copy an area")]
         public async Task CopyArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CopyAreaRequestDto>();
@@ -28,6 +29,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/builder/paste")]
         [ResponseBody]
         [RequestBody(typeof(PasteAreaRequestDto))]
+        [EndpointMetadata("Paste a copied area")]
         public async Task PasteArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PasteAreaRequestDto>();
@@ -38,6 +40,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/builder/blueprint")]
         [ResponseBody(typeof(PlaceResultDto))]
         [RequestBody(typeof(PasteAreaRequestDto))]
+        [EndpointMetadata("Place blueprints from a copy")]
         public async Task PlaceBlueprints(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PasteAreaRequestDto>();
@@ -48,7 +51,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/builder/cancel")]
         [ResponseBody(typeof(CancelResultDto))]
         [RequestBody(typeof(CancelBlueprintsRequestDto))]
-        [EndpointMetadata("Cancel every blueprint and frame inside a rectangle, the game's own cancel order")]
+        [EndpointMetadata("Cancel blueprints in a rectangle", Notes = "Cancel every blueprint and frame inside a rectangle, the game's own cancel order")]
         public async Task CancelBlueprints(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CancelBlueprintsRequestDto>();
@@ -59,6 +62,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/builder/check-zone")]
         [ResponseBody(typeof(CheckZoneResultDto))]
         [RequestBody(typeof(CheckZoneRequestDto))]
+        [EndpointMetadata("Check a build area for obstacles")]
         public async Task CheckZone(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CheckZoneRequestDto>();

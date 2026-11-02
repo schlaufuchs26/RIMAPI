@@ -22,6 +22,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/caravans")]
+        [EndpointMetadata("List the world caravans")]
         public async Task GetCaravans(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -35,6 +36,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/caravan/path")]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get a caravan's path")]
         public async Task GetCaravanPath(HttpListenerContext context)
         {
             var id = RequestParser.GetIntParameter(context, "id");
@@ -48,6 +50,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/settlements")]
+        [EndpointMetadata("List the world settlements")]
         public async Task GetSettlements(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -60,6 +63,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/player/settlements")]
+        [EndpointMetadata("List the player's settlements")]
         public async Task GetPlayerSettlements(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -73,6 +77,7 @@ namespace RIMAPI.Controllers
 
 
         [Get("/api/v1/world/sites")]
+        [EndpointMetadata("List the world sites")]
         public async Task GetSites(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -86,6 +91,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile")]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one world tile")]
         public async Task GetTile(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -100,6 +106,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile/coordinates")]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get a tile's coordinates")]
         public async Task GetTileCoordinates(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -114,6 +121,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile/details")]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get a tile's details")]
         public async Task GetTileDetails(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -127,6 +135,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/landing")]
+        [EndpointMetadata("Get the chosen landing site")]
         public async Task GetLanding(HttpListenerContext context)
         {
             // The site a founding picked from its wish list (ticket #3930).
@@ -145,6 +154,7 @@ namespace RIMAPI.Controllers
 
 
         [Get("/api/v1/world/grid")]
+        [EndpointMetadata("Get the world grid")]
         public async Task GetWorldGrid(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -158,6 +168,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/grid/area")]
         [QueryParameters("radius:number?", "tile_id:integer?")]
+        [EndpointMetadata("Get the world grid around a tile")]
         public async Task GetWorldGridArea(HttpListenerContext context)
         {
             if (!int.TryParse(context.Request.QueryString["tile_id"], out var tileId) ||

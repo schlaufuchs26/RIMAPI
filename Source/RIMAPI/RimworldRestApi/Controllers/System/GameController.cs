@@ -44,7 +44,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/version")]
-        [EndpointMetadata("Get versions of: game, mod, API")]
+        [EndpointMetadata("Get the game, mod and API versions")]
         public async Task GetVersion(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -66,6 +66,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/state")]
+        [EndpointMetadata("Get the game state")]
         public async Task GetGameState(HttpListenerContext context)
         {
             var result = _gameStateService.GetGameState();
@@ -74,6 +75,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/mods/configure")]
         [RequestBody(typeof(ConfigureModsRequestDto))]
+        [EndpointMetadata("Configure the mod list")]
         public async Task ConfigureMods(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<ConfigureModsRequestDto>();
@@ -82,7 +84,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/list")]
-        [EndpointMetadata("Get list of active mods or single mod info if package_id/uid is provided")]
+        [EndpointMetadata("List the active mods", Notes = "Get list of active mods or single mod info if package_id/uid is provided")]
         [ResponseExample(typeof(ApiResponse<List<ModInfoDto>>))]
         public async Task GetModsInfo(HttpListenerContext context)
         {
@@ -98,7 +100,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/mods/info")]
         [QueryParameters("package_id:string", "uid:string")]
-        [EndpointMetadata("Get single mod info by package_id or uid")]
+        [EndpointMetadata("Get one mod")]
         [ResponseExample(typeof(ApiResponse<ModInfoDto>))]
         public async Task GetModInfo(HttpListenerContext context)
         {
@@ -112,7 +114,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/mods/preview")]
         [QueryParameters("package_id:string", "uid:string")]
-        [EndpointMetadata("Get mod preview image as base64")]
+        [EndpointMetadata("Get a mod's preview image")]
         [ResponseExample(typeof(ApiResponse<string>))]
         public async Task GetModPreview(HttpListenerContext context)
         {
@@ -198,6 +200,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/dev/game/send/letter")]
         [RequestBody(typeof(SendLetterRequestDto))]
+        [EndpointMetadata("Send a letter")]
         public async Task PostLetter(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SendLetterRequestDto>();
@@ -207,6 +210,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/game/speed")]
         [QueryParameters("speed:integer")]
+        [EndpointMetadata("Set the game speed")]
         public async Task SetGameSpeed(HttpListenerContext context)
         {
             var speed = RequestParser.GetIntParameter(context, "speed");
@@ -216,6 +220,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/game/save")]
         [RequestBody(typeof(GameSaveRequestDto))]
+        [EndpointMetadata("Save the game")]
         public async Task GameSave(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<GameSaveRequestDto>();
@@ -225,6 +230,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/game/load")]
         [RequestBody(typeof(GameLoadRequestDto))]
+        [EndpointMetadata("Load a save")]
         public async Task GameLoad(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<GameLoadRequestDto>();
@@ -241,7 +247,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/quit")]
-        [EndpointMetadata("Completely close and exit the RimWorld application")]
+        [EndpointMetadata("Quit the game")]
         public async Task QuitGame(HttpListenerContext context)
         {
             var result = _gameStateService.QuitGame();
@@ -249,6 +255,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/game/start/devquick")]
+        [EndpointMetadata("Start a dev quicktest game")]
         public async Task GameDevQuickStart(HttpListenerContext context)
         {
             var result = _gameStateService.GameDevQuickStart();
@@ -256,6 +263,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/scenarios")]
+        [EndpointMetadata("List the starting scenarios")]
         public async Task GetScenarios(HttpListenerContext context)
         {
             // The starting scenarios the installed game carries (ticket
@@ -270,6 +278,7 @@ namespace RIMAPI.Controllers
         // back once the world and the pawns exist.
         [Post("/api/v1/game/start/candidates")]
         [RequestBody(typeof(NewGameStartRequestDto))]
+        [EndpointMetadata("Start drawing starting colonists")]
         public async Task StartCandidateBatch(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<NewGameStartRequestDto>();
@@ -278,6 +287,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/start/candidates")]
+        [EndpointMetadata("Get the drawn starting colonists")]
         public async Task GetCandidateBatch(HttpListenerContext context)
         {
             await context.SendJsonResponse(ApiResult<CandidateBatchDto>.Ok(_gameStateService.GetCandidateBatch()));
@@ -285,6 +295,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/game/start")]
         [RequestBody(typeof(NewGameStartRequestDto))]
+        [EndpointMetadata("Start a new game")]
         public async Task GameStart(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<NewGameStartRequestDto>();
@@ -293,6 +304,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/settings")]
+        [EndpointMetadata("Get the game settings")]
         public async Task GetGameSettings(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -306,6 +318,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/settings/toggle/run-in-background")]
+        [EndpointMetadata("Toggle run in background")]
         public async Task ToggleRunInBackground(HttpListenerContext context)
         {
             var result = _gameStateService.ToggleRunInBackground();
@@ -313,6 +326,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/settings/run-in-background")]
+        [EndpointMetadata("Get the run-in-background setting")]
         public async Task GetRunInBackground(HttpListenerContext context)
         {
             var result = _gameStateService.GetRunInBackground();
@@ -321,7 +335,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/game/settings/manual-priorities")]
         [QueryParameters("enabled:boolean?")]
-        [EndpointMetadata("Switch the colony's manual work priorities on or off (?enabled=true|false)")]
+        [EndpointMetadata("Switch manual work priorities", Notes = "Switch the colony's manual work priorities on or off (?enabled=true|false)")]
         public async Task SetManualPriorities(HttpListenerContext context)
         {
             if (!RequestParser.HasParameter(context, "enabled"))

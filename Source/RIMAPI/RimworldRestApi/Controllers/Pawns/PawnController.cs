@@ -21,6 +21,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/colonists")]
         [ResponseBody(typeof(List<PawnDto>))]
+        [EndpointMetadata("List the colony's colonists")]
         public async Task GetColonists(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -35,6 +36,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/colonists/positions")]
         [ResponseBody(typeof(List<PawnPositionDto>))]
+        [EndpointMetadata("Get the colonist positions")]
         public async Task GetColonistPositions(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -50,6 +52,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonist")]
         [ResponseBody(typeof(PawnDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one colonist")]
         public async Task GetColonist(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -59,6 +62,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/colonists/detailed")]
         [ResponseBody(typeof(List<ApiV1PawnDetailedDto>))]
+        [EndpointMetadata("List the colonists in detail")]
         public async Task GetColonistsDetailedV1(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -74,6 +78,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonist/detailed")]
         [ResponseBody(typeof(ApiV1PawnDetailedDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one colonist in detail")]
         public async Task GetColonistDetailedV1(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -84,6 +89,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v2/colonists/detailed")]
         [ResponseBody(typeof(List<PawnDetailedRequestDto>))]
+        [EndpointMetadata("List the colonists with full detail")]
         public async Task GetColonistsDetailed(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -99,6 +105,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v2/colonist/detailed")]
         [ResponseBody(typeof(PawnDetailedRequestDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get one colonist with full detail")]
         public async Task GetColonistDetailed(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -109,6 +116,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonist/opinion-about")]
         [ResponseBody(typeof(OpinionAboutPawnDto))]
         [QueryParameters("id:integer", "other_id:integer")]
+        [EndpointMetadata("Get one pawn's opinion of another")]
         public async Task GetPawnOpinionAboutPawn(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -120,6 +128,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonist/inventory")]
         [ResponseBody(typeof(PawnInventoryDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get a colonist's inventory")]
         public async Task GetColonistInventory(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -130,6 +139,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/colonist/body/image")]
         [ResponseBody(typeof(BodyPartsDto))]
         [QueryParameters("id:integer")]
+        [EndpointMetadata("Get a colonist's body image")]
         public async Task GetPawnBodyImage(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "id");
@@ -140,6 +150,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/pawn/portrait/image")]
         [ResponseBody(typeof(ImageDto))]
         [QueryParameters("direction:string", "height:integer", "pawn_id:integer", "width:integer")]
+        [EndpointMetadata("Get a pawn's portrait image")]
         public async Task GetPawnPortraitImage(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "pawn_id");
@@ -155,6 +166,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/trait-def")]
         [ResponseBody(typeof(TraitDefDto))]
         [QueryParameters("name:string")]
+        [EndpointMetadata("Get a trait definition")]
         public async Task GetTraitDef(HttpListenerContext context)
         {
             string name = RequestParser.GetStringParameter(context, "name");
@@ -164,6 +176,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/time-assignments")]
         [ResponseBody(typeof(List<TimeAssignmentDto>))]
+        [EndpointMetadata("List the time assignments")]
         public async Task GetTimeAssignmentsList(HttpListenerContext context)
         {
             var result = _colonistService.GetTimeAssignmentsList();
@@ -199,6 +212,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/outfits")]
         [ResponseBody(typeof(List<OutfitDto>))]
+        [EndpointMetadata("List the apparel policies")]
         public async Task GetOutfits(HttpListenerContext context)
         {
             var result = _colonistService.GetOutfits();
@@ -207,6 +221,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/work-list")]
         [ResponseBody(typeof(WorkListDto))]
+        [EndpointMetadata("List the work types")]
         public async Task GetWorkList(HttpListenerContext context)
         {
             var result = _colonistService.GetWorkList();
@@ -229,7 +244,7 @@ namespace RIMAPI.Controllers
         // colony of eight pay eight loopback calls per placement.
         [Get("/api/v1/colonists/work-priorities")]
         [ResponseBody(typeof(ColonistsWorkPrioritiesDto))]
-        [EndpointMetadata("Read every colonist's work priorities in one call")]
+        [EndpointMetadata("Read every colonist's work priorities")]
         public async Task GetColonistsWorkPriorities(HttpListenerContext context)
         {
             var result = _colonistService.GetColonistsWorkPriorities();
@@ -239,7 +254,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/colonist/work-priority")]
         [ResponseBody]
         [RequestBody(typeof(WorkPriorityRequestDto))]
-        [EndpointMetadata("Set pawn work priorities")]
+        [EndpointMetadata("Set one pawn's work priorities")]
         public async Task SetColonistWorkPriority(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<WorkPriorityRequestDto>();
@@ -250,7 +265,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/colonists/work-priority")]
         [ResponseBody]
         [RequestBody(typeof(ColonistsWorkPrioritiesRequestDto))]
-        [EndpointMetadata("Set multiple work priorities to several pawns")]
+        [EndpointMetadata("Set several pawns' work priorities")]
         public async Task SetColonistsWorkPriority(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<ColonistsWorkPrioritiesRequestDto>();
@@ -261,7 +276,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/equip")]
         [ResponseBody]
         [QueryParameters("item_id:integer", "map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Set multiple work priorities to several pawns")]
+        [EndpointMetadata("Queue an equip job")]
         public async Task MakeJobEquip(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -280,7 +295,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/tend")]
         [ResponseBody]
         [QueryParameters("map_id:integer", "medicine_id:integer", "patient_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own tend job: a doctor treats a patient, or a pawn itself when its Self-tend option is on")]
+        [EndpointMetadata("Queue a tend job", Notes = "Queue the game's own tend job: a doctor treats a patient, or a pawn itself when its Self-tend option is on")]
         public async Task MakeJobTend(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -317,7 +332,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/haul")]
         [ResponseBody]
         [QueryParameters("dest_id:integer", "item_id:integer", "map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own haul job for one thing and one destination")]
+        [EndpointMetadata("Queue a haul job", Notes = "Queue the game's own haul job for one thing and one destination")]
         public async Task MakeJobHaul(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -340,7 +355,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/prioritize")]
         [ResponseBody]
         [QueryParameters("job:string?", "map_id:integer", "pawn_id:integer", "thing_id:integer", "work:string?", "x:integer", "z:integer")]
-        [EndpointMetadata("Order one job on one named colonist now, the way the right-click menu does")]
+        [EndpointMetadata("Order a job on a colonist", Notes = "Order one job on one named colonist now, the way the right-click menu does")]
         public async Task MakeJobPrioritize(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -372,7 +387,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/tame")]
         [ResponseBody]
         [QueryParameters("map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own tame job for a wild person or an animal")]
+        [EndpointMetadata("Queue a tame job")]
         public async Task MakeJobTame(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -386,7 +401,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/slaughter")]
         [ResponseBody]
         [QueryParameters("map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own slaughter job for a colony animal")]
+        [EndpointMetadata("Queue a slaughter job")]
         public async Task MakeJobSlaughter(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -401,7 +416,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/arrest")]
         [ResponseBody]
         [QueryParameters("arrestor_id:integer", "map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own arrest or capture job into a prisoner bed")]
+        [EndpointMetadata("Queue an arrest or capture job", Notes = "Queue the game's own arrest or capture job into a prisoner bed")]
         public async Task MakeJobArrest(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -422,7 +437,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/rescue")]
         [ResponseBody]
         [QueryParameters("bed_id:integer", "map_id:integer", "pawn_id:integer", "rescuer_id:integer")]
-        [EndpointMetadata("Queue the game's own rescue job: carry a downed pawn or colony animal to a bed, or to the bed named in bed_id")]
+        [EndpointMetadata("Queue a rescue job", Notes = "Queue the game's own rescue job: carry a downed pawn or colony animal to a bed, or to the bed named in bed_id")]
         public async Task MakeJobRescue(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -446,7 +461,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/feed")]
         [ResponseBody]
         [QueryParameters("feeder_id:integer", "map_id:integer", "meal_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own FeedPatient job for a downed patient in a bed: a colonist, a prisoner or a colony animal")]
+        [EndpointMetadata("Queue a feed-patient job", Notes = "Queue the game's own FeedPatient job for a downed patient in a bed: a colonist, a prisoner or a colony animal")]
         public async Task MakeJobFeed(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -467,7 +482,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/jobs/make/chat")]
         [ResponseBody]
         [QueryParameters("chatter_id:integer", "map_id:integer", "pawn_id:integer")]
-        [EndpointMetadata("Queue the game's own chat with a visitor who wants to join")]
+        [EndpointMetadata("Queue a chat with a joiner")]
         public async Task MakeJobChat(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);

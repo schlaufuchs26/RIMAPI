@@ -27,7 +27,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/shuttles")]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("The shuttles on a map with their cell, the pawns and items they wait for, and the quest's countdown")]
+        [EndpointMetadata("List the shuttles on a map", Notes = "The shuttles on a map with their cell, the pawns and items they wait for, and the quest's countdown")]
         public async Task GetShuttles(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -37,7 +37,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/map/shuttle/enter")]
         [RequestBody(typeof(ShuttleEnterRequestDto))]
-        [EndpointMetadata("Send a named pawn onto a landed shuttle, the game's own right-click boarding order")]
+        [EndpointMetadata("Board a pawn onto a shuttle", Notes = "Send a named pawn onto a landed shuttle, the game's own right-click boarding order")]
         public async Task EnterShuttle(HttpListenerContext context)
         {
             // The ids travel in the JSON body, as on every other write of the
@@ -59,7 +59,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/map/shuttle/launch")]
         [RequestBody(typeof(ShuttleLaunchRequestDto))]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Send a loaded shuttle away through the game's own send-away order, instead of waiting for the quest's timer")]
+        [EndpointMetadata("Send a shuttle away", Notes = "Send a loaded shuttle away through the game's own send-away order, instead of waiting for the quest's timer")]
         public async Task LaunchShuttle(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<ShuttleLaunchRequestDto>();

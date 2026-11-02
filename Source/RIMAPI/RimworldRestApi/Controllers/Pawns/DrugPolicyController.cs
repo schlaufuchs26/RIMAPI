@@ -24,7 +24,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/drug-policies")]
         [ResponseBody(typeof(List<DrugPolicyDto>))]
-        [EndpointMetadata("Read every drug policy with its per-drug rules and how many pawns follow it")]
+        [EndpointMetadata("List the drug policies", Notes = "Read every drug policy with its per-drug rules and how many pawns follow it")]
         public async Task GetDrugPolicies(HttpListenerContext context)
         {
             var result = _drugPolicyService.GetAll();
@@ -34,7 +34,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/drug-policies/create")]
         [ResponseBody(typeof(DrugPolicyDto))]
         [RequestBody(typeof(DrugPolicyWriteRequest))]
-        [EndpointMetadata("Create a drug policy, copying the default policy or a named one, the Manage drug policies dialog's New button")]
+        [EndpointMetadata("Create a drug policy", Notes = "Create a drug policy, copying the default policy or a named one, the Manage drug policies dialog's New button")]
         public async Task CreateDrugPolicy(HttpListenerContext context)
         {
             DrugPolicyWriteRequest body = await ReadBody<DrugPolicyWriteRequest>(context);
@@ -45,7 +45,7 @@ namespace RIMAPI.Controllers
         [Put("/api/v1/drug-policies/update")]
         [ResponseBody(typeof(DrugPolicyDto))]
         [RequestBody(typeof(DrugPolicyWriteRequest))]
-        [EndpointMetadata("Change a drug policy's label and the rules of the drugs it holds")]
+        [EndpointMetadata("Update a drug policy", Notes = "Change a drug policy's label and the rules of the drugs it holds")]
         public async Task UpdateDrugPolicy(HttpListenerContext context)
         {
             DrugPolicyWriteRequest body = await ReadBody<DrugPolicyWriteRequest>(context);
@@ -56,7 +56,7 @@ namespace RIMAPI.Controllers
         [Delete("/api/v1/drug-policies/delete")]
         [ResponseBody(typeof(DrugPolicyDto))]
         [QueryParameters("id:integer")]
-        [EndpointMetadata("Delete a drug policy; the game refuses its default one and one a pawn still follows")]
+        [EndpointMetadata("Delete a drug policy", Notes = "Delete a drug policy; the game refuses its default one and one a pawn still follows")]
         public async Task DeleteDrugPolicy(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");
@@ -78,7 +78,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/drug-policies/set-default")]
         [ResponseBody(typeof(DrugPolicyDto))]
         [QueryParameters("id:integer")]
-        [EndpointMetadata("Make a drug policy the default one a new pawn gets, the dialog's star")]
+        [EndpointMetadata("Set the default drug policy", Notes = "Make a drug policy the default one a new pawn gets, the dialog's star")]
         public async Task SetDefaultDrugPolicy(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");

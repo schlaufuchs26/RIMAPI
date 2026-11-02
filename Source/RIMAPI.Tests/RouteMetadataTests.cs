@@ -200,6 +200,82 @@ namespace RIMAPI.Tests
             Assert.True(problems.Count == 0, string.Join("\n", problems));
         }
 
+        /// <summary>
+        /// The summary a documentation page shows for one route (fox ticket
+        /// #4305): imperative, sentence case, at most 60 characters, no
+        /// trailing period and no colon. Everything a reader needs beyond
+        /// that belongs in the attribute's Notes, which the OpenAPI document
+        /// renders as the operation's description.
+        /// </summary>
+        private static readonly Regex SummaryAttribute = new Regex(
+            @"\[EndpointMetadata\(\s*""(?<summary>(?:[^""\\]|\\.)*)""",
+            RegexOptions.Compiled
+        );
+
+        private const int SummaryLimit = 60;
+
+        // A summary opens with the action the route takes. A new verb is a
+        // deliberate addition here, so the wording of 280 routes does not
+        // drift apart one handler at a time.
+        private static readonly HashSet<string> SummaryVerbs = new HashSet<string>(
+            new[]
+            {
+                "Abandon", "Accept", "Add", "Apply", "Arrest", "Assign", "Board",
+                "Build", "Buy", "Cancel", "Capture", "Change", "Chat", "Check",
+                "Clear", "Close", "Complete", "Configure", "Copy", "Create", "Cut",
+                "Deactivate", "Delete", "Designate", "Destroy", "Disable",
+                "Dismiss", "Draft", "Drop", "Edit", "Enable", "End", "Equip",
+                "Export", "Extend", "Fill", "Find", "Follow", "Force", "Form",
+                "Get", "Give", "Grow", "Haul", "Hold", "Jump", "Kill", "Lift",
+                "List", "Load", "Lock", "Log", "Make", "Mark", "Move", "Open",
+                "Order", "Paste", "Place", "Press", "Put", "Queue", "Quit",
+                "Read", "Rebuild", "Recruit", "Reject", "Release", "Remove",
+                "Rename", "Repair", "Reorder", "Repay", "Replace", "Restrict",
+                "Resume", "Return", "Save", "Schedule", "Select", "Send", "Set",
+                "Settle", "Sever", "Show", "Spawn", "Start", "Steer", "Stop",
+                "Store", "Suspend", "Switch", "Take", "Tame", "Tend", "Toggle",
+                "Trade", "Trigger", "Unassign", "Undraft", "Unload", "Unlock",
+                "Update", "Write",
+            },
+            StringComparer.Ordinal
+        );
+
+        [Fact]
+        public void EveryRouteNamesItselfInTheSummaryFormat()
+        {
+            var problems = new List<string>();
+
+            foreach (RouteMethod route in Routes())
+            {
+                Match match = SummaryAttribute.Match(route.Attributes);
+                if (!match.Success)
+                {
+                    problems.Add(
+                        route.Location + " " + route.HttpMethod + " " + route.Path
+                            + " declares no [EndpointMetadata] summary"
+                    );
+                    continue;
+                }
+
+                string summary = match.Groups["summary"].Value;
+                string first = summary.Split(' ')[0];
+                string where = route.Location + " \"" + summary + "\"";
+
+                if (summary.Length == 0)
+                    problems.Add(where + " is empty");
+                else if (summary.Length > SummaryLimit)
+                    problems.Add(where + " is longer than " + SummaryLimit + " characters");
+                if (summary.EndsWith(".", StringComparison.Ordinal))
+                    problems.Add(where + " ends with a period");
+                if (summary.IndexOf(':') >= 0)
+                    problems.Add(where + " carries detail after a colon; that belongs in Notes");
+                if (first.Length > 0 && !SummaryVerbs.Contains(first))
+                    problems.Add(where + " does not open with a verb from the summary list");
+            }
+
+            Assert.True(problems.Count == 0, string.Join("\n", problems));
+        }
+
         private static IEnumerable<RouteMethod> Routes()
         {
             string root = SourceTree.RepoRoot();
@@ -369,6 +445,7 @@ namespace RIMAPI.Tests
                 HttpMethod = httpMethod;
                 Path = path;
                 Location = location;
+                Attributes = attributes;
                 ReturnsTask = signature.IndexOf("Task", StringComparison.Ordinal) >= 0;
                 Parameters = ParameterShape.ParseList(parameterList);
 
@@ -396,6 +473,7 @@ namespace RIMAPI.Tests
             public bool ReturnsTask { get; }
             public List<ParameterShape> Parameters { get; }
             public string Location { get; }
+            public string Attributes { get; }
             public string DeclaredBodyType { get; }
             public List<string> BodyTypes { get; } = new List<string>();
             public Dictionary<string, QueryParameterSpec> DeclaredQueryParameters { get; } =

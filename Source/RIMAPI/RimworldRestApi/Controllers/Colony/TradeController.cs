@@ -22,6 +22,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/traders/defs")]
         [ResponseBody(typeof(List<TraderKindDto>))]
+        [EndpointMetadata("List the trader kinds")]
         public async Task GetTradersDefs(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -40,7 +41,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/traders")]
         [ResponseBody(typeof(List<TraderDto>))]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Traders on the map with their silver and stock")]
+        [EndpointMetadata("List the traders on the map")]
         public async Task GetTraders(HttpListenerContext context)
         {
             int mapId = RequestParser.GetMapId(context);
@@ -54,7 +55,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/traders/beacons")]
         [ResponseBody(typeof(List<TradeBeaconDto>))]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Orbital trade beacons on the map with cell and power")]
+        [EndpointMetadata("List the orbital trade beacons")]
         public async Task GetTradeBeacons(HttpListenerContext context)
         {
             int mapId = RequestParser.GetMapId(context);

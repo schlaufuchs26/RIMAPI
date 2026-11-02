@@ -119,7 +119,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/example")]
-        [EndpointMetadata("An example endpoint to demonstrate functionality.")]
+        [EndpointMetadata("Get an example message")]
         public async Task GetExample(HttpListenerContext context)
         {
             var result = _exampleService.GetExampleMessage();
@@ -145,6 +145,14 @@ private void ConfigureServices(IServiceCollection services)
 ```
 
 ### 6. Document the Endpoint
+
+The `[EndpointMetadata]` summary is the operation's title in the OpenAPI
+document and on the documentation site: imperative, sentence case, at most 60
+characters, no trailing period and no colon (`Get an example message`,
+`List the colony's colonists`). Anything longer (fields, body shape, game
+internals) belongs in `Notes = "..."` on the same attribute, which the document
+renders as the operation's description. `RouteMetadataTests` fails a route
+without a summary and a summary outside that format.
 
 Finally, add an entry for your new endpoint to the controller's YAML file in `docs/_api_macroses/controllers/` (for example `UIController.yml`). This makes it visible in the API documentation.
 

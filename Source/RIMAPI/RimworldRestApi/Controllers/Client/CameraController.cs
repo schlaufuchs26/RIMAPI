@@ -45,7 +45,7 @@ namespace RimworldRestApi.Controllers
 
         [Post("/api/v1/camera/follow/pawn")]
         [QueryParameters("pawn_id:integer")]
-        [EndpointMetadata("Jump/follow the camera to a pawn by id (cinematic capture).")]
+        [EndpointMetadata("Jump the camera to a pawn")]
         public async Task JumpToPawn(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
@@ -56,7 +56,7 @@ namespace RimworldRestApi.Controllers
 
         [Post("/api/v1/camera/screenshot")]
         [RequestBody(typeof(CameraScreenshotRequestDto))]
-        [EndpointMetadata("Capture a screenshot of the game view. Supports resizing and format changes.")]
+        [EndpointMetadata("Capture a screenshot", Notes = "Capture a screenshot of the game view. Supports resizing and format changes.")]
         public async Task MakeScreenshot(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<CameraScreenshotRequestDto>();
@@ -66,7 +66,7 @@ namespace RimworldRestApi.Controllers
 
         [Post("/api/v1/camera/screenshot/native")]
         [RequestBody(typeof(NativeScreenshotRequestDto))]
-        [EndpointMetadata("Moves the camera and saves a high-quality screenshot directly to the host machine's hard drive.")]
+        [EndpointMetadata("Save a screenshot to disk", Notes = "Moves the camera and saves a high-quality screenshot directly to the host machine's hard drive.")]
         public async Task TriggerNativeScreenshot(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<NativeScreenshotRequestDto>();

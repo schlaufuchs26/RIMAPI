@@ -22,7 +22,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/quests")]
         [ResponseBody(typeof(QuestsDto))]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("The quests the game has on offer or is running: id, name, kind, state, expiry, the game's own CanAcceptQuest report, the reward choices and the accepter. The id this read prints is what quest/accept takes.")]
+        [EndpointMetadata("List the quests", Notes = "The quests the game has on offer or is running: id, name, kind, state, expiry, the game's own CanAcceptQuest report, the reward choices and the accepter. The id this read prints is what quest/accept takes.")]
         public async Task GetQuestsData(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -33,7 +33,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/quest/accept")]
         [ResponseBody(typeof(QuestAcceptResultDto))]
         [RequestBody(typeof(QuestAcceptRequestDto))]
-        [EndpointMetadata("Accept one quest by id, the same path the Quests tab's accept button runs: the game's own CanAcceptQuest check, the chosen reward option, and Quest.Accept. Body: {id, pawn_id? (the colonist who takes it), choice? (the reward choice's index)}. A quest the game refuses answers accepted=false with its own reason.")]
+        [EndpointMetadata("Accept a quest", Notes = "Accept one quest by id, the same path the Quests tab's accept button runs: the game's own CanAcceptQuest check, the chosen reward option, and Quest.Accept. Body: {id, pawn_id? (the colonist who takes it), choice? (the reward choice's index)}. A quest the game refuses answers accepted=false with its own reason.")]
         public async Task AcceptQuest(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<QuestAcceptRequestDto>();
@@ -75,6 +75,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/incidents/top")]
         [ResponseBody(typeof(List<IncidentWeightDto>))]
+        [EndpointMetadata("List the most likely incidents")]
         public async Task GetIncidentsTopChance(HttpListenerContext context)
         {
             var result = _incidentService.GetTopIncidents();
@@ -84,6 +85,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/incident/chance")]
         [ResponseBody(typeof(IncidentChanceDto))]
         [RequestBody(typeof(IncidentChanceRequestDto))]
+        [EndpointMetadata("Get an incident's chance")]
         public async Task GetIncidentChance(HttpListenerContext context)
         {
             var requestData = await context.Request.ReadBodyAsync<IncidentChanceRequestDto>();

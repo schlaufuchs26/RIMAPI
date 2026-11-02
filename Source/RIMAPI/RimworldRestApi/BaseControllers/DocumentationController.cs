@@ -22,6 +22,7 @@ namespace RIMAPI.Core
         }
 
         [Get("/api/v1/core/docs/export")]
+        [EndpointMetadata("Export the core API documentation")]
         public async Task ExportCoreDocumentation(HttpListenerContext context)
         {
             await ExportDocumentation(context, true);
@@ -29,6 +30,7 @@ namespace RIMAPI.Core
 
         [Get("/api/v1/docs")]
         [QueryParameters("format:string?")]
+        [EndpointMetadata("Get the API documentation")]
         public async Task GetDocumentation(HttpListenerContext context)
         {
             var format = context.Request.QueryString["format"] ?? "html";
@@ -151,6 +153,7 @@ namespace RIMAPI.Core
 
         // Additional endpoint for specific extension documentation
         [Get("/api/v1/docs/extensions/{extensionId}")]
+        [EndpointMetadata("Get one extension's documentation")]
         public async Task GetExtensionDocumentation(HttpListenerContext context, string extensionId)
         {
             try
@@ -185,6 +188,7 @@ namespace RIMAPI.Core
 
         // Health check endpoint for documentation service
         [Get("/api/v1/docs/health")]
+        [EndpointMetadata("Get the documentation health")]
         public async Task GetHealth(HttpListenerContext context)
         {
             try
@@ -213,6 +217,7 @@ namespace RIMAPI.Core
 
         [Get("/api/v1/docs/export")]
         [QueryParameters("format:string?")]
+        [EndpointMetadata("Export the API documentation")]
         public async Task ExportDocumentation(HttpListenerContext context, bool saveFile = false)
         {
             try

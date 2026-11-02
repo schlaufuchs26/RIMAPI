@@ -181,7 +181,16 @@ Query param names are **not** snake_cased — use the exact name from the `Reque
 2. **Create a service interface + implementation** in `Services/<domain>/`.
 3. **Register the service** in `ApiServer.CreateDefaultServiceProvider()`.
 4. **Create or update a controller** in `Controllers/<domain>/`, inject the service, add a `[Get]`/`[Post]`/etc. method.
-5. **Update docs** in `docs/_endpoints_examples/examples.yml` (required for release).
+5. **Declare the route's summary**: `[EndpointMetadata("List the colony's colonists")]`.
+   The OpenAPI document renders it as the operation's summary, so the docs
+   page is only as good as this line. Imperative, sentence case, at most 60
+   characters, no trailing period, no colon, and it opens with a verb from
+   `SummaryVerbs` in `RouteMetadataTests` (`Get` for one item, `List` for a
+   collection, plus the acting verbs). Detail; body shape, fields, game
+   internals; goes into `Notes = "..."`, which becomes the operation's
+   description; `RouteMetadataTests.EveryRouteNamesItselfInTheSummaryFormat`
+   refuses a route without a summary and a summary outside that format.
+6. **Update docs** in `docs/_endpoints_examples/examples.yml` (required for release).
 
 Route attributes are discovered automatically — no manual registration needed.
 

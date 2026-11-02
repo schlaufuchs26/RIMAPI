@@ -23,9 +23,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/world/settlement/abandon")]
         [RequestBody(typeof(AbandonSettlementRequest))]
-        [EndpointMetadata(
-            "Abandon a player settlement, the Abandon button of its own gizmo bar, with the command's own refusal"
-        )]
+        [EndpointMetadata("Abandon a settlement", Notes = "Abandon a player settlement, the Abandon button of its own gizmo bar, with the command's own refusal")]
         public async Task AbandonSettlement(HttpListenerContext context)
         {
             AbandonSettlementRequest body = context.Request.HasEntityBody
