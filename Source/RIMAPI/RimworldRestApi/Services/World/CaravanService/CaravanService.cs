@@ -130,6 +130,241 @@ namespace RIMAPI.Services
         }
 
         /// <summary>
+        /// Changes a formed caravan's destination (fox ticket #4226, wave 2). The
+        /// lever is the one the world map's right-click pulls: a plain tile is
+        /// WorldSelector.AutoOrderToTileNow (the nearest reachable tile, then the
+        /// pather's StartPath with no arrival action), a settlement is the game's
+        /// own arrival action for Visit or Trade, which is what decides what
+        /// happens when the caravan gets there.
+        /// </summary>
+        public ApiResult<CaravanSteerResultDto> Steer(SteerCaravanRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        "a steer call needs a body: caravan_id and tile"
+                    );
+
+                Caravan caravan = CaravanHelper.GetCaravanById(request.CaravanId);
+                if (caravan == null)
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        CaravanRules.UnknownCaravan(request.CaravanId)
+                    );
+                if (!caravan.IsPlayerControlled)
+                    return ApiResult<CaravanSteerResultDto>.Fail(CaravanRules.NotOurs(caravan.Label));
+                if (!CaravanRules.TryParseAction(request.Action, out string action))
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        CaravanRules.UnknownAction(request.Action)
+                    );
+                if (request.Tile < 0 || request.Tile >= Find.WorldGrid.TilesCount)
+                    return ApiResult<CaravanSteerResultDto>.Fail(CaravanRules.BadTile(request.Tile));
+
+                PlanetTile clicked = new PlanetTile(request.Tile);
+                if (clicked == caravan.Tile && !caravan.pather.Moving)
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        CaravanRules.AlreadyThere(request.Tile)
+                    );
+
+                if (action == CaravanRules.TravelAction)
+                    return Travel(caravan, clicked);
+
+                Settlement settlement = Find.WorldObjects.SettlementBaseAt(clicked);
+                if (settlement == null)
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        SettlementRules.NoSettlementOnTile(request.Tile)
+                    );
+
+                string problem = SettlementProblem(caravan, settlement, action);
+                if (problem != null)
+                    return ApiResult<CaravanSteerResultDto>.Fail(problem);
+
+                CaravanArrivalAction arrival = ArrivalAction(settlement, action);
+                if (!arrival.StillValid(caravan, settlement.Tile).Accepted)
+                {
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        SettlementRules.NoReasonGiven(settlement.Label, action)
+                    );
+                }
+
+                if (!caravan.pather.StartPath(settlement.Tile, arrival, repathImmediately: true))
+                {
+                    return ApiResult<CaravanSteerResultDto>.Fail(
+                        CaravanRules.NoPath(settlement.Tile.tileId)
+                    );
+                }
+
+                return ApiResult<CaravanSteerResultDto>.Ok(
+                    SteerAnswer(caravan, settlement.Tile, action, arrival.Label,
+                        "the game's own arrival action is set: the caravan walks to the settlement and "
+                        + (action == CaravanRules.TradeAction
+                            ? "the trade dialog opens when it arrives (/api/v1/ui/dialog reads it)"
+                            : "enters its map when it arrives"))
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<CaravanSteerResultDto>.Fail(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// The trade order with a settlement (fox ticket #4226, wave 2). The game's
+        /// own CaravanArrivalAction_Trade is the whole lever: the caravan walks to
+        /// the settlement, and the arrival opens Dialog_Trade, the window a player
+        /// trades in. A caravan that already stands there arrives at once, which is
+        /// what the player's own click does too (StartPath sees it is at the
+        /// destination and runs the arrival action immediately).
+        /// </summary>
+        public ApiResult<CaravanTradeResultDto> Trade(CaravanTradeRequest request)
+        {
+            try
+            {
+                if (request == null)
+                    return ApiResult<CaravanTradeResultDto>.Fail(
+                        "a trade call needs a body: caravan_id and settlement_id"
+                    );
+
+                Caravan caravan = CaravanHelper.GetCaravanById(request.CaravanId);
+                if (caravan == null)
+                    return ApiResult<CaravanTradeResultDto>.Fail(
+                        CaravanRules.UnknownCaravan(request.CaravanId)
+                    );
+                if (!caravan.IsPlayerControlled)
+                    return ApiResult<CaravanTradeResultDto>.Fail(CaravanRules.NotOurs(caravan.Label));
+
+                Settlement settlement = Find
+                    .WorldObjects.AllWorldObjects.OfType<Settlement>()
+                    .FirstOrDefault(s => s.ID == request.SettlementId);
+                if (settlement == null)
+                    return ApiResult<CaravanTradeResultDto>.Fail(
+                        SettlementRules.UnknownSettlement(request.SettlementId)
+                    );
+
+                // CanTradeWith answers yes or no; the facts behind it are named
+                // here, so a refusal says what is missing instead of only "no".
+                string problem = SettlementProblem(caravan, settlement, CaravanRules.TradeAction);
+                if (problem != null)
+                    return ApiResult<CaravanTradeResultDto>.Fail(problem);
+
+                var arrival = new CaravanArrivalAction_Trade(settlement);
+                bool atSettlement = caravan.Tile == settlement.Tile && !caravan.pather.Moving;
+                if (!caravan.pather.StartPath(settlement.Tile, arrival, repathImmediately: true))
+                {
+                    return ApiResult<CaravanTradeResultDto>.Fail(
+                        CaravanRules.NoPath(settlement.Tile.tileId)
+                    );
+                }
+
+                bool dialogOpen = Find.WindowStack.Windows.Any(w => w is Dialog_Trade);
+                int ticks = atSettlement
+                    ? 0
+                    : CaravanArrivalTimeEstimator.EstimatedTicksToArrive(caravan, allowCaching: true);
+                return ApiResult<CaravanTradeResultDto>.Ok(
+                    new CaravanTradeResultDto
+                    {
+                        CaravanId = caravan.ID,
+                        CaravanName = caravan.Name,
+                        SettlementId = settlement.ID,
+                        SettlementName = settlement.Label,
+                        Tile = settlement.Tile.tileId,
+                        AtSettlement = atSettlement,
+                        DialogOpen = dialogOpen,
+                        Negotiator = BestCaravanPawnUtility
+                            .FindBestNegotiator(caravan, settlement.Faction, settlement.TraderKind)
+                            ?.LabelShortCap,
+                        TicksToArrive = ticks,
+                        DaysToArrive = ticks / 60000f,
+                        Note = dialogOpen
+                            ? "the game's trade dialog is open: /api/v1/ui/dialog reads it, and the window "
+                                + "endpoints press its buttons"
+                            : "the caravan walks to the settlement now; the game opens its trade dialog on "
+                                + "arrival, which /api/v1/ui/dialog then reads",
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<CaravanTradeResultDto>.Fail(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// The plain travel order, exactly what WorldSelector.AutoOrderToTileNow
+        /// runs for a right-click on an empty tile: the nearest reachable tile to
+        /// the one clicked, the pather with no arrival action, and the game's own
+        /// "ordered to tile" mote so the order is visible.
+        /// </summary>
+        private static ApiResult<CaravanSteerResultDto> Travel(Caravan caravan, PlanetTile clicked)
+        {
+            PlanetTile destination = CaravanUtility.BestGotoDestNear(clicked, caravan);
+            if (!destination.Valid)
+                return ApiResult<CaravanSteerResultDto>.Fail(CaravanRules.NoPath(clicked.tileId));
+
+            if (!caravan.pather.StartPath(destination, null, repathImmediately: true))
+                return ApiResult<CaravanSteerResultDto>.Fail(CaravanRules.NoPath(destination.tileId));
+
+            caravan.gotoMote?.OrderedToTile(destination);
+            return ApiResult<CaravanSteerResultDto>.Ok(
+                SteerAnswer(caravan, destination, CaravanRules.TravelAction, null,
+                    "the caravan walks there and nothing happens on arrival; pass action=visit or "
+                    + "action=trade for a settlement, which runs the game's own arrival action")
+            );
+        }
+
+        /// <summary>
+        /// Why the game would not send the caravan to this settlement for this
+        /// action. Visit and Trade each check their own facts; the wording of the
+        /// ones that answer only yes or no lives in SettlementRules, so it is
+        /// tested without the game.
+        /// </summary>
+        private static string SettlementProblem(Caravan caravan, Settlement settlement, string action)
+        {
+            bool playerFaction = settlement.Faction == Faction.OfPlayer;
+            if (action == CaravanRules.VisitAction)
+            {
+                string visitProblem = SettlementRules.VisitProblem(settlement.Spawned, settlement.Visitable);
+                return visitProblem == null ? null : settlement.Label + ": " + visitProblem;
+            }
+
+            string tradeProblem = SettlementRules.TradeProblem(
+                settlement.Spawned,
+                settlement.HasMap,
+                playerFaction,
+                settlement.Faction != null && settlement.Faction.def.permanentEnemy,
+                settlement.Faction != null && settlement.Faction.HostileTo(Faction.OfPlayer),
+                settlement.CanTradeNow,
+                CaravanArrivalAction_Trade.HasNegotiator(caravan, settlement)
+            );
+            return tradeProblem == null ? null : settlement.Label + ": " + tradeProblem;
+        }
+
+        private static CaravanArrivalAction ArrivalAction(Settlement settlement, string action)
+        {
+            return action == CaravanRules.VisitAction
+                ? (CaravanArrivalAction)new CaravanArrivalAction_VisitSettlement(settlement)
+                : new CaravanArrivalAction_Trade(settlement);
+        }
+
+        private static CaravanSteerResultDto SteerAnswer(Caravan caravan, PlanetTile destination,
+            string action, string label, string note)
+        {
+            int ticks = CaravanArrivalTimeEstimator.EstimatedTicksToArrive(caravan, allowCaching: true);
+            return new CaravanSteerResultDto
+            {
+                CaravanId = caravan.ID,
+                CaravanName = caravan.Name,
+                Tile = destination.tileId,
+                Action = action,
+                Label = label,
+                TilesInPath = CaravanHelper.GetFullCaravanPath(caravan).Count,
+                TicksToArrive = ticks,
+                DaysToArrive = ticks / 60000f,
+                Note = note,
+            };
+        }
+
+        /// <summary>
         /// The tile the caravan travels to, validated against the planet the
         /// game loaded. A tile id the planet does not hold is refused instead of
         /// handed to the pathfinder.

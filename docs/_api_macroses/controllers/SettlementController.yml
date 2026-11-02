@@ -1,0 +1,41 @@
+title: '### :material-home-city: Settlement Controller'
+desc: |-
+  The world map's settlement writes. A player can give up a home from its own gizmo bar; nothing outside the game could, so a colony that outgrew its map had no way to move.
+
+  **Capabilities:**
+
+  * Abandon a player settlement, with the Abandon command's own refusal while every colonist is still home.
+/api/v1/world/settlement/abandon:
+  desc: Abandons a player settlement, the Abandon button of its own gizmo bar. The map is destroyed, its pawns walk out on their own, and an abandoned-settlement world object stays on the tile. A settlement whose archotech structures are still being studied is refused with the game's own warning, because the game asks before it gives those up.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url http://localhost:8765/api/v1/world/settlement/abandon \
+    --header 'Content-Type: application/json' \
+    --data '{"settlement_id": 132}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+        "settlement_id": 132
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "settlement_id": 132,
+            "name": "Newhome",
+            "tile": 1834,
+            "note": "the game abandoned the settlement: its map is gone, its pawns walk out on their own, and an abandoned-settlement world object stays on the tile"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T21:22:03.9182730Z"
+    }
+    ```
+  method: POST

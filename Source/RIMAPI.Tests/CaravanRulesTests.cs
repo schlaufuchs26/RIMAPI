@@ -93,5 +93,78 @@ namespace RIMAPI.Tests
             Assert.DoesNotContain("ExitMapAndCreateCaravan", text);
             Assert.DoesNotContain("FormAndCreateCaravan", text);
         }
+
+        // ---- Steering a formed caravan (fox ticket #4226) ----
+
+        [Fact]
+        public void TheThreeSteerActionsAreTravelVisitAndTrade()
+        {
+            // The order is the one the answer and the refusal print them in;
+            // travel is first because it is the default the route takes.
+            Assert.Equal(new[] { "travel", "visit", "trade" }, CaravanRules.Actions);
+        }
+
+        [Theory]
+        [InlineData(null, "travel")]
+        [InlineData("", "travel")]
+        [InlineData("   ", "travel")]
+        [InlineData("travel", "travel")]
+        [InlineData("Visit", "visit")]
+        [InlineData(" TRADE ", "trade")]
+        public void AnActionNameIsReadCaseAndSpaceInsensitive(string raw, string expected)
+        {
+            Assert.True(CaravanRules.TryParseAction(raw, out string action));
+            Assert.Equal(expected, action);
+        }
+
+        [Fact]
+        public void AnActionTheRouteDoesNotTakeIsRefusedWithTheOnesItDoes()
+        {
+            // Attack and gifts are arrival actions too, but they are not this
+            // route's; the refusal names the three it takes instead of guessing.
+            Assert.False(CaravanRules.TryParseAction("attack", out _));
+            string refusal = CaravanRules.UnknownAction("attack");
+            Assert.Contains("attack", refusal);
+            Assert.Contains("travel", refusal);
+            Assert.Contains("visit", refusal);
+            Assert.Contains("trade", refusal);
+        }
+
+        [Fact]
+        public void ASteerRefusalNamesWhatIsWrong()
+        {
+            Assert.Contains("114", CaravanRules.UnknownCaravan(114));
+            Assert.Contains("not the player's caravan", CaravanRules.NotOurs("Rosa's caravan"));
+            Assert.Contains("999999", CaravanRules.BadTile(999999));
+            Assert.Contains("already stands on tile 42", CaravanRules.AlreadyThere(42));
+            Assert.Contains("no passable route", CaravanRules.NoPath(42));
+        }
+
+        [Fact]
+        public void TheSteerRouteRunsTheWorldMapsOwnOrderRatherThanAPathOfItsOwn()
+        {
+            // The lever is the one a right-click pulls (WorldSelector's
+            // AutoOrderToTileNow) plus the game's arrival actions; a route that
+            // teleports or walks the caravan itself would be a god action.
+            string root = SourceTree.RepoRoot();
+            string service = Path.Combine(
+                root,
+                "Source",
+                "RIMAPI",
+                "RimworldRestApi",
+                "Services",
+                "World",
+                "CaravanService",
+                "CaravanService.cs"
+            );
+
+            string text = File.ReadAllText(service);
+            Assert.Contains("BestGotoDestNear", text);
+            Assert.Contains("caravan.pather.StartPath", text);
+            Assert.Contains("CaravanArrivalAction_Trade", text);
+            Assert.Contains("CaravanArrivalAction_VisitSettlement", text);
+            // No teleport: the caravan walks, the game moves it.
+            Assert.DoesNotContain("Teleport", text);
+        }
     }
 }

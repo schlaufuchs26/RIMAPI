@@ -1,0 +1,176 @@
+title: '### :material-hiking: Caravan Controller'
+desc: |-
+  The world map's caravan writes. The map could be read and never written, so a colony could see its neighbours and never visit them; these routes run what the player's own dialog and right-click run.
+
+  **Capabilities:**
+
+  * Form a caravan from named pawns and goods and send it (the form dialog's Send button).
+  * Change a formed caravan's destination: a plain tile, or a settlement to visit or trade with.
+  * Trade with a settlement: send the caravan there, or open the game's trade dialog when it already stands at it.
+  * Settle a new home where the caravan stands.
+
+  Every route runs the game's own code: `CaravanFormingUtility.StartFormingCaravan`, `Caravan_PathFollower.StartPath` with the game's arrival actions, and `SettleInEmptyTileUtility.Settle`. A precondition that fails answers with the game's own refusal text, not with a wording of our own.
+/api/v1/world/caravan/form:
+  desc: Sends named pawns and goods off as a caravan to a tile. The pawns walk to a packing spot, haul the named goods and leave through the game's own exit cell; the caravan appears in `/api/v1/world/caravans` once it has left the map.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url http://localhost:8765/api/v1/world/caravan/form \
+    --header 'Content-Type: application/json' \
+    --data '{"pawn_ids": [12, 15], "items": [{"thing_id": 4211, "count": 40}], "destination_tile": 1834}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+        "pawn_ids": [12, 15],
+        "items": [{"thing_id": 4211, "count": 40}],
+        "destination_tile": 1834,
+        "map_id": 0
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "pawns": [{"id": 12, "name": "McClain", "downed": false, "x": 120, "z": 95}],
+            "items": ["40 x thing 4211"],
+            "exit_x": 139,
+            "exit_z": 0,
+            "meeting_x": 128,
+            "meeting_z": 148,
+            "starting_tile": 1834,
+            "direction_tile": 1835,
+            "destination_tile": 1834,
+            "mass_usage": 8.34,
+            "mass_capacity": 35.0,
+            "note": "the game's own gather jobs run now: the pawns walk to the meeting cell, haul the named goods and leave through the exit cell, and the caravan appears in /api/v1/world/caravans once it has left the map, which takes game time"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T19:05:31.2018740Z"
+    }
+    ```
+  method: POST
+/api/v1/world/caravan/steer:
+  desc: Changes a formed caravan's destination, the way a right-click on the world map does. A plain tile is a travel order (the nearest reachable tile, no arrival action); a settlement is the game's own Visit or Trade arrival action, which decides what happens when the caravan gets there.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url http://localhost:8765/api/v1/world/caravan/steer \
+    --header 'Content-Type: application/json' \
+    --data '{"caravan_id": 114, "tile": 1834, "action": "travel"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+        "caravan_id": 114,
+        "tile": 1834,
+        "action": "travel"
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "caravan_id": 114,
+            "caravan_name": "McClain's caravan",
+            "tile": 1834,
+            "action": "travel",
+            "label": null,
+            "tiles_in_path": 6,
+            "ticks_to_arrive": 180000,
+            "days_to_arrive": 3.0,
+            "note": "the caravan walks there and nothing happens on arrival; pass action=visit or action=trade for a settlement, which runs the game's own arrival action"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T21:14:02.5512030Z"
+    }
+    ```
+  method: POST
+/api/v1/world/caravan/trade:
+  desc: Trades with a settlement. A caravan that already stands at it opens the game's own trade dialog at once; a caravan still on the way is sent there with the trade arrival action, and the dialog opens when it arrives. The dialog is read through `/api/v1/ui/dialog`, the same window a player trades in.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url http://localhost:8765/api/v1/world/caravan/trade \
+    --header 'Content-Type: application/json' \
+    --data '{"caravan_id": 114, "settlement_id": 87}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+        "caravan_id": 114,
+        "settlement_id": 87
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "caravan_id": 114,
+            "caravan_name": "McClain's caravan",
+            "settlement_id": 87,
+            "settlement_name": "Rustburg",
+            "tile": 1834,
+            "at_settlement": true,
+            "dialog_open": true,
+            "negotiator": "McClain",
+            "ticks_to_arrive": 0,
+            "days_to_arrive": 0.0,
+            "note": "the game's trade dialog is open: /api/v1/ui/dialog reads it, and the window endpoints press its buttons"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T21:15:44.1138760Z"
+    }
+    ```
+  method: POST
+/api/v1/world/caravan/settle:
+  desc: Settles a new home where the caravan stands, the Settle button of the caravan's own gizmo bar. The settlement exists at once; its map generates on the game's own long event and the caravan walks in.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url http://localhost:8765/api/v1/world/caravan/settle \
+    --header 'Content-Type: application/json' \
+    --data '{"caravan_id": 114}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+        "caravan_id": 114
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "caravan_id": 114,
+            "caravan_name": "McClain's caravan",
+            "tile": 1834,
+            "settlement_id": 132,
+            "settlement_name": "Newhome",
+            "note": "the game created the settlement and queues its map now (the game's own long event, which takes a moment of game time); /api/v1/world/player/settlements names it once the map exists"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T21:18:10.7745120Z"
+    }
+    ```
+  method: POST

@@ -77,6 +77,86 @@ namespace RIMAPI.Helpers
             return "a caravan needs at least one pawn: pass the ids in pawn_ids";
         }
 
+        // ---- Steering a formed caravan (fox ticket #4226) ----
+        //
+        // A formed caravan's destination is what the player sets by
+        // right-clicking a tile with the caravan selected: a plain tile is a
+        // travel order, a settlement offers Visit and Trade, and the game's own
+        // arrival action decides what happens on arrival.
+
+        /// <summary>The plain travel order: walk to the tile, do nothing there.</summary>
+        public const string TravelAction = "travel";
+
+        /// <summary>Visit a settlement: enter its map, the game's own arrival action.</summary>
+        public const string VisitAction = "visit";
+
+        /// <summary>Trade with a settlement: the game's trade dialog opens on arrival.</summary>
+        public const string TradeAction = "trade";
+
+        /// <summary>
+        /// The three actions the steer route takes, in the order a caller reads
+        /// them. Travel is the default, because it is the one that needs nothing
+        /// but a tile.
+        /// </summary>
+        public static readonly string[] Actions = { TravelAction, VisitAction, TradeAction };
+
+        /// <summary>
+        /// Reads the action name a caller passed. An empty name is a travel
+        /// order (the route's default); anything else has to be one of the three.
+        /// </summary>
+        public static bool TryParseAction(string raw, out string action)
+        {
+            action = TravelAction;
+            if (raw == null || raw.Trim().Length == 0)
+                return true;
+            string name = raw.Trim().ToLowerInvariant();
+            foreach (string known in Actions)
+            {
+                if (known == name)
+                {
+                    action = known;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static string UnknownAction(string raw)
+        {
+            return "unknown caravan action \"" + raw + "\": the steer route takes "
+                + string.Join(", ", Actions);
+        }
+
+        public static string UnknownCaravan(int id)
+        {
+            return "no caravan with id " + id + " on the world map: /api/v1/world/caravans prints the ids";
+        }
+
+        public static string NotOurs(string label)
+        {
+            return label + " is not the player's caravan, so it cannot be steered";
+        }
+
+        public static string BadTile(int tile)
+        {
+            return "tile " + tile + " is not a tile of this planet: /api/v1/world/tile reads one by id";
+        }
+
+        public static string AlreadyThere(int tile)
+        {
+            return "the caravan already stands on tile " + tile + "; name the tile it should travel to";
+        }
+
+        /// <summary>
+        /// The game's pathfinder refused the path. It is its own gate (an
+        /// impassable ocean or mountain range between here and there), so the
+        /// refusal names it instead of blaming the call.
+        /// </summary>
+        public static string NoPath(int tile)
+        {
+            return "the game found no passable route to tile " + tile + ", so it would not start the caravan";
+        }
+
         /// <summary>
         /// Why the game would not send this pawn, in the order the game's own
         /// sendable list drops him. The caller checks the facts it can see; the

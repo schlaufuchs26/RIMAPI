@@ -8,17 +8,24 @@ using RIMAPI.Services;
 namespace RIMAPI.Controllers
 {
     /// <summary>
-    /// Forming a caravan (fox ticket #4212, wave 2). The world map was read-only:
-    /// eleven read routes and no write, so a colony could see its neighbours and
-    /// never visit them. This route runs the dialog's Send button.
+    /// The caravan writes (fox tickets #4212 and #4226, wave 2). The world map was
+    /// read-only: eleven read routes and no write, so a colony could see its
+    /// neighbours and never visit them. Form runs the form-caravan dialog's Send
+    /// button; steer, trade and settle run what the world map's own right-click and
+    /// the caravan's gizmo bar run.
     /// </summary>
     public class CaravanController
     {
         private readonly ICaravanService _caravanService;
+        private readonly ISettlementService _settlementService;
 
-        public CaravanController(ICaravanService caravanService)
+        public CaravanController(
+            ICaravanService caravanService,
+            ISettlementService settlementService
+        )
         {
             _caravanService = caravanService;
+            _settlementService = settlementService;
         }
 
         [Post("/api/v1/world/caravan/form")]
@@ -53,6 +60,48 @@ namespace RIMAPI.Controllers
                 body.MapId = mapId;
 
             var result = _caravanService.Form(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/world/caravan/steer")]
+        [RequestBody(typeof(SteerCaravanRequest))]
+        [EndpointMetadata(
+            "Change a formed caravan's destination: a plain tile is a travel order, a settlement is the game's own Visit or Trade arrival action"
+        )]
+        public async Task SteerCaravan(HttpListenerContext context)
+        {
+            SteerCaravanRequest body = context.Request.HasEntityBody
+                ? await context.Request.ReadBodyAsync<SteerCaravanRequest>()
+                : null;
+            var result = _caravanService.Steer(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/world/caravan/trade")]
+        [RequestBody(typeof(CaravanTradeRequest))]
+        [EndpointMetadata(
+            "Trade with a settlement: send the caravan there, or open the game's own trade dialog when it already stands at it"
+        )]
+        public async Task TradeCaravan(HttpListenerContext context)
+        {
+            CaravanTradeRequest body = context.Request.HasEntityBody
+                ? await context.Request.ReadBodyAsync<CaravanTradeRequest>()
+                : null;
+            var result = _caravanService.Trade(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/world/caravan/settle")]
+        [RequestBody(typeof(SettleCaravanRequest))]
+        [EndpointMetadata(
+            "Settle a new home where the caravan stands, the Settle button of the caravan's own gizmo bar"
+        )]
+        public async Task SettleCaravan(HttpListenerContext context)
+        {
+            SettleCaravanRequest body = context.Request.HasEntityBody
+                ? await context.Request.ReadBodyAsync<SettleCaravanRequest>()
+                : null;
+            var result = _settlementService.Settle(body);
             await context.SendJsonResponse(result);
         }
     }

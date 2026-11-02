@@ -63,6 +63,10 @@
     <!-- The rules of forming a caravan (fox ticket #4212, wave 2): the mass
          comparison and the game's own refusal keys. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CaravanRules.cs" Link="Linked\CaravanRules.cs" />
+    <!-- The wording of settling, abandoning and trading (fox ticket #4226,
+         wave 2): the game's own limit keys and the facts its yes/no checks
+         leave unsaid. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SettlementRules.cs" Link="Linked\SettlementRules.cs" />
     <!-- The wording of an apparel policy's refusals (fox ticket #4212, gap 2). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApparelPolicyRules.cs" Link="Linked\ApparelPolicyRules.cs" />
     <!-- The bounds of a drug policy write (fox ticket #4212, gap 3). -->
