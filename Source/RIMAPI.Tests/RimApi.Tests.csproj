@@ -251,5 +251,9 @@
          twice is marked once, and the map is flat, so two entries that differ
          only in y are one cell. Plain C#, so the rule is tested here. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationCells.cs" Link="Linked\DesignationCells.cs" />
+    <!-- What a player can see of the map (fox ticket #4220): the fog verdict a
+         map read applies before it answers. Plain C#, so the rules are tested
+         without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FogReveal.cs" Link="Linked\FogReveal.cs" />
   </ItemGroup>
 </Project>

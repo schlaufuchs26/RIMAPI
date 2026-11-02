@@ -34,6 +34,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/things")]
         [QueryParameters("map_id:integer")]
+        [EndpointMetadata("Get the items lying on the map; cells the colony has not explored are left out")]
         public async Task GetMapThings(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -43,6 +44,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/things-at")]
         [RequestBody(typeof(ThingsAtCellRequestDto))]
+        [EndpointMetadata("Get the things standing in one cell; a cell the colony has not explored answers nothing")]
         public async Task GetThingsAtCell(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<ThingsAtCellRequestDto>();
@@ -52,6 +54,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/things/radius")]
         [QueryParameters("map_id:integer", "radius:integer", "x:integer", "z:integer")]
+        [EndpointMetadata("Get the items, buildings and plants within a radius of one cell; cells the colony has not explored are left out")]
         public async Task GetMapThingsInRadius(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -65,7 +68,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/plants")]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Get all plants (trees, bushes, crops) on the map")]
+        [EndpointMetadata("Get all plants (trees, bushes, crops) the colony can see; fogged cells are left out")]
         public async Task GetMapPlants(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -75,7 +78,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/plants/area")]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Get the plants standing on a rectangle (x1, z1, x2, z2): defName, growth and cell of each")]
+        [EndpointMetadata("Get the plants standing on a rectangle (x1, z1, x2, z2): defName, growth and cell of each, fogged cells left out")]
         public async Task GetMapPlantsInRect(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -159,6 +162,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/ore")]
         [QueryParameters("map_id:integer")]
+        [EndpointMetadata("Get the ore the colony has found, grouped by def: cells and hit points per deposit, fogged cells left out")]
         public async Task GetMapOre(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -168,7 +172,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/animals")]
         [QueryParameters("map_id:integer")]
-        [EndpointMetadata("Get animals on the map: id, race, name, side (wild or tame), sex, life stage, health, the tame and hunt designations, and whether it is a manhunter or a predator")]
+        [EndpointMetadata("Get the animals the colony can see: id, race, name, side (wild or tame), sex, life stage, health, the tame and hunt designations, and whether it is a manhunter or a predator; animals in fogged cells are left out")]
         public async Task GetMapAnimals(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -324,6 +328,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/buildings")]
         [QueryParameters("map_id:integer")]
+        [EndpointMetadata("Get the colony's buildings; a building in a cell the colony has not explored is left out")]
         public async Task GetMapBuildings(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);

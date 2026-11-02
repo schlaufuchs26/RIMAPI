@@ -64,6 +64,13 @@ namespace RIMAPI.Services
 
                 IntVec3 cellPosition = new IntVec3(body.Position.X, body.Position.Y, body.Position.Z);
 
+                // A cell the colony has not explored holds nothing a player can
+                // point at (fox ticket #4220).
+                if (MapHelper.IsFogged(map, cellPosition))
+                {
+                    return ApiResult<List<ThingDto>>.Ok(new List<ThingDto>());
+                }
+
                 List<Thing> things = cellPosition.GetThingList(map);
                 List<ThingDto> thingDtos = new List<ThingDto>();
 

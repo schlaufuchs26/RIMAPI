@@ -31,6 +31,42 @@ namespace RIMAPI.Helpers
             return null;
         }
 
+        // The fog verdict of the map reads (fox ticket #4220). The reads below
+        // walk the whole map, and every cell the colony has not explored is
+        // information a player does not have: the parity rule says the mod is
+        // the interface to what a player can do and see, so a read answers only
+        // the revealed cells. A map without a fog grid hides nothing.
+        public static bool IsFogged(Map map, IntVec3 cell)
+        {
+            if (map.fogGrid == null) return false;
+            return map.fogGrid.IsFogged(map.cellIndices.CellToIndex(cell));
+        }
+
+        // A thing shows when any cell it covers is revealed (FogReveal.ShowsAny);
+        // a multi-cell building is drawn cell by cell, so its lit half counts.
+        private static bool Revealed(Map map, Thing thing)
+        {
+            if (map.fogGrid == null) return true;
+            return FogReveal.ShowsAny(FoggedCells(map, thing.OccupiedRect()));
+        }
+
+        // A carried pawn's own Position is where it was picked up, so the cell
+        // that matters is the carrier's (the animal read already reports that
+        // cell, fox #3668).
+        private static bool RevealedPawn(Map map, Pawn pawn)
+        {
+            IntVec3 cell = pawn.CarriedBy != null ? pawn.CarriedBy.Position : pawn.Position;
+            return !IsFogged(map, cell);
+        }
+
+        private static IEnumerable<bool> FoggedCells(Map map, CellRect cells)
+        {
+            foreach (IntVec3 cell in cells)
+            {
+                yield return IsFogged(map, cell);
+            }
+        }
+
         public static List<MapDto> GetMaps()
         {
             var maps = new List<MapDto>();
@@ -255,6 +291,9 @@ namespace RIMAPI.Helpers
                     // the spawned-only filter dropped it and a rescue looked
                     // like a death (fox #3668).
                     .Where(p => p != null && AnimalRules.Listed(p.Spawned, p.CarriedBy != null, p.Dead, p.Destroyed))
+                    // Only the animals standing where the colony can see (fox
+                    // ticket #4220): a herd in the dark is not on the screen.
+                    .Where(p => RevealedPawn(map, p))
                     .Select(p => AnimalDtoOf(map, p))
                     .ToList();
 
@@ -336,6 +375,7 @@ namespace RIMAPI.Helpers
 
                 things = map
                     .listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver)
+                    .Where(t => Revealed(map, t))
                     .Select(p => ResourcesHelper.ThingToDto(p))
                     .ToList();
 
@@ -359,9 +399,10 @@ namespace RIMAPI.Helpers
                     return plants;
                 }
 
-                // Get all plants (trees, bushes, crops, etc.)
+                // Get all plants (trees, bushes, crops, etc.) the player can see.
                 plants = map
                     .listerThings.ThingsInGroup(ThingRequestGroup.Plant)
+                    .Where(t => Revealed(map, t))
                     .Select(p => ResourcesHelper.ThingToDto(p))
                     .ToList();
 
@@ -518,6 +559,12 @@ namespace RIMAPI.Helpers
             foreach (IntVec3 cell in rect)
             {
                 if (!cell.InBounds(map))
+                {
+                    continue;
+                }
+                // A plant in a cell the colony has not explored is not on the
+                // screen (fox ticket #4220).
+                if (IsFogged(map, cell))
                 {
                     continue;
                 }
@@ -986,6 +1033,10 @@ namespace RIMAPI.Helpers
 
             foreach (Building building in map.listerBuildings.allBuildingsColonist)
             {
+                // The colony's own buildings stand where it built them, so the
+                // filter changes nothing today; it keeps the read honest if a
+                // building ever stands in the dark (fox ticket #4220).
+                if (!Revealed(map, building)) continue;
                 buildings.Add(
                     new BuildingDto
                     {
@@ -1249,6 +1300,7 @@ namespace RIMAPI.Helpers
             foreach (IntVec3 cell in GenRadial.RadialCellsAround(center, radius, true))
             {
                 if (!cell.InBounds(map)) continue;
+                if (IsFogged(map, cell)) continue;
                 List<Thing> thingsAtCell = map.thingGrid.ThingsListAt(cell);
 
                 for (int i = 0; i < thingsAtCell.Count; i++)
@@ -1263,6 +1315,11 @@ namespace RIMAPI.Helpers
                     {
                         // Skip invisible things
                         if (t.def.drawerType == DrawerType.None) continue;
+
+                        // A thing the colony cannot see is not in the answer,
+                        // even when the cell asked about is revealed (fox
+                        // ticket #4220).
+                        if (!Revealed(map, t)) continue;
 
                         // Convert to DTO
                         // Use existing helper but ensure we capture building-specifics if needed
@@ -1298,6 +1355,10 @@ namespace RIMAPI.Helpers
             {
                 if (thing.def.mineable)
                 {
+                    // Ore under unexplored rock is exactly what a player does
+                    // not know about (fox ticket #4220).
+                    if (IsFogged(map, thing.Position)) continue;
+
                     string defName = thing.def.defName;
 
                     // Get or Create the Group for this ore type

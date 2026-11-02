@@ -11,7 +11,9 @@ desc: |-
   *   Query map size and boundaries.
   *   Modify terrain (set floors, clear debris).
 /api/v1/map/things:
-  desc: Returns a comprehensive list of all objects (things) present on the current map.
+  desc: |-
+    Returns a comprehensive list of all objects (things) present on the current map.
+    Cells the colony has not explored are left out: a thing in fog is not on the player's screen.
   curl: |-
     **Example:**
     ```bash
@@ -199,6 +201,8 @@ desc: |-
     Returns a list of things located at a specific single cell coordinate.
 
     **Note:** Unlike standard GET requests, this endpoint requires a JSON body containing the coordinates.
+
+    A cell the colony has not explored answers an empty list.
   curl: |-
     **Example:**
     ```bash
@@ -245,7 +249,7 @@ desc: |-
 /api/v1/map/things/radius:
   desc: |-
     Returns a list of all things found within a specified radius around a center point.
-    Useful for finding nearby resources or enemies.
+    Useful for finding nearby resources or enemies. Cells the colony has not explored are left out.
   curl: |-
     **Example:**
     ```bash
@@ -298,7 +302,8 @@ desc: |-
   method: GET
 /api/v1/map/ore:
   desc: |-
-    Returns a compressed dictionary of all ore deposits on the map.
+    Returns a compressed dictionary of the ore deposits the colony has found.
+    Ore in cells the colony has not explored is left out.
 
     **Structure:**
     * Keys are the ore definition names (e.g., "MineableSteel").
@@ -367,6 +372,7 @@ desc: |-
   desc: |-
     Returns a list of all plants located on the specified map.
     This includes wild plants (trees, bushes, grass) and sown crops.
+    Plants in cells the colony has not explored are left out.
   curl: |-
     **Example:**
     ```bash
@@ -448,6 +454,7 @@ desc: |-
     Retrieves a list of all animals currently present on the active map.
     This includes both wild animals and tamed/owned animals
     (pets, livestock, caravan animals).
+    Animals in cells the colony has not explored are left out.
   curl: |-
     **Example:**
     ```bash
@@ -958,7 +965,9 @@ desc: |-
     ```
   method: GET
 /api/v1/map/buildings:
-  desc: Retrieves a comprehensive list of all buildings and structures present on the active map.
+  desc: |-
+    Retrieves a comprehensive list of all buildings and structures present on the active map.
+    A building in a cell the colony has not explored is left out.
   curl: |-
     **Example:**
     ```bash
