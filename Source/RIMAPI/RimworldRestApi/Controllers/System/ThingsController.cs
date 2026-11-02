@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -21,6 +23,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/resources/summary")]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get a resources summary")]
+        [ResponseBody(typeof(ResourcesSummaryDto))]
         public async Task GetResourcesSummary(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -30,27 +33,35 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/resources/stored")]
         [QueryParameters("category:string?", "map_id:integer")]
+        // The query narrows one shape rather than switching to another: a
+        // stack list per category, with the one category the query names (fox
+        // ticket #4304). The category branch answered a flat list before, so
+        // one route had two response shapes and the spec could name no type.
         [EndpointMetadata("List the stored resources")]
+        [ResponseBody(typeof(Dictionary<string, List<ThingDto>>))]
         public async Task GetResourcesStored(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
             var categoryDef = RequestParser.GetStringParameter(context, "category", false);
 
-            if (string.IsNullOrEmpty(categoryDef))
+            var result = _resourcesService.GetAllStoredResources(mapId);
+            if (!string.IsNullOrEmpty(categoryDef) && result.Success && result.Data != null)
             {
-                var result = _resourcesService.GetAllStoredResources(mapId);
-                await context.SendJsonResponse(result);
+                var picked = new Dictionary<string, List<ThingDto>>(StringComparer.Ordinal);
+                List<ThingDto> things;
+                if (result.Data.TryGetValue(categoryDef, out things))
+                    picked[categoryDef] = things;
+
+                result = ApiResult<Dictionary<string, List<ThingDto>>>.Ok(picked);
             }
-            else
-            {
-                var result = _resourcesService.GetAllStoredResourcesByCategory(mapId, categoryDef);
-                await context.SendJsonResponse(result);
-            }
+
+            await context.SendJsonResponse(result);
         }
 
         [Get("/api/v1/resources/storages/summary")]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get a storage summary")]
+        [ResponseBody(typeof(StoragesSummaryDto))]
         public async Task GetStoragesSummary(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -61,6 +72,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/item/spawn")]
         [RequestBody(typeof(SpawnItemRequestDto))]
         [EndpointMetadata("Spawn an item")]
+        [ResponseBody]
         public async Task SpawnItem(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SpawnItemRequestDto>();
@@ -71,6 +83,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/item/recipes")]
         [QueryParameters("def_name:string")]
         [EndpointMetadata("List an item's recipes")]
+        [ResponseBody(typeof(ItemRecipesDto))]
         public async Task GetItemRecipe(HttpListenerContext context)
         {
             var itemDef = RequestParser.GetStringParameter(context, "def_name");
@@ -81,6 +94,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/item/sources")]
         [QueryParameters("def_name:string")]
         [EndpointMetadata("List where an item comes from")]
+        [ResponseBody(typeof(ThingSourcesDto))]
         public async Task GetItemSource(HttpListenerContext context)
         {
             var itemDef = RequestParser.GetStringParameter(context, "def_name");
@@ -91,6 +105,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/things/set-forbidden")]
         [RequestBody(typeof(SetForbiddenRequestDto))]
         [EndpointMetadata("Set things forbidden")]
+        [ResponseBody]
         public async Task SetForbidden(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SetForbiddenRequestDto>();

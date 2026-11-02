@@ -18,6 +18,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/lords/create")]
         [RequestBody(typeof(LordCreateRequestDto))]
         [EndpointMetadata("Create a lord")]
+        [ResponseBody(typeof(LordCreateDto))]
         public async Task CreateLord(HttpListenerContext context)
         {
             // Helper to parse body safely

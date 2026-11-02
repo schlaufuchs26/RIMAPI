@@ -74,6 +74,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/pawns/interactions/force")]
         [RequestBody(typeof(ForceInteractionRequestDto))]
         [EndpointMetadata("Force a social interaction", Notes = "Forces a specific social interaction to occur immediately between two pawns.")]
+        [ResponseBody]
         public async Task ForceInteraction(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<ForceInteractionRequestDto>();
@@ -84,6 +85,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/pawns/relations/add")]
         [RequestBody(typeof(AddRelationRequestDto))]
         [EndpointMetadata("Create a social bond")]
+        [ResponseBody]
         public async Task AddRelation(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<AddRelationRequestDto>();
@@ -94,6 +96,7 @@ namespace RIMAPI.Controllers
         [Delete("/api/v1/dev/pawns/relations/remove")]
         [QueryParameters("relation_def_name:string")]
         [EndpointMetadata("Sever a social bond")]
+        [ResponseBody]
         public async Task RemoveRelation(HttpListenerContext context)
         {
             var pawn1Id = RequestParser.GetIntParameter(context, "pawn1_id");

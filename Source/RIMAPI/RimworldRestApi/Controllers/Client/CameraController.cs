@@ -23,6 +23,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/change/zoom")]
         [QueryParameters("zoom:integer")]
         [EndpointMetadata("Change game camera zoom")]
+        [ResponseBody]
         public async Task ChangeZoom(HttpListenerContext context)
         {
             var zoom = RequestParser.GetIntParameter(context, "zoom");
@@ -34,6 +35,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/change/position")]
         [QueryParameters("x:integer", "y:integer")]
         [EndpointMetadata("Change game camera position")]
+        [ResponseBody]
         public async Task MoveToPosition(HttpListenerContext context)
         {
             var x = RequestParser.GetIntParameter(context, "x");
@@ -46,6 +48,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/follow/pawn")]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Jump the camera to a pawn")]
+        [ResponseBody]
         public async Task JumpToPawn(HttpListenerContext context)
         {
             var pawnId = RequestParser.GetIntParameter(context, "pawn_id");
@@ -57,6 +60,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/screenshot")]
         [RequestBody(typeof(CameraScreenshotRequestDto))]
         [EndpointMetadata("Capture a screenshot", Notes = "Capture a screenshot of the game view. Supports resizing and format changes.")]
+        [ResponseBody(typeof(CameraScreenshotResponseDto))]
         public async Task MakeScreenshot(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<CameraScreenshotRequestDto>();
@@ -67,6 +71,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/screenshot/native")]
         [RequestBody(typeof(NativeScreenshotRequestDto))]
         [EndpointMetadata("Save a screenshot to disk", Notes = "Moves the camera and saves a high-quality screenshot directly to the host machine's hard drive.")]
+        [ResponseBody(typeof(string))]
         public async Task TriggerNativeScreenshot(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<NativeScreenshotRequestDto>();
@@ -76,6 +81,7 @@ namespace RimworldRestApi.Controllers
 
         [Post("/api/v1/camera/stream/start")]
         [EndpointMetadata("Start game camera stream")]
+        [ResponseBody]
         public async Task PostStreamStart(HttpListenerContext context)
         {
             var result = _cameraService.StartStream(_cameraStream);
@@ -84,6 +90,7 @@ namespace RimworldRestApi.Controllers
 
         [Post("/api/v1/camera/stream/stop")]
         [EndpointMetadata("Stop game camera stream")]
+        [ResponseBody]
         public async Task PostStreamStop(HttpListenerContext context)
         {
             var result = _cameraService.StopStream(_cameraStream);
@@ -93,6 +100,7 @@ namespace RimworldRestApi.Controllers
         [Post("/api/v1/camera/stream/setup")]
         [RequestBody(typeof(StreamConfigDto))]
         [EndpointMetadata("Set game camera stream configuration")]
+        [ResponseBody]
         public async Task PostStreamSetup(HttpListenerContext context)
         {
             var requestData = await context.Request.ReadBodyAsync<StreamConfigDto>();
@@ -102,6 +110,7 @@ namespace RimworldRestApi.Controllers
 
         [Get("/api/v1/camera/stream/status")]
         [EndpointMetadata("Get game camera stream status")]
+        [ResponseBody(typeof(StreamStatusDto))]
         public async Task GetStreamStatus(HttpListenerContext context)
         {
             var result = _cameraService.GetStreamStatus(_cameraStream);

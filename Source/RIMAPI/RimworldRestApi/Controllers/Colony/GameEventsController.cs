@@ -66,6 +66,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/incident/trigger")]
         [RequestBody(typeof(TriggerIncidentRequestDto))]
         [EndpointMetadata("Trigger game incident")]
+        [ResponseBody]
         public async Task TriggerIncident(HttpListenerContext context)
         {
             var requestData = await context.Request.ReadBodyAsync<TriggerIncidentRequestDto>();

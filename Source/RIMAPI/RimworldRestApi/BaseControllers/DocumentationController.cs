@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RIMAPI.Models;
 using Verse;
 
 namespace RIMAPI.Core
@@ -22,7 +23,8 @@ namespace RIMAPI.Core
         }
 
         [Get("/api/v1/core/docs/export")]
-        [EndpointMetadata("Export the core API documentation")]
+        [EndpointMetadata("Export the core API documentation", Notes = "The body is the document itself, not the API envelope.")]
+        [ResponseBody(typeof(string))]
         public async Task ExportCoreDocumentation(HttpListenerContext context)
         {
             await ExportDocumentation(context, true);
@@ -30,7 +32,8 @@ namespace RIMAPI.Core
 
         [Get("/api/v1/docs")]
         [QueryParameters("format:string?")]
-        [EndpointMetadata("Get the API documentation")]
+        [EndpointMetadata("Get the API documentation", Notes = "The body is the document itself in the format the query asks for, not the API envelope.")]
+        [ResponseBody(typeof(string))]
         public async Task GetDocumentation(HttpListenerContext context)
         {
             var format = context.Request.QueryString["format"] ?? "html";
@@ -41,7 +44,11 @@ namespace RIMAPI.Core
                 {
                     case "json":
                         var docs = _docService.GenerateDocumentation();
-                        await ResponseBuilder.SendSuccess(context.Response, docs);
+                        await SendRawResponse(
+                            context.Response,
+                            JsonConvert.SerializeObject(docs, Formatting.Indented),
+                            "application/json"
+                        );
                         break;
 
                     case "markdown":
@@ -82,6 +89,9 @@ namespace RIMAPI.Core
             }
         }
 
+        // The document routes answer the document itself, so the payload this
+        // helper sends is text whatever the format (fox ticket #4304).
+        [ResponseBody(typeof(string))]
         private async Task SendRawResponse(
             HttpListenerResponse response,
             string content,
@@ -153,7 +163,8 @@ namespace RIMAPI.Core
 
         // Additional endpoint for specific extension documentation
         [Get("/api/v1/docs/extensions/{extensionId}")]
-        [EndpointMetadata("Get one extension's documentation")]
+        [EndpointMetadata("Get one extension's documentation", Notes = "The body is the extension's own document as JSON, not the API envelope.")]
+        [ResponseBody(typeof(string))]
         public async Task GetExtensionDocumentation(HttpListenerContext context, string extensionId)
         {
             try
@@ -173,7 +184,13 @@ namespace RIMAPI.Core
                     return;
                 }
 
-                await ResponseBuilder.SendSuccess(context.Response, extensionSection);
+                // A document like its siblings, not an envelope: one schema
+                // then covers every route of this controller (fox ticket #4304).
+                await SendRawResponse(
+                    context.Response,
+                    JsonConvert.SerializeObject(extensionSection, Formatting.Indented),
+                    "application/json"
+                );
             }
             catch (Exception ex)
             {
@@ -189,21 +206,22 @@ namespace RIMAPI.Core
         // Health check endpoint for documentation service
         [Get("/api/v1/docs/health")]
         [EndpointMetadata("Get the documentation health")]
+        [ResponseBody(typeof(DocumentationHealthDto))]
         public async Task GetHealth(HttpListenerContext context)
         {
             try
             {
                 var docs = _docService.GenerateDocumentation();
-                var healthInfo = new
+                var healthInfo = new DocumentationHealthDto
                 {
-                    status = "healthy",
-                    generated_at = DateTime.UtcNow,
-                    total_endpoints = docs.Sections.Sum(s => s.Endpoints.Count),
-                    total_extensions = docs.Sections.Count - 1, // minus core
-                    sections = docs.Sections.Select(s => s.Name),
+                    Status = "healthy",
+                    GeneratedAt = DateTime.UtcNow,
+                    TotalEndpoints = docs.Sections.Sum(s => s.Endpoints.Count),
+                    TotalExtensions = docs.Sections.Count - 1, // minus core
+                    Sections = docs.Sections.Select(s => s.Name).ToList(),
                 };
 
-                await ResponseBuilder.SendSuccess(context.Response, healthInfo);
+                await context.SendJsonResponse(ApiResult<DocumentationHealthDto>.Ok(healthInfo));
             }
             catch (Exception ex)
             {
@@ -217,7 +235,8 @@ namespace RIMAPI.Core
 
         [Get("/api/v1/docs/export")]
         [QueryParameters("format:string?")]
-        [EndpointMetadata("Export the API documentation")]
+        [EndpointMetadata("Export the API documentation", Notes = "The body is the document itself, not the API envelope.")]
+        [ResponseBody(typeof(string))]
         public async Task ExportDocumentation(HttpListenerContext context, bool saveFile = false)
         {
             try

@@ -461,6 +461,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/weather/change")]
         [QueryParameters("map_id:integer", "name:string")]
         [EndpointMetadata("Set weather on the map")]
+        [ResponseBody]
         public async Task SetWeather(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -472,6 +473,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/destroy/corpses")]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Destroy the map's corpses")]
+        [ResponseBody]
         public async Task DestroyCorpses(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -482,6 +484,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/destroy/forbidden")]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Destroy the forbidden items")]
+        [ResponseBody]
         public async Task DestroyForbiddenItems(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -492,6 +495,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/destroy/rect")]
         [RequestBody(typeof(DestroyRectRequestDto))]
         [EndpointMetadata("Destroy things in a rectangle")]
+        [ResponseBody]
         public async Task DestroyThingsInRect(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DestroyRectRequestDto>();
@@ -502,6 +506,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/repair/positions")]
         [RequestBody(typeof(RepairPositionsRequestDto))]
         [EndpointMetadata("Repair things at positions")]
+        [ResponseBody]
         public async Task RepairAtPositions(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<RepairPositionsRequestDto>();
@@ -512,6 +517,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/repair/rect")]
         [RequestBody(typeof(RepairRectRequestDto))]
         [EndpointMetadata("Repair things in a rectangle")]
+        [ResponseBody]
         public async Task RepairInRect(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<RepairRectRequestDto>();
@@ -522,6 +528,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/map/droppod")]
         [RequestBody(typeof(SpawnDropPodRequestDto))]
         [EndpointMetadata("Spawn a drop pod")]
+        [ResponseBody]
         public async Task SpawnDropPod(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SpawnDropPodRequestDto>();

@@ -45,6 +45,13 @@ namespace RIMAPI.Tests
             RegexOptions.Compiled
         );
 
+        // A call without a receiver: a helper of the same file, such as the
+        // SendRawResponse of the documentation controller.
+        private static readonly Regex BareCall = new Regex(
+            @"(?<![\w.])(?<name>\w+)\s*\(",
+            RegexOptions.Compiled
+        );
+
         private static readonly Regex InlineResult = new Regex(
             @"ApiResult<(?<type>[^;()]+?)>\s*\.\s*(?:Ok|Fail|Partial)\s*\(",
             RegexOptions.Compiled
@@ -183,6 +190,21 @@ namespace RIMAPI.Tests
                 foreach (Match field in Field.Matches(text))
                     fields[field.Groups[2].Value] = field.Groups[1].Value;
 
+                // A handler may answer through a method of its own file that
+                // declares what it sends, the way a route declares its own
+                // payload (fox ticket #4304).
+                var declared = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (Match method in Declaration.Matches(text))
+                {
+                    string block = AttributeBlock(lines, LineOf(text, method.Index) - 1);
+                    Match own = ResponseAttribute.Match(block);
+                    if (!own.Success)
+                        continue;
+                    Group ownType = own.Groups["type"];
+                    declared[method.Groups["name"].Value] =
+                        ownType.Success ? ownType.Value : "none";
+                }
+
                 foreach (Match declaration in Declaration.Matches(text))
                 {
                     int line = LineOf(text, declaration.Index);
@@ -202,7 +224,7 @@ namespace RIMAPI.Tests
                             relative + ":" + line,
                             Area(relative, attribute.Groups[2].Value),
                             ResponseAttribute.Match(attributes),
-                            ReadAnswer(body, fields, returns)
+                            ReadAnswer(body, fields, returns, declared)
                         )
                     );
                 }
@@ -215,8 +237,17 @@ namespace RIMAPI.Tests
         private static Dictionary<string, string> ServiceReturns(string root)
         {
             var returns = new Dictionary<string, string>(StringComparer.Ordinal);
+            // A service answers either synchronously (ApiResult&lt;T&gt;) or as a
+            // task the handler awaits (Task&lt;ApiResult&lt;T&gt;&gt;); both carry the same
+            // envelope, so the task wrapper names no type of its own. Two
+            // patterns, because one that made the wrapper optional would read
+            // the wrapper's own closing angle as part of the payload type.
             var returnLine = new Regex(
-                @"^\s*(?:public\s+|internal\s+)?ApiResult(?:<(?<type>[^;()]+?)>)?\s+(?<name>\w+)\s*\(",
+                @"^\s*(?:public\s+|internal\s+)?ApiResult(?:<(?<type>[^;()]+)>)?\s+(?<name>\w+)\s*\(",
+                RegexOptions.Compiled
+            );
+            var taskReturnLine = new Regex(
+                @"^\s*(?:public\s+|internal\s+)?Task<ApiResult(?:<(?<type>[^;()]+)>)?>\s+(?<name>\w+)\s*\(",
                 RegexOptions.Compiled
             );
             var interfaceLine = new Regex(@"\binterface\s+(?<name>\w+)", RegexOptions.Compiled);
@@ -236,6 +267,8 @@ namespace RIMAPI.Tests
                         continue;
 
                     Match match = returnLine.Match(line);
+                    if (!match.Success)
+                        match = taskReturnLine.Match(line);
                     if (match.Success)
                     {
                         Group type = match.Groups["type"];
@@ -256,7 +289,8 @@ namespace RIMAPI.Tests
         private static Answer ReadAnswer(
             string body,
             Dictionary<string, string> fields,
-            Dictionary<string, string> returns
+            Dictionary<string, string> returns,
+            Dictionary<string, string> declared
         )
         {
             var payloads = new HashSet<string>(StringComparer.Ordinal);
@@ -281,6 +315,16 @@ namespace RIMAPI.Tests
 
                 payloads.Add(payload ?? "none");
                 hints.Add(key + " → " + (payload ?? "ApiResult"));
+            }
+
+            foreach (Match bare in BareCall.Matches(body))
+            {
+                string payload;
+                if (!declared.TryGetValue(bare.Groups["name"].Value, out payload))
+                    continue;
+
+                payloads.Add(payload);
+                hints.Add(bare.Groups["name"].Value + " → " + payload);
             }
 
             if (payloads.Count != 1)

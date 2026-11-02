@@ -83,6 +83,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/dev/faction/change/goodwill")]
         [RequestBody(typeof(FactionChangeRelationRequestDto))]
         [EndpointMetadata("Change faction goodwill")]
+        [ResponseBody(typeof(FactionChangeRelationResponceDto))]
         public async Task ChangeFactionRelationWith(HttpListenerContext context)
         {
             FactionChangeRelationRequestDto body =
