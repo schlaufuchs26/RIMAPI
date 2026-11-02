@@ -1,0 +1,73 @@
+# Routes the fox fork added and deliberately leaves undocumented (fuchs #4109).
+#
+# mkdocs_check_api.py fails on a C# route that no YAML file documents, which is
+# how upstream keeps its own docs complete. The fork's 62 added routes have no
+# doc block yet; listing them here lets the checker stay a gate on the fox
+# branch: a route that is neither documented nor on this list still fails, and a
+# line whose route got documented (or removed from C#) is reported as stale so
+# this list cannot quietly hide a missing doc block later.
+#
+# One route per line: <Controller>.cs <path>. Drop the line when you document
+# the route.
+BuilderController.cs /api/v1/builder/cancel
+CombatController.cs /api/v1/map/combat
+CombatController.cs /api/v1/map/cover
+CombatController.cs /api/v1/map/deaths
+CombatController.cs /api/v1/pawn/draft
+CombatController.cs /api/v1/pawn/order
+DevToolsController.cs /api/v1/dev/action
+GameController.cs /api/v1/game/scenarios
+GameController.cs /api/v1/game/settings/manual-priorities
+GameController.cs /api/v1/game/start/candidates
+GameEventsController.cs /api/v1/quest/accept
+GlobalMapController.cs /api/v1/world/landing
+IdeoController.cs /api/v1/ideo
+IdeoController.cs /api/v1/ideo/ritual/end
+IdeoController.cs /api/v1/ideo/ritual/start
+IdeoController.cs /api/v1/ideo/rituals
+IdeoController.cs /api/v1/ideo/role/assign
+IdeoController.cs /api/v1/ideo/roles
+JobLogController.cs /api/v1/colonists/job-log
+MapController.cs /api/v1/map/area
+MapController.cs /api/v1/map/area/expand
+MapController.cs /api/v1/map/blueprints
+MapController.cs /api/v1/map/building/bed-for-prisoners
+MapController.cs /api/v1/map/building/bed-owner
+MapController.cs /api/v1/map/building/temperature-target
+MapController.cs /api/v1/map/designations
+MapController.cs /api/v1/map/food/rotting
+MapController.cs /api/v1/map/pens
+MapController.cs /api/v1/map/people
+MapController.cs /api/v1/map/plants/area
+MapController.cs /api/v1/map/storage/capacity
+MapController.cs /api/v1/map/storage/unwanted
+MapController.cs /api/v1/map/storage/update
+MapController.cs /api/v1/map/zone/delete
+OrderController.cs /api/v1/order/designate/cells
+OrderController.cs /api/v1/order/firefight
+OrderController.cs /api/v1/order/roof
+OrderController.cs /api/v1/order/undesignate/area
+PawnController.cs /api/v1/colonist/self-tend
+PawnController.cs /api/v1/colonist/work-priorities
+PawnController.cs /api/v1/jobs/make/arrest
+PawnController.cs /api/v1/jobs/make/chat
+PawnController.cs /api/v1/jobs/make/feed
+PawnController.cs /api/v1/jobs/make/haul
+PawnController.cs /api/v1/jobs/make/prioritize
+PawnController.cs /api/v1/jobs/make/rescue
+PawnController.cs /api/v1/jobs/make/slaughter
+PawnController.cs /api/v1/jobs/make/tame
+PawnController.cs /api/v1/jobs/make/tend
+PawnController.cs /api/v1/pawn/allowed_area
+PawnController.cs /api/v1/pawn/prisoner/interaction
+ShuttleController.cs /api/v1/map/shuttle/enter
+ShuttleController.cs /api/v1/map/shuttles
+TradeController.cs /api/v1/traders
+TradeController.cs /api/v1/traders/beacons
+TradeController.cs /api/v1/traders/trade
+UIController.cs /api/v1/ui/letter/answer
+UIController.cs /api/v1/ui/letter/dismiss
+UIController.cs /api/v1/ui/letter/growth
+UIController.cs /api/v1/ui/letters
+UIController.cs /api/v1/ui/messages
+UIController.cs /api/v1/ui/window/accept

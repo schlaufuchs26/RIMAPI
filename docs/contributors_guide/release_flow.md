@@ -32,6 +32,12 @@ echo "🔍 Running final validation check..."
 python scripts/docs/mkdocs_check_api.py
 ```
 
+A route that is deliberately left undocumented goes into
+`scripts/docs/undocumented_routes.txt`, one `<Controller>.cs <path>` line each.
+The checker allows such a route and reports the line as stale as soon as the
+route is documented or gone, so the list cannot hide a doc block that later
+disappears.
+
 `mkdocs_check_api.py` only proves that every route is documented, not that the
 example under it is true. The examples are hand-written, so they keep fields a
 route no longer sends. `mkdocs_capture_examples.py` repeats each block's own

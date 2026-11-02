@@ -146,7 +146,9 @@ private void ConfigureServices(IServiceCollection services)
 
 ### 6. Document the Endpoint
 
-Finally, add an entry for your new endpoint in `docs/_endpoints_examples/examples.yml`. This makes it visible in the API documentation.
+Finally, add an entry for your new endpoint to the controller's YAML file in `docs/_api_macroses/controllers/` (for example `UIController.yml`). This makes it visible in the API documentation.
+
+`python scripts/docs/mkdocs_check_api.py` fails while a route has no YAML block. If you mean to leave the endpoint undocumented for now, add its line to `scripts/docs/undocumented_routes.txt` instead: the checker then allows it and reports the line as stale once the route is documented or removed.
 
 ```yaml
     "/api/v1/example":
