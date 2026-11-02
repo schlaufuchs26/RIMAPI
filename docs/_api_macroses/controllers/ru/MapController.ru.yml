@@ -1157,6 +1157,39 @@ desc: |-
   method: POST
   csharp_method: SetBuildingPower
 
+/api/v1/map/building/bed-medical:
+  desc: |-
+    Читает или задаёт собственную медицинскую настройку кровати; переключатель **Medical** на вкладке кровати: медицинская кровать работает как больничная, и врач лечит в ней.
+    Без `medical` вызов только читает флаг. Политика лекарств рядом принадлежит пешке, а не кровати (`/api/v1/pawn/medicine-policy`).
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/building/bed-medical?buildingId=77261&medical=true'
+    ```
+  request: ""
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 77261,
+            "label": "wooden bed (good)",
+            "def_name": "Bed",
+            "can_be_medical": true,
+            "medical": true,
+            "previous_medical": false,
+            "changed": true
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T22:31:01.8749600Z"
+    }
+    ```
+  method: POST
+  csharp_method: SetBedMedical
+
 /api/v1/datetime:
   desc: Возвращает текущую игровую дату и время в соответствии с мировым календарем RimWorld.
   curl: |-

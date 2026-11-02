@@ -280,6 +280,87 @@ namespace RIMAPI.Services
             return "not a colonist";
         }
 
+        // A bed's own medical setting (fox ticket #4235): the bed tab's
+        // "Medical" gizmo, the one flag that makes a bed a hospital bed. The
+        // building read answered it as BedDto.Medical and nothing set it, so a
+        // run that found the hospital full of normal beds could not make one.
+        // The medicine policy beside it belongs to the pawn
+        // (playerSettings.medCare, POST /api/v1/pawn/medicine-policy): the game
+        // holds no per-bed medicine policy, so this flag is the whole of a
+        // bed's own medical setting.
+        public ApiResult<BedMedicalDto> SetBedMedical(int buildingId, bool? medical)
+        {
+            try
+            {
+                Building building = BuildingHelper.FindBuildingByID(buildingId);
+                if (building == null)
+                {
+                    return ApiResult<BedMedicalDto>.Fail(
+                        ThingHolderHelper.DescribeUnbuilt(
+                            buildingId,
+                            "only a built bed on the map has a medical setting"
+                        ) ?? $"Building not found: {buildingId}"
+                    );
+                }
+                Building_Bed bed = building as Building_Bed;
+                if (bed == null)
+                {
+                    return ApiResult<BedMedicalDto>.Fail(
+                        BedMedicalRules.NotABed(
+                            building.Label,
+                            buildingId,
+                            building.def?.defName ?? "building"
+                        )
+                    );
+                }
+
+                bool canBeMedical = bed.def?.building != null && bed.def.building.bed_canBeMedical;
+                bool previous = bed.Medical;
+                if (medical.HasValue)
+                {
+                    if (!BedMedicalRules.CanTake(canBeMedical, medical.Value))
+                    {
+                        return ApiResult<BedMedicalDto>.Fail(
+                            BedMedicalRules.NoMedicalSetting(
+                                bed.Label,
+                                buildingId,
+                                bed.def?.defName ?? "bed"
+                            )
+                        );
+                    }
+                    // The bed tab's own toggle.
+                    bed.Medical = medical.Value;
+                }
+
+                BedMedicalDto dto = new BedMedicalDto
+                {
+                    Id = bed.thingIDNumber,
+                    Label = bed.Label,
+                    DefName = bed.def?.defName,
+                    CanBeMedical = canBeMedical,
+                    Medical = bed.Medical,
+                    PreviousMedical = previous,
+                    Changed = bed.Medical != previous,
+                };
+                if (medical.HasValue && !BedMedicalRules.Took(medical.Value, dto.Medical))
+                {
+                    return ApiResult<BedMedicalDto>.Fail(
+                        BedMedicalRules.DidNotTake(
+                            bed.Label,
+                            buildingId,
+                            medical.Value,
+                            dto.Medical
+                        )
+                    );
+                }
+                return ApiResult<BedMedicalDto>.Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<BedMedicalDto>.Fail(ex.ToString());
+            }
+        }
+
         // A cooler's and a heater's target temperature (fox ticket #3744): the
         // setting lives on the building's own tab, and nothing in the tool read
         // or set it. Colony 15 built a powered cooler into a walled, roofed

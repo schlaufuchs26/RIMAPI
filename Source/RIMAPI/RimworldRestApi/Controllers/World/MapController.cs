@@ -386,6 +386,23 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // A bed's own medical setting (fox ticket #4235): the bed tab's
+        // "Medical" gizmo. A call without `medical` reads the flag, with it the
+        // call sets the flag and answers what the game holds afterwards. The
+        // medicine policy is the pawn's, not the bed's.
+        [Post("/api/v1/map/building/bed-medical")]
+        [QueryParameters("medical:boolean?")]
+        [EndpointMetadata("Read or set a bed's own medical setting (the medical bed toggle)")]
+        public async Task SetBedMedical(HttpListenerContext context)
+        {
+            var buildingId = RequestParser.GetIntParameter(context, "buildingId");
+            bool? medical = RequestParser.HasParameter(context, "medical")
+                ? (bool?)RequestParser.GetBooleanParameter(context, "medical")
+                : null;
+            var result = _buildingService.SetBedMedical(buildingId, medical);
+            await context.SendJsonResponse(result);
+        }
+
         // A cooler's and a heater's target temperature (fox ticket #3744): the
         // one setting that decides whether a room freezes. A call without
         // `target` reads it, with `target` it sets it and reads it back.

@@ -1317,6 +1317,39 @@ desc: |-
   method: POST
   csharp_method: SetBuildingPower
 
+/api/v1/map/building/bed-medical:
+  desc: |-
+    Reads or sets a bed's own medical setting, the bed tab's **Medical** toggle: a bed set medical is a hospital bed, and a doctor tends in it.
+    Without `medical` the call only reads the flag. The medicine policy beside it is the pawn's, not the bed's (`/api/v1/pawn/medicine-policy`).
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/building/bed-medical?buildingId=77261&medical=true'
+    ```
+  request: ""
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 77261,
+            "label": "wooden bed (good)",
+            "def_name": "Bed",
+            "can_be_medical": true,
+            "medical": true,
+            "previous_medical": false,
+            "changed": true
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2026-11-02T22:31:01.8749600Z"
+    }
+    ```
+  method: POST
+  csharp_method: SetBedMedical
+
 /api/v1/datetime:
   desc: Retrieves the current in-game date and time according to the RimWorld world calendar.
   curl: |-

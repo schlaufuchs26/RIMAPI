@@ -51,6 +51,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\NameDialogRules.cs" Link="Linked\NameDialogRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\IdeoNameRules.cs" Link="Linked\IdeoNameRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedOwnerRules.cs" Link="Linked\BedOwnerRules.cs" />
+    <!-- A bed's own medical flag (fox ticket #4235): whether a def has the
+         toggle, and the refusals a write names. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\BedMedicalRules.cs" Link="Linked\BedMedicalRules.cs" />
     <!-- Whether the game lets a pawn board a shuttle (fox ticket #3862): the
          refusal wording is plain C#. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ShuttleRules.cs" Link="Linked\ShuttleRules.cs" />
