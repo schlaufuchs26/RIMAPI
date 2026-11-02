@@ -10,6 +10,7 @@ using RIMAPI.Models;
 using RIMAPI.Services;
 using RIMAPI.Services.Interfaces;
 using RimWorld;
+using Verse;
 
 namespace RIMAPI.Controllers
 {
@@ -55,6 +56,7 @@ namespace RIMAPI.Controllers
                         RimWorldVersion = VersionControl.CurrentVersionString,
                         ModVersion = _settings.version,
                         ApiVersion = _settings.apiVersion,
+                        SaveDataFolder = GenFilePaths.SaveDataFolderPath,
                     }
                 )),
                 expiration: TimeSpan.FromMinutes(5),

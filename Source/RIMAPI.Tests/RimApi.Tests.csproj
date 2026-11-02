@@ -142,6 +142,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BillDto.cs" Link="Linked\BillDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\BuildingDto.cs" Link="Linked\BuildingDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\MessageDtos.cs" Link="Linked\MessageDtos.cs" />
+    <!-- The version answer names the save-data folder the game writes into
+         (fox ticket #4005): the debug script tells its own slot's game from a
+         foreign game on the same port by that key. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\VersionDto.cs" Link="Linked\VersionDto.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\LetterDtos.cs" Link="Linked\LetterDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\JobLogDtos.cs" Link="Linked\JobLogDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\ColonistDto.cs" Link="Linked\ColonistDto.cs" />

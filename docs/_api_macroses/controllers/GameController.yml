@@ -138,7 +138,8 @@ desc: This controller handles the general game functions.
         "data": {
             "rim_world_version": "1.5.4243",
             "mod_version": "1.2.0",
-            "api_version": "v1"
+            "api_version": "v1",
+            "save_data_folder": "/Users/evan/Library/Application Support/RimWorld/debug"
         },
         "errors": [],
         "warnings": [],

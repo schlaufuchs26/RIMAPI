@@ -46,6 +46,18 @@ namespace RIMAPI.Tests
             Assert.Equal(120, (int)json["x"]);
         }
 
+        // The version answer names the folder the game writes its saves into
+        // (ticket #4005): the debug script tells its slot's game from another
+        // game on the same port by that key, so a rename would let it act on a
+        // foreign game again.
+        [Fact]
+        public void TheVersionAnswerNamesTheSaveDataFolder()
+        {
+            JObject json = Json(new VersionDto { SaveDataFolder = "/tmp/rimworld-debug" });
+
+            Assert.Equal("/tmp/rimworld-debug", (string)json["save_data_folder"]);
+        }
+
         [Fact]
         public void ASingleLetterNameIsJustLowercased()
         {
