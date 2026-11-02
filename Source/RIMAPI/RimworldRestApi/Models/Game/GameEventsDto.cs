@@ -93,6 +93,16 @@ namespace RIMAPI.Models
         public List<QuestChoiceDto> Choices { get; set; } = new List<QuestChoiceDto>();
         // The accepter the game recorded, once the quest was taken.
         public string Accepter { get; set; }
+        // The tick the quest ended in: Quest.cleanupTick, which the game sets
+        // when it cleans a quest up after the quest left the running state, -1
+        // while it is on offer or running. The fox's finished-quest tail sorts
+        // by it, so a quest created early and finished yesterday is not
+        // dropped for one created late and finished days ago (fox ticket #4080).
+        public int EndedTick { get; set; }
+        // How long ago that was, in game ticks (Quest.TicksSinceCleanup), -1
+        // while the quest has not ended. Counted inside the game, so a caller
+        // needs no clock of its own.
+        public int EndedTicksAgo { get; set; }
     }
 
     public class TriggerIncidentRequestDto

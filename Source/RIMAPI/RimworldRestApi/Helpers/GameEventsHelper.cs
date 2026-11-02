@@ -44,6 +44,11 @@ namespace RIMAPI.Helpers
                 Reward = GetQuestRewardString(quest),
                 RequiresAccepter = quest.RequiresAccepter,
                 Accepter = quest.AccepterPawn != null ? quest.AccepterPawn.LabelShortCap : "",
+                // When the quest ended, which its id does not say: the id rises
+                // with creation, so an old quest finished yesterday would sort
+                // below one created late and finished days ago (fox #4080).
+                EndedTick = quest.cleanupTick,
+                EndedTicksAgo = quest.TicksSinceCleanup,
             };
             AcceptanceReport report = QuestUtility.CanAcceptQuest(quest);
             dto.CanAccept = report.Accepted;

@@ -40,7 +40,9 @@ desc: |-
                     "accept_reason": "",
                     "requires_accepter": false,
                     "choices": [{"index": 0, "total_market_value": 0.0, "rewards": []}],
-                    "accepter": ""
+                    "accepter": "",
+                    "ended_tick": -1,
+                    "ended_ticks_ago": -1
                 }
             ],
             "historical_quests": [
@@ -56,7 +58,9 @@ desc: |-
                     "accept_reason": "",
                     "requires_accepter": false,
                     "choices": [{"index": 0, "total_market_value": 0.0, "rewards": []}],
-                    "accepter": ""
+                    "accepter": "",
+                    "ended_tick": 2700000,
+                    "ended_ticks_ago": 150000
                 }
             ]
         },
