@@ -292,6 +292,7 @@ namespace RIMAPI.Helpers
                 Downed = p.Downed,
                 Tameable = TameUtility.CanTame(p),
                 ManhunterOnDamageChance = p.RaceProps.manhunterOnDamageChance,
+                ManhunterOnTameFailChance = PawnUtility.GetManhunterOnTameFailChance(p),
                 TameDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null,
                 HuntDesignated = map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null,
                 Manhunter = Hostility.IsManhunter(p),

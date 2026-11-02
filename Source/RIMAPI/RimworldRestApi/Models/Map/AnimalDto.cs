@@ -43,6 +43,14 @@ namespace RIMAPI.Models
         // manhunterChanceOnDamageFactor at the moment of the wound.
         public float ManhunterOnDamageChance { get; set; }
 
+        // ManhunterOnTameFailChance is the race's own chance to turn manhunter
+        // on each failed tame attempt (ThingDef manhunterOnTameFailChance, 0..1;
+        // 0 when the def names none, fox #4191). A wolf is 0.5 and an alpaca 0,
+        // so the same `tame` order is a coin flip on the first and harmless on
+        // the second. The game rolls it on every failed attempt, once per try,
+        // with no difficulty multiplier.
+        public float ManhunterOnTameFailChance { get; set; }
+
         // The two designations a run sets and then looks for: the game keeps
         // them on the animal, not on a cell, so no map read of designations
         // tells a marked animal from an unmarked one.
