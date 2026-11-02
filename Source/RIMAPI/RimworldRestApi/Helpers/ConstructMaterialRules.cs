@@ -30,6 +30,16 @@ namespace RIMAPI.Helpers
             public int Forbidden;
             public List<int> ForbiddenIds = new List<int>();
             public int OutOfReach;
+
+            /// <summary>
+            /// CounterSaysNone is the game's own answer for this material
+            /// (Map.itemAvailability.ThingsAvailableAnywhere), false while the
+            /// stacks the builder may haul cover the need. The game caches
+            /// that answer until the map's next tick, so a stack that appeared
+            /// or was unflagged in a game that stood still reads as absent
+            /// (fox ticket #4081).
+            /// </summary>
+            public bool CounterSaysNone;
         }
 
         /// <summary>
@@ -54,6 +64,35 @@ namespace RIMAPI.Helpers
                 parts.Add(GapText(gap));
             }
             return parts.Count > 0 ? string.Join("; ", parts) : null;
+        }
+
+        /// <summary>
+        /// StaleCount is the sentence after "The game's own material count for
+        /// the Wall at 10,10 has not ticked since the stack changed: ", or null
+        /// when no material disagrees with the game's cached answer. Only a
+        /// material the haulable stock covers can be stale: when it is short,
+        /// the shortfall is the truth and Shortfall already says it (fox
+        /// #4081).
+        /// </summary>
+        public static string StaleCount(IList<MaterialGap> gaps)
+        {
+            if (gaps == null)
+            {
+                return null;
+            }
+            foreach (MaterialGap gap in gaps)
+            {
+                if (gap == null || gap.Needed <= 0 || !gap.CounterSaysNone || gap.Usable < gap.Needed)
+                {
+                    continue;
+                }
+                string label = string.IsNullOrEmpty(gap.Label) ? gap.DefName : gap.Label;
+                return string.Format(
+                    "he may use {0} {1}, but the giver's cached count still says none; "
+                    + "it clears on the game's next tick, so a `wait` of a few ticks ends this",
+                    gap.Usable, label);
+            }
+            return null;
         }
 
         /// <summary>

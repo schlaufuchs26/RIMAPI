@@ -393,10 +393,21 @@ namespace RIMAPI.Services
             Blueprint blueprint = planned as Blueprint;
             if (blueprint != null)
             {
-                string missing = MissingFor(pawn, blueprint);
+                List<ConstructMaterialRules.MaterialGap> gaps = MaterialGaps(pawn, blueprint);
+                string missing = ConstructMaterialRules.Shortfall(gaps);
                 if (missing != null)
                 {
                     return $"The game counts no usable material for the {label} at {at}: {missing}.";
+                }
+                // The material is there and the giver still built nothing, so
+                // the game's own answer is the stale one: a stack that
+                // appeared or was unflagged while the map stood still is
+                // absent from its cache until the next tick, and the three
+                // guesses of the generic refusal are all false (fox #4081).
+                string stale = ConstructMaterialRules.StaleCount(gaps);
+                if (stale != null)
+                {
+                    return $"The game's own material count for the {label} at {at} has not ticked since the stack changed: {stale}.";
                 }
             }
             JobFailReason.Clear();
@@ -409,14 +420,17 @@ namespace RIMAPI.Services
                 + (string.IsNullOrEmpty(reason) ? "its own check said no and names no reason" : reason) + ".";
         }
 
-        // MissingFor names each material a plan still needs against the count
-        // the game itself uses, so the answer is the number its own check saw.
-        // What a builder may haul is the game's own test (tickets #4033,
-        // #4054): a stack behind the forbidden flag and one he cannot walk to
-        // are no material, and naming them as absent sent a run to chop wood
-        // the colony already had. Both are named instead, the forbidden one
-        // with the thing ids and the `allow` call that lifts the flag.
-        private static string MissingFor(Pawn pawn, Blueprint blueprint)
+        // MaterialGaps splits each material a plan still needs against the
+        // count the game itself uses, so the answer is the number its own
+        // check saw. What a builder may haul is the game's own test (tickets
+        // #4033, #4054): a stack behind the forbidden flag and one he cannot
+        // walk to are no material, and naming them as absent sent a run to
+        // chop wood the colony already had. Both are named instead, the
+        // forbidden one with the thing ids and the `allow` call that lifts the
+        // flag. Each gap also carries the game's own availability answer: it
+        // is cached until the map's next tick, so it can say "none" for a
+        // stack that is right there (fox #4081).
+        private static List<ConstructMaterialRules.MaterialGap> MaterialGaps(Pawn pawn, Blueprint blueprint)
         {
             List<ConstructMaterialRules.MaterialGap> gaps = new List<ConstructMaterialRules.MaterialGap>();
             foreach (ThingDefCountClass need in blueprint.TotalMaterialCost())
@@ -431,6 +445,8 @@ namespace RIMAPI.Services
                     DefName = need.thingDef.defName,
                     Label = need.thingDef.label,
                     Needed = needed,
+                    CounterSaysNone = !pawn.Map.itemAvailability.ThingsAvailableAnywhere(
+                        need.thingDef, needed, pawn),
                 };
                 foreach (Thing stack in pawn.Map.listerThings.ThingsOfDef(need.thingDef))
                 {
@@ -452,7 +468,7 @@ namespace RIMAPI.Services
                 }
                 gaps.Add(gap);
             }
-            return ConstructMaterialRules.Shortfall(gaps);
+            return gaps;
         }
 
         // CellNote is why the cell itself built no job, which is what a caller

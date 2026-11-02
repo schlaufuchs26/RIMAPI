@@ -133,5 +133,45 @@ namespace RIMAPI.Tests
 
             Assert.Equal("25 wood needed, 0 on the map he may use", text);
         }
+
+        // The game's own material check caches its answer until the map's next
+        // tick, so a stack that appeared or was unflagged in a game that stood
+        // still reads as absent to the construct giver while the tool's own
+        // walk counts it. That is the fourth cause, and the three guesses of
+        // the generic refusal are all false for it (fox ticket #4081).
+        [Fact]
+        public void AStaleCounterIsNamedInsteadOfAGuess()
+        {
+            var gap = Gap(25, 50);
+            gap.CounterSaysNone = true;
+
+            string text = ConstructMaterialRules.StaleCount(
+                new List<ConstructMaterialRules.MaterialGap> { gap });
+
+            Assert.Equal(
+                "he may use 50 wood, but the giver's cached count still says none; "
+                + "it clears on the game's next tick, so a `wait` of a few ticks ends this",
+                text);
+        }
+
+        [Fact]
+        public void ACoveredPlanWithAFreshCountSaysNothing()
+        {
+            Assert.Null(ConstructMaterialRules.StaleCount(
+                new List<ConstructMaterialRules.MaterialGap> { Gap(25, 50) }));
+        }
+
+        // A plan that really is short is short, whatever the cached answer
+        // says: naming the counter there would send the run to wait instead of
+        // hauling (fox #4081).
+        [Fact]
+        public void AShortPlanIsNeverCalledStale()
+        {
+            var gap = Gap(25, 10);
+            gap.CounterSaysNone = true;
+
+            Assert.Null(ConstructMaterialRules.StaleCount(
+                new List<ConstructMaterialRules.MaterialGap> { gap }));
+        }
     }
 }
