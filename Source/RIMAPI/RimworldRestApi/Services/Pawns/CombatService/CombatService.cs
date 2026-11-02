@@ -17,7 +17,7 @@ namespace RIMAPI.Services
     // Pawn_DraftController.Drafted, a move is JobDefOf.Goto, an attack is the
     // job the game's own attack gizmo queues, and holding is an idle combat
     // wait. Nothing spawns, teleports or damages anything.
-    public class CombatService : ICombatService
+    public partial class CombatService : ICombatService
     {
         // The two attack jobs the game's attack gizmo picks between: a ranged
         // pawn shoots (AttackStatic), a melee pawn closes in (AttackMelee).
@@ -253,92 +253,6 @@ namespace RIMAPI.Services
             return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
         }
 
-        private ApiResult<OrderResultDto> Attack(Pawn pawn, OrderRequestDto request, OrderResultDto result)
-        {
-            Pawn target = PawnHelper.FindPawnById(request.TargetId);
-            if (target == null)
-            {
-                return ApiResult<OrderResultDto>.Fail($"no pawn with id {request.TargetId} to attack");
-            }
-            if (target.Dead || !target.Spawned)
-            {
-                return ApiResult<OrderResultDto>.Fail($"{target.LabelShort} is dead or gone");
-            }
-            // A colonist in a mental state is still a colonist (ticket #3433):
-            // the game's IsColonistPlayerControlled is false for him, and a
-            // berserk colonist is hostile to everyone, so this test must not
-            // fall through to the hostility check below.
-            if (target.IsColonist)
-            {
-                MentalStateDef state = target.MentalStateDef;
-                string mental = state == null
-                    ? ""
-                    : $" (in a mental state: {CombatRefusal.MentalStateName(state.label, state.defName)})";
-                return ApiResult<OrderResultDto>.Fail(
-                    $"{target.LabelShort} is a colonist{mental}; the tool does not order friendly fire");
-            }
-            // The same rule the fight read counts with (fox #3630): a wild man
-            // who is beating a colonist is a hostile, so `attack` must take the
-            // id the read just printed. Asking HostileTo alone refused him with
-            // "not hostile, so the colony has no fight with him" while he was
-            // hurting Veniamin.
-            if (!Hostility.IsHostileToColony(target))
-            {
-                return ApiResult<OrderResultDto>.Fail(
-                    $"{target.LabelShort} is not hostile, so the colony has no fight with him");
-            }
-            // The same reachability check as a move (ticket #3175): a raider
-            // behind a sealed wall or across water takes the attack job and
-            // then drops it, so the pawn stands still and the caller learns
-            // nothing. A ranged pawn needs a path to its firing position too.
-            Danger maxDanger;
-            string dangerError;
-            if (!TryParseDanger(request.MaxDanger, out maxDanger, out dangerError))
-            {
-                return ApiResult<OrderResultDto>.Fail(dangerError);
-            }
-            string destText = $"{target.LabelShort} (id {target.thingIDNumber})";
-            string refusal = ReachRefusal(pawn, target, PathEndMode.Touch, maxDanger, destText);
-            if (refusal != null) return ApiResult<OrderResultDto>.Fail(refusal);
-            WalkReport walk = InspectWalk(pawn, target);
-            if (walk.Worst > maxDanger)
-            {
-                return ApiResult<OrderResultDto>.Fail(
-                    $"{pawn.LabelShort} cannot reach {destText} from {pawn.Position.x},{pawn.Position.z} at " +
-                    $"max_danger={DangerText(maxDanger)}: the walk the game would take runs through " +
-                    $"{walk.HazardText()}, so the pawn would take damage on the way; " +
-                    "pass max_danger=deadly to order it anyway");
-            }
-            JobDef def = HasRangedWeapon(pawn)
-                ? DefDatabase<JobDef>.GetNamedSilentFail(AttackStaticDef)
-                : DefDatabase<JobDef>.GetNamedSilentFail(AttackMeleeDef);
-            if (def == null)
-            {
-                return ApiResult<OrderResultDto>.Fail("the game has no attack job for this pawn");
-            }
-            Job job = JobMaker.MakeJob(def, target);
-            if (!pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
-            {
-                return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} refused the attack order");
-            }
-            result.PathHazards = walk.HazardText();
-            // Whether the shot can land from where the pawn stands (fox #3737):
-            // the order took and the job reads back, but a target behind a wall
-            // or beyond the weapon leaves the pawn standing and firing nothing,
-            // which reads as "the shot missed" for hours. The reason is the
-            // game's own check, so the answer says what the game would say.
-            string block = BlockReason(pawn, target);
-            if (block != null)
-            {
-                result.Note = $"from {pawn.Position.x},{pawn.Position.z} the attack cannot land: {block}, "
-                    + "so the pawn stands and does not fire until it can; move him into the open or closer first";
-            }
-            else if (walk.Worst != Danger.None)
-            {
-                result.Note = $"the path crosses {walk.HazardText()}, tolerated at max_danger={DangerText(maxDanger)}";
-            }
-            return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
-        }
 
         // WalkReport is what a walk to a destination costs (ticket #3209): the
         // path length in cells and the hazards along it, so an order's answer
@@ -709,50 +623,6 @@ namespace RIMAPI.Services
         private static float MoveSpeed(Pawn pawn)
         {
             return pawn.GetStatValue(StatDefOf.MoveSpeed);
-        }
-
-        private static bool HasRangedWeapon(Pawn pawn)
-        {
-            return WeaponRange(pawn) > 1.6f;
-        }
-
-        // BlockReason names the game's own gate between a pawn and its target,
-        // or null when the attack can land (fox #3737). The verb's own check
-        // decides, so the reason matches what the game does instead of a second
-        // opinion; only the wording is ours (AttackBlockRules, game-free and
-        // tested).
-        private static string BlockReason(Pawn pawn, Thing target)
-        {
-            if (target == null || !target.Spawned || pawn.Map == null) return null;
-            Verb verb = HasRangedWeapon(pawn)
-                ? (pawn.equipment != null && pawn.equipment.PrimaryEq != null
-                    ? pawn.equipment.PrimaryEq.PrimaryVerb
-                    : null)
-                : pawn.meleeVerbs.TryGetMeleeVerb(target);
-            AttackBlockRules.Facts facts = new AttackBlockRules.Facts
-            {
-                CanFight = PawnHelper.CanFight(pawn),
-                HasVerb = verb != null,
-                CanHit = verb != null && verb.CanHitTargetFrom(pawn.Position, target),
-                Distance = pawn.Position.DistanceTo(target.Position),
-                Range = verb != null ? verb.EffectiveRange : 0f,
-                MinRange = verb != null && verb.verbProps != null
-                    ? verb.verbProps.EffectiveMinRange(target, pawn)
-                    : 0f,
-            };
-            string reason = AttackBlockRules.Reason(facts);
-            return reason.Length == 0 ? null : reason;
-        }
-
-        // AttackBlockedOf is the read's half of it: a drafted pawn whose job is
-        // an attack says why that attack is not landing, so a run reads "no
-        // line of sight" instead of "the shot missed" (fox #3737).
-        private static string AttackBlockedOf(Pawn pawn)
-        {
-            if (!pawn.Drafted || pawn.CurJob == null || !IsFightJob(pawn.CurJob.def)) return "";
-            Thing target = pawn.CurJob.targetA.Thing;
-            if (target == null) return "";
-            return BlockReason(pawn, target) ?? "";
         }
 
         // IsHostile is the side test the tool uses: an enemy faction, or an
