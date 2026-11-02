@@ -900,6 +900,8 @@ desc: |-
     Retrieves a list of all defined outfits in the game, including their
     labels and associated item filters. Outfits dictate which apparel
     colonists will wear based on criteria like type, quality, and hit points.
+    Each outfit also names the pawns wearing it right now (fox ticket #4232),
+    so the Assign tab's state is one call instead of one call per colonist.
   curl: |-
     **Example:**
     ```bash
@@ -930,7 +932,13 @@ desc: |-
                     "allowed_quality_max": "masterwork",
                     "allowed_hit_points_configurable": true,
                     "allowed_qualities_configurable": true
-                }
+                },
+                "pawns": [
+                    {
+                        "pawn_id": 41,
+                        "name": "McClain"
+                    }
+                ]
             },
             {
                 "id": 2,
@@ -944,7 +952,8 @@ desc: |-
                     "allowed_quality_max": "legendary",
                     "allowed_hit_points_configurable": true,
                     "allowed_qualities_configurable": true
-                }
+                },
+                "pawns": []
             }
         ],
         "errors": [],

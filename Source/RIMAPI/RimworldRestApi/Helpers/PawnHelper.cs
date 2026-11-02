@@ -734,11 +734,30 @@ namespace RIMAPI.Helpers
                         Id = policy.id,
                         Label = policy.label,
                         Filter = GetThingFilterDto(policy.filter),
+                        Pawns = PawnsWearing(policy)
+                            .Select(p => new OutfitPawnDto
+                            {
+                                PawnId = p.thingIDNumber,
+                                Name = p.LabelShortCap,
+                            })
+                            .ToList(),
                     }
                 );
             }
 
             return outfits;
+        }
+
+        // PawnsWearing is who the Assign tab puts under a policy, in the game's
+        // own order (fox ticket #4232). The write's answer counts the same list,
+        // so the two answers cannot disagree about a colony.
+        public static List<Pawn> PawnsWearing(ApparelPolicy policy)
+        {
+            return PawnsFinder
+                .AllMapsCaravansAndTravellingTransporters_Alive.Where(p =>
+                    p.outfits != null && p.outfits.CurrentApparelPolicy == policy
+                )
+                .ToList();
         }
     }
 }

@@ -492,6 +492,39 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void TheOutfitReadNamesItsPawnsUnderTheKeysTheToolReads()
+        {
+            // The outfits read names who wears a policy (fox ticket #4232), so
+            // the Assign tab's state is one call. `pawn_id` is the id the pawn
+            // orders take; a rename here has to be a deliberate edit of this
+            // list.
+            JObject json = Json(
+                new OutfitDto
+                {
+                    Id = 2,
+                    Label = "Tattered",
+                    Pawns = new List<OutfitPawnDto>
+                    {
+                        new OutfitPawnDto { PawnId = 4711, Name = "Ana" },
+                    },
+                }
+            );
+
+            Assert.Equal(
+                new[] { "filter", "id", "label", "pawns" },
+                json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal)
+            );
+
+            JObject pawn = (JObject)((JArray)json["pawns"])[0];
+            Assert.Equal(
+                new[] { "name", "pawn_id" },
+                pawn.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal)
+            );
+            Assert.Equal(4711, (int)pawn["pawn_id"]);
+            Assert.Equal("Ana", (string)pawn["name"]);
+        }
+
+        [Fact]
         public void EveryFuelFieldKeepsTheKeyTheToolReads()
         {
             // The fuel summary rides on the resources answer (fox ticket

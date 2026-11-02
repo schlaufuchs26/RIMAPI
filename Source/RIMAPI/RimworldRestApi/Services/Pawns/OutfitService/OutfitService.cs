@@ -247,10 +247,9 @@ namespace RIMAPI.Services
         /// <summary>The policy as the game holds it now, plus how many wear it.</summary>
         private static ApparelPolicyResultDto ReadBack(ApparelPolicy policy)
         {
-            int usingCount = PawnsFinder
-                .AllMapsCaravansAndTravellingTransporters_Alive.Count(p =>
-                    p.outfits != null && p.outfits.CurrentApparelPolicy == policy
-                );
+            // The outfits read sends the same list, so "how many" and "who" are
+            // one query (fox ticket #4232).
+            int usingCount = PawnHelper.PawnsWearing(policy).Count;
 
             return new ApparelPolicyResultDto
             {

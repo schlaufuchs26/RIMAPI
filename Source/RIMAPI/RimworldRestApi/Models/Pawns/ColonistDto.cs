@@ -361,6 +361,18 @@ namespace RIMAPI.Models
         public int Id { get; set; }
         public string Label { get; set; }
         public ThingFilterDto Filter { get; set; }
+
+        // The pawns wearing this policy, the Assign tab's column (fox ticket
+        // #4232): the write's answer said how many, so a caller that wanted
+        // "who wears the tattered policy" read every colonist instead. The ids
+        // are the same thing_id the pawn orders take.
+        public List<OutfitPawnDto> Pawns { get; set; } = new List<OutfitPawnDto>();
+    }
+
+    public class OutfitPawnDto
+    {
+        public int PawnId { get; set; }
+        public string Name { get; set; }
     }
 
     public class ThingFilterDto

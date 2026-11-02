@@ -761,7 +761,13 @@ desc: |-
                     "allowed_hit_points_max": 1.0,
                     "allowed_hit_points_configurable": true,
                     "allowed_qualities_configurable": true
-                }
+                },
+                "pawns": [
+                    {
+                        "pawn_id": 41,
+                        "name": "McClain"
+                    }
+                ]
             },
             {
                 "id": 2,
@@ -775,7 +781,8 @@ desc: |-
                     "allowed_quality_max": "legendary",
                     "allowed_hit_points_configurable": true,
                     "allowed_qualities_configurable": true
-                }
+                },
+                "pawns": []
             }
         ],
         "errors": [],
