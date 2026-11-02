@@ -106,6 +106,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HostilityRules.cs" Link="Linked\HostilityRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />
+    <!-- Why an ordered tend cannot start when another pawn holds the patient
+         (fox ticket #4167): plain C#, so the refusal is tested without the
+         game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\TendReservation.cs" Link="Linked\TendReservation.cs" />
     <!-- The words of a feed refusal (fox ticket #3680): the hunger gate and the
          per-stack reasons are plain C#. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FeedRules.cs" Link="Linked\FeedRules.cs" />

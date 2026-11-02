@@ -367,7 +367,8 @@ namespace RIMAPI.Services
                     if (!map.reservationManager.CanReserve(doctor, doctor))
                     {
                         return ApiResult.Fail(
-                            $"Pawn {pawnId} cannot tend itself: its own reservation is held by something else"
+                            TendReservationRefusal(map, doctor, doctor, true)
+                                ?? $"Pawn {pawnId} cannot tend itself: its own reservation is held by something else"
                         );
                     }
                 }
@@ -386,6 +387,12 @@ namespace RIMAPI.Services
                                 + DownedNote(patient)
                         );
                     }
+                    // The gate the ordered job dies on (fox ticket #4167): the
+                    // tend driver reserves the patient on its first tick with
+                    // maxPawns 1, so a pawn that already holds him takes the
+                    // job down without a word from the game.
+                    string held = TendReservationRefusal(map, doctor, patient, false);
+                    if (held != null) return ApiResult.Fail(held);
                 }
 
                 Thing medicine = null;
@@ -438,6 +445,32 @@ namespace RIMAPI.Services
             }
         }
 
+
+        // TendReservationRefusal names the pawn that holds the patient's
+        // reservation and the job it holds him for, or null when the doctor
+        // can take it (fox ticket #4167). The game's own gate is
+        // JobDriver_TendPatient.TryMakePreToilReservations, which reserves the
+        // patient with maxPawns 1 and ends the job when that fails, so the
+        // order was accepted and nothing happened.
+        private static string TendReservationRefusal(Map map, Pawn doctor, Pawn patient, bool selfTend)
+        {
+            foreach (var reservation in map.reservationManager.ReservationsReadOnly)
+            {
+                if (reservation.Claimant == doctor || reservation.Target.Thing != patient)
+                {
+                    continue;
+                }
+                return TendReservation.Refusal(
+                    selfTend,
+                    patient.LabelShort,
+                    patient.thingIDNumber,
+                    reservation.Claimant?.LabelShort,
+                    reservation.Claimant?.thingIDNumber ?? 0,
+                    reservation.Job?.def?.defName
+                );
+            }
+            return null;
+        }
 
         public ApiResult MakeJobEquip(int mapId, int pawnId, int equipmentId)
         {
