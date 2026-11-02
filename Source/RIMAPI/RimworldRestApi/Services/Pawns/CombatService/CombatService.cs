@@ -171,6 +171,17 @@ namespace RIMAPI.Services
                                 + "so no attack order can make him fight; move and hold still work");
                         }
                         return Attack(pawn, request, result);
+                    case "shoot":
+                        // The same gate as an attack: a pawn the game disables
+                        // violence for never fires, whatever the order (fox
+                        // #3360, #4175).
+                        if (!PawnHelper.CanFight(pawn))
+                        {
+                            return ApiResult<OrderResultDto>.Fail(
+                                $"{pawn.LabelShort} is incapable of violence (the game disables the violent work tags for him), "
+                                + "so no attack order can make him fight; move and hold still work");
+                        }
+                        return Shoot(pawn, request, result);
                     case "hold":
                         return Hold(pawn, result);
                     case "fire_at_will":
@@ -183,7 +194,7 @@ namespace RIMAPI.Services
                         return ApiResult<OrderResultDto>.Ok(Fill(pawn, result));
                     default:
                         return ApiResult<OrderResultDto>.Fail(
-                            $"unknown order {request.Order}: use move, attack, hold or fire_at_will");
+                            $"unknown order {request.Order}: use move, attack, shoot, hold or fire_at_will");
                 }
             }
             catch (Exception ex)
