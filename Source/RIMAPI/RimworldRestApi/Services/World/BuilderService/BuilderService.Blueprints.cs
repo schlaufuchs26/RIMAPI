@@ -54,6 +54,54 @@ namespace RIMAPI.Services
                 // and a thrown exception arrives as a refusal carrying its type,
                 // message and the method that threw, which is the read that
                 // names the null field.
+                // The game's own build designator wipes what the plan may be
+                // built over before it places the blueprint
+                // (Designator_Build.DesignateSingleCell): a cooler goes into a
+                // wall, and the wall goes with it. Placing the plan without
+                // that step left the wall standing on the cell, so the game
+                // offered only a deconstruct there and the cooler was never
+                // built (fox ticket #4033). What goes is named, because a
+                // wall a run did not ask to lose must be readable.
+                void WipeBlockers(BuildableDef buildable, IntVec3 pos, Rot4 rot)
+                {
+                    foreach (Thing onCell in pos.GetThingList(map).ToList())
+                    {
+                        if (onCell is Frame frame
+                            && buildable.blueprintDef != null
+                            && buildable.blueprintDef.replaceTags.NotNullAndContainsAnyElement(frame.def.replaceTags))
+                        {
+                            Wiped(frame, pos);
+                            frame.Destroy(DestroyMode.Cancel);
+                        }
+                    }
+                    if (buildable.blueprintDef == null)
+                    {
+                        return;
+                    }
+                    foreach (IntVec3 cell in GenAdj.CellsOccupiedBy(pos, rot, buildable.Size))
+                    {
+                        foreach (Thing onCell in cell.GetThingList(map).ToList())
+                        {
+                            if (GenSpawn.SpawningWipes(buildable.blueprintDef, onCell.def))
+                            {
+                                Wiped(onCell, cell);
+                            }
+                        }
+                    }
+                    GenSpawn.WipeExistingThings(pos, rot, buildable.blueprintDef, map, DestroyMode.Deconstruct);
+                }
+
+                void Wiped(Thing thing, IntVec3 pos)
+                {
+                    result.Wiped.Add(new WipedThingDto
+                    {
+                        DefName = thing.def?.defName,
+                        Label = thing.LabelShort,
+                        X = pos.x,
+                        Z = pos.z,
+                    });
+                }
+
                 void TryPlace(BuildableDef buildable, IntVec3 pos, Rot4 rot, ThingDef stuffDef)
                 {
                     AcceptanceReport report;
@@ -99,6 +147,7 @@ namespace RIMAPI.Services
 
                     try
                     {
+                        WipeBlockers(buildable, pos, rot);
                         GenConstruct.PlaceBlueprintForBuild(buildable, pos, map, rot, Faction.OfPlayer, stuffDef);
                         result.Placed++;
                     }

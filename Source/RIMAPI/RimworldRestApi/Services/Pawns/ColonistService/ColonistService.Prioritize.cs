@@ -179,7 +179,12 @@ namespace RIMAPI.Services
                 {
                     result.Offered = PriorityJobRules.OfferList(offered);
                     string cellNote = thing == null ? CellNote(map, cell, jobName) : null;
-                    result.Refusal = removalRefusal ?? NoOfferReason(pawn, jobName, workType, target, cellNote);
+                    // A planned build says why in the game's own terms: the
+                    // generic sentence names three causes that were all false
+                    // while a wall under the plan was the one thing in the way
+                    // (fox ticket #4033).
+                    string plannedNote = PlannedBuildNote(pawn, PlannedAt(map, thing, cell));
+                    result.Refusal = removalRefusal ?? plannedNote ?? NoOfferReason(pawn, jobName, workType, target, cellNote);
                     return ApiResult.Ok(result);
                 }
 
@@ -334,6 +339,94 @@ namespace RIMAPI.Services
         {
             Pawn pawn = thing as Pawn;
             return pawn != null && pawn.RaceProps != null && pawn.RaceProps.Animal;
+        }
+
+        // PlannedAt is the blueprint or frame a target stands for, or null: a
+        // named planned build itself, else the plan on a cell (fox #3708).
+        private static Thing PlannedAt(Map map, Thing thing, IntVec3 cell)
+        {
+            if (thing != null)
+            {
+                return IsPlannedBuild(thing) ? thing : null;
+            }
+            if (!cell.IsValid)
+            {
+                return null;
+            }
+            return map.thingGrid.ThingsListAt(cell).FirstOrDefault(IsPlannedBuild);
+        }
+
+        // PlannedBuildNote says why the game builds nothing on a planned build,
+        // in the order its own construct givers check it (fox ticket #4033).
+        // The old answer named three guesses that were all false while a wall
+        // under the cooler's plan was the one thing in the way: the mod had
+        // placed the plan without the wipe the game's build designator does, so
+        // the wall stood on the cell and only a deconstruct was offered there.
+        // The material half is the game's own count, which is the number a run
+        // cannot get from the tool's stock line: a stack it cannot use is not
+        // counted, so "the map's stock covers it" and "no job" can both be true.
+        private static string PlannedBuildNote(Pawn pawn, Thing planned)
+        {
+            if (planned == null || planned.def == null)
+            {
+                return null;
+            }
+            string label = planned.def.label;
+            string at = $"{planned.Position.x},{planned.Position.z}";
+            if (planned is Frame frame && !frame.IsCompleted())
+            {
+                return $"The {label} frame at {at} holds no complete set of material yet, so the game waits for the delivery before it offers the build.";
+            }
+            if (!GenConstruct.CanTouchTargetFromValidCell(planned, pawn))
+            {
+                return $"No free cell beside the {label} at {at} is somewhere he can stand and touch it from, so the game offers no build there.";
+            }
+            Thing blocking = GenConstruct.FirstBlockingThing(planned, pawn);
+            if (blocking != null)
+            {
+                bool clearable = GenConstruct.HandleBlockingThingJob(planned, pawn, true) != null;
+                return $"The {blocking.LabelShort} at {blocking.Position.x},{blocking.Position.z} stands where the {label} must go, so the game offers no build there"
+                    + (clearable
+                        ? "; its own job for that cell comes first, and `prioritize` without a job takes it."
+                        : "; nothing he can do clears it, so the plan needs another cell.");
+            }
+            if (planned is Blueprint blueprint && !GenConstruct.CanGetResources_NewTemp(blueprint, pawn, true))
+            {
+                return $"The game counts no usable material for the {label} at {at}: {MissingFor(pawn, blueprint)}.";
+            }
+            JobFailReason.Clear();
+            if (GenConstruct.CanConstruct(planned, pawn, checkSkills: true, forced: true))
+            {
+                return null;
+            }
+            string reason = JobFailReason.Reason;
+            return $"The game refuses the {label} at {at} for him: "
+                + (string.IsNullOrEmpty(reason) ? "its own check said no and names no reason" : reason) + ".";
+        }
+
+        // MissingFor names each material a plan still needs against the count
+        // the game itself uses, so the answer is the number its own check saw.
+        private static string MissingFor(Pawn pawn, Blueprint blueprint)
+        {
+            List<string> parts = new List<string>();
+            foreach (ThingDefCountClass need in blueprint.TotalMaterialCost())
+            {
+                int needed = blueprint.ThingCountNeeded(need.thingDef);
+                if (needed <= 0)
+                {
+                    continue;
+                }
+                int have = 0;
+                foreach (Thing stack in pawn.Map.listerThings.ThingsOfDef(need.thingDef))
+                {
+                    if (!stack.IsForbidden(pawn))
+                    {
+                        have += stack.StackCount;
+                    }
+                }
+                parts.Add($"{needed} {need.thingDef.label} needed, {have} on the map he may use");
+            }
+            return parts.Count > 0 ? string.Join("; ", parts) : "no material is counted for it";
         }
 
         // CellNote is why the cell itself built no job, which is what a caller

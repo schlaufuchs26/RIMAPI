@@ -71,6 +71,27 @@ namespace RIMAPI.Models
         public int Instantly { get; set; }
 
         public List<PlaceRefusalDto> Dropped { get; set; } = new List<PlaceRefusalDto>();
+
+        /// <summary>
+        /// What the game's own placement removed to make room, the way its
+        /// build designator wipes a thing a plan may be built over (a cooler
+        /// into a wall takes the wall). Named instead of silent: a run that
+        /// ordered one cell must not lose a wall without reading it (fox
+        /// ticket #4033).
+        /// </summary>
+        public List<WipedThingDto> Wiped { get; set; } = new List<WipedThingDto>();
+    }
+
+    /// <summary>One thing the game's placement rule removed for a blueprint.</summary>
+    public class WipedThingDto
+    {
+        public string DefName { get; set; }
+
+        public string Label { get; set; }
+
+        public int X { get; set; }
+
+        public int Z { get; set; }
     }
 
     /// <summary>One blueprint cell the game would not place, and why.</summary>
