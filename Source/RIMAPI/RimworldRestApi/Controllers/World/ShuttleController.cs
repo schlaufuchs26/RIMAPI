@@ -12,7 +12,9 @@ namespace RIMAPI.Controllers
     /// shuttle waits for the pawns its quest names; the game's own lever is the
     /// right-click "Enter shuttle" on the shuttle, and these two routes are
     /// that lever: `shuttles` names the cell and the people it waits for,
-    /// `shuttle/enter` sends one named pawn.
+    /// `shuttle/enter` sends one named pawn. Sending a loaded shuttle off
+    /// before the quest's timer runs out is `shuttle/launch` (ticket #4150),
+    /// the game's own send-away order.
     /// </summary>
     public class ShuttleController
     {
@@ -44,6 +46,26 @@ namespace RIMAPI.Controllers
             if (shuttleId == 0 && RequestParser.HasParameter(context, "shuttleId"))
                 shuttleId = RequestParser.GetIntParameter(context, "shuttleId");
             var result = _shuttleService.Enter(pawnId, shuttleId);
+            await context.SendJsonResponse(result);
+        }
+
+        // Sending a loaded shuttle off (fox ticket #4150): the game's own
+        // "Send shuttle" button, which a player clicks instead of waiting out
+        // the quest's three-day timer. It names no pawn; the shuttle is the one
+        // that already holds everyone and everything its quest waits for, and a
+        // shuttle that is not ready is refused with what is still missing.
+        [Post("/api/v1/map/shuttle/launch")]
+        [EndpointMetadata("Send a loaded shuttle away through the game's own send-away order, instead of waiting for the quest's timer")]
+        public async Task LaunchShuttle(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<ShuttleLaunchRequestDto>();
+            int mapId = body != null && body.MapId > 0 ? body.MapId : 0;
+            if (mapId == 0 && RequestParser.HasParameter(context, "map_id"))
+                mapId = RequestParser.GetIntParameter(context, "map_id");
+            int shuttleId = body != null && body.ShuttleId > 0 ? body.ShuttleId : 0;
+            if (shuttleId == 0 && RequestParser.HasParameter(context, "shuttleId"))
+                shuttleId = RequestParser.GetIntParameter(context, "shuttleId");
+            var result = _shuttleService.Launch(mapId, shuttleId);
             await context.SendJsonResponse(result);
         }
     }

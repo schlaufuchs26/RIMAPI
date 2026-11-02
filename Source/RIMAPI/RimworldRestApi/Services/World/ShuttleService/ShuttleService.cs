@@ -137,6 +137,61 @@ namespace RIMAPI.Services
             }
         }
 
+        public ApiResult<ShuttleLaunchResultDto> Launch(int mapId, int shuttleId)
+        {
+            try
+            {
+                Thing shuttle;
+                string shuttleProblem;
+                if (!FindShuttleOnMap(mapId, shuttleId, out shuttle, out shuttleProblem))
+                    return ApiResult<ShuttleLaunchResultDto>.Fail(shuttleProblem);
+
+                CompShuttle comp = shuttle.TryGetComp<CompShuttle>();
+                CompTransporter transporter = shuttle.TryGetComp<CompTransporter>();
+                if (comp == null || transporter == null)
+                    return ApiResult<ShuttleLaunchResultDto>.Fail(
+                        $"{shuttle.Label} (id {shuttle.thingIDNumber}) is not a shuttle: it carries no shuttle component");
+
+                if (ShipJobDefOf.FlyAway == null)
+                    return ApiResult<ShuttleLaunchResultDto>.Fail(
+                        shuttle.Label.CapitalizeFirst() + " (id " + shuttle.thingIDNumber
+                        + ") cannot be sent away: this game has no shuttle send-away job, which comes with Royalty");
+
+                ShuttleDto state = ShuttleDtoOf(shuttle, shuttle.MapHeld);
+                ShuttleRules.SendState send = SendStateOf(comp, state);
+                if (!ShuttleRules.NothingToSend(send))
+                {
+                    string refusal = ShuttleRules.SendProblem(send);
+                    if (refusal != null)
+                        return ApiResult<ShuttleLaunchResultDto>.Fail(
+                            state.Label + " (id " + state.Id + "): " + refusal);
+                }
+
+                PositionDto position = state.Position;
+                // The game's own lever, the one its "Send shuttle" gizmo pulls
+                // (ShipJob_Wait.GetJobGizmos) and its quests pull
+                // (SendShuttleAwayQuestPartUtility): the ship gets the FlyAway
+                // job, which hands the contents to the leaving skyfaller, tells
+                // the quest "FlewAway" and despawns the shuttle on the map.
+                SendShuttleAwayQuestPartUtility.SendAway(shuttle, false);
+
+                TransportShip ship = comp.shipParent;
+                return ApiResult<ShuttleLaunchResultDto>.Ok(new ShuttleLaunchResultDto
+                {
+                    ShuttleId = state.Id,
+                    Shuttle = state.Label,
+                    Position = position,
+                    Left = !shuttle.Spawned,
+                    Job = ship != null && ship.curJob != null && ship.curJob.def != null
+                        ? ship.curJob.def.defName : "",
+                });
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<ShuttleLaunchResultDto>.Fail(ex.ToString());
+            }
+        }
+
         // ShuttlesOn lists the things on a map that carry a CompShuttle: a quest
         // shuttle, an imperial shuttle, a player's passenger shuttle.
         private static IEnumerable<Thing> ShuttlesOn(Map map)
@@ -186,6 +241,97 @@ namespace RIMAPI.Services
             }
             shuttle = onMap[0];
             return true;
+        }
+
+        // FindShuttleOnMap resolves the shuttle a send-away call means: the one
+        // it names, else the single shuttle on the map it names (the open one
+        // when the call names no map). Two shuttles without an id is a refusal
+        // that names both, because sending the wrong one away is what the call
+        // must not guess at.
+        private static bool FindShuttleOnMap(int mapId, int shuttleId, out Thing shuttle, out string problem)
+        {
+            shuttle = null;
+            problem = null;
+            if (shuttleId > 0)
+            {
+                foreach (Map m in Find.Maps)
+                {
+                    shuttle = ShuttlesOn(m).FirstOrDefault(t => t.thingIDNumber == shuttleId);
+                    if (shuttle != null) return true;
+                }
+                problem = $"no shuttle with id {shuttleId} is on a map: the `shuttles` read prints the id";
+                return false;
+            }
+
+            Map map = mapId > 0 ? MapHelper.GetMapByID(mapId) : Find.CurrentMap;
+            if (map == null)
+            {
+                problem = mapId > 0
+                    ? MapLookup.MapNotFound(mapId)
+                    : "no map is open: a send-away call names the map the shuttle stands on in `map_id`";
+                return false;
+            }
+            List<Thing> onMap = ShuttlesOn(map).ToList();
+            if (onMap.Count == 0)
+            {
+                problem = "no shuttle is on the map: the `shuttles` read names one when it has landed";
+                return false;
+            }
+            if (onMap.Count > 1)
+            {
+                problem = "the map has " + onMap.Count + " shuttles, so the call names one: "
+                    + string.Join(", ", onMap.Select(t => t.Label + " (id " + t.thingIDNumber + ") at "
+                        + t.Position.x + "," + t.Position.z).ToArray());
+                return false;
+            }
+            shuttle = onMap[0];
+            return true;
+        }
+
+        // SendStateOf collects what the read and the game say about a shuttle a
+        // call wants to send away: the game's own readiness flag, the ship job
+        // it holds, and the required pawns and items that are still missing,
+        // worded the way the refusal needs them.
+        private static ShuttleRules.SendState SendStateOf(CompShuttle comp, ShuttleDto state)
+        {
+            ShuttleRules.SendState send = new ShuttleRules.SendState
+            {
+                Shuttle = state.Label,
+                ShuttleId = state.Id,
+                Cell = "(" + state.Position.X + ", " + state.Position.Z + ")",
+                Spawned = state.Spawned,
+                AllRequiredLoaded = state.AllRequiredLoaded,
+                AlreadyLeaving = comp.shipParent != null && comp.shipParent.LeavingSoonAutomatically,
+            };
+            int colonists = 0;
+            foreach (ShuttlePawnDto p in state.ContainedPawns)
+            {
+                if (p.Kind == "colonist") colonists++;
+            }
+            foreach (ShuttlePawnDto p in state.RequiredPawns)
+            {
+                if (p.Contained || p.Dead) continue;
+                send.Missing.Add(p.Name + " (id " + p.Id + ")" + MissingWhere(p));
+            }
+            foreach (ShuttleItemDto item in state.RequiredItems)
+            {
+                if (item.Loaded >= item.Required) continue;
+                send.Missing.Add(item.Loaded + "/" + item.Required + " " + item.DefName);
+            }
+            if (state.RequiredColonistCount > 0 && colonists < state.RequiredColonistCount)
+                send.Missing.Add(state.RequiredColonistCount + " colonist(s), " + colonists + " aboard");
+            if (state.RequireAllColonistsOnMap)
+                send.Missing.Add("every colonist on the map");
+            return send;
+        }
+
+        // MissingWhere says why a required pawn is not aboard, in the words the
+        // boarding rule uses for the same states.
+        private static string MissingWhere(ShuttlePawnDto p)
+        {
+            if (!p.OnMap) return " is off the map";
+            if (p.Downed) return " is down and cannot board on his own";
+            return " is not aboard yet";
         }
 
         // StateOf collects what the game and the shuttle say about this pawn,

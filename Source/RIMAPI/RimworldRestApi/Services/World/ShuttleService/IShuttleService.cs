@@ -13,5 +13,7 @@ namespace RIMAPI.Services
         ApiResult<List<ShuttleDto>> Shuttles(int mapId);
 
         ApiResult<ShuttleEnterResultDto> Enter(int pawnId, int shuttleId);
+
+        ApiResult<ShuttleLaunchResultDto> Launch(int mapId, int shuttleId);
     }
 }

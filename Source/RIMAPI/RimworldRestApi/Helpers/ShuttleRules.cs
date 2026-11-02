@@ -153,6 +153,77 @@ namespace RIMAPI.Helpers
             return state != null && state.AlreadyAboard;
         }
 
+        /// <summary>
+        /// What the mod read off the shuttle a send-away call names (fox ticket
+        /// #4150): the state the game's own "Send shuttle" gizmo is enabled by,
+        /// and what is still missing, so a refused call names the thing the
+        /// quest waits for instead of "not ready".
+        /// </summary>
+        public sealed class SendState
+        {
+            /// <summary>The shuttle's label and id, for the sentence.</summary>
+            public string Shuttle = "";
+            public int ShuttleId;
+
+            /// <summary>The cell the shuttle stands on, written as "(x, z)".</summary>
+            public string Cell = "";
+
+            /// <summary>The shuttle is on the map.</summary>
+            public bool Spawned = true;
+
+            /// <summary>The game's own CompShuttle.AllRequiredThingsLoaded.</summary>
+            public bool AllRequiredLoaded = true;
+
+            /// <summary>
+            /// What the quest still waits for, already worded for the sentence
+            /// ("Neda (id 203027) is not aboard", "10/50 Steel"), in the read's
+            /// order: the required pawns first, then the required items.
+            /// </summary>
+            public System.Collections.Generic.List<string> Missing =
+                new System.Collections.Generic.List<string>();
+
+            /// <summary>The ship job the shuttle holds, for the answer: "WaitSendable".</summary>
+            public string Job = "";
+
+            /// <summary>The shuttle already flies away or has its FlyAway job queued.</summary>
+            public bool AlreadyLeaving;
+        }
+
+        /// <summary>
+        /// Why the game would not send this shuttle away, or null when it takes
+        /// the order. The game's own send button (ShipJob_Wait.GetJobGizmos)
+        /// is disabled until CompShuttle.AllRequiredThingsLoaded, so the first
+        /// fact is what the quest still waits for; a call on a shuttle that is
+        /// already on its way orders nothing (NothingToSend).
+        /// </summary>
+        public static string SendProblem(SendState state)
+        {
+            if (state == null) return null;
+            if (!state.Spawned)
+                return "the shuttle " + Named(state.Shuttle, state.ShuttleId)
+                    + " is not on the map any more: it has left or been destroyed";
+            if (state.AlreadyLeaving) return null;
+            if (!state.AllRequiredLoaded)
+            {
+                string missing = state.Missing != null && state.Missing.Count > 0
+                    ? string.Join(", ", state.Missing.ToArray())
+                    : "something it requires";
+                return "the shuttle " + Named(state.Shuttle, state.ShuttleId)
+                    + " at " + state.Cell + " is not ready to leave: it still waits for "
+                    + missing + ", and the game sends it away only once everything it requires is aboard";
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Whether the call orders nothing because the shuttle is on its way
+        /// already; the answer then says so instead of forcing a second job.
+        /// </summary>
+        public static bool NothingToSend(SendState state)
+        {
+            return state != null && state.AlreadyLeaving;
+        }
+
         private static string Named(string name, int id)
         {
             if (string.IsNullOrEmpty(name)) return string.Format("thing {0}", id);

@@ -61,6 +61,7 @@ PawnController.cs /api/v1/jobs/make/tend
 PawnController.cs /api/v1/pawn/allowed_area
 PawnController.cs /api/v1/pawn/prisoner/interaction
 ShuttleController.cs /api/v1/map/shuttle/enter
+ShuttleController.cs /api/v1/map/shuttle/launch
 ShuttleController.cs /api/v1/map/shuttles
 TradeController.cs /api/v1/traders
 TradeController.cs /api/v1/traders/beacons

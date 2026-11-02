@@ -142,4 +142,29 @@ namespace RIMAPI.Models
         /// <summary>The shuttle's state after the call, so a run sees what is still missing.</summary>
         public ShuttleDto ShuttleState { get; set; }
     }
+
+    /// <summary>
+    /// What a send-away call did (fox ticket #4150): the game's own "Send
+    /// shuttle" lever, reported as the state the game holds afterwards. The
+    /// shuttle is gone from the map in the same call, so the answer carries the
+    /// cell it left from and whether anything is still aboard.
+    /// </summary>
+    public class ShuttleLaunchResultDto
+    {
+        public int ShuttleId { get; set; }
+        public string Shuttle { get; set; }
+
+        /// <summary>The cell the shuttle stood on when the call sent it away.</summary>
+        public PositionDto Position { get; set; }
+
+        /// <summary>True when the shuttle is off the map after the call.</summary>
+        public bool Left { get; set; }
+
+        /// <summary>
+        /// The ship job the shuttle holds after the call ("FlyAway"), empty when
+        /// the game already disposed the ship. FlyAway hands the shuttle's
+        /// contents to the leaving skyfaller and tells the quest "FlewAway".
+        /// </summary>
+        public string Job { get; set; }
+    }
 }

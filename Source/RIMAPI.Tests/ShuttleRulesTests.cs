@@ -149,5 +149,69 @@ namespace RIMAPI.Tests
             state.CanReach = false;
             Assert.Contains("no path", ShuttleRules.Problem(state));
         }
+
+        // The rule behind a send-away call (fox ticket #4150): the game's own
+        // "Send shuttle" button is enabled once everything the quest requires is
+        // aboard, and a call on a shuttle that is not ready names what is still
+        // missing instead of "not ready".
+
+        private static ShuttleRules.SendState LoadedShuttle()
+        {
+            return new ShuttleRules.SendState
+            {
+                Shuttle = "Imperial shuttle",
+                ShuttleId = 203032,
+                Cell = "(140, 107)",
+                AllRequiredLoaded = true,
+                Job = "WaitSendable",
+            };
+        }
+
+        [Fact]
+        public void ALoadedShuttleIsSentAway()
+        {
+            Assert.Null(ShuttleRules.SendProblem(LoadedShuttle()));
+            Assert.False(ShuttleRules.NothingToSend(LoadedShuttle()));
+        }
+
+        [Fact]
+        public void AShuttleThatIsStillMissingItsPeopleNamesThem()
+        {
+            var state = LoadedShuttle();
+            state.AllRequiredLoaded = false;
+            state.Missing.Add("Neda (id 203027) is not aboard yet");
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("Neda (id 203027)", problem);
+            Assert.Contains("(140, 107)", problem);
+            Assert.Contains("not ready to leave", problem);
+        }
+
+        [Fact]
+        public void AShuttleMissingSomethingUnnamedStillSaysSo()
+        {
+            var state = LoadedShuttle();
+            state.AllRequiredLoaded = false;
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("something it requires", problem);
+        }
+
+        [Fact]
+        public void AShuttleAlreadyOnItsWayOrdersNothing()
+        {
+            var state = LoadedShuttle();
+            state.AlreadyLeaving = true;
+            Assert.Null(ShuttleRules.SendProblem(state));
+            Assert.True(ShuttleRules.NothingToSend(state));
+        }
+
+        [Fact]
+        public void AShuttleThatAlreadyLeftIsNamed()
+        {
+            var state = LoadedShuttle();
+            state.Spawned = false;
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("not on the map any more", problem);
+            Assert.Contains("id 203032", problem);
+        }
     }
 }
