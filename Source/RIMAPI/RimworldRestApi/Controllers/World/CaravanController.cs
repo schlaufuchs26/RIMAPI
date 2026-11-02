@@ -29,6 +29,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/caravan/form")]
+        [ResponseBody(typeof(FormCaravanResultDto))]
         [RequestBody(typeof(FormCaravanRequest))]
         [QueryParameters("destination_tile:integer?", "map_id:integer?")]
         [EndpointMetadata("Form a caravan", Notes = "Send named pawns and goods off as a caravan to a tile, the game's own form-and-send jobs")]
@@ -62,6 +63,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/caravan/steer")]
+        [ResponseBody(typeof(CaravanSteerResultDto))]
         [RequestBody(typeof(SteerCaravanRequest))]
         [EndpointMetadata("Steer a caravan", Notes = "Change a formed caravan's destination: a plain tile is a travel order, a settlement is the game's own Visit or Trade arrival action")]
         public async Task SteerCaravan(HttpListenerContext context)
@@ -74,6 +76,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/caravan/trade")]
+        [ResponseBody(typeof(CaravanTradeResultDto))]
         [RequestBody(typeof(CaravanTradeRequest))]
         [EndpointMetadata("Trade with a settlement", Notes = "Trade with a settlement: send the caravan there, or open the game's own trade dialog when it already stands at it")]
         public async Task TradeCaravan(HttpListenerContext context)
@@ -86,6 +89,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/caravan/settle")]
+        [ResponseBody(typeof(SettleCaravanResultDto))]
         [RequestBody(typeof(SettleCaravanRequest))]
         [EndpointMetadata("Settle a caravan", Notes = "Settle a new home where the caravan stands, the Settle button of the caravan's own gizmo bar")]
         public async Task SettleCaravan(HttpListenerContext context)

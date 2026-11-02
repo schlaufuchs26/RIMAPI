@@ -16,13 +16,13 @@ namespace RIMAPI.Tests
     ///
     /// Waves, in the order the ticket names them: pawn, colony, map-world,
     /// system, client, dev, ai, other (the docs and cache routes of
-    /// BaseControllers). The pawn and colony waves are done and left the
-    /// list; the rest follow one run each.
+    /// BaseControllers). The pawn, colony and map-world waves are done and
+    /// left the list; the rest follow one run each.
     /// </remarks>
     internal static class PendingResponseSchemas
     {
         public static readonly HashSet<string> Areas = new HashSet<string>(
-            new[] { "map-world", "system", "client", "dev", "ai", "other" },
+            new[] { "system", "client", "dev", "ai", "other" },
             StringComparer.Ordinal
         );
     }

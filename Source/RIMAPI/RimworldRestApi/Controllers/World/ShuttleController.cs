@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -26,6 +27,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/shuttles")]
+        [ResponseBody(typeof(List<ShuttleDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the shuttles on a map", Notes = "The shuttles on a map with their cell, the pawns and items they wait for, and the quest's countdown")]
         public async Task GetShuttles(HttpListenerContext context)
@@ -36,6 +38,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/shuttle/enter")]
+        [ResponseBody(typeof(ShuttleEnterResultDto))]
         [RequestBody(typeof(ShuttleEnterRequestDto))]
         [EndpointMetadata("Board a pawn onto a shuttle", Notes = "Send a named pawn onto a landed shuttle, the game's own right-click boarding order")]
         public async Task EnterShuttle(HttpListenerContext context)
@@ -57,6 +60,7 @@ namespace RIMAPI.Controllers
         // that already holds everyone and everything its quest waits for, and a
         // shuttle that is not ready is refused with what is still missing.
         [Post("/api/v1/map/shuttle/launch")]
+        [ResponseBody(typeof(ShuttleLaunchResultDto))]
         [RequestBody(typeof(ShuttleLaunchRequestDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Send a shuttle away", Notes = "Send a loaded shuttle away through the game's own send-away order, instead of waiting for the quest's timer")]

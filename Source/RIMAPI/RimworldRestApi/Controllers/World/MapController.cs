@@ -25,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/maps")]
+        [ResponseBody(typeof(List<MapDto>))]
         [EndpointMetadata("Get all generated maps list the in game session")]
         public async Task GetGameState(HttpListenerContext context)
         {
@@ -33,6 +34,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/things")]
+        [ResponseBody(typeof(List<ThingDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the items on the map", Notes = "Get the items lying on the map; cells the colony has not explored are left out")]
         public async Task GetMapThings(HttpListenerContext context)
@@ -43,6 +45,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/things-at")]
+        [ResponseBody(typeof(List<ThingDto>))]
         [RequestBody(typeof(ThingsAtCellRequestDto))]
         [EndpointMetadata("Get the things in one cell", Notes = "Get the things standing in one cell; a cell the colony has not explored answers nothing")]
         public async Task GetThingsAtCell(HttpListenerContext context)
@@ -53,6 +56,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/things/radius")]
+        [ResponseBody(typeof(List<ThingDto>))]
         [QueryParameters("map_id:integer", "radius:integer", "x:integer", "z:integer")]
         [EndpointMetadata("Get things within a radius", Notes = "Get the items, buildings and plants within a radius of one cell; cells the colony has not explored are left out")]
         public async Task GetMapThingsInRadius(HttpListenerContext context)
@@ -67,6 +71,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/plants")]
+        [ResponseBody(typeof(List<ThingDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the visible plants", Notes = "Get all plants (trees, bushes, crops) the colony can see; fogged cells are left out")]
         public async Task GetMapPlants(HttpListenerContext context)
@@ -77,6 +82,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/plants/area")]
+        [ResponseBody(typeof(List<PlantDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the plants on a rectangle", Notes = "Get the plants standing on a rectangle (x1, z1, x2, z2): defName, growth and cell of each, fogged cells left out")]
         public async Task GetMapPlantsInRect(HttpListenerContext context)
@@ -91,6 +97,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/designations")]
+        [ResponseBody(typeof(List<DesignationDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List every designation", Notes = "Get every designation on the map: what is marked for chopping, mining, deconstructing, harvesting or hunting, with its cell or thing")]
         public async Task GetMapDesignations(HttpListenerContext context)
@@ -101,6 +108,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/blueprints")]
+        [ResponseBody(typeof(List<BlueprintEntryDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the blueprints and frames", Notes = "Get every blueprint and frame on the map: the def it builds, its cell, its material and the work left")]
         public async Task GetMapBlueprints(HttpListenerContext context)
@@ -111,6 +119,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/pens")]
+        [ResponseBody(typeof(List<PenDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the animal pens", Notes = "Get every animal pen on the map: the marker's cell, the game's enclosure verdict, the animals standing inside and the pen tab's food numbers and animal capacity")]
         public async Task GetMapPens(HttpListenerContext context)
@@ -121,6 +130,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/area")]
+        [ResponseBody(typeof(AreaCellsDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get an area's cells", Notes = "Get one area's cells as rectangles: where the Home area reaches, which is where colonists haul and therefore where a blueprint is ever built")]
         public async Task GetMapArea(HttpListenerContext context)
@@ -132,6 +142,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/area/expand")]
+        [ResponseBody(typeof(AreaCellsDto))]
         [RequestBody(typeof(AreaExpandRequestDto))]
         [EndpointMetadata("Extend an area", Notes = "Extend one area over a rectangle, the game's own expand designator applied at once")]
         public async Task ExpandMapArea(HttpListenerContext context)
@@ -142,6 +153,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/weather")]
+        [ResponseBody(typeof(MapWeatherDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the weather")]
         public async Task GetMapWeather(HttpListenerContext context)
@@ -152,6 +164,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/power/info")]
+        [ResponseBody(typeof(MapPowerInfoDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the map's power grid")]
         public async Task GetMapPowerInfo(HttpListenerContext context)
@@ -162,6 +175,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/ore")]
+        [ResponseBody(typeof(OreDataDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the ore the colony has found", Notes = "Get the ore the colony has found, grouped by def: cells and hit points per deposit, fogged cells left out")]
         public async Task GetMapOre(HttpListenerContext context)
@@ -172,6 +186,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/animals")]
+        [ResponseBody(typeof(List<AnimalDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the visible animals", Notes = "Get the animals the colony can see: id, race, name, side (wild or tame), sex, life stage, health, the tame and hunt designations, and whether it is a manhunter or a predator; animals in fogged cells are left out")]
         public async Task GetMapAnimals(HttpListenerContext context)
@@ -182,6 +197,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/creatures/summary")]
+        [ResponseBody(typeof(MapCreaturesSummaryDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get a creature summary")]
         public async Task GetMapCreaturesSummary(HttpListenerContext context)
@@ -192,6 +208,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/farm/summary")]
+        [ResponseBody(typeof(MapFarmSummaryDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get a farm summary")]
         public async Task GetMapFarmSummary(HttpListenerContext context)
@@ -202,6 +219,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/zone/growing")]
+        [ResponseBody(typeof(GrowingZoneDto))]
         [QueryParameters("map_id:integer", "zone_id:integer")]
         [EndpointMetadata("Get one growing zone")]
         public async Task GetMapGrowingZoneById(HttpListenerContext context)
@@ -213,6 +231,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/zone/growing")]
+        [ResponseBody(typeof(GrowingZoneDto))]
         [RequestBody(typeof(CreateGrowingZoneRequestDto))]
         [EndpointMetadata("Create a growing zone")]
         public async Task CreateGrowingZone(HttpListenerContext context)
@@ -223,6 +242,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/zones")]
+        [ResponseBody(typeof(MapZonesDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get zones on the map")]
         public async Task GetMapZones(HttpListenerContext context)
@@ -233,6 +253,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/storage/unwanted")]
+        [ResponseBody(typeof(UnwantedFoodDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the edible things no storage on the map accepts")]
         public async Task GetUnwantedFood(HttpListenerContext context)
@@ -243,6 +264,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/storage/capacity")]
+        [ResponseBody(typeof(StorageCapacityDto))]
         [QueryParameters("def:string", "map_id:integer")]
         [EndpointMetadata("Get the storage room the map has for one product")]
         public async Task GetStorageCapacity(HttpListenerContext context)
@@ -254,6 +276,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/food/rotting")]
+        [ResponseBody(typeof(MapRottingFoodDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the perishable food", Notes = "Get the perishable food in rooms above 0 C, with its room and the hours it has left")]
         public async Task GetRottingFood(HttpListenerContext context)
@@ -264,6 +287,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/rooms")]
+        [ResponseBody(typeof(MapRoomsDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the map's rooms")]
         public async Task GetMapRooms(HttpListenerContext context)
@@ -274,6 +298,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/terrain")]
+        [ResponseBody(typeof(MapTerrainDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the terrain grid", Notes = "Get the map's natural terrain and constructed floors as a run-length grid; x1, z1, x2, z2 narrow it to that rectangle")]
         public async Task GetMapTerrain(HttpListenerContext context)
@@ -323,6 +348,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/fog-grid")]
+        [ResponseBody(typeof(FogGridDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get the fog grid")]
         public async Task GetMapFogGrid(HttpListenerContext context)
@@ -333,6 +359,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/buildings")]
+        [ResponseBody(typeof(List<BuildingDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the colony's buildings", Notes = "Get the colony's buildings; a building in a cell the colony has not explored is left out")]
         public async Task GetMapBuildings(HttpListenerContext context)
@@ -343,6 +370,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/building/info")]
+        [ResponseBody(typeof(BuildingDto))]
         [QueryParameters("building_id:integer")]
         [EndpointMetadata("Get building info")]
         public async Task GetBuildingInfo(HttpListenerContext context)
@@ -356,6 +384,8 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/map/building/power")]
         [EndpointMetadata("Toggle a building's power")]
+        [ResponseBody(typeof(PoweredBuildingDto))]
+        [EndpointMetadata("Toggle power on/off for a flickable building")]
         public async Task SetBuildingPower(HttpListenerContext context)
         {
             var buildingId = RequestParser.GetIntParameter(context, "buildingId");
@@ -367,6 +397,7 @@ namespace RIMAPI.Controllers
         // A humanlike bed's "Set for prisoners" toggle: an arrest or a capture
         // needs a bed with that flag, and nothing could set it (ticket #3183).
         [Post("/api/v1/map/building/bed-for-prisoners")]
+        [ResponseBody(typeof(BedDto))]
         [EndpointMetadata("Set a humanlike bed for prisoners (the bed's own toggle)")]
         public async Task SetBedForPrisoners(HttpListenerContext context)
         {
@@ -382,6 +413,8 @@ namespace RIMAPI.Controllers
         // being taken apart.
         [Post("/api/v1/map/building/bed-owner")]
         [EndpointMetadata("Assign a bed to a colonist")]
+        [ResponseBody(typeof(BedOwnerDto))]
+        [EndpointMetadata("Assign a humanlike bed to a colonist, or clear its owner")]
         public async Task SetBedOwner(HttpListenerContext context)
         {
             var buildingId = RequestParser.GetIntParameter(context, "buildingId");
@@ -397,6 +430,7 @@ namespace RIMAPI.Controllers
         // call sets the flag and answers what the game holds afterwards. The
         // medicine policy is the pawn's, not the bed's.
         [Post("/api/v1/map/building/bed-medical")]
+        [ResponseBody(typeof(BedMedicalDto))]
         [QueryParameters("medical:boolean?")]
         [EndpointMetadata("Get or set a bed's medical setting", Notes = "Read or set a bed's own medical setting (the medical bed toggle)")]
         public async Task SetBedMedical(HttpListenerContext context)
@@ -413,6 +447,7 @@ namespace RIMAPI.Controllers
         // one setting that decides whether a room freezes. A call without
         // `target` reads it, with `target` it sets it and reads it back.
         [Post("/api/v1/map/building/temperature-target")]
+        [ResponseBody(typeof(TemperatureTargetDto))]
         [QueryParameters("target:number")]
         [EndpointMetadata("Read or set a cooler's or heater's target temperature")]
         public async Task SetTemperatureTarget(HttpListenerContext context)
@@ -497,6 +532,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/pawns")]
+        [ResponseBody(typeof(List<PawnDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the pawns on a map")]
         public async Task GetPawnsOnMap(HttpListenerContext context)
@@ -507,6 +543,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/people")]
+        [ResponseBody(typeof(List<PersonDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("List the non-colonist people", Notes = "The humanlike people who are not free colonists: wild people, prisoners, guests, downed raiders")]
         public async Task GetPeople(HttpListenerContext context)
@@ -517,6 +554,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/zone/stockpile")]
+        [ResponseBody(typeof(StockpileResponseDto))]
         [RequestBody(typeof(CreateStockpileRequestDto))]
         [EndpointMetadata("Create a new stockpile zone on the map")]
         public async Task CreateStockpile(HttpListenerContext context)
@@ -527,6 +565,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/map/zone/stockpile/delete")]
+        [ResponseBody]
         [QueryParameters("zone_id:integer")]
         [EndpointMetadata("Delete a stockpile zone by zone ID")]
         public async Task DeleteStockpile(HttpListenerContext context)
@@ -537,6 +576,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/map/zone/delete")]
+        [ResponseBody]
         [QueryParameters("zone_id:integer")]
         [EndpointMetadata("Delete any zone (stockpile or growing) by zone ID")]
         public async Task DeleteZone(HttpListenerContext context)
@@ -547,6 +587,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/zone/stockpile/update")]
+        [ResponseBody(typeof(StockpileResponseDto))]
         [RequestBody(typeof(UpdateStockpileRequestDto))]
         [EndpointMetadata("Update stockpile zone parameters by zone ID")]
         public async Task UpdateStockpile(HttpListenerContext context)
@@ -557,6 +598,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/map/storage/update")]
+        [ResponseBody(typeof(StorageSettingsDto))]
         [RequestBody(typeof(UpdateStorageRequestDto))]
         [EndpointMetadata("Get or set a container's storage", Notes = "Read or write a container's storage priority and filter by thing ID")]
         public async Task UpdateStorage(HttpListenerContext context)
@@ -567,6 +609,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/datetime")]
+        [ResponseBody(typeof(MapTimeDto))]
         [EndpointMetadata("Get in-game date and time")]
         public async Task GetCurrentMapDatetime(HttpListenerContext context)
         {
@@ -575,6 +618,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/datetime/tile")]
+        [ResponseBody(typeof(MapTimeDto))]
         [QueryParameters("tile_id:integer")]
         [EndpointMetadata("Get in-game date and time in global map tile")]
         public async Task GetWorldTileDatetime(HttpListenerContext context)

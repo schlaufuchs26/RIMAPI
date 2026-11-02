@@ -22,6 +22,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/settlement/abandon")]
+        [ResponseBody(typeof(AbandonSettlementResultDto))]
         [RequestBody(typeof(AbandonSettlementRequest))]
         [EndpointMetadata("Abandon a settlement", Notes = "Abandon a player settlement, the Abandon button of its own gizmo bar, with the command's own refusal")]
         public async Task AbandonSettlement(HttpListenerContext context)

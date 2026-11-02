@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -18,6 +19,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/factions")]
         [EndpointMetadata("List the factions")]
+        [ResponseBody(typeof(List<FactionsDto>))]
         public async Task GetFactions(HttpListenerContext context)
         {
             var result = _factionService.GetFactions();
@@ -26,6 +28,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/faction/player")]
         [EndpointMetadata("Get the player faction")]
+        [ResponseBody(typeof(FactionDto))]
         public async Task GetPlayerFaction(HttpListenerContext context)
         {
             var result = _factionService.GetPlayerFaction();
@@ -33,6 +36,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction")]
+        [ResponseBody(typeof(FactionDto))]
         [QueryParameters("id:integer")]
         [EndpointMetadata("Get one faction")]
         public async Task GetFaction(HttpListenerContext context)
@@ -43,6 +47,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/relation-with")]
+        [ResponseBody(typeof(FactionRelationDto))]
         [QueryParameters("id:integer", "other_id:integer")]
         [EndpointMetadata("Get a relation between two factions")]
         public async Task GetFactionRelationWith(HttpListenerContext context)
@@ -54,6 +59,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/relations")]
+        [ResponseBody(typeof(FactionRelationsDto))]
         [QueryParameters("id:integer")]
         [EndpointMetadata("List one faction's relations")]
         public async Task GetFactionRelations(HttpListenerContext context)
@@ -64,6 +70,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/def")]
+        [ResponseBody(typeof(FactionDefDto))]
         [QueryParameters("name:string")]
         [EndpointMetadata("Get a faction definition")]
         public async Task GetFactionDef(HttpListenerContext context)
@@ -91,6 +98,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/faction/goodwill")]
+        [ResponseBody(typeof(FactionChangeRelationResponceDto))]
         [RequestBody(typeof(FactionChangeRelationRequestDto))]
         [EndpointMetadata("Set faction goodwill")]
         public async Task SetFactionGoodwill(HttpListenerContext context)
@@ -108,6 +116,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/icon")]
+        [ResponseBody(typeof(FactionIconImageDto))]
         [QueryParameters("id:integer")]
         [EndpointMetadata("Get a faction icon")]
         public async Task GetFactionIcon(HttpListenerContext context)
