@@ -54,6 +54,20 @@ namespace RIMAPI.Core
         /// </summary>
         [JsonIgnore]
         public Type RequestBodyType { get; set; }
+
+        /// <summary>
+        /// The type a route answers in the envelope's data field, from
+        /// [ResponseBody(typeof(T))] (ticket #4304); null when it answers no
+        /// payload, and <see cref="DeclaresResponseBody"/> says whether the
+        /// route declared that at all. A Type cannot be serialized into the
+        /// JSON documentation, so it stays out of it.
+        /// </summary>
+        [JsonIgnore]
+        public Type ResponseBodyType { get; set; }
+
+        /// <summary>Whether the route carries a [ResponseBody] declaration.</summary>
+        [JsonIgnore]
+        public bool DeclaresResponseBody { get; set; }
     }
 
     public class EndpointParameter

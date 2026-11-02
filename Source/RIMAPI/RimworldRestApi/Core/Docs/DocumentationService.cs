@@ -104,6 +104,7 @@ namespace RIMAPI.Core
             var descriptionAttr = method.GetCustomAttribute<EndpointMetadataAttribute>();
             var responseExampleAttr = method.GetCustomAttribute<ResponseExampleAttribute>();
             var bodyAttr = method.GetCustomAttribute<RequestBodyAttribute>();
+            var responseAttr = method.GetCustomAttribute<ResponseBodyAttribute>();
             var queryAttr = method.GetCustomAttribute<QueryParametersAttribute>();
 
             var className = method.DeclaringType?.Name ?? "General";
@@ -134,6 +135,8 @@ namespace RIMAPI.Core
                 Controller = className,
                 Action = methodName,
                 RequestBodyType = bodyAttr?.Type,
+                DeclaresResponseBody = responseAttr != null,
+                ResponseBodyType = responseAttr?.Type,
                 DeprecationNotice = descriptionAttr != null && descriptionAttr.IsDeprecated
                     ? descriptionAttr.DeprecationReason ?? "Deprecated"
                     : null,

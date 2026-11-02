@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using System.Net;
 using RIMAPI.Core;
 using RIMAPI.Http;
+using RIMAPI.Models;
 using RIMAPI.Services;
 
 namespace RIMAPI.Controllers
@@ -16,6 +17,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/details")]
+        [ResponseBody(typeof(PawnDetailedDto))]
         [QueryParameters("id:integer")]
         public async Task GetPawnDetails(HttpListenerContext context)
         {
@@ -25,6 +27,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/inventory")]
+        [ResponseBody(typeof(PawnInventoryDto))]
         [QueryParameters("id:integer")]
         public async Task GetPawnInventory(HttpListenerContext context)
         {

@@ -164,10 +164,7 @@ namespace RIMAPI.Core
                     {
                         ["application/json"] = new JObject
                         {
-                            ["schema"] = new JObject
-                            {
-                                ["$ref"] = "#/components/schemas/ApiResult",
-                            },
+                            ["schema"] = schemas.Envelope(endpoint),
                         },
                     },
                 },
@@ -379,7 +376,22 @@ namespace RIMAPI.Core
                 if (type == typeof(byte[]))
                     return new JObject { ["type"] = "string", ["format"] = "byte" };
                 if (type.IsEnum)
-                    return new JObject { ["type"] = "integer", ["format"] = "int32" };
+                    return new JObject
+                    {
+                        ["type"] = "integer",
+                        ["format"] = "int32",
+                        // The response path serializes an enum as its numeric
+                        // value (no StringEnumConverter), so the schema names
+                        // the numbers the wire carries and keeps the member
+                        // names beside them for a reader of the document.
+                        ["enum"] = new JArray(
+                            Enum.GetValues(type)
+                                .Cast<object>()
+                                .Select(value => (JToken)Convert.ToInt64(value))
+                                .ToArray()
+                        ),
+                        ["x-enum-varnames"] = new JArray(Enum.GetNames(type)),
+                    };
                 if (type == typeof(object) || typeof(JToken).IsAssignableFrom(type))
                     return new JObject();
 
@@ -422,37 +434,117 @@ namespace RIMAPI.Core
                 if (Components["ApiResult"] != null)
                     return;
 
-                Components["ApiResult"] = new JObject
+                // Three envelope shapes: untyped (a route that has not declared
+                // its response yet), no payload (declared with a bare
+                // [ResponseBody]) and one per payload type, built on demand by
+                // Envelope().
+                var untyped = new JObject
                 {
-                    ["type"] = "object",
                     ["description"] = "The envelope every route answers with.",
-                    ["required"] = new JArray("success", "timestamp", "tick"),
-                    ["properties"] = new JObject
+                };
+                FillEnvelope(
+                    untyped,
+                    new JObject
                     {
-                        ["success"] = new JObject { ["type"] = "boolean" },
-                        ["data"] = new JObject
-                        {
-                            ["description"] = "The route's payload; absent when the route reports nothing back.",
-                        },
-                        ["errors"] = new JObject
-                        {
-                            ["type"] = "array",
-                            ["items"] = new JObject { ["type"] = "string" },
-                        },
-                        ["warnings"] = new JObject
-                        {
-                            ["type"] = "array",
-                            ["items"] = new JObject { ["type"] = "string" },
-                        },
-                        ["timestamp"] = new JObject { ["type"] = "string", ["format"] = "date-time" },
-                        ["tick"] = new JObject
-                        {
-                            ["type"] = "integer",
-                            ["format"] = "int32",
-                            ["description"] = "The game tick the answer describes; 0 when no game is loaded.",
-                        },
+                        ["description"] =
+                            "The route's payload; absent when the route reports nothing back.",
+                    }
+                );
+                Components["ApiResult"] = untyped;
+
+                var noData = new JObject { ["description"] = "The envelope of a route that reports no payload." };
+                FillEnvelope(
+                    noData,
+                    new JObject
+                    {
+                        ["type"] = "null",
+                        ["description"] = "Always null: the route answers success and errors only.",
+                    }
+                );
+                Components["ApiResultNoData"] = noData;
+            }
+
+            /// <summary>
+            /// The 200 schema of one route: the untyped envelope while a route
+            /// declares nothing, and otherwise an envelope whose data field is
+            /// the type the route answers (ticket #4304).
+            /// </summary>
+            public JToken Envelope(DocumentedEndpoint endpoint)
+            {
+                if (!endpoint.DeclaresResponseBody)
+                    return Reference("ApiResult");
+
+                if (endpoint.ResponseBodyType == null)
+                    return Reference("ApiResultNoData");
+
+                string name = "ApiResultOf" + TypeName(endpoint.ResponseBodyType);
+                if (Components[name] == null)
+                {
+                    var schema = new JObject();
+                    FillEnvelope(schema, Build(endpoint.ResponseBodyType));
+                    Components[name] = schema;
+                }
+
+                return Reference(name);
+            }
+
+            private static JToken Reference(string component) =>
+                new JObject { ["$ref"] = "#/components/schemas/" + component };
+
+            private static void FillEnvelope(JObject schema, JToken data)
+            {
+                schema["type"] = "object";
+                schema["additionalProperties"] = false;
+                schema["required"] = new JArray("success", "timestamp", "tick");
+                schema["properties"] = new JObject
+                {
+                    ["success"] = new JObject { ["type"] = "boolean" },
+                    ["data"] = data,
+                    ["errors"] = new JObject
+                    {
+                        ["type"] = "array",
+                        ["items"] = new JObject { ["type"] = "string" },
+                    },
+                    ["warnings"] = new JObject
+                    {
+                        ["type"] = "array",
+                        ["items"] = new JObject { ["type"] = "string" },
+                    },
+                    ["timestamp"] = new JObject { ["type"] = "string", ["format"] = "date-time" },
+                    ["tick"] = new JObject
+                    {
+                        ["type"] = "integer",
+                        ["format"] = "int32",
+                        ["description"] = "The game tick the answer describes; 0 when no game is loaded.",
                     },
                 };
+            }
+
+            /// <summary>
+            /// A component name for a payload type: `PawnDto`, `ListOfPawnDto`,
+            /// `DictionaryOfStringToListOfThingDto`. Stable across builds, so a
+            /// generated client sees the same name for the same type.
+            /// </summary>
+            private static string TypeName(Type type)
+            {
+                Type nullable = Nullable.GetUnderlyingType(type);
+                if (nullable != null)
+                    return TypeName(nullable) + "Nullable";
+
+                if (type.IsArray)
+                    return TypeName(type.GetElementType()) + "Array";
+
+                if (type.IsGenericType)
+                {
+                    Type definition = type.GetGenericTypeDefinition();
+                    Type[] arguments = type.GetGenericArguments();
+                    if (definition == typeof(Dictionary<,>) || definition == typeof(IDictionary<,>))
+                        return "DictionaryOf" + TypeName(arguments[0]) + "To" + TypeName(arguments[1]);
+                    if (arguments.Length == 1)
+                        return type.Name.Split('`')[0] + "Of" + TypeName(arguments[0]);
+                }
+
+                return type.Name;
             }
 
             private JToken Reference(Type type)
@@ -470,7 +562,14 @@ namespace RIMAPI.Core
 
                     // Register before filling the properties so a self-reference
                     // resolves to the same component instead of recursing.
-                    var schema = new JObject { ["type"] = "object" };
+                    // additionalProperties:false makes the shape closed, so a
+                    // generated client sees exactly the fields the route sends
+                    // (ticket #4304).
+                    var schema = new JObject
+                    {
+                        ["type"] = "object",
+                        ["additionalProperties"] = false,
+                    };
                     Components[name] = schema;
                     Fill(type, schema);
                 }

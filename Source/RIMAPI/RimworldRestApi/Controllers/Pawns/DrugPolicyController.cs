@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -22,6 +23,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/drug-policies")]
+        [ResponseBody(typeof(List<DrugPolicyDto>))]
         [EndpointMetadata("Read every drug policy with its per-drug rules and how many pawns follow it")]
         public async Task GetDrugPolicies(HttpListenerContext context)
         {
@@ -30,6 +32,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/drug-policies/create")]
+        [ResponseBody(typeof(DrugPolicyDto))]
         [RequestBody(typeof(DrugPolicyWriteRequest))]
         [EndpointMetadata("Create a drug policy, copying the default policy or a named one, the Manage drug policies dialog's New button")]
         public async Task CreateDrugPolicy(HttpListenerContext context)
@@ -40,6 +43,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/drug-policies/update")]
+        [ResponseBody(typeof(DrugPolicyDto))]
         [RequestBody(typeof(DrugPolicyWriteRequest))]
         [EndpointMetadata("Change a drug policy's label and the rules of the drugs it holds")]
         public async Task UpdateDrugPolicy(HttpListenerContext context)
@@ -50,6 +54,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/drug-policies/delete")]
+        [ResponseBody(typeof(DrugPolicyDto))]
         [QueryParameters("id:integer")]
         [EndpointMetadata("Delete a drug policy; the game refuses its default one and one a pawn still follows")]
         public async Task DeleteDrugPolicy(HttpListenerContext context)
@@ -60,6 +65,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/drug-policy")]
+        [ResponseBody(typeof(DrugPolicyDto))]
         [RequestBody(typeof(PawnDrugPolicyRequest))]
         [EndpointMetadata("Give a pawn a drug policy, the Assign tab's dropdown")]
         public async Task AssignDrugPolicy(HttpListenerContext context)
@@ -70,6 +76,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/drug-policies/set-default")]
+        [ResponseBody(typeof(DrugPolicyDto))]
         [QueryParameters("id:integer")]
         [EndpointMetadata("Make a drug policy the default one a new pawn gets, the dialog's star")]
         public async Task SetDefaultDrugPolicy(HttpListenerContext context)

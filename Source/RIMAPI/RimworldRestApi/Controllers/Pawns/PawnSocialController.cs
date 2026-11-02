@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -17,6 +18,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/game/defs/interactions")]
+        [ResponseBody(typeof(List<InteractionDefDto>))]
         [EndpointMetadata("Retrieves a list of all valid InteractionDef names in the game.")]
         public async Task GetInteractionDefs(HttpListenerContext context)
         {
@@ -25,6 +27,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/interactions")]
+        [ResponseBody(typeof(PawnInteractionStatusDto))]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Gets the real-time interaction readiness of a specific pawn.")]
         public async Task GetPawnInteractionStatus(HttpListenerContext context)
@@ -35,6 +38,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/interactions/log")]
+        [ResponseBody(typeof(PawnInteractionLogDto))]
         [QueryParameters("limit:integer", "pawn_id:integer")]
         [EndpointMetadata("Retrieves the recent interaction history for a specific pawn.")]
         public async Task GetPawnInteractionLog(HttpListenerContext context)
@@ -46,6 +50,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/relations")]
+        [ResponseBody(typeof(PawnRelationsDto))]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Retrieves all established familial and romantic relationships for this pawn.")]
         public async Task GetPawnRelations(HttpListenerContext context)
@@ -56,6 +61,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/opinions")]
+        [ResponseBody(typeof(List<PawnOpinionDto>))]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Retrieves a list of this pawn's numerical opinion toward every other colonist on the map.")]
         public async Task GetPawnOpinions(HttpListenerContext context)

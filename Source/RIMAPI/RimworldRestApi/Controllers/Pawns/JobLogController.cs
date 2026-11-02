@@ -2,6 +2,7 @@ using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
 using RIMAPI.Http;
+using RIMAPI.Models;
 using RIMAPI.Services;
 
 namespace RIMAPI.Controllers
@@ -20,6 +21,7 @@ namespace RIMAPI.Controllers
         // is the tick the caller's span starts at; the answer also carries the
         // entry each pawn was in at that tick, so the first span has a start.
         [Get("/api/v1/colonists/job-log")]
+        [ResponseBody(typeof(JobLogDto))]
         [QueryParameters("since_tick:string?")]
         [EndpointMetadata("Job changes of the colony's colonists since a tick: pawn, job def, label, target")]
         public async Task GetJobLog(HttpListenerContext context)

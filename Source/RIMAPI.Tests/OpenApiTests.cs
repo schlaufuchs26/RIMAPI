@@ -197,6 +197,168 @@ namespace RIMAPI.Tests
             Assert.Contains("        - name: map_id\n", yaml);
         }
 
+        [Fact]
+        public void ADeclaredResponseTypeBecomesTheEnvelopesDataSchema()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "GET",
+                    Path = "/api/v1/things/typed",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "ListTypedThings",
+                    DeclaresResponseBody = true,
+                    ResponseBodyType = typeof(List<OpenApiTestRequest>),
+                }
+            );
+
+            JObject document = OpenApiDocument.Build(docs);
+            JObject operation = (JObject)document["paths"]["/api/v1/things/typed"]["get"];
+            string reference = (string)
+                operation["responses"]["200"]["content"]["application/json"]["schema"]["$ref"];
+
+            Assert.Equal("#/components/schemas/ApiResultOfListOfOpenApiTestRequest", reference);
+
+            JObject envelope = (JObject)document["components"]["schemas"]["ApiResultOfListOfOpenApiTestRequest"];
+            Assert.Equal("object", (string)envelope["type"]);
+            Assert.False((bool)envelope["additionalProperties"]);
+            Assert.Equal("boolean", (string)envelope["properties"]["success"]["type"]);
+            Assert.Equal("array", (string)envelope["properties"]["data"]["type"]);
+            Assert.Equal(
+                "#/components/schemas/OpenApiTestRequest",
+                (string)envelope["properties"]["data"]["items"]["$ref"]
+            );
+        }
+
+        [Fact]
+        public void ADeclaredRouteWithoutAPayloadSaysSo()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "POST",
+                    Path = "/api/v1/things/nothing",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "DoNothing",
+                    DeclaresResponseBody = true,
+                }
+            );
+
+            JObject document = OpenApiDocument.Build(docs);
+            JObject operation = (JObject)document["paths"]["/api/v1/things/nothing"]["post"];
+            Assert.Equal(
+                "#/components/schemas/ApiResultNoData",
+                (string)operation["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+            );
+
+            JObject envelope = (JObject)document["components"]["schemas"]["ApiResultNoData"];
+            Assert.Equal("null", (string)envelope["properties"]["data"]["type"]);
+        }
+
+        [Fact]
+        public void AnEnumSchemaNamesTheValuesTheWireCarries()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "GET",
+                    Path = "/api/v1/things/kind",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "GetKind",
+                    DeclaresResponseBody = true,
+                    ResponseBodyType = typeof(OpenApiTestRequest),
+                }
+            );
+
+            JObject document = OpenApiDocument.Build(docs);
+            JObject kind = (JObject)
+                document["components"]["schemas"]["OpenApiTestRequest"]["properties"]["kind"];
+
+            Assert.Equal("integer", (string)kind["type"]);
+            Assert.Equal(new[] { 0L, 1L }, kind["enum"].Select(token => (long)token).ToArray());
+            Assert.Equal(
+                new[] { "Item", "Building" },
+                kind["x-enum-varnames"].Select(token => (string)token).ToArray()
+            );
+        }
+
+        /// <summary>
+        /// The gate the ticket asks for (fox ticket #4304): no schema in the
+        /// document may be a bare object, and no property may be untyped. A
+        /// route that has not declared its response yet still points at the
+        /// untyped envelope, which is why the route list is a ratchet in
+        /// ResponseSchemaTests rather than a check on the rendered document.
+        /// </summary>
+        [Fact]
+        public void NoSchemaInTheDocumentIsABareObject()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "GET",
+                    Path = "/api/v1/things/typed",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "ListTypedThings",
+                    DeclaresResponseBody = true,
+                    ResponseBodyType = typeof(List<OpenApiTestRequest>),
+                }
+            );
+
+            var problems = new List<string>();
+            Inspect(OpenApiDocument.Build(docs), "components", problems);
+            Assert.True(problems.Count == 0, string.Join("\n", problems));
+        }
+
+        /// <summary>
+        /// Walks every schema node: an object needs properties (or an explicit
+        /// additionalProperties schema), and a node needs a type, a $ref or a
+        /// composition keyword.
+        /// </summary>
+        private static void Inspect(JToken node, string at, List<string> problems)
+        {
+            JObject schema = node as JObject;
+            if (schema != null)
+            {
+                bool looksLikeSchema =
+                    schema["type"] != null
+                    || schema["$ref"] != null
+                    || schema["properties"] != null
+                    || schema["items"] != null;
+
+                if (looksLikeSchema)
+                {
+                    if (schema["type"] != null && (string)schema["type"] == "object"
+                        && schema["properties"] == null
+                        && schema["additionalProperties"] == null)
+                        problems.Add(at + " is a bare object without properties");
+                    if (schema["type"] == null && schema["$ref"] == null
+                        && schema["anyOf"] == null && schema["allOf"] == null
+                        && schema["oneOf"] == null && schema["enum"] == null
+                        && schema["description"] == null)
+                        problems.Add(at + " declares no type");
+                }
+
+                foreach (JProperty property in schema.Properties())
+                    Inspect(property.Value, at + "/" + property.Name, problems);
+                return;
+            }
+
+            JArray array = node as JArray;
+            if (array != null)
+            {
+                for (int i = 0; i < array.Count; i++)
+                    Inspect(array[i], at + "[" + i + "]", problems);
+            }
+        }
+
         private static ApiDocumentation Fixture()
         {
             var docs = new ApiDocumentation

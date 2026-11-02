@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -22,6 +23,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawn/operations")]
+        [ResponseBody(typeof(PawnOperationsDto))]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Read a pawn's operation bills and medicine policy (?pawn_id=N)")]
         public async Task GetOperations(HttpListenerContext context)
@@ -32,6 +34,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawn/surgery-recipes")]
+        [ResponseBody(typeof(List<SurgeryRecipeDto>))]
         [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("List the operations a pawn could be given, with the body parts each can target (?pawn_id=N)")]
         public async Task GetSurgeryRecipes(HttpListenerContext context)
@@ -42,6 +45,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/operation")]
+        [ResponseBody(typeof(PawnOperationsDto))]
         [RequestBody(typeof(AddOperationRequest))]
         [EndpointMetadata("Add an operation bill, the health tab's Add bill: pawn_id, recipe, body_part")]
         public async Task AddOperation(HttpListenerContext context)
@@ -52,6 +56,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/pawn/operation")]
+        [ResponseBody(typeof(PawnOperationsDto))]
         [QueryParameters("id:string", "pawn_id:integer")]
         [EndpointMetadata("Cancel an operation bill (?pawn_id=N&id=Bill_...)")]
         public async Task CancelOperation(HttpListenerContext context)
@@ -63,6 +68,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/medicine-policy")]
+        [ResponseBody(typeof(PawnOperationsDto))]
         [RequestBody(typeof(MedicinePolicyRequest))]
         [EndpointMetadata("Set a pawn's medicine policy: pawn_id and care (NoCare, NoMeds, HerbalOrWorse, NormalOrWorse, Best)")]
         public async Task SetMedicinePolicy(HttpListenerContext context)

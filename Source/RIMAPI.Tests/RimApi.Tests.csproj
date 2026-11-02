@@ -214,6 +214,10 @@
          tested without the game. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\ApiDocumentation.cs" Link="Linked\ApiDocumentation.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\RequestBodyAttribute.cs" Link="Linked\RequestBodyAttribute.cs" />
+    <!-- The response type a route declares (fox ticket #4304): the OpenAPI
+         renderer reads it, and a source-level test keeps it equal to the type
+         the handler's service call answers. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\ResponseBodyAttribute.cs" Link="Linked\ResponseBodyAttribute.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\QueryParametersAttribute.cs" Link="Linked\QueryParametersAttribute.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\OpenApiDocument.cs" Link="Linked\OpenApiDocument.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\YamlWriter.cs" Link="Linked\YamlWriter.cs" />

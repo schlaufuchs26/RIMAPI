@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -21,6 +22,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/combat")]
+        [ResponseBody(typeof(CombatStateDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Hostiles and colonists with position, weapon, health, drafted state and current job")]
         public async Task GetCombat(HttpListenerContext context)
@@ -34,6 +36,7 @@ namespace RIMAPI.Controllers
         // writes names killer, victim and the weapon's def, which is what a
         // report needs to tell a dead raider from one who fled the map.
         [Get("/api/v1/map/deaths")]
+        [ResponseBody(typeof(List<DeathDto>))]
         [QueryParameters("limit:integer", "since:integer")]
         [EndpointMetadata("Kills the game recorded: killer, victim, weapon and the tale's kind")]
         public async Task GetDeaths(HttpListenerContext context)
@@ -53,6 +56,7 @@ namespace RIMAPI.Controllers
         // whether the cell has a line to the target (ticket #3174). Without a
         // target there is no direction, so the call needs one.
         [Get("/api/v1/map/cover")]
+        [ResponseBody(typeof(CoverStateDto))]
         [QueryParameters("map_id:integer", "pawn_id:integer", "radius:integer", "target_id:integer", "target_x:integer", "target_z:integer", "x:integer", "z:integer")]
         [EndpointMetadata("Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
         public async Task GetCover(HttpListenerContext context)
@@ -81,6 +85,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/draft")]
+        [ResponseBody(typeof(List<DraftResultDto>))]
         [RequestBody(typeof(DraftRequestDto))]
         [EndpointMetadata("Draft or undraft a list of colonists")]
         public async Task SetDrafted(HttpListenerContext context)
@@ -91,6 +96,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/order")]
+        [ResponseBody(typeof(OrderResultDto))]
         [RequestBody(typeof(OrderRequestDto))]
         [EndpointMetadata("Order one drafted colonist to move, attack, hold or switch fire-at-will")]
         public async Task Order(HttpListenerContext context)
