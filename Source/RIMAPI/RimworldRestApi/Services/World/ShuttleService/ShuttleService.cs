@@ -162,9 +162,10 @@ namespace RIMAPI.Services
                 if (!ShuttleRules.NothingToSend(send))
                 {
                     string refusal = ShuttleRules.SendProblem(send);
+                    // The rule names the shuttle itself in every sentence, so
+                    // the answer does not repeat label and id in front of it.
                     if (refusal != null)
-                        return ApiResult<ShuttleLaunchResultDto>.Fail(
-                            state.Label + " (id " + state.Id + "): " + refusal);
+                        return ApiResult<ShuttleLaunchResultDto>.Fail(refusal);
                 }
 
                 PositionDto position = state.Position;
@@ -326,7 +327,7 @@ namespace RIMAPI.Services
             foreach (ShuttleItemDto item in state.RequiredItems)
             {
                 if (item.Loaded >= item.Required) continue;
-                send.Missing.Add(item.Loaded + "/" + item.Required + " " + item.DefName);
+                send.Missing.Add(item.Required + " " + item.DefName + " (" + item.Loaded + " loaded)");
             }
             if (state.RequiredColonistCount > 0 && colonists < state.RequiredColonistCount)
                 send.Missing.Add(state.RequiredColonistCount + " colonist(s), " + colonists + " aboard");
@@ -336,12 +337,13 @@ namespace RIMAPI.Services
         }
 
         // MissingWhere says why a required pawn is not aboard, in the words the
-        // boarding rule uses for the same states.
+        // boarding rule uses for the same states; it trails the pawn's name in
+        // the sentence "it still waits for ...".
         private static string MissingWhere(ShuttlePawnDto p)
         {
-            if (!p.OnMap) return " is off the map";
-            if (p.Downed) return " is down and cannot board on his own";
-            return " is not aboard yet";
+            if (!p.OnMap) return ", off the map";
+            if (p.Downed) return ", down and cannot board on his own";
+            return ", not aboard yet";
         }
 
         // StateOf collects what the game and the shuttle say about this pawn,

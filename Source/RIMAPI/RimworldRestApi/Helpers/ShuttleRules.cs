@@ -210,7 +210,7 @@ namespace RIMAPI.Helpers
                     : "something it requires";
                 return "the shuttle " + Named(state.Shuttle, state.ShuttleId)
                     + " at " + state.Cell + " is not ready to leave: it still waits for "
-                    + missing + ", and the game sends it away only once everything it requires is aboard";
+                    + missing + "; the game sends it away only once everything it requires is aboard";
             }
             return null;
         }
