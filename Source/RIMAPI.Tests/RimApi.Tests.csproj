@@ -69,6 +69,8 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DrugPolicyRules.cs" Link="Linked\DrugPolicyRules.cs" />
     <!-- The wording of an operation's refusals (fox ticket #4212, gap 4). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\OperationRules.cs" Link="Linked\OperationRules.cs" />
+    <!-- The wording of the training card's refusals (fox ticket #4212, gap 5). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\AnimalTrainingRules.cs" Link="Linked\AnimalTrainingRules.cs" />
     <!-- The body a quest offer letter carries (fox ticket #3881): the letter's
          own words plus the quest's description. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\QuestOfferText.cs" Link="Linked\QuestOfferText.cs" />
