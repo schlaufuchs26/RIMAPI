@@ -24,6 +24,7 @@ namespace RIMAPI.Tests
         [InlineData("trait")]
         [InlineData("incident")]
         [InlineData("quest")]
+        [InlineData("quest_delay")]
         [InlineData("wealth")]
         [InlineData("ticks")]
         [InlineData("debug_actions")]
@@ -113,6 +114,21 @@ namespace RIMAPI.Tests
             Assert.Contains("ticks", DevActionRules.Problem("ticks", null, null, null, null, null, null));
             Assert.Null(DevActionRules.Problem("ticks", null, null, null, null, null, DevActionRules.MaxTicks));
             Assert.Contains("20000", DevActionRules.Problem("ticks", null, null, null, null, null, DevActionRules.MaxTicks + 1));
+        }
+
+        [Fact]
+        public void AQuestDelayNeedsItsTicksAndStaysInsideTheGamesRange()
+        {
+            // 0 is allowed: it ends the delay in the call, which is what a check
+            // that wants the quest's next state asks for.
+            Assert.Contains("ticks", DevActionRules.Problem("quest_delay", null, null, null, null, null, null));
+            Assert.Contains("ticks", DevActionRules.Problem("quest_delay", null, null, null, null, null, -1));
+            Assert.Null(DevActionRules.Problem("quest_delay", null, null, null, null, null, 0));
+            Assert.Null(DevActionRules.Problem("quest_delay", null, null, null, null, null, 60000));
+            Assert.Contains(
+                DevActionRules.MaxQuestDelay.ToString(),
+                DevActionRules.Problem("quest_delay", null, null, null, null, null, DevActionRules.MaxQuestDelay + 1)
+            );
         }
 
         [Fact]

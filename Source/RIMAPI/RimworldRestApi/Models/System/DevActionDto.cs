@@ -86,6 +86,39 @@ namespace RIMAPI.Models
         public DevTickStateDto Ticks { get; set; }
         public DevWealthStateDto Wealth { get; set; }
         public DevActionsStateDto Actions { get; set; }
+        public DevQuestDelayStateDto QuestDelay { get; set; }
+    }
+
+    /// <summary>
+    /// The quest delay a `quest_delay` op moved (ticket #4001): which quest,
+    /// which part, and the span it held before and after, read off the live
+    /// part rather than echoed from the request.
+    /// </summary>
+    public class DevQuestDelayStateDto
+    {
+        /// <summary>The quest's own id, as the `quests` read prints it.</summary>
+        public int QuestId { get; set; }
+
+        /// <summary>The quest's name, e.g. "Hospitality: shelter".</summary>
+        public string QuestName { get; set; }
+
+        /// <summary>The defName of the script the quest was built from.</summary>
+        public string ScriptDefName { get; set; }
+
+        /// <summary>The part's own type, e.g. QuestPart_Delay or QuestPart_ShuttleDelay.</summary>
+        public string PartType { get; set; }
+
+        /// <summary>Ticks the delay held before the op.</summary>
+        public int Before { get; set; }
+
+        /// <summary>Ticks the delay holds after the op; 0 when it ended in the call.</summary>
+        public int After { get; set; }
+
+        /// <summary>True when the op ended the delay in the call instead of moving it.</summary>
+        public bool Ended { get; set; }
+
+        /// <summary>Other enabled delays in that quest, left as they were.</summary>
+        public int Others { get; set; }
     }
 
     /// <summary>

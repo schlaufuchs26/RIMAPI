@@ -119,6 +119,9 @@ namespace RIMAPI.Services
                     case "quest":
                         result = OfferQuest(map, request);
                         break;
+                    case "quest_delay":
+                        result = SetQuestDelay(request);
+                        break;
                     case "wealth":
                         result = AddWealth(map, request);
                         break;

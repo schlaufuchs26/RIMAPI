@@ -36,6 +36,13 @@ namespace RIMAPI.Helpers
         /// <summary>Silver one `wealth` call may add; the game counts silver at face value.</summary>
         public const float MaxWealth = 100000f;
 
+        /// <summary>
+        /// Ticks a `quest_delay` may set: 60 in-game days, past the longest delay
+        /// the game's own quests use (25 days), so a longer number is a typo. The
+        /// op shortens waits, it never needs to stretch one past the game's range.
+        /// </summary>
+        public const int MaxQuestDelay = 3600000;
+
         /// <summary>A hediff severity past 100 is past every disease the game defines.</summary>
         public const float MaxSeverity = 100f;
 
@@ -55,6 +62,7 @@ namespace RIMAPI.Helpers
             "trait",
             "incident",
             "quest",
+            "quest_delay",
             "wealth",
             "ticks",
             "debug_actions",
@@ -236,6 +244,22 @@ namespace RIMAPI.Helpers
                             + " is past the "
                             + MaxTicks
                             + " cap (eight in-game hours per call); run the rest in a second call";
+                    }
+                    break;
+                case "quest_delay":
+                    if (ticks == null || ticks < 0)
+                    {
+                        return "quest_delay needs `ticks`, how many ticks from now the delay fires "
+                            + "(0 ends it in the call)";
+                    }
+                    if (ticks > MaxQuestDelay)
+                    {
+                        return "a quest delay of "
+                            + ticks
+                            + " is past the "
+                            + MaxQuestDelay
+                            + " cap (60 in-game days), longer than any delay the game's own quests "
+                            + "use; the op shortens a wait, so a bigger number is a typo";
                     }
                     break;
             }
