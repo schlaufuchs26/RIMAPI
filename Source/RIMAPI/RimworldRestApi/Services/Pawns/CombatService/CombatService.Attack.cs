@@ -205,12 +205,16 @@ namespace RIMAPI.Services
         // an attack says why that attack is not landing, so a run reads "no
         // line of sight" instead of "the shot missed" (fox #3737). The job's
         // own verb is read, so the line never contradicts the job next to it.
+        // A swinging pawn that is still walking to its target is not blocked
+        // (fox #4163): the melee job paths there, and "attack blocked" beside a
+        // pawn on its way sent the run into a second order.
         private static string AttackBlockedOf(Pawn pawn)
         {
             if (!pawn.Drafted || pawn.CurJob == null || !IsFightJob(pawn.CurJob.def)) return "";
             Thing target = pawn.CurJob.targetA.Thing;
             if (target == null) return "";
             bool melee = pawn.CurJob.def.defName == AttackMeleeDef;
+            if (melee && pawn.pather != null && pawn.pather.Moving) return "";
             return BlockReason(pawn, target, melee) ?? "";
         }
 
