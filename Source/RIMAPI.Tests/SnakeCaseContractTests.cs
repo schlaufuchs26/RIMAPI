@@ -264,6 +264,41 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void EveryShuttleFieldKeepsTheKeyTheToolReads()
+        {
+            // The shuttles read prints these keys, and the pilot state is the
+            // one a launch depends on (fox ticket #4155): the game asks a
+            // player shuttle for a pilot, and a shuttle without one refuses to
+            // leave. A rename has to fail here rather than leave the read with
+            // a pilot clause that never fires.
+            var expected = new[]
+            {
+                "all_required_loaded",
+                "autoload",
+                "contained_pawns",
+                "def_name",
+                "faction",
+                "has_pilot",
+                "id",
+                "label",
+                "launch_problem",
+                "leaves_in_ticks",
+                "leaves_soon",
+                "loading",
+                "pilot_required",
+                "position",
+                "require_all_colonists_on_map",
+                "required_colonist_count",
+                "required_items",
+                "required_pawns",
+                "spawned",
+            };
+
+            JObject json = Json(new ShuttleDto());
+            Assert.Equal(expected, json.Properties().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public void EveryHediffFieldKeepsTheKeyTheToolReads()
         {
             // The untended-injury block reads these keys, the two infection

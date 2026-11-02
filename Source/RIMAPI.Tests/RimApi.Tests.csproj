@@ -216,6 +216,10 @@
          stacks a builder may haul, and the forbidden one named with the call
          that lifts the flag. Plain C#, so the wording is tested here. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ConstructMaterialRules.cs" Link="Linked\ConstructMaterialRules.cs" />
+    <!-- The shuttles answer's keys, the pilot state included (fox ticket
+         #4155): a rename would leave the read with a pilot clause that never
+         fires, because the Go decoder reads pilot_required and has_pilot. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Map\ShuttleDto.cs" Link="Linked\ShuttleDto.cs" />
     <!-- Which cells a designate call marks (fox ticket #4095): a cell named
          twice is marked once, and the map is flat, so two entries that differ
          only in y are one cell. Plain C#, so the rule is tested here. -->

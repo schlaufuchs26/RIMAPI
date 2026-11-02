@@ -47,6 +47,25 @@ namespace RIMAPI.Models
         /// </summary>
         public string LaunchProblem { get; set; }
 
+        /// <summary>
+        /// True when the game asks this shuttle for a pilot before it launches
+        /// (CompShuttle.IsPlayerShuttle, fox ticket #4155): a spawned player
+        /// shuttle needs a free colonist aboard whose piloting ability clears
+        /// the game's 10% floor. A quest shuttle that is not a player shuttle
+        /// needs no pilot.
+        /// </summary>
+        public bool PilotRequired { get; set; }
+
+        /// <summary>
+        /// The game's own CompShuttle.HasPilot: a free colonist inside the
+        /// shuttle who can fly it. False while nobody aboard can, which is the
+        /// state CanLaunch refuses with "No colonist capable of piloting
+        /// shuttle." A bridge from before the field sends false as well, which
+        /// is why the read prints the pilot state only for a shuttle that
+        /// carries PilotRequired.
+        /// </summary>
+        public bool HasPilot { get; set; }
+
         /// <summary>The number of colonists the shuttle requires aboard; 0 when it names none.</summary>
         public int RequiredColonistCount { get; set; }
 

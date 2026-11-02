@@ -479,6 +479,8 @@ namespace RIMAPI.Services
                 Autoload = comp.Autoload,
                 AllRequiredLoaded = comp.AllRequiredThingsLoaded,
                 LaunchProblem = LaunchProblemOf(comp),
+                PilotRequired = comp.IsPlayerShuttle,
+                HasPilot = comp.HasPilot,
                 RequiredColonistCount = comp.requiredColonistCount,
                 RequireAllColonistsOnMap = comp.requireAllColonistsOnMap,
             };
