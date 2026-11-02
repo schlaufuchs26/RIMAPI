@@ -32,6 +32,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/animal/training")]
+        [RequestBody(typeof(SetTrainingRequest))]
         [EndpointMetadata("Switch a trick on or off, the training card's checkbox: pawn_id, trainable, wanted")]
         public async Task SetTraining(HttpListenerContext context)
         {
@@ -41,6 +42,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/animal/master")]
+        [RequestBody(typeof(AnimalMasterRequest))]
         [EndpointMetadata("Set the colonist an animal follows, the training card's master button: pawn_id, master_id (0 clears)")]
         public async Task SetMaster(HttpListenerContext context)
         {
@@ -50,6 +52,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/animal/area")]
+        [RequestBody(typeof(AnimalAreaRequest))]
         [EndpointMetadata("Restrict an animal to an area, or free it: pawn_id, area (empty means anywhere)")]
         public async Task SetArea(HttpListenerContext context)
         {
@@ -59,6 +62,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/animal/follow")]
+        [RequestBody(typeof(AnimalFollowRequest))]
         [EndpointMetadata("The training card's two follow checkboxes: pawn_id, follow_drafted, follow_fieldwork")]
         public async Task SetFollow(HttpListenerContext context)
         {

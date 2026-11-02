@@ -62,7 +62,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/ideo/ritual/start")]
-        [QueryParameters("map_id:integer", "pawn_id:string?", "ritual:string", "target_id:string?", "x:string?", "z:string?")]
+        [QueryParameters("map_id:integer", "pawn_id:integer", "ritual:string", "target_id:integer", "x:integer", "z:integer")]
         [EndpointMetadata("Start an ideoligion ritual or the leader's speech (the game's own start)")]
         public async Task StartRitual(HttpListenerContext context)
         {

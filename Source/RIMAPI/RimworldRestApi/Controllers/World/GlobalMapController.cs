@@ -157,7 +157,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/grid/area")]
-        [QueryParameters("radius:string?", "tile_id:string?")]
+        [QueryParameters("radius:number?", "tile_id:integer?")]
         public async Task GetWorldGridArea(HttpListenerContext context)
         {
             if (!int.TryParse(context.Request.QueryString["tile_id"], out var tileId) ||

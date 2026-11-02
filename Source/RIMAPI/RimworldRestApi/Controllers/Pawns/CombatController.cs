@@ -34,7 +34,7 @@ namespace RIMAPI.Controllers
         // writes names killer, victim and the weapon's def, which is what a
         // report needs to tell a dead raider from one who fled the map.
         [Get("/api/v1/map/deaths")]
-        [QueryParameters("limit:string?", "since:string?")]
+        [QueryParameters("limit:integer", "since:integer")]
         [EndpointMetadata("Kills the game recorded: killer, victim, weapon and the tale's kind")]
         public async Task GetDeaths(HttpListenerContext context)
         {
@@ -53,7 +53,7 @@ namespace RIMAPI.Controllers
         // whether the cell has a line to the target (ticket #3174). Without a
         // target there is no direction, so the call needs one.
         [Get("/api/v1/map/cover")]
-        [QueryParameters("map_id:integer", "pawn_id:string?", "radius:string?", "target_id:string?", "target_x:string?", "target_z:string?", "x:string?", "z:string?")]
+        [QueryParameters("map_id:integer", "pawn_id:integer", "radius:integer", "target_id:integer", "target_x:integer", "target_z:integer", "x:integer", "z:integer")]
         [EndpointMetadata("Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
         public async Task GetCover(HttpListenerContext context)
         {

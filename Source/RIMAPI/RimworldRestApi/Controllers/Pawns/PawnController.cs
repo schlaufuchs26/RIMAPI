@@ -158,7 +158,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/colonist/time-assignment")]
         [RequestBody(typeof(PawnTimeAssignmentRequestDto))]
-        [QueryParameters("assignment:string", "hour:integer", "pawn_id:integer")]
+        [QueryParameters("assignment:string?", "hour:integer?", "pawn_id:integer?")]
         [EndpointMetadata("Schedule pawn assignment during provided hour")]
         public async Task SetTimeAssignment(HttpListenerContext context)
         {
@@ -256,7 +256,7 @@ namespace RIMAPI.Controllers
         // GetIntParameter throws on a missing one, so it is only read when the
         // caller sent it (ticket #3117).
         [Post("/api/v1/jobs/make/tend")]
-        [QueryParameters("map_id:integer", "medicine_id:string?", "patient_id:integer", "pawn_id:integer")]
+        [QueryParameters("map_id:integer", "medicine_id:integer", "patient_id:integer", "pawn_id:integer")]
         [EndpointMetadata("Queue the game's own tend job: a doctor treats a patient, or a pawn itself when its Self-tend option is on")]
         public async Task MakeJobTend(HttpListenerContext context)
         {
@@ -275,7 +275,7 @@ namespace RIMAPI.Controllers
         // other way to move it. enabled defaults to true, so a bare call turns
         // it on.
         [Post("/api/v1/colonist/self-tend")]
-        [QueryParameters("enabled:string?", "pawn_id:integer")]
+        [QueryParameters("enabled:boolean?", "pawn_id:integer")]
         [EndpointMetadata("Switch one pawn's Self-tend option on or off")]
         public async Task SetSelfTend(HttpListenerContext context)
         {
@@ -291,7 +291,7 @@ namespace RIMAPI.Controllers
         // (0 or absent lets the mod pick a colonist that can haul). A corpse
         // into a grave is the case this exists for (ticket #3136).
         [Post("/api/v1/jobs/make/haul")]
-        [QueryParameters("dest_id:string?", "item_id:integer", "map_id:integer", "pawn_id:string?")]
+        [QueryParameters("dest_id:integer", "item_id:integer", "map_id:integer", "pawn_id:integer")]
         [EndpointMetadata("Queue the game's own haul job for one thing and one destination")]
         public async Task MakeJobHaul(HttpListenerContext context)
         {
@@ -313,7 +313,7 @@ namespace RIMAPI.Controllers
         // narrows the scan to one work type. Every field but pawn_id and the
         // target is optional.
         [Post("/api/v1/jobs/make/prioritize")]
-        [QueryParameters("job:string?", "map_id:integer", "pawn_id:integer", "thing_id:string?", "work:string?", "x:string?", "z:string?")]
+        [QueryParameters("job:string?", "map_id:integer", "pawn_id:integer", "thing_id:integer", "work:string?", "x:integer", "z:integer")]
         [EndpointMetadata("Order one job on one named colonist now, the way the right-click menu does")]
         public async Task MakeJobPrioritize(HttpListenerContext context)
         {
@@ -371,7 +371,7 @@ namespace RIMAPI.Controllers
         // carries the pawn to. arrestor_id is optional; without it the mod
         // takes the nearest colonist who can do it.
         [Post("/api/v1/jobs/make/arrest")]
-        [QueryParameters("arrestor_id:string?", "map_id:integer", "pawn_id:integer")]
+        [QueryParameters("arrestor_id:integer", "map_id:integer", "pawn_id:integer")]
         [EndpointMetadata("Queue the game's own arrest or capture job into a prisoner bed")]
         public async Task MakeJobArrest(HttpListenerContext context)
         {
@@ -391,7 +391,7 @@ namespace RIMAPI.Controllers
         // lookup, which is how a downed colony animal reaches an animal bed or
         // an animal sleeping spot (fox ticket #3519).
         [Post("/api/v1/jobs/make/rescue")]
-        [QueryParameters("bed_id:string?", "map_id:integer", "pawn_id:integer", "rescuer_id:string?")]
+        [QueryParameters("bed_id:integer", "map_id:integer", "pawn_id:integer", "rescuer_id:integer")]
         [EndpointMetadata("Queue the game's own rescue job: carry a downed pawn or colony animal to a bed, or to the bed named in bed_id")]
         public async Task MakeJobRescue(HttpListenerContext context)
         {
@@ -414,7 +414,7 @@ namespace RIMAPI.Controllers
         // a prisoner's warden, the doctor's humanlike feeder, or its animal
         // feeder for an animal in an animal bed (fox ticket #3519).
         [Post("/api/v1/jobs/make/feed")]
-        [QueryParameters("feeder_id:string?", "map_id:integer", "meal_id:string?", "pawn_id:integer")]
+        [QueryParameters("feeder_id:integer", "map_id:integer", "meal_id:integer", "pawn_id:integer")]
         [EndpointMetadata("Queue the game's own FeedPatient job for a downed patient in a bed: a colonist, a prisoner or a colony animal")]
         public async Task MakeJobFeed(HttpListenerContext context)
         {
@@ -434,7 +434,7 @@ namespace RIMAPI.Controllers
         // be talked into joining (ticket #3275). chatter_id is optional; without
         // it the mod takes the nearest colonist who can reach him and talk.
         [Post("/api/v1/jobs/make/chat")]
-        [QueryParameters("chatter_id:string?", "map_id:integer", "pawn_id:integer")]
+        [QueryParameters("chatter_id:integer", "map_id:integer", "pawn_id:integer")]
         [EndpointMetadata("Queue the game's own chat with a visitor who wants to join")]
         public async Task MakeJobChat(HttpListenerContext context)
         {

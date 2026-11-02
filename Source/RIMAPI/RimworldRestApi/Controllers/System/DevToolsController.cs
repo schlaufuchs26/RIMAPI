@@ -27,6 +27,8 @@ namespace RIMAPI.Controllers
         // service refuses the whole route unless the game runs in dev mode, so
         // a colony the fox plays honestly cannot be tampered with.
         [Post("/api/v1/dev/action")]
+        [RequestBody(typeof(DevActionRequest))]
+        [QueryParameters("name:string?", "op:string?")]
         [EndpointMetadata(
             "Build a test situation in a dev-mode game: damage, heal, hediff, spawn, mental state, skill, trait, incident, quest, wealth, ticks"
         )]
@@ -52,7 +54,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/dev/console")]
         [RequestBody(typeof(DebugConsoleRequest))]
-        [QueryParameters("action:string", "message:string")]
+        [QueryParameters("action:string?", "message:string?")]
         [EndpointMetadata("Send message to the debug console")]
         public async Task PostConsoleAction(HttpListenerContext context)
         {

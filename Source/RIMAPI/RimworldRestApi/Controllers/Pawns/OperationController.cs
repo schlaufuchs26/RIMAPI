@@ -42,6 +42,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/operation")]
+        [RequestBody(typeof(AddOperationRequest))]
         [EndpointMetadata("Add an operation bill, the health tab's Add bill: pawn_id, recipe, body_part")]
         public async Task AddOperation(HttpListenerContext context)
         {
@@ -62,6 +63,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/medicine-policy")]
+        [RequestBody(typeof(MedicinePolicyRequest))]
         [EndpointMetadata("Set a pawn's medicine policy: pawn_id and care (NoCare, NoMeds, HerbalOrWorse, NormalOrWorse, Best)")]
         public async Task SetMedicinePolicy(HttpListenerContext context)
         {

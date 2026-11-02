@@ -35,7 +35,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/interactions/log")]
-        [QueryParameters("limit:string?", "pawn_id:integer")]
+        [QueryParameters("limit:integer", "pawn_id:integer")]
         [EndpointMetadata("Retrieves the recent interaction history for a specific pawn.")]
         public async Task GetPawnInteractionLog(HttpListenerContext context)
         {

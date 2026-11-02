@@ -385,7 +385,7 @@ namespace RIMAPI.Controllers
         // one setting that decides whether a room freezes. A call without
         // `target` reads it, with `target` it sets it and reads it back.
         [Post("/api/v1/map/building/temperature-target")]
-        [QueryParameters("target:string?")]
+        [QueryParameters("target:number")]
         [EndpointMetadata("Read or set a cooler's or heater's target temperature")]
         public async Task SetTemperatureTarget(HttpListenerContext context)
         {

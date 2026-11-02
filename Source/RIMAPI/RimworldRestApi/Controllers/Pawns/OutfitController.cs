@@ -23,6 +23,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/outfits/create")]
+        [RequestBody(typeof(ApparelPolicyRequest))]
         [EndpointMetadata("Create an apparel policy with a label, the Manage outfits dialog's New button")]
         public async Task CreateOutfit(HttpListenerContext context)
         {
@@ -32,6 +33,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/outfits/update")]
+        [RequestBody(typeof(ApparelPolicyRequest))]
         [EndpointMetadata(
             "Change an apparel policy: its label, its allowed and disallowed apparel and special filters, its hit points and quality range"
         )]
@@ -53,6 +55,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/outfit")]
+        [RequestBody(typeof(PawnApparelPolicyRequest))]
         [EndpointMetadata("Assign an apparel policy to a pawn, the Assign tab's dropdown")]
         public async Task AssignOutfit(HttpListenerContext context)
         {

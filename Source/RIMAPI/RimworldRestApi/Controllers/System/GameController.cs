@@ -97,7 +97,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/info")]
-        [QueryParameters("package_id:string?", "uid:string")]
+        [QueryParameters("package_id:string", "uid:string")]
         [EndpointMetadata("Get single mod info by package_id or uid")]
         [ResponseExample(typeof(ApiResponse<ModInfoDto>))]
         public async Task GetModInfo(HttpListenerContext context)
@@ -111,7 +111,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/preview")]
-        [QueryParameters("package_id:string?", "uid:string")]
+        [QueryParameters("package_id:string", "uid:string")]
         [EndpointMetadata("Get mod preview image as base64")]
         [ResponseExample(typeof(ApiResponse<string>))]
         public async Task GetModPreview(HttpListenerContext context)
@@ -320,7 +320,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/settings/manual-priorities")]
-        [QueryParameters("enabled:string?")]
+        [QueryParameters("enabled:boolean?")]
         [EndpointMetadata("Switch the colony's manual work priorities on or off (?enabled=true|false)")]
         public async Task SetManualPriorities(HttpListenerContext context)
         {

@@ -22,6 +22,8 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/world/caravan/form")]
+        [RequestBody(typeof(FormCaravanRequest))]
+        [QueryParameters("destination_tile:integer?", "map_id:integer?")]
         [EndpointMetadata(
             "Send named pawns and goods off as a caravan to a tile, the game's own form-and-send jobs"
         )]

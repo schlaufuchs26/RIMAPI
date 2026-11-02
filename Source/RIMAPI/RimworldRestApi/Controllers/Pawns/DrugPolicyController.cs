@@ -30,6 +30,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/drug-policies/create")]
+        [RequestBody(typeof(DrugPolicyWriteRequest))]
         [EndpointMetadata("Create a drug policy, copying the default policy or a named one, the Manage drug policies dialog's New button")]
         public async Task CreateDrugPolicy(HttpListenerContext context)
         {
@@ -39,6 +40,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/drug-policies/update")]
+        [RequestBody(typeof(DrugPolicyWriteRequest))]
         [EndpointMetadata("Change a drug policy's label and the rules of the drugs it holds")]
         public async Task UpdateDrugPolicy(HttpListenerContext context)
         {
@@ -58,6 +60,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/drug-policy")]
+        [RequestBody(typeof(PawnDrugPolicyRequest))]
         [EndpointMetadata("Give a pawn a drug policy, the Assign tab's dropdown")]
         public async Task AssignDrugPolicy(HttpListenerContext context)
         {

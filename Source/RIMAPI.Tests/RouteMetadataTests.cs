@@ -34,8 +34,11 @@ namespace RIMAPI.Tests
             RegexOptions.Compiled
         );
 
+        // Controllers that predate ReadBodyAsync wrap it in a local
+        // ReadBody<T>(context) that answers null without a body; a route
+        // calling that one reads a body just the same.
         private static readonly Regex ReadBody = new Regex(
-            @"ReadBodyAsync<(?<type>[A-Za-z0-9_]+)>",
+            @"(?:ReadBodyAsync|ReadBody)<(?<type>[A-Za-z0-9_]+)>",
             RegexOptions.Compiled
         );
 
@@ -90,12 +93,12 @@ namespace RIMAPI.Tests
                 string expected = route.BodyTypes[0];
                 if (route.DeclaredBodyType == null)
                     problems.Add(
-                        route.Location + " reads ReadBodyAsync<" + expected
+                        route.Location + " reads a body of type " + expected
                             + ">() but has no [RequestBody(typeof(" + expected + "))]"
                     );
                 else if (route.DeclaredBodyType != expected)
                     problems.Add(
-                        route.Location + " reads ReadBodyAsync<" + expected
+                        route.Location + " reads a body of type " + expected
                             + ">() but declares [RequestBody(typeof(" + route.DeclaredBodyType + "))]"
                     );
             }
@@ -208,16 +211,10 @@ namespace RIMAPI.Tests
                 foreach (Match declaration in Declaration.Matches(text))
                 {
                     int line = LineOf(text, declaration.Index);
-                    List<string> attributes = AttributeLines(lines, line - 1);
+                    string attributes = AttributeBlock(lines, line - 1);
 
-                    Match route = null;
-                    foreach (string attribute in attributes)
-                    {
-                        route = RouteAttribute.Match(attribute);
-                        if (route.Success)
-                            break;
-                    }
-                    if (route == null)
+                    Match route = RouteAttribute.Match(attributes);
+                    if (!route.Success)
                         continue;
 
                     string body = Body(text, declaration.Index + declaration.Length - 1);
@@ -241,23 +238,30 @@ namespace RIMAPI.Tests
             }
         }
 
-        /// <summary>The contiguous attribute block above a declaration.</summary>
-        private static List<string> AttributeLines(string[] lines, int declarationLine)
+        /// <summary>
+        /// Everything between the previous member and the declaration: the
+        /// attributes, multi-line ones included. The walk stops at a blank
+        /// line, a brace, a statement end or a comment that opens a block, so
+        /// one member's attributes never leak into the next (ticket #4234:
+        /// a multi-line [EndpointMetadata( hid the route attribute above it).
+        /// </summary>
+        private static string AttributeBlock(string[] lines, int declarationLine)
         {
-            var block = new List<string>();
-            for (int i = declarationLine - 1; i >= 0; i--)
+            int start = declarationLine - 1;
+            while (start >= 0)
             {
-                string trimmed = lines[i].Trim();
-                if (trimmed.StartsWith("[", StringComparison.Ordinal)
-                    || trimmed.StartsWith("\"", StringComparison.Ordinal)
-                    || trimmed.StartsWith("*", StringComparison.Ordinal))
-                {
-                    block.Insert(0, trimmed);
-                    continue;
-                }
-                break;
+                string trimmed = lines[start].Trim();
+                if (trimmed.Length == 0
+                    || trimmed == "}"
+                    || trimmed == "{"
+                    || trimmed.EndsWith(";", StringComparison.Ordinal)
+                    || trimmed.StartsWith("//", StringComparison.Ordinal)
+                    || trimmed.StartsWith("/*", StringComparison.Ordinal))
+                    break;
+                start--;
             }
-            return block;
+
+            return string.Join("\n", lines.Skip(start + 1).Take(declarationLine - start - 1));
         }
 
         private static string Body(string text, int openParen)
@@ -328,6 +332,16 @@ namespace RIMAPI.Tests
 
         private sealed class RouteMethod
         {
+            private static readonly Regex[] TypedTryParse =
+            {
+                new Regex(@"int\.TryParse\(\s*context\.Request\.QueryString\[""(?<name>[a-z_]+)""\]", RegexOptions.Compiled),
+                new Regex(@"float\.TryParse\(\s*context\.Request\.QueryString\[""(?<name>[a-z_]+)""\]", RegexOptions.Compiled),
+                new Regex(@"double\.TryParse\(\s*context\.Request\.QueryString\[""(?<name>[a-z_]+)""\]", RegexOptions.Compiled),
+                new Regex(@"bool\.TryParse\(\s*context\.Request\.QueryString\[""(?<name>[a-z_]+)""\]", RegexOptions.Compiled),
+            };
+
+            private static readonly string[] TypedTryParseTypes = { "integer", "number", "number", "boolean" };
+
             private static readonly Regex[] Patterns =
             {
                 new Regex(@"GetMapId\(\s*context\s*\)", RegexOptions.Compiled),
@@ -346,7 +360,7 @@ namespace RIMAPI.Tests
                 string httpMethod,
                 string path,
                 string location,
-                List<string> attributes,
+                string attributes,
                 string body,
                 string signature,
                 string parameterList
@@ -358,20 +372,16 @@ namespace RIMAPI.Tests
                 ReturnsTask = signature.IndexOf("Task", StringComparison.Ordinal) >= 0;
                 Parameters = ParameterShape.ParseList(parameterList);
 
-                foreach (string attribute in attributes)
-                {
-                    Match bodyAttribute = BodyAttribute.Match(attribute);
-                    if (bodyAttribute.Success)
-                        DeclaredBodyType = bodyAttribute.Groups["type"].Value;
+                Match bodyAttribute = BodyAttribute.Match(attributes);
+                if (bodyAttribute.Success)
+                    DeclaredBodyType = bodyAttribute.Groups["type"].Value;
 
-                    Match queryAttribute = QueryAttribute.Match(attribute);
-                    if (queryAttribute.Success)
+                foreach (Match queryAttribute in QueryAttribute.Matches(attributes))
+                {
+                    foreach (Match literal in Regex.Matches(queryAttribute.Groups["args"].Value, "\"([^\"]*)\""))
                     {
-                        foreach (Match literal in Regex.Matches(queryAttribute.Groups["args"].Value, "\"([^\"]*)\""))
-                        {
-                            QueryParameterSpec spec = QueryParameterSpec.Parse(literal.Groups[1].Value);
-                            DeclaredQueryParameters[spec.Name] = spec;
-                        }
+                        QueryParameterSpec spec = QueryParameterSpec.Parse(literal.Groups[1].Value);
+                        DeclaredQueryParameters[spec.Name] = spec;
                     }
                 }
 
@@ -404,13 +414,29 @@ namespace RIMAPI.Tests
                 foreach (Match match in Patterns[2].Matches(body))
                     reads["building_id"] = new QueryRead("building_id", "integer", true);
 
-                AddMatches(reads, optional, Patterns[3], body, "integer", true);
-                AddMatches(reads, optional, Patterns[4], body, "string", true);
-                AddMatches(reads, optional, Patterns[5], body, "boolean", false);
-                AddMatches(reads, optional, Patterns[6], body, "number", true);
-                AddMatches(reads, optional, Patterns[7], body, "number", true);
-                AddMatches(reads, optional, Patterns[8], body, "string", false);
-                AddMatches(reads, optional, Patterns[9], body, "string", false);
+                // int.TryParse(QueryString["x"], ...) names the type the plain
+                // QueryString read cannot: a number, not a string.
+                for (int i = 0; i < TypedTryParse.Length; i++)
+                    AddMatches(reads, optional, TypedTryParse[i], body, TypedTryParseTypes[i], false, false);
+
+                AddMatches(reads, optional, Patterns[3], body, "integer", true, false);
+                AddMatches(reads, optional, Patterns[4], body, "string", true, false);
+                AddMatches(reads, optional, Patterns[5], body, "boolean", false, false);
+                AddMatches(reads, optional, Patterns[6], body, "number", true, false);
+                AddMatches(reads, optional, Patterns[7], body, "number", true, false);
+                // A presence check or a raw QueryString read says nothing about
+                // the type: it must not overwrite a typed read of the same name.
+                AddMatches(reads, optional, Patterns[8], body, "string", false, true);
+                AddMatches(reads, optional, Patterns[9], body, "string", false, true);
+
+                // A route that falls back to the query string when the request
+                // has no body (HasEntityBody) takes every query parameter as a
+                // fallback, so none of them is required on its own.
+                if (body.IndexOf("HasEntityBody", StringComparison.Ordinal) >= 0)
+                {
+                    foreach (string name in reads.Keys.ToList())
+                        optional.Add(name);
+                }
 
                 // "HasParameter(x) ? GetIntParameter(x) : 0" reads an optional
                 // integer: the presence check decides whether it is required.
@@ -430,12 +456,16 @@ namespace RIMAPI.Tests
                 Regex pattern,
                 string body,
                 string type,
-                bool required
+                bool required,
+                bool weak
             )
             {
                 foreach (Match match in pattern.Matches(body))
                 {
                     string name = match.Groups["name"].Value;
+                    if (weak && reads.ContainsKey(name))
+                        continue;
+
                     bool isRequired = required;
                     Group requiredGroup = match.Groups["required"];
                     if (requiredGroup.Success && requiredGroup.Value == "false")

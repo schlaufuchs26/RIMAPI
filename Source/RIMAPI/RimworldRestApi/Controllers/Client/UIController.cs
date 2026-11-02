@@ -69,7 +69,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
-        [QueryParameters("archive:string?", "limit:string?", "peek:string?", "since:string?")]
+        [QueryParameters("archive:string?", "limit:integer?", "peek:string?", "since:integer?")]
         [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, whether the game's own dismiss applies, and whether the game's auto-pause rule pauses the clock for it. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do. Add ?archive=1 to read the letters the game received instead of the ones still standing (query: since=<tick>, limit=<n>): the stack drops a letter whose target is gone, so a letter that paused the game can be off it by the next look.")]
         public async Task ListLetters(HttpListenerContext context)
         {
@@ -95,7 +95,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/messages")]
-        [QueryParameters("limit:string?", "since:string?")]
+        [QueryParameters("limit:integer?", "since:integer?")]
         [EndpointMetadata("List the game's own message archive: the little notifications (a plant died of cold, blight struck, an animal roams away, a colonist was attacked) with their text, def, tick and the thing or cell they are about. Query: since=<tick> for only the messages created at or after it, limit=<n> for the newest few (default 25, max 200). Letters have their own read and are not in this list.")]
         public async Task ListMessages(HttpListenerContext context)
         {

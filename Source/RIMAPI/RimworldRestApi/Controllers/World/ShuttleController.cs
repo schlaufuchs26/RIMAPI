@@ -58,7 +58,7 @@ namespace RIMAPI.Controllers
         // shuttle that is not ready is refused with what is still missing.
         [Post("/api/v1/map/shuttle/launch")]
         [RequestBody(typeof(ShuttleLaunchRequestDto))]
-        [QueryParameters("map_id:string?")]
+        [QueryParameters("map_id:integer")]
         [EndpointMetadata("Send a loaded shuttle away through the game's own send-away order, instead of waiting for the quest's timer")]
         public async Task LaunchShuttle(HttpListenerContext context)
         {
