@@ -189,5 +189,9 @@
          costs about 8 s for 60,456 entries, so the cache is plain C# and the
          test project compiles it. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\MenuCache.cs" Link="Linked\MenuCache.cs" />
+    <!-- Which pawn slot of a kill tale is the victim (fox ticket #4014):
+         KilledBy records the victim first, every other kill tale the killer.
+         Plain C#, so the order is tested without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\KillTaleOrder.cs" Link="Linked\KillTaleOrder.cs" />
   </ItemGroup>
 </Project>

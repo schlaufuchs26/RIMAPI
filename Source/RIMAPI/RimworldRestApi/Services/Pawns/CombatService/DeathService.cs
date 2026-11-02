@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RIMAPI.Core;
+using RIMAPI.Helpers;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
@@ -92,10 +93,25 @@ namespace RIMAPI.Services
                 return null;
 
             // Tale_DoublePawn keeps the killer in firstPawnData and the victim
-            // in secondPawnData; the kill tales declare those symbols
-            // themselves (firstPawnSymbol KILLER, secondPawnSymbol VICTIM).
-            var killerData = Read(tale, "firstPawnData");
-            var victimData = Read(tale, "secondPawnData");
+            // in secondPawnData, except KilledBy, which records the victim
+            // first (fox ticket #4014). The tale def's own symbols settle the
+            // order; the pawns do when a def carries none.
+            var firstData = Read(tale, "firstPawnData");
+            var secondData = Read(tale, "secondPawnData");
+            var firstPawn = PawnOf(firstData);
+            var secondPawn = PawnOf(secondData);
+            if (KillTaleOrder.NamesVictimFirst(
+                    Read(def, "firstPawnSymbol") as string,
+                    Read(def, "secondPawnSymbol") as string,
+                    firstPawn != null && firstPawn.Dead,
+                    secondPawn != null && secondPawn.Dead))
+            {
+                var swap = firstData;
+                firstData = secondData;
+                secondData = swap;
+            }
+            var killerData = firstData;
+            var victimData = secondData;
             var weaponDef = Read(Read(tale, "defData"), "def") as Def;
 
             var dto = new DeathDto
