@@ -14,9 +14,14 @@ namespace RIMAPI.Helpers
     /// </summary>
     public static class DesignationEntry
     {
+        // manhunterOnDamageChance is the hunted animal's race chance to turn
+        // manhunter when it is hurt (fox #4183). It travels with the hunt
+        // entry, because a run that marks prey has to see which of the marked
+        // animals can turn on the hunter; every other order leaves it null.
         public static DesignationDto Make(
             string defName, string label, bool hasThing, int x, int z,
-            int thingId = 0, string thingDefName = null, string thingLabel = null)
+            int thingId = 0, string thingDefName = null, string thingLabel = null,
+            float? manhunterOnDamageChance = null)
         {
             var dto = new DesignationDto
             {
@@ -31,6 +36,7 @@ namespace RIMAPI.Helpers
                 dto.ThingId = thingId;
                 dto.ThingDefName = thingDefName;
                 dto.ThingLabel = thingLabel;
+                dto.ManhunterOnDamageChance = manhunterOnDamageChance;
             }
             return dto;
         }

@@ -30,6 +30,14 @@ namespace RIMAPI.Models
 
         /// <summary>The targeted thing's short label, null for a cell designation.</summary>
         public string ThingLabel { get; set; }
+
+        /// <summary>
+        /// The hunted animal's race chance to turn manhunter when it is hurt
+        /// (0..1), null for every order that is not a hunt (fox #4183). A run
+        /// that marks prey reads here which of the marked animals can turn on
+        /// the hunter: a cassowary answers 1.0, an alpaca 0.
+        /// </summary>
+        public float? ManhunterOnDamageChance { get; set; }
     }
 
     /// <summary>

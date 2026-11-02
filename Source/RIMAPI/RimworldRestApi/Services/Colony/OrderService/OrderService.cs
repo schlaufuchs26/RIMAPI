@@ -234,8 +234,12 @@ public partial class OrderService : IOrderService
                     }
                     map.designationManager.AddDesignation(new Designation(p, DesignationDefOf.Hunt));
                     count++;
+                    // The race's revenge chance travels with the entry: a run
+                    // that marked a cassowary has to see that the hunt is a
+                    // fight (fox #4183).
                     designated.Add(DesignationEntry.Make(DesignationDefOf.Hunt.defName, DesignationDefOf.Hunt.label,
-                        true, p.Position.x, p.Position.z, p.thingIDNumber, p.def.defName, p.LabelShort));
+                        true, p.Position.x, p.Position.z, p.thingIDNumber, p.def.defName, p.LabelShort,
+                        p.RaceProps.manhunterOnDamageChance));
                 }
             }
             else if (type == "remove-all")

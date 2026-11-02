@@ -35,6 +35,14 @@ namespace RIMAPI.Models
         // Tameable is TameUtility.CanTame, the same check the tame order makes.
         public bool Tameable { get; set; }
 
+        // ManhunterOnDamageChance is the race's own chance to turn manhunter
+        // when something hurts it (ThingDef manhunterOnDamageChance, 0..1; 0
+        // when the def names none). A hunt of a cassowary (1.00) is a fight and
+        // a hunt of an alpaca (0) is not, and the read said neither (fox
+        // #4183). The game multiplies it by the difficulty's own
+        // manhunterChanceOnDamageFactor at the moment of the wound.
+        public float ManhunterOnDamageChance { get; set; }
+
         // The two designations a run sets and then looks for: the game keeps
         // them on the animal, not on a cell, so no map read of designations
         // tells a marked animal from an unmarked one.

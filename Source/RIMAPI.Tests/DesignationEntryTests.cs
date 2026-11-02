@@ -70,5 +70,46 @@ namespace RIMAPI.Tests
             Assert.Equal(1, (int)entry["x"]);
             Assert.Equal(2, (int)entry["z"]);
         }
+
+        // A run that marks prey has to see which of the marked animals can turn
+        // on the hunter: colony 18 hunted a cassowary blind and it went
+        // manhunter (fox #4183).
+        [Fact]
+        public void AHuntEntryCarriesTheRaceRevengeChance()
+        {
+            var dto = DesignationEntry.Make("Hunt", "Hunt", true, 128, 96,
+                55373, "Cassowary", "cassowary", 1f);
+
+            Assert.Equal(1f, dto.ManhunterOnDamageChance);
+        }
+
+        // Every other order leaves the field out: a tree has no revenge chance,
+        // and a client must not read a 0 there as "this plant is safe".
+        [Fact]
+        public void ACellEntryCarriesNoRevengeChance()
+        {
+            var dto = DesignationEntry.Make("Mine", "Mine", false, 120, 90);
+
+            Assert.Null(dto.ManhunterOnDamageChance);
+        }
+
+        [Fact]
+        public void TheRevengeChanceUsesItsOwnSnakeCaseKey()
+        {
+            var body = new
+            {
+                designated_cells = new List<DesignationDto>
+                {
+                    DesignationEntry.Make("Hunt", "Hunt", true, 128, 96, 55373, "Cassowary", "cassowary", 0.5f),
+                },
+            };
+            var json = JsonConvert.SerializeObject(body, new JsonSerializerSettings
+            {
+                ContractResolver = new SnakeCaseContractResolver(),
+            });
+
+            var entry = (JObject)JObject.Parse(json)["designated_cells"][0];
+            Assert.Equal(0.5f, (float)entry["manhunter_on_damage_chance"]);
+        }
     }
 }
