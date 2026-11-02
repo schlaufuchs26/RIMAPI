@@ -33,13 +33,13 @@ namespace RIMAPI.Tests
         [Theory]
         [InlineData("0.0.0.0")]
         [InlineData("*")]
-        public void EveryInterfaceIsOneWildcardSocket(string setting)
+        public void EveryInterfaceIsBothWildcardSockets(string setting)
         {
             IReadOnlyList<IPEndPoint> endpoints = ListenAddresses.For(setting, 8766);
 
-            IPEndPoint only = Assert.Single(endpoints);
-            Assert.Equal(IPAddress.IPv6Any, only.Address);
-            Assert.Equal(8766, only.Port);
+            Assert.Equal(2, endpoints.Count);
+            Assert.Contains(endpoints, e => e.Address.Equals(IPAddress.Any) && e.Port == 8766);
+            Assert.Contains(endpoints, e => e.Address.Equals(IPAddress.IPv6Any) && e.Port == 8766);
         }
 
         [Fact]

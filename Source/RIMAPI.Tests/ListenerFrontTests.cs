@@ -152,6 +152,22 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void AWildcardSettingIsReachableOnLoopback()
+        {
+            int publicPort = ListenerFront.FreeLoopbackPort();
+            var wildcard = ListenAddresses.For("0.0.0.0", publicPort);
+            using (var front = new ListenerFront(wildcard, _listenerPort))
+            {
+                front.Start();
+
+                string answer = Send(publicPort, "POST /x HTTP/1.1\r\nHost: h\r\n\r\n");
+
+                Assert.StartsWith("HTTP/1.1 200", answer);
+                Assert.Equal("POST|", Body(answer));
+            }
+        }
+
+        [Fact]
         public void TheNextConnectionIsServedToo()
         {
             Send(_publicPort, "POST /x HTTP/1.1\r\nHost: h\r\n\r\n");

@@ -79,34 +79,74 @@ namespace RIMAPI.Core
             _stop = new CancellationTokenSource();
             CancellationToken token = _stop.Token;
 
-            try
+            bool anyBound = false;
+            Exception firstFailure = null;
+
+            foreach (IPEndPoint endpoint in _endpoints)
             {
-                foreach (IPEndPoint endpoint in _endpoints)
+                TcpListener listener = null;
+                try
                 {
-                    var listener = new TcpListener(endpoint);
+                    listener = new TcpListener(endpoint);
                     if (endpoint.AddressFamily == AddressFamily.InterNetworkV6)
                     {
-                        // The wildcard listens for both families; a single
-                        // address answers for itself alone.
-                        listener.Server.DualMode = endpoint.Address.Equals(IPAddress.IPv6Any);
+                        // A dual-mode socket also takes IPv4, so it only does so
+                        // when no IPv4 wildcard socket covers the same port.
+                        listener.Server.DualMode =
+                            endpoint.Address.Equals(IPAddress.IPv6Any) && !HasIPv4Wildcard();
                     }
                     listener.Start();
-                    lock (_listenersLock)
-                    {
-                        _listeners.Add(listener);
-                    }
-                    TcpListener accepting = listener;
-                    _ = Task.Run(() => AcceptLoopAsync(accepting, token));
-                    LogApi.Info($"Front listening on {endpoint}");
                 }
+                catch (Exception ex)
+                {
+                    // One family may be missing (a machine with IPv6 switched
+                    // off); the other still serves the setting.
+                    firstFailure = firstFailure ?? ex;
+                    LogApi.Warning($"Front cannot bind {endpoint}: {ex.Message}");
+                    if (listener != null)
+                    {
+                        try
+                        {
+                            listener.Stop();
+                        }
+                        catch (Exception)
+                        {
+                            // Nothing to undo.
+                        }
+                    }
+                    continue;
+                }
+
+                lock (_listenersLock)
+                {
+                    _listeners.Add(listener);
+                }
+                anyBound = true;
+                TcpListener accepting = listener;
+                _ = Task.Run(() => AcceptLoopAsync(accepting, token));
+                LogApi.Info($"Front listening on {endpoint}");
             }
-            catch
+
+            if (!anyBound)
             {
                 Stop();
-                throw;
+                throw new InvalidOperationException(
+                    "the front could not bind a single address",
+                    firstFailure
+                );
             }
 
             _running = true;
+        }
+
+        private bool HasIPv4Wildcard()
+        {
+            foreach (IPEndPoint endpoint in _endpoints)
+            {
+                if (endpoint.Address.Equals(IPAddress.Any))
+                    return true;
+            }
+            return false;
         }
 
         public void Stop()

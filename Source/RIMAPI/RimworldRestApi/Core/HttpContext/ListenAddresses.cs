@@ -33,8 +33,9 @@ namespace RIMAPI.Core
 
             if (host == ListenPrefixes.AllInterfaces)
             {
-                // IPv6Any listens for both families unless the socket says
-                // otherwise, and the setting asked for every interface.
+                // Both wildcard sockets: a machine with IPv6 disabled cannot
+                // bind the v6 one, and the v4 one still serves the setting.
+                AddOnce(endpoints, new IPEndPoint(IPAddress.Any, port));
                 AddOnce(endpoints, new IPEndPoint(IPAddress.IPv6Any, port));
                 return;
             }
