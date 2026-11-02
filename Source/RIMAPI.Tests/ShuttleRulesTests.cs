@@ -213,5 +213,44 @@ namespace RIMAPI.Tests
             Assert.Contains("not on the map any more", problem);
             Assert.Contains("id 203032", problem);
         }
+
+        // The game's own CompShuttle.CanLaunch is what the send order skips
+        // (ticket #4154): a shuttle with everything aboard and nobody who can
+        // pilot it fails inside the game after the call reported success, so
+        // the rule refuses with the game's reason instead.
+
+        [Fact]
+        public void ALoadedShuttleWithoutAPilotIsRefusedWithTheGamesReason()
+        {
+            var state = LoadedShuttle();
+            state.CanLaunch = false;
+            state.LaunchProblem = "Cannot launch: no pilot aboard.";
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("will not launch", problem);
+            Assert.Contains("id 203032", problem);
+            Assert.Contains("(140, 107)", problem);
+            Assert.Contains("no pilot aboard", problem);
+        }
+
+        [Fact]
+        public void ALaunchRefusalWithoutAWordingStillSaysTheGameRefused()
+        {
+            var state = LoadedShuttle();
+            state.CanLaunch = false;
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("the game's own launch check refuses it", problem);
+        }
+
+        [Fact]
+        public void AShuttleMissingItsPeopleIsRefusedBeforeThePilotCheck()
+        {
+            var state = LoadedShuttle();
+            state.AllRequiredLoaded = false;
+            state.CanLaunch = false;
+            state.LaunchProblem = "Cannot launch: no pilot aboard.";
+            string problem = ShuttleRules.SendProblem(state);
+            Assert.Contains("not ready to leave", problem);
+            Assert.DoesNotContain("no pilot", problem);
+        }
     }
 }

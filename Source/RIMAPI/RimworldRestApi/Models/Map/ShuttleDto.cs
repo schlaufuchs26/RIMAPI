@@ -38,6 +38,15 @@ namespace RIMAPI.Models
         /// <summary>True when every pawn and item the shuttle requires is aboard, which is what the quest checks.</summary>
         public bool AllRequiredLoaded { get; set; }
 
+        /// <summary>
+        /// The game's own reason it would refuse a launch right now, empty when
+        /// it would take one (CompShuttle.CanLaunch, ticket #4154). A quest
+        /// shuttle with everything aboard and no colonist with piloting reads
+        /// "Cannot launch: no pilot aboard." here, which is why the send-away
+        /// call refuses instead of letting the game fail it.
+        /// </summary>
+        public string LaunchProblem { get; set; }
+
         /// <summary>The number of colonists the shuttle requires aboard; 0 when it names none.</summary>
         public int RequiredColonistCount { get; set; }
 

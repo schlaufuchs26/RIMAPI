@@ -187,13 +187,28 @@ namespace RIMAPI.Helpers
 
             /// <summary>The shuttle already flies away or has its FlyAway job queued.</summary>
             public bool AlreadyLeaving;
+
+            /// <summary>
+            /// The game's own CompShuttle.CanLaunch answer: true when the game
+            /// would take a launch. The send order itself skips this check, so
+            /// the rule carries it (ticket #4154).
+            /// </summary>
+            public bool CanLaunch = true;
+
+            /// <summary>
+            /// The game's own reason CanLaunch refuses with, e.g.
+            /// "Cannot launch: no pilot aboard." Kept as the game words it.
+            /// </summary>
+            public string LaunchProblem = "";
         }
 
         /// <summary>
         /// Why the game would not send this shuttle away, or null when it takes
         /// the order. The game's own send button (ShipJob_Wait.GetJobGizmos)
         /// is disabled until CompShuttle.AllRequiredThingsLoaded, so the first
-        /// fact is what the quest still waits for; a call on a shuttle that is
+        /// fact is what the quest still waits for; then the game's own
+        /// CompShuttle.CanLaunch has its say, which is where a shuttle without
+        /// a pilot is refused (ticket #4154). A call on a shuttle that is
         /// already on its way orders nothing (NothingToSend).
         /// </summary>
         public static string SendProblem(SendState state)
@@ -211,6 +226,14 @@ namespace RIMAPI.Helpers
                 return "the shuttle " + Named(state.Shuttle, state.ShuttleId)
                     + " at " + state.Cell + " is not ready to leave: it still waits for "
                     + missing + "; the game sends it away only once everything it requires is aboard";
+            }
+            if (!state.CanLaunch)
+            {
+                string problem = string.IsNullOrEmpty(state.LaunchProblem)
+                    ? "the game's own launch check refuses it"
+                    : state.LaunchProblem;
+                return "the game will not launch the shuttle " + Named(state.Shuttle, state.ShuttleId)
+                    + " at " + state.Cell + ": " + problem;
             }
             return null;
         }

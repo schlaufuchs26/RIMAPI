@@ -309,6 +309,8 @@ namespace RIMAPI.Services
                 Cell = "(" + state.Position.X + ", " + state.Position.Z + ")",
                 Spawned = state.Spawned,
                 AllRequiredLoaded = state.AllRequiredLoaded,
+                CanLaunch = string.IsNullOrEmpty(state.LaunchProblem),
+                LaunchProblem = state.LaunchProblem ?? "",
                 AlreadyLeaving = comp.shipParent != null
                     && comp.shipParent.curJob != null
                     && ShipJobDefOf.FlyAway != null
@@ -334,6 +336,18 @@ namespace RIMAPI.Services
             if (state.RequireAllColonistsOnMap)
                 send.Missing.Add("every colonist on the map");
             return send;
+        }
+
+        // LaunchProblemOf is the game's own CompShuttle.CanLaunch answer as a
+        // sentence, empty when the game would take a launch. The send order
+        // itself (SendShuttleAwayQuestPartUtility.SendAway) skips this check,
+        // so a quest shuttle whose required pawns are all aboard but none of
+        // them can pilot failed inside the game after the call had already
+        // answered success (ticket #4154).
+        private static string LaunchProblemOf(CompShuttle comp)
+        {
+            AcceptanceReport canLaunch = comp.CanLaunch;
+            return canLaunch.Accepted ? "" : canLaunch.Reason;
         }
 
         // MissingWhere says why a required pawn is not aboard, in the words the
@@ -464,6 +478,7 @@ namespace RIMAPI.Services
                 Loading = transporter != null && transporter.LoadingInProgressOrReadyToLaunch,
                 Autoload = comp.Autoload,
                 AllRequiredLoaded = comp.AllRequiredThingsLoaded,
+                LaunchProblem = LaunchProblemOf(comp),
                 RequiredColonistCount = comp.requiredColonistCount,
                 RequireAllColonistsOnMap = comp.requireAllColonistsOnMap,
             };
