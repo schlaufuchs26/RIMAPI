@@ -103,6 +103,11 @@ namespace RIMAPI.Models
         // while the quest has not ended. Counted inside the game, so a caller
         // needs no clock of its own.
         public int EndedTicksAgo { get; set; }
+        // Why this quest could not be read, empty for a quest that reads
+        // normally. One quest whose parts throw is reported here instead of
+        // failing the whole list, so an offer standing beside it still reads
+        // (fox ticket #4164).
+        public string ReadError { get; set; }
     }
 
     public class TriggerIncidentRequestDto

@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using RIMAPI.Core;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
@@ -32,6 +34,48 @@ namespace RIMAPI.Helpers
         // tell an offer it can take from one the game refuses before it calls
         // quest/accept (ticket #3216).
         private static QuestDto ToQuestDto(Quest quest)
+        {
+            try
+            {
+                return BuildQuestDto(quest);
+            }
+            catch (Exception ex)
+            {
+                // One unreadable quest must not fail the whole read: the offer
+                // standing beside it is what a run needs to judge, and the game
+                // keeps quests whose parts throw when they are read. The log
+                // line carries the stack trace the answer cannot (fox ticket
+                // #4164).
+                LogApi.Error($"[GameEvents] quest {quest?.id} {quest?.name} could not be read: {ex}");
+                return BrokenQuestDto(quest, ex);
+            }
+        }
+
+        // BrokenQuestDto keeps what a quest says about itself without touching
+        // the parts that threw, so the read names the quest and its failure
+        // instead of dropping it silently.
+        private static QuestDto BrokenQuestDto(Quest quest, Exception ex)
+        {
+            string state = "";
+            try
+            {
+                state = quest?.State.ToString() ?? "";
+            }
+            catch
+            {
+                // the state itself is what threw; an empty one says so
+            }
+            return new QuestDto
+            {
+                Id = quest?.id ?? -1,
+                Name = quest?.name ?? "",
+                QuestDef = quest?.root?.defName ?? "Unknown",
+                State = state,
+                ReadError = ex.Message,
+            };
+        }
+
+        private static QuestDto BuildQuestDto(Quest quest)
         {
             var dto = new QuestDto
             {
@@ -196,6 +240,9 @@ namespace RIMAPI.Helpers
             return quest
                 .PartsListForReading.OfType<QuestPart_Choice>()
                 .SelectMany(choicePart => choicePart.choices)
+                // A null entry in choices is possible and GetQuestChoices
+                // already skips it; this read must not throw on it either.
+                .Where(choice => choice != null)
                 .SelectMany(choice => choice.rewards)
                 .Select(reward => reward?.ToString() ?? "Unknown")
                 .ToList();
