@@ -38,6 +38,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/client/learning/concept")]
+        [QueryParameters("def_name:string")]
         public async Task GetConcept(HttpListenerContext context)
         {
             var defName = RequestParser.GetStringParameter(context, "def_name");
@@ -46,6 +47,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/client/learning/mark-learned")]
+        [RequestBody(typeof(LearningConceptMarkDto))]
         public async Task MarkLearned(HttpListenerContext context)
         {
             var request = await context.Request.ReadBodyAsync<LearningConceptMarkDto>();

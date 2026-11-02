@@ -25,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/interactions")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Gets the real-time interaction readiness of a specific pawn.")]
         public async Task GetPawnInteractionStatus(HttpListenerContext context)
         {
@@ -34,6 +35,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/interactions/log")]
+        [QueryParameters("limit:string?", "pawn_id:integer")]
         [EndpointMetadata("Retrieves the recent interaction history for a specific pawn.")]
         public async Task GetPawnInteractionLog(HttpListenerContext context)
         {
@@ -44,6 +46,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/relations")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Retrieves all established familial and romantic relationships for this pawn.")]
         public async Task GetPawnRelations(HttpListenerContext context)
         {
@@ -53,6 +56,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/opinions")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Retrieves a list of this pawn's numerical opinion toward every other colonist on the map.")]
         public async Task GetPawnOpinions(HttpListenerContext context)
         {
@@ -62,6 +66,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/pawns/interactions/force")]
+        [RequestBody(typeof(ForceInteractionRequestDto))]
         [EndpointMetadata("Forces a specific social interaction to occur immediately between two pawns.")]
         public async Task ForceInteraction(HttpListenerContext context)
         {
@@ -71,6 +76,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/pawns/relations/add")]
+        [RequestBody(typeof(AddRelationRequestDto))]
         [EndpointMetadata("Instantly creates a permanent social bond between two pawns.")]
         public async Task AddRelation(HttpListenerContext context)
         {
@@ -80,6 +86,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/dev/pawns/relations/remove")]
+        [QueryParameters("relation_def_name:string")]
         [EndpointMetadata("Severs a specific social bond between two pawns.")]
         public async Task RemoveRelation(HttpListenerContext context)
         {

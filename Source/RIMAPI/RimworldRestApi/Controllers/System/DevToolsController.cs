@@ -51,6 +51,8 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/console")]
+        [RequestBody(typeof(DebugConsoleRequest))]
+        [QueryParameters("action:string", "message:string")]
         [EndpointMetadata("Send message to the debug console")]
         public async Task PostConsoleAction(HttpListenerContext context)
         {
@@ -88,6 +90,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/stuff/color")]
+        [RequestBody(typeof(StuffColorRequest))]
         [EndpointMetadata("Change stuff color")]
         public async Task PostStuffColor(HttpListenerContext context)
         {

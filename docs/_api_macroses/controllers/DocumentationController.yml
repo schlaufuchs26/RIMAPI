@@ -22,7 +22,10 @@ desc: |-
   response: ''
   method: GET
 /api/v1/docs:
-  desc: Get documentation for all available API endpoints in requested format.
+  desc: |-
+    Get documentation for all available API endpoints in the requested format:
+    html (the default), json, markdown, openapi (an OpenAPI 3.1 YAML document)
+    or openapi-json (the same document as JSON).
   curl: |-
     **Example:**
     ```bash

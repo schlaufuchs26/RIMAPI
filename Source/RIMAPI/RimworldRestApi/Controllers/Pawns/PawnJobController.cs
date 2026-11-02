@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/job")]
+        [RequestBody(typeof(PawnJobRequestDto))]
         [EndpointMetadata("Assign a job to a pawn by JobDef name, with optional target")]
         public async Task AssignJob(HttpListenerContext context)
         {
@@ -25,6 +26,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/medical/tend")]
+        [RequestBody(typeof(MedicalTendRequestDto))]
         [EndpointMetadata("Assign a doctor to tend a patient")]
         public async Task AssignTendJob(HttpListenerContext context)
         {
@@ -34,6 +36,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/medical/bed-rest")]
+        [RequestBody(typeof(MedicalBedRestRequestDto))]
         [EndpointMetadata("Assign a pawn to bed rest, optionally specifying a bed")]
         public async Task AssignBedRest(HttpListenerContext context)
         {

@@ -20,6 +20,7 @@ namespace RIMAPI.Controllers
         // is the tick the caller's span starts at; the answer also carries the
         // entry each pawn was in at that tick, so the first span has a start.
         [Get("/api/v1/colonists/job-log")]
+        [QueryParameters("since_tick:string?")]
         [EndpointMetadata("Job changes of the colony's colonists since a tick: pawn, job def, label, target")]
         public async Task GetJobLog(HttpListenerContext context)
         {

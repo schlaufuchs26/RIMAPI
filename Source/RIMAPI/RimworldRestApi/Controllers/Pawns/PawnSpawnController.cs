@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/pawn/spawn")]
+        [RequestBody(typeof(PawnSpawnRequestDto))]
         public async Task EditPawn(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PawnSpawnRequestDto>();

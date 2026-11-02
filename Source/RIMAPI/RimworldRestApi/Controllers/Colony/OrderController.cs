@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/order/designate/area")]
+        [RequestBody(typeof(DesignateRequestDto))]
         public async Task DesignateArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DesignateRequestDto>();
@@ -28,6 +29,7 @@ namespace RIMAPI.Controllers
         // beside it too, so a caller that knows the zone's own cells marks
         // exactly those.
         [Post("/api/v1/order/designate/cells")]
+        [RequestBody(typeof(DesignateCellsRequestDto))]
         [EndpointMetadata("Mark an explicit list of cells for one designation kind (chop, cut, blight, harvest, mine, deconstruct, hunt), so a zone that is not a rectangle is marked without the cells beside it")]
         public async Task DesignateCells(HttpListenerContext context)
         {
@@ -39,6 +41,7 @@ namespace RIMAPI.Controllers
         // Taking a designation back (fox ticket #3425): the same rectangle and
         // type the designate call took, so a wrong sweep is cleared in one call.
         [Post("/api/v1/order/undesignate/area")]
+        [RequestBody(typeof(DesignateRequestDto))]
         [EndpointMetadata("Remove one designation kind (chop, blight, harvest, mine, deconstruct, hunt) over a rectangle, so a wrong sweep can be cleared")]
         public async Task UndesignateArea(HttpListenerContext context)
         {
@@ -52,6 +55,7 @@ namespace RIMAPI.Controllers
         // own BeatFire job, instead of the Firefighter work priority that sends
         // him to whatever fire the game picks.
         [Post("/api/v1/order/firefight")]
+        [RequestBody(typeof(FirefightRequestDto))]
         [EndpointMetadata("Put a colonist on a named burning cell or on the fires inside the Home area through the game's own BeatFire job")]
         public async Task Firefight(HttpListenerContext context)
         {
@@ -64,6 +68,7 @@ namespace RIMAPI.Controllers
         // outside temperature until a constructor builds the roof, so the order
         // marks the Build roof area and queues the game's own build-roof job.
         [Post("/api/v1/order/roof")]
+        [RequestBody(typeof(RoofRequestDto))]
         [EndpointMetadata("Mark the Build roof area over a rectangle and queue the game's own build-roof job, so a sealed room gets its roof")]
         public async Task BuildRoof(HttpListenerContext context)
         {

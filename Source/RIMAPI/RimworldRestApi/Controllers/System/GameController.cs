@@ -73,6 +73,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/mods/configure")]
+        [RequestBody(typeof(ConfigureModsRequestDto))]
         public async Task ConfigureMods(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<ConfigureModsRequestDto>();
@@ -96,6 +97,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/info")]
+        [QueryParameters("package_id:string?", "uid:string")]
         [EndpointMetadata("Get single mod info by package_id or uid")]
         [ResponseExample(typeof(ApiResponse<ModInfoDto>))]
         public async Task GetModInfo(HttpListenerContext context)
@@ -109,6 +111,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/preview")]
+        [QueryParameters("package_id:string?", "uid:string")]
         [EndpointMetadata("Get mod preview image as base64")]
         [ResponseExample(typeof(ApiResponse<string>))]
         public async Task GetModPreview(HttpListenerContext context)
@@ -122,6 +125,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/select-area")]
+        [RequestBody(typeof(SelectAreaRequestDto))]
         [EndpointMetadata("Select an area on the map")]
         public async Task SelectArea(HttpListenerContext context)
         {
@@ -131,6 +135,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/select")]
+        [QueryParameters("id:integer", "type:string")]
         [EndpointMetadata("Select game object")]
         public async Task Select(HttpListenerContext context)
         {
@@ -149,6 +154,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/open-tab")]
+        [QueryParameters("name:string")]
         [EndpointMetadata("Open interface tab")]
         public async Task OpenTab(HttpListenerContext context)
         {
@@ -158,6 +164,8 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/def/all")]
+        [RequestBody(typeof(AllDefsRequestDto))]
+        [QueryParameters("filter:string?", "include:string?")]
         [EndpointMetadata("Get all game definitions with optional filtering")]
         public async Task GetAllDefs(HttpListenerContext context)
         {
@@ -189,6 +197,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/game/send/letter")]
+        [RequestBody(typeof(SendLetterRequestDto))]
         public async Task PostLetter(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SendLetterRequestDto>();
@@ -197,6 +206,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/speed")]
+        [QueryParameters("speed:integer")]
         public async Task SetGameSpeed(HttpListenerContext context)
         {
             var speed = RequestParser.GetIntParameter(context, "speed");
@@ -205,6 +215,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/save")]
+        [RequestBody(typeof(GameSaveRequestDto))]
         public async Task GameSave(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<GameSaveRequestDto>();
@@ -213,6 +224,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/load")]
+        [RequestBody(typeof(GameLoadRequestDto))]
         public async Task GameLoad(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<GameLoadRequestDto>();
@@ -257,6 +269,7 @@ namespace RIMAPI.Controllers
         // starts the draw and answers at once, the GET hands the candidates
         // back once the world and the pawns exist.
         [Post("/api/v1/game/start/candidates")]
+        [RequestBody(typeof(NewGameStartRequestDto))]
         public async Task StartCandidateBatch(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<NewGameStartRequestDto>();
@@ -271,6 +284,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/start")]
+        [RequestBody(typeof(NewGameStartRequestDto))]
         public async Task GameStart(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<NewGameStartRequestDto>();
@@ -306,6 +320,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/settings/manual-priorities")]
+        [QueryParameters("enabled:string?")]
         [EndpointMetadata("Switch the colony's manual work priorities on or off (?enabled=true|false)")]
         public async Task SetManualPriorities(HttpListenerContext context)
         {

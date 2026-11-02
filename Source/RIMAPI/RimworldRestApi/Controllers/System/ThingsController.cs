@@ -19,6 +19,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/resources/summary")]
+        [QueryParameters("map_id:integer")]
         public async Task GetResourcesSummary(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -27,6 +28,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/resources/stored")]
+        [QueryParameters("category:string?", "map_id:integer")]
         public async Task GetResourcesStored(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -45,6 +47,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/resources/storages/summary")]
+        [QueryParameters("map_id:integer")]
         public async Task GetStoragesSummary(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -53,6 +56,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/item/spawn")]
+        [RequestBody(typeof(SpawnItemRequestDto))]
         public async Task SpawnItem(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SpawnItemRequestDto>();
@@ -61,6 +65,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/item/recipes")]
+        [QueryParameters("def_name:string")]
         public async Task GetItemRecipe(HttpListenerContext context)
         {
             var itemDef = RequestParser.GetStringParameter(context, "def_name");
@@ -69,6 +74,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/item/sources")]
+        [QueryParameters("def_name:string")]
         public async Task GetItemSource(HttpListenerContext context)
         {
             var itemDef = RequestParser.GetStringParameter(context, "def_name");
@@ -77,6 +83,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/things/set-forbidden")]
+        [RequestBody(typeof(SetForbiddenRequestDto))]
         [EndpointMetadata("Set forbidden status on one or more things")]
         public async Task SetForbidden(HttpListenerContext context)
         {

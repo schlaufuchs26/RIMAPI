@@ -15,6 +15,8 @@ namespace RIMAPI.Core
     {
         ApiDocumentation GenerateDocumentation();
         string GenerateMarkdown();
+        string GenerateOpenApiYaml();
+        string GenerateOpenApiJson();
     }
 
     public class DocumentationService : IDocumentationService
@@ -101,6 +103,8 @@ namespace RIMAPI.Core
         {
             var descriptionAttr = method.GetCustomAttribute<EndpointMetadataAttribute>();
             var responseExampleAttr = method.GetCustomAttribute<ResponseExampleAttribute>();
+            var bodyAttr = method.GetCustomAttribute<RequestBodyAttribute>();
+            var queryAttr = method.GetCustomAttribute<QueryParametersAttribute>();
 
             var className = method.DeclaringType?.Name ?? "General";
 
@@ -123,16 +127,41 @@ namespace RIMAPI.Core
                 GithubLink = githubLink,
                 Category = className,
                 Notes = descriptionAttr?.Notes,
-                Parameters = ExtractEnhancedParameters(method),
+                Parameters = ExtractEnhancedParameters(method, routeAttr.Pattern),
                 RequestExample = GenerateRequestExample(method),
                 ResponseExample = GenerateEnhancedResponseExample(method, responseExampleAttr),
                 Tags = descriptionAttr?.Tags,
+                Controller = className,
+                Action = methodName,
+                RequestBodyType = bodyAttr?.Type,
+                DeprecationNotice = descriptionAttr != null && descriptionAttr.IsDeprecated
+                    ? descriptionAttr.DeprecationReason ?? "Deprecated"
+                    : null,
             };
+
+            if (queryAttr != null)
+            {
+                foreach (var spec in queryAttr.Parameters)
+                {
+                    endpoint.Parameters.Add(
+                        new EndpointParameter
+                        {
+                            Name = spec.Name,
+                            Type = spec.Type,
+                            Source = "query",
+                            Required = spec.Required,
+                        }
+                    );
+                }
+            }
 
             return endpoint;
         }
 
-        private List<EndpointParameter> ExtractEnhancedParameters(MethodInfo method)
+        private List<EndpointParameter> ExtractEnhancedParameters(
+            MethodInfo method,
+            string routePattern
+        )
         {
             var parameters = new List<EndpointParameter>();
 
@@ -148,6 +177,9 @@ namespace RIMAPI.Core
                     {
                         Name = param.Name,
                         Type = GetTypeDisplayName(param.ParameterType),
+                        Source = routePattern != null && routePattern.Contains("{" + param.Name)
+                            ? "path"
+                            : "query",
                         Required = !param.IsOptional,
                         Description = paramDesc?.Description ?? GetParameterDescription(param),
                         Example = paramDesc?.Example,
@@ -482,6 +514,22 @@ namespace RIMAPI.Core
             return sb.ToString();
         }
 
+        /// <summary>
+        /// The same registry as an OpenAPI 3.1 YAML document (ticket #4234):
+        /// paths, tags, query parameters and the body DTOs declared on the
+        /// handlers, with component schemas built from the DTOs.
+        /// </summary>
+        public string GenerateOpenApiYaml()
+        {
+            return OpenApiDocument.ToYaml(GenerateDocumentation());
+        }
+
+        /// <summary>The OpenAPI document as JSON, for a client that would rather parse JSON.</summary>
+        public string GenerateOpenApiJson()
+        {
+            return OpenApiDocument.ToJson(GenerateDocumentation());
+        }
+
         private List<DocumentedEndpoint> DocumentExtensionEndpointsWithExamples(string extensionId)
         {
             var endpoints = new List<DocumentedEndpoint>();
@@ -548,6 +596,11 @@ namespace RIMAPI.Core
             var methods = controllerType
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(m =>
+                    m.ReturnType == typeof(System.Threading.Tasks.Task)
+                    && m.GetParameters().Length >= 1
+                    && m.GetParameters()[0].ParameterType == typeof(HttpListenerContext)
+                )
+                .Where(m =>
                     m.GetCustomAttributes<RouteAttribute>().Any()
                     || m.GetCustomAttributes<GetAttribute>().Any()
                     || m.GetCustomAttributes<PostAttribute>().Any()
@@ -579,62 +632,5 @@ namespace RIMAPI.Core
         {
             return null;
         }
-    }
-
-    public class ApiDocumentation
-    {
-        public DateTime GeneratedAt { get; set; }
-        public string BaseUrl { get; set; }
-        public string Version { get; set; }
-        public List<DocumentationSection> Sections { get; set; } = new List<DocumentationSection>();
-    }
-
-    public class DocumentationSection
-    {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public List<DocumentedEndpoint> Endpoints { get; set; } = new List<DocumentedEndpoint>();
-    }
-
-    public class DocumentedEndpoint
-    {
-        public string Method { get; set; }
-        public string Path { get; set; }
-        public string Description { get; set; }
-        public string GithubLinkTitle { get; set; }
-        public string GithubLink { get; set; }
-        public string Category { get; set; } = "General";
-        public string Notes { get; set; }
-        public string RequestExample { get; set; }
-        public string ResponseExample { get; set; }
-        public List<EndpointParameter> Parameters { get; set; } = new List<EndpointParameter>();
-        public string Controller { get; set; }
-        public string Action { get; set; }
-        public bool RequiresAuthentication { get; set; }
-        public string[] Tags { get; set; } = Array.Empty<string>();
-        public string DeprecationNotice { get; set; }
-        public string SinceVersion { get; set; }
-    }
-
-    public class EndpointParameter
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public string Source { get; set; } // "query", "path", "body", "header"
-        public bool Required { get; set; }
-        public string Description { get; set; }
-        public string Example { get; set; }
-        public string DefaultValue { get; set; }
-        public string[] AllowedValues { get; set; } = Array.Empty<string>();
-        public ParameterValidation Validation { get; set; }
-    }
-
-    public class ParameterValidation
-    {
-        public int? MinLength { get; set; }
-        public int? MaxLength { get; set; }
-        public string Pattern { get; set; }
-        public object Minimum { get; set; }
-        public object Maximum { get; set; }
     }
 }

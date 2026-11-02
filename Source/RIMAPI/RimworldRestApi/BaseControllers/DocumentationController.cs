@@ -28,6 +28,7 @@ namespace RIMAPI.Core
         }
 
         [Get("/api/v1/docs")]
+        [QueryParameters("format:string?")]
         public async Task GetDocumentation(HttpListenerContext context)
         {
             var format = context.Request.QueryString["format"] ?? "html";
@@ -44,6 +45,22 @@ namespace RIMAPI.Core
                     case "markdown":
                         var markdown = _docService.GenerateMarkdown();
                         await SendRawResponse(context.Response, markdown, "text/markdown");
+                        break;
+
+                    case "openapi":
+                        await SendRawResponse(
+                            context.Response,
+                            _docService.GenerateOpenApiYaml(),
+                            "application/yaml"
+                        );
+                        break;
+
+                    case "openapi-json":
+                        await SendRawResponse(
+                            context.Response,
+                            _docService.GenerateOpenApiJson(),
+                            "application/json"
+                        );
                         break;
 
                     default:
@@ -195,6 +212,7 @@ namespace RIMAPI.Core
         }
 
         [Get("/api/v1/docs/export")]
+        [QueryParameters("format:string?")]
         public async Task ExportDocumentation(HttpListenerContext context, bool saveFile = false)
         {
             try
@@ -214,6 +232,23 @@ namespace RIMAPI.Core
                         break;
 
                     case "markdown":
+                        content = _docService.GenerateMarkdown();
+                        fileName = "api.md";
+                        contentType = "text/markdown";
+                        break;
+
+                    case "openapi":
+                        content = _docService.GenerateOpenApiYaml();
+                        fileName = "openapi.yaml";
+                        contentType = "application/yaml";
+                        break;
+
+                    case "openapi-json":
+                        content = _docService.GenerateOpenApiJson();
+                        fileName = "openapi.json";
+                        contentType = "application/json";
+                        break;
+
                     default:
                         content = _docService.GenerateMarkdown();
                         fileName = "api.md";

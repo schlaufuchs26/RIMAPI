@@ -29,6 +29,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/cache/status")]
+        [QueryParameters("detailed:boolean?")]
         public async Task GetCacheStatus(HttpListenerContext context)
         {
             var isDetailed = RequestParser.GetBooleanParameter(context, "detailed", false);

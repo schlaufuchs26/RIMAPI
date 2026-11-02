@@ -195,6 +195,18 @@
          while its bill reads "running". The sentence is plain C#. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PowerFault.cs" Link="Linked\PowerFault.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\EndpointDescriptionAttribute.cs" Link="Linked\EndpointDescriptionAttribute.cs" />
+    <!-- The OpenAPI renderer (fox ticket #4234): the documentation model, the
+         two route attributes that carry what reflection cannot see, and the
+         document/YAML writers. All plain C#, so the document a client reads is
+         tested without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\ApiDocumentation.cs" Link="Linked\ApiDocumentation.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\RequestBodyAttribute.cs" Link="Linked\RequestBodyAttribute.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\QueryParametersAttribute.cs" Link="Linked\QueryParametersAttribute.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\OpenApiDocument.cs" Link="Linked\OpenApiDocument.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\YamlWriter.cs" Link="Linked\YamlWriter.cs" />
+    <!-- The route pattern conversion (fox ticket #4234): a parameter that
+         becomes an invalid regex group is a route that never registers. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Routing\RoutePattern.cs" Link="Linked\RoutePattern.cs" />
     <!-- The request shape behind `dev` (fox ticket #3757): which ops exist,
          which field each one needs, and the numbers the game can run. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DevActionRules.cs" Link="Linked\DevActionRules.cs" />

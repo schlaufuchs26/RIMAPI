@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/ui/announce")]
+        [RequestBody(typeof(OverlayRequestDto))]
         public async Task ShowAnnouncement(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<OverlayRequestDto>();

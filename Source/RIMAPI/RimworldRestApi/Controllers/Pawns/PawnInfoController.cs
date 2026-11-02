@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/details")]
+        [QueryParameters("id:integer")]
         public async Task GetPawnDetails(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "id");
@@ -24,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawns/inventory")]
+        [QueryParameters("id:integer")]
         public async Task GetPawnInventory(HttpListenerContext context)
         {
             int pawnId = RequestParser.GetIntParameter(context, "id");

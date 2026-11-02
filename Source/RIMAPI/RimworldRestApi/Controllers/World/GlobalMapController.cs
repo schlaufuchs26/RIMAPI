@@ -34,6 +34,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/caravan/path")]
+        [QueryParameters("id:integer")]
         public async Task GetCaravanPath(HttpListenerContext context)
         {
             var id = RequestParser.GetIntParameter(context, "id");
@@ -84,6 +85,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/tile")]
+        [QueryParameters("id:integer")]
         public async Task GetTile(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -97,6 +99,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/tile/coordinates")]
+        [QueryParameters("id:integer")]
         public async Task GetTileCoordinates(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -110,6 +113,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/tile/details")]
+        [QueryParameters("id:integer")]
         public async Task GetTileDetails(HttpListenerContext context)
         {
             var tileId = RequestParser.GetIntParameter(context, "id");
@@ -153,6 +157,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/world/grid/area")]
+        [QueryParameters("radius:string?", "tile_id:string?")]
         public async Task GetWorldGridArea(HttpListenerContext context)
         {
             if (!int.TryParse(context.Request.QueryString["tile_id"], out var tileId) ||

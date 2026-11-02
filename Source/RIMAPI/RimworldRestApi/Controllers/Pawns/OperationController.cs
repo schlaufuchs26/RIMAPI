@@ -22,6 +22,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawn/operations")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Read a pawn's operation bills and medicine policy (?pawn_id=N)")]
         public async Task GetOperations(HttpListenerContext context)
         {
@@ -31,6 +32,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/pawn/surgery-recipes")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("List the operations a pawn could be given, with the body parts each can target (?pawn_id=N)")]
         public async Task GetSurgeryRecipes(HttpListenerContext context)
         {
@@ -49,6 +51,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/pawn/operation")]
+        [QueryParameters("id:string", "pawn_id:integer")]
         [EndpointMetadata("Cancel an operation bill (?pawn_id=N&id=Bill_...)")]
         public async Task CancelOperation(HttpListenerContext context)
         {

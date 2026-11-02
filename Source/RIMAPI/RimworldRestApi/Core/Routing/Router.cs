@@ -259,16 +259,10 @@ namespace RIMAPI.Core
 
                 // Convert route pattern to regex with named groups
                 // Supports both {param} and :param syntax
-                var regexPattern =
-                    "^"
-                    + Regex
-                        .Escape(path)
-                        .Replace("\\{", "(?<param_")
-                        .Replace("\\}", ">[^/]+)")
-                        .Replace("\\:", "(?<param_")
-                    + "$";
-
-                Pattern = new Regex(regexPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                Pattern = new Regex(
+                    RoutePattern.ToRegex(path),
+                    RegexOptions.IgnoreCase | RegexOptions.Compiled
+                );
             }
         }
 

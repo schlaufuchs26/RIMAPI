@@ -43,6 +43,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/outfits/delete")]
+        [QueryParameters("id:integer")]
         [EndpointMetadata("Delete an apparel policy; the game refuses one a pawn still wears")]
         public async Task DeleteOutfit(HttpListenerContext context)
         {

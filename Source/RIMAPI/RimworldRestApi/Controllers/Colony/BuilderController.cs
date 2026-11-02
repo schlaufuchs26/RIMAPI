@@ -16,6 +16,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/builder/copy")]
+        [RequestBody(typeof(CopyAreaRequestDto))]
         public async Task CopyArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CopyAreaRequestDto>();
@@ -24,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/builder/paste")]
+        [RequestBody(typeof(PasteAreaRequestDto))]
         public async Task PasteArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PasteAreaRequestDto>();
@@ -32,6 +34,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/builder/blueprint")]
+        [RequestBody(typeof(PasteAreaRequestDto))]
         public async Task PlaceBlueprints(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PasteAreaRequestDto>();
@@ -40,6 +43,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/builder/cancel")]
+        [RequestBody(typeof(CancelBlueprintsRequestDto))]
         [EndpointMetadata("Cancel every blueprint and frame inside a rectangle, the game's own cancel order")]
         public async Task CancelBlueprints(HttpListenerContext context)
         {
@@ -49,6 +53,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/builder/check-zone")]
+        [RequestBody(typeof(CheckZoneRequestDto))]
         public async Task CheckZone(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CheckZoneRequestDto>();

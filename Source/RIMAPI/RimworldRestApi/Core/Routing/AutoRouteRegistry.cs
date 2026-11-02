@@ -68,7 +68,7 @@ namespace RIMAPI.Core
                     .GetMethods(BindingFlags.Public | BindingFlags.Instance)
                     .Where(m =>
                         m.ReturnType == typeof(Task)
-                        && m.GetParameters().Length == 1
+                        && m.GetParameters().Length >= 1
                         && m.GetParameters()[0].ParameterType == typeof(HttpListenerContext)
                     )
                     .ToList();
@@ -131,6 +131,15 @@ namespace RIMAPI.Core
         {
             try
             {
+                if (!CanBind(method, routeAttr.Pattern))
+                {
+                    LogApi.Warning(
+                        $"Route {routeAttr.Method} {routeAttr.Pattern} is not registered: "
+                            + $"{controllerType.Name}.{method.Name} has a parameter the route cannot fill"
+                    );
+                    return;
+                }
+
                 // Create a generic handler that resolves the controller from DI
                 var handler = CreateRouteHandler(controllerType, method, routeAttr.Pattern);
 
@@ -186,7 +195,10 @@ namespace RIMAPI.Core
                     }
 
                     // Invoke the method
-                    var task = (Task)method.Invoke(controller, new object[] { context });
+                    var task = (Task)method.Invoke(
+                        controller,
+                        BindArguments(method, pattern, context)
+                    );
                     if (task != null)
                     {
                         await task;
@@ -227,6 +239,73 @@ namespace RIMAPI.Core
                     );
                 }
             };
+        }
+
+        /// <summary>
+        /// Whether every argument the handler takes can be filled: the context
+        /// itself, a {name} segment of the route, or the parameter's own default.
+        /// </summary>
+        /// <remarks>
+        /// The registry used to accept only handlers with the context alone, so
+        /// two documented routes were never registered and answered 404
+        /// (ticket #4234: /api/v1/docs/export and
+        /// /api/v1/docs/extensions/{extensionId}).
+        /// </remarks>
+        private static bool CanBind(MethodInfo method, string pattern)
+        {
+            foreach (ParameterInfo parameter in method.GetParameters())
+            {
+                if (parameter.ParameterType == typeof(HttpListenerContext))
+                    continue;
+                if (pattern.IndexOf("{" + parameter.Name + "}", StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+                if (parameter.HasDefaultValue)
+                    continue;
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>The argument array for one call: context, route segments, defaults.</summary>
+        private object[] BindArguments(MethodInfo method, string pattern, HttpListenerContext context)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            var arguments = new object[parameters.Length];
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                ParameterInfo parameter = parameters[i];
+                if (parameter.ParameterType == typeof(HttpListenerContext))
+                {
+                    arguments[i] = context;
+                    continue;
+                }
+
+                string raw = null;
+                if (pattern.IndexOf("{" + parameter.Name + "}", StringComparison.OrdinalIgnoreCase) >= 0)
+                    raw = _router.GetRouteParameter(context, parameter.Name);
+
+                if (raw == null)
+                {
+                    if (parameter.HasDefaultValue)
+                    {
+                        arguments[i] = parameter.DefaultValue;
+                        continue;
+                    }
+
+                    throw new ArgumentException(
+                        "No value for route parameter '" + parameter.Name + "'."
+                    );
+                }
+
+                arguments[i] = Convert.ChangeType(
+                    raw,
+                    parameter.ParameterType,
+                    System.Globalization.CultureInfo.InvariantCulture
+                );
+            }
+
+            return arguments;
         }
 
         // Method to get all registered routes for debugging

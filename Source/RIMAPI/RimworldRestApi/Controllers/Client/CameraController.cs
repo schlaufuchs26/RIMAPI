@@ -21,6 +21,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/change/zoom")]
+        [QueryParameters("zoom:integer")]
         [EndpointMetadata("Change game camera zoom")]
         public async Task ChangeZoom(HttpListenerContext context)
         {
@@ -31,6 +32,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/change/position")]
+        [QueryParameters("x:integer", "y:integer")]
         [EndpointMetadata("Change game camera position")]
         public async Task MoveToPosition(HttpListenerContext context)
         {
@@ -42,6 +44,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/follow/pawn")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Jump/follow the camera to a pawn by id (cinematic capture).")]
         public async Task JumpToPawn(HttpListenerContext context)
         {
@@ -52,6 +55,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/screenshot")]
+        [RequestBody(typeof(CameraScreenshotRequestDto))]
         [EndpointMetadata("Capture a screenshot of the game view. Supports resizing and format changes.")]
         public async Task MakeScreenshot(HttpListenerContext context)
         {
@@ -61,6 +65,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/screenshot/native")]
+        [RequestBody(typeof(NativeScreenshotRequestDto))]
         [EndpointMetadata("Moves the camera and saves a high-quality screenshot directly to the host machine's hard drive.")]
         public async Task TriggerNativeScreenshot(HttpListenerContext context)
         {
@@ -86,6 +91,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/stream/setup")]
+        [RequestBody(typeof(StreamConfigDto))]
         [EndpointMetadata("Set game camera stream configuration")]
         public async Task PostStreamSetup(HttpListenerContext context)
         {

@@ -22,6 +22,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/animal/training")]
+        [QueryParameters("pawn_id:integer")]
         [EndpointMetadata("Read an animal's training card: each trick with learned and wanted, the master, the area and the follow flags (?pawn_id=N)")]
         public async Task GetTraining(HttpListenerContext context)
         {

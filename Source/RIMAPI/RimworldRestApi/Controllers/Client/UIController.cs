@@ -33,6 +33,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/message")]
+        [RequestBody(typeof(WindowMessageRequestDto))]
         public async Task ShowMessage(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<WindowMessageRequestDto>();
@@ -41,6 +42,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/dialog")]
+        [RequestBody(typeof(WindowDialogRequestDto))]
         public async Task ShowDialog(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<WindowDialogRequestDto>();
@@ -57,6 +59,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/window/accept")]
+        [RequestBody(typeof(WindowAcceptRequestDto))]
         [EndpointMetadata("Press the accept button of one open window, the same code the game's own button runs, so a dialog's action happens instead of the window being dropped. Body: {window_types: [substrings]} (default: the topmost force-pause window).")]
         public async Task AcceptWindows(HttpListenerContext context)
         {
@@ -66,6 +69,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
+        [QueryParameters("archive:string?", "limit:string?", "peek:string?", "since:string?")]
         [EndpointMetadata("List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, whether the game's own dismiss applies, and whether the game's auto-pause rule pauses the clock for it. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do. Add ?archive=1 to read the letters the game received instead of the ones still standing (query: since=<tick>, limit=<n>): the stack drops a letter whose target is gone, so a letter that paused the game can be off it by the next look.")]
         public async Task ListLetters(HttpListenerContext context)
         {
@@ -91,6 +95,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/messages")]
+        [QueryParameters("limit:string?", "since:string?")]
         [EndpointMetadata("List the game's own message archive: the little notifications (a plant died of cold, blight struck, an animal roams away, a colonist was attacked) with their text, def, tick and the thing or cell they are about. Query: since=<tick> for only the messages created at or after it, limit=<n> for the newest few (default 25, max 200). Letters have their own read and are not in this list.")]
         public async Task ListMessages(HttpListenerContext context)
         {
@@ -101,6 +106,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/letter/dismiss")]
+        [RequestBody(typeof(LetterDismissRequestDto))]
         [EndpointMetadata("Dismiss one letter by id through the game's own dismiss, so a letter that was read stops covering the map. Body: {id}. A letter that needs an answer is refused with the reason.")]
         public async Task DismissLetter(HttpListenerContext context)
         {
@@ -110,6 +116,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/letter/answer")]
+        [RequestBody(typeof(LetterAnswerRequestDto))]
         [EndpointMetadata("Open a choice letter (a joiner, a quest offer, a ritual choice) and press the option named in the body, the same code the game's own button runs. Body: {id, option}, where option is a word from the dialog's label (accept, reject); an option that matches none is refused with the labels the dialog offers.")]
         public async Task AnswerLetter(HttpListenerContext context)
         {
@@ -119,6 +126,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/letter/growth")]
+        [RequestBody(typeof(LetterGrowthRequestDto))]
         [EndpointMetadata("Take the choice a growth letter asks for: a child's 'became an adult' letter (ChoiceLetter_GrowthMoment) wants a skill that gains a passion and, usually, one trait. Body: {id, passion, trait}, where passion names a skill from passion_choices or its 0-based index, and trait names one of trait_choices or 'none' for the letter's own no-trait option. A call with only id answers what the letter offers and applies nothing. The choice runs the game's own MakeChoices, the method the letter's dialog calls when its confirm button is pressed, so the pawn gains the passion and the trait and the letter leaves the stack.")]
         public async Task ApplyGrowthChoice(HttpListenerContext context)
         {
@@ -128,6 +136,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Post("/api/v1/ui/window/close")]        [EndpointMetadata("Close open windows by type name, or (default) every force-pause window — used to auto-dismiss the colony-name and debug-log popups during unattended runs.")]
+        [RequestBody(typeof(WindowCloseRequestDto))]
         public async Task CloseWindows(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<WindowCloseRequestDto>();

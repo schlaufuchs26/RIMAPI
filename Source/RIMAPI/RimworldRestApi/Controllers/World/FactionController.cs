@@ -31,6 +31,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction")]
+        [QueryParameters("id:integer")]
         public async Task GetFaction(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");
@@ -39,6 +40,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/relation-with")]
+        [QueryParameters("id:integer", "other_id:integer")]
         public async Task GetFactionRelationWith(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");
@@ -48,6 +50,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/relations")]
+        [QueryParameters("id:integer")]
         public async Task GetFactionRelations(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");
@@ -56,6 +59,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/def")]
+        [QueryParameters("name:string")]
         public async Task GetFactionDef(HttpListenerContext context)
         {
             var name = RequestParser.GetStringParameter(context, "name");
@@ -64,6 +68,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/faction/change/goodwill")]
+        [RequestBody(typeof(FactionChangeRelationRequestDto))]
         public async Task ChangeFactionRelationWith(HttpListenerContext context)
         {
             FactionChangeRelationRequestDto body =
@@ -79,6 +84,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/faction/goodwill")]
+        [RequestBody(typeof(FactionChangeRelationRequestDto))]
         public async Task SetFactionGoodwill(HttpListenerContext context)
         {
             FactionChangeRelationRequestDto body =
@@ -94,6 +100,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/faction/icon")]
+        [QueryParameters("id:integer")]
         public async Task GetFactionIcon(HttpListenerContext context)
         {
             int id = RequestParser.GetIntParameter(context, "id");

@@ -37,6 +37,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/project")]
+        [QueryParameters("name:string")]
         public async Task GetResearchProjectByName(HttpListenerContext context)
         {
             var name = RequestParser.GetStringParameter(context, "name");
@@ -52,6 +53,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/research/target")]
+        [QueryParameters("force:boolean?", "name:string")]
         [EndpointMetadata("Set the current research project by defName")]
         public async Task SetResearchTarget(HttpListenerContext context)
         {

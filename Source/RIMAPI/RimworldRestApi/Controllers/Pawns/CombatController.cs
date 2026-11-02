@@ -21,6 +21,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/combat")]
+        [QueryParameters("map_id:integer")]
         [EndpointMetadata("Hostiles and colonists with position, weapon, health, drafted state and current job")]
         public async Task GetCombat(HttpListenerContext context)
         {
@@ -33,6 +34,7 @@ namespace RIMAPI.Controllers
         // writes names killer, victim and the weapon's def, which is what a
         // report needs to tell a dead raider from one who fled the map.
         [Get("/api/v1/map/deaths")]
+        [QueryParameters("limit:string?", "since:string?")]
         [EndpointMetadata("Kills the game recorded: killer, victim, weapon and the tale's kind")]
         public async Task GetDeaths(HttpListenerContext context)
         {
@@ -51,6 +53,7 @@ namespace RIMAPI.Controllers
         // whether the cell has a line to the target (ticket #3174). Without a
         // target there is no direction, so the call needs one.
         [Get("/api/v1/map/cover")]
+        [QueryParameters("map_id:integer", "pawn_id:string?", "radius:string?", "target_id:string?", "target_x:string?", "target_z:string?", "x:string?", "z:string?")]
         [EndpointMetadata("Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
         public async Task GetCover(HttpListenerContext context)
         {
@@ -78,6 +81,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/draft")]
+        [RequestBody(typeof(DraftRequestDto))]
         [EndpointMetadata("Draft or undraft a list of colonists")]
         public async Task SetDrafted(HttpListenerContext context)
         {
@@ -87,6 +91,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/pawn/order")]
+        [RequestBody(typeof(OrderRequestDto))]
         [EndpointMetadata("Order one drafted colonist to move, attack, hold or switch fire-at-will")]
         public async Task Order(HttpListenerContext context)
         {
