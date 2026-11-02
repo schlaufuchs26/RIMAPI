@@ -175,6 +175,10 @@
     <!-- Why a grave refused a corpse (fox ticket #3784): the assignment, the
          body already inside or the filter, each with its own sentence. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CasketRefusal.cs" Link="Linked\CasketRefusal.cs" />
+    <!-- Which cell of a haul destination an ordered haul may use (fox ticket
+         #4058): the choice between a clean cell, one only the carrier's own
+         job reserved, and a blocked one is plain C#. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HaulCellChoice.cs" Link="Linked\HaulCellChoice.cs" />
     <!-- How many ticks a colony has run since it loaded (fox ticket #3781):
          the power figures are written by the tick, and the loader's own tick
          still reads 0 W, so a fresh load must be visible as such. -->
