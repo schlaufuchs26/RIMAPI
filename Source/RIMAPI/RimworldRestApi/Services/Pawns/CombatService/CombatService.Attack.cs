@@ -61,7 +61,11 @@ namespace RIMAPI.Services
             string destText = $"{target.LabelShort} (id {target.thingIDNumber})";
             string refusal = ReachRefusal(pawn, target, PathEndMode.Touch, maxDanger, destText);
             if (refusal != null) return ApiResult<OrderResultDto>.Fail(refusal);
-            WalkReport walk = InspectWalk(pawn, target);
+            // The walk is read to touching distance, because that is where the
+            // melee job paths to (ticket #4176): the default OnCell asked for a
+            // path onto the target's own cell, which is one cell longer than
+            // the walk the game takes.
+            WalkReport walk = InspectWalk(pawn, target, PathEndMode.Touch);
             if (walk.Worst > maxDanger)
             {
                 return ApiResult<OrderResultDto>.Fail(
@@ -112,6 +116,18 @@ namespace RIMAPI.Services
             result.TargetId = target.thingIDNumber;
             result.Target = target.LabelShort;
             result.PathHazards = walk.HazardText();
+            // How long the approach is, so a run knows when to step the clock
+            // (ticket #4176): the live check of #4163 read "Job AttackMelee"
+            // and nothing about the 40 cells the pawn then walked. Only a
+            // swinging order walks at all; the game's AttackStatic stops the
+            // pather dead (JobDriver_AttackStatic), so a shot names no walk
+            // and a target in contact has none to name.
+            if (swing && walk.Cells > 0)
+            {
+                result.Reachable = true;
+                result.Reach = walk.ReachText();
+                result.PathDanger = DangerText(walk.Worst);
+            }
             // Whether the attack can land from where the pawn stands (fox #3737):
             // the order took and the job reads back, but a target behind a wall
             // or beyond the weapon leaves the pawn standing and firing nothing,

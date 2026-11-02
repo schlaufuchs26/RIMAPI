@@ -298,10 +298,10 @@ namespace RIMAPI.Services
         // the gases read "none" there; they are named here at the level each
         // costs (GasHazard.All): fire is deadly, polluted ground, tox gas and
         // rot stink some, blind smoke and deadlife dust none.
-        private static WalkReport InspectWalk(Pawn pawn, LocalTargetInfo dest)
+        private static WalkReport InspectWalk(Pawn pawn, LocalTargetInfo dest, PathEndMode endMode = PathEndMode.OnCell)
         {
             WalkReport report = new WalkReport();
-            PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, dest, pawn);
+            PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, dest, pawn, null, endMode);
             if (path == null) return report;
             try
             {
