@@ -77,6 +77,11 @@ namespace RIMAPI.Helpers
                     // (ticket #3451): counting humanlikes only made a warg
                     // raid read "0 hostiles" and the digest stayed silent.
                     EnemiesCount = map.mapPawns.AllPawnsSpawned.Count(Hostility.IsHostileToColony),
+                    // Of those, the ones the colony holds (fox ticket #4187).
+                    // Counted apart so the digest's danger line can say "1
+                    // hostile" about a raid and "1 held" about a captive.
+                    HeldCount = map.mapPawns.AllPawnsSpawned.Count(p =>
+                        Hostility.IsHostileToColony(p) && Hostility.IsHeld(p)),
                     AnimalsCount = map.mapPawns.AllPawnsSpawned.Count(p => p.RaceProps.Animal),
                     InsectoidsCount = map.mapPawns.AllPawnsSpawned.Count(p =>
                         p != null && p.Faction != null && p.Faction.def == FactionDefOf.Insect

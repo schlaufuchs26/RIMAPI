@@ -109,6 +109,13 @@ namespace RIMAPI.Models
         public int ColonistsCount { get; set; }
         public int PrisonersCount { get; set; }
         public int EnemiesCount { get; set; }
+        // HeldCount is how many of EnemiesCount the colony itself holds: a
+        // prisoner or a slave that is not fighting (fox ticket #4187). An
+        // enemy faction stays hostile in the game's eyes, so a prisoner in the
+        // colony's own cell is in the hostile list; the danger line must not
+        // read that as a raid, and only the mod can tell it from a prison
+        // break, which keeps its cap through LordJob_PrisonBreak.
+        public int HeldCount { get; set; }
         public int AnimalsCount { get; set; }
         public int InsectoidsCount { get; set; }
         public int MechanoidsCount { get; set; }

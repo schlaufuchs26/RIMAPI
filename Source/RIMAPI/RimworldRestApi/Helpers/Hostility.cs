@@ -31,6 +31,18 @@ namespace RIMAPI.Helpers
             return HostilityRules.ThreatensColony(StateOf(pawn));
         }
 
+        /// <summary>
+        /// The colony holds this pawn prisoner or as a slave and it is not
+        /// fighting (fox ticket #4187). The same moment-rule the tool's
+        /// heldHostile applies: a prison break or a slave rebellion carries an
+        /// assaulting lord and stays a threat.
+        /// </summary>
+        public static bool IsHeld(Pawn pawn)
+        {
+            if (pawn == null) return false;
+            return HostilityRules.IsHeld(StateOf(pawn));
+        }
+
         public static bool IsManhunter(Pawn pawn)
         {
             if (pawn == null || pawn.RaceProps == null || !pawn.RaceProps.Animal) return false;

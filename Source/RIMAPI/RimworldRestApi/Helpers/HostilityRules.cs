@@ -81,6 +81,22 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// True when the colony holds the pawn and it is no threat right now
+        /// (fox ticket #4187). A prisoner of an enemy faction is hostile by
+        /// faction and stands in the colony's own cell, so the danger line read
+        /// a captive as a raid; the fight block already splits the two, and
+        /// this is the same rule for the cheap headcount. A prison break
+        /// (LordJob_PrisonBreak) or an attack job is a fight again.
+        /// </summary>
+        public static bool IsHeld(PawnState pawn)
+        {
+            if (!pawn.Prisoner && !pawn.Slave) return false;
+            if (IsAggroState(pawn.MentalState)) return false;
+            if (IsAttackJob(pawn.JobDef)) return false;
+            return !IsAssaultingLord(pawn.LordJob);
+        }
+
+        /// <summary>
         /// The states the game turns an animal into a hunter with. A manhunter
         /// warg was the case behind ticket #3451: the headcount was humanlikes
         /// only, so a raid of teeth reached the tool as "0 hostiles".

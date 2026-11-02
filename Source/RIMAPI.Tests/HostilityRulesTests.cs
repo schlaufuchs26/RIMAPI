@@ -211,5 +211,71 @@ namespace RIMAPI.Tests
             var trader = new HostilityRules.PawnState { HasFaction = true };
             Assert.Equal("neutral", HostilityRules.KindOf(trader));
         }
+
+        // fox #4187: a prisoner of an enemy faction is hostile by faction and
+        // stands in the colony's own cell, so the danger line said "1 hostile
+        // on the map → draft the fighters" while the colony held a captive.
+        [Fact]
+        public void APrisonerInHisCellIsHeldAndNoFight()
+        {
+            var prisoner = new HostilityRules.PawnState
+            {
+                Prisoner = true,
+                EnemyFaction = true,
+                HasFaction = true,
+                JobDef = "GotoWander",
+            };
+            Assert.True(HostilityRules.IsHeld(prisoner));
+            // He is still in the headcount the game's rule makes: the field is
+            // about which of them the colony holds, not about hiding him.
+            Assert.True(HostilityRules.ThreatensColony(prisoner));
+        }
+
+        [Fact]
+        public void ASlaveIsHeldToo()
+        {
+            var slave = new HostilityRules.PawnState { Slave = true, EnemyFaction = true, HasFaction = true };
+            Assert.True(HostilityRules.IsHeld(slave));
+        }
+
+        [Fact]
+        public void APrisonBreakIsNoHeldPawn()
+        {
+            // The cap has to keep a breakout: the lord job is the difference.
+            var escaping = new HostilityRules.PawnState
+            {
+                Prisoner = true,
+                EnemyFaction = true,
+                HasFaction = true,
+                LordJob = "LordJob_PrisonBreak",
+            };
+            Assert.False(HostilityRules.IsHeld(escaping));
+        }
+
+        [Fact]
+        public void APrisonerBeatingAWardenIsNoHeldPawn()
+        {
+            var rioting = new HostilityRules.PawnState
+            {
+                Prisoner = true,
+                JobDef = "AttackMelee",
+                JobTargetsColony = true,
+            };
+            Assert.False(HostilityRules.IsHeld(rioting));
+        }
+
+        [Fact]
+        public void ABerserkPrisonerIsNoHeldPawn()
+        {
+            var berserk = new HostilityRules.PawnState { Prisoner = true, MentalState = "Berserk" };
+            Assert.False(HostilityRules.IsHeld(berserk));
+        }
+
+        [Fact]
+        public void ARaiderInTheOpenIsNoHeldPawn()
+        {
+            Assert.False(HostilityRules.IsHeld(Raider()));
+            Assert.False(HostilityRules.IsHeld(new HostilityRules.PawnState { Guest = true }));
+        }
     }
 }
