@@ -77,11 +77,6 @@ namespace RIMAPI.Helpers
             return "a caravan needs at least one pawn: pass the ids in pawn_ids";
         }
 
-        public static string NotOnMap(string pawnLabel, int mapId)
-        {
-            return pawnLabel + " is not on map " + mapId;
-        }
-
         /// <summary>
         /// Why the game would not send this pawn, in the order the game's own
         /// sendable list drops him. The caller checks the facts it can see; the
