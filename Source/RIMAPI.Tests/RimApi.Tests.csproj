@@ -60,6 +60,9 @@
          run, and the one line that reads the game's own switch. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DevOnlyRoutes.cs" Link="Linked\DevOnlyRoutes.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DevGate.cs" Link="Linked\DevGate.cs" />
+    <!-- The rules of forming a caravan (fox ticket #4212, wave 2): the mass
+         comparison and the game's own refusal keys. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CaravanRules.cs" Link="Linked\CaravanRules.cs" />
     <!-- The body a quest offer letter carries (fox ticket #3881): the letter's
          own words plus the quest's description. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\QuestOfferText.cs" Link="Linked\QuestOfferText.cs" />
