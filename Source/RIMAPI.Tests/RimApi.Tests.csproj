@@ -201,5 +201,9 @@
          KilledBy records the victim first, every other kill tale the killer.
          Plain C#, so the order is tested without the game. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\KillTaleOrder.cs" Link="Linked\KillTaleOrder.cs" />
+    <!-- The material half of a planned build's refusal (fox ticket #4054): the
+         stacks a builder may haul, and the forbidden one named with the call
+         that lifts the flag. Plain C#, so the wording is tested here. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ConstructMaterialRules.cs" Link="Linked\ConstructMaterialRules.cs" />
   </ItemGroup>
 </Project>

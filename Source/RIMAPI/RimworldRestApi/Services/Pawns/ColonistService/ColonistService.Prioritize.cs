@@ -411,9 +411,14 @@ namespace RIMAPI.Services
 
         // MissingFor names each material a plan still needs against the count
         // the game itself uses, so the answer is the number its own check saw.
+        // What a builder may haul is the game's own test (tickets #4033,
+        // #4054): a stack behind the forbidden flag and one he cannot walk to
+        // are no material, and naming them as absent sent a run to chop wood
+        // the colony already had. Both are named instead, the forbidden one
+        // with the thing ids and the `allow` call that lifts the flag.
         private static string MissingFor(Pawn pawn, Blueprint blueprint)
         {
-            List<string> parts = new List<string>();
+            List<ConstructMaterialRules.MaterialGap> gaps = new List<ConstructMaterialRules.MaterialGap>();
             foreach (ThingDefCountClass need in blueprint.TotalMaterialCost())
             {
                 int needed = blueprint.ThingCountNeeded(need.thingDef);
@@ -421,17 +426,33 @@ namespace RIMAPI.Services
                 {
                     continue;
                 }
-                int have = 0;
+                ConstructMaterialRules.MaterialGap gap = new ConstructMaterialRules.MaterialGap
+                {
+                    DefName = need.thingDef.defName,
+                    Label = need.thingDef.label,
+                    Needed = needed,
+                };
                 foreach (Thing stack in pawn.Map.listerThings.ThingsOfDef(need.thingDef))
                 {
-                    if (!stack.IsForbidden(pawn))
+                    if (stack.IsForbidden(pawn))
                     {
-                        have += stack.stackCount;
+                        gap.Forbidden += stack.stackCount;
+                        if (stack.thingIDNumber > 0)
+                        {
+                            gap.ForbiddenIds.Add(stack.thingIDNumber);
+                        }
+                        continue;
                     }
+                    if (!pawn.CanReach(stack, PathEndMode.ClosestTouch, Danger.Deadly))
+                    {
+                        gap.OutOfReach += stack.stackCount;
+                        continue;
+                    }
+                    gap.Usable += stack.stackCount;
                 }
-                parts.Add($"{needed} {need.thingDef.label} needed, {have} on the map he may use");
+                gaps.Add(gap);
             }
-            return parts.Count > 0 ? string.Join("; ", parts) : null;
+            return ConstructMaterialRules.Shortfall(gaps);
         }
 
         // CellNote is why the cell itself built no job, which is what a caller
