@@ -39,7 +39,8 @@ def get_csharp_routes():
                 if matches:
                     routes = csharp_data.setdefault(controller_name, {})
                     for method, path in matches:
-                        routes[path] = method.upper()
+                        # a path can answer several methods (GET to read, POST to create)
+                        routes.setdefault(path, set()).add(method.upper())
 
     return csharp_data
 
@@ -55,15 +56,28 @@ def _load_yaml_file(filepath):
             return None
 
 
+def _route_blocks(value):
+    """The method blocks of one route key: a list for a path that answers
+    several methods, the single block itself otherwise."""
+    if isinstance(value, list):
+        return [block for block in value if isinstance(block, dict)]
+    if isinstance(value, dict):
+        return [value]
+    return []
+
+
 def _extract_routes(data):
-    """Given a parsed YAML dict, return {path: method} for all route keys."""
+    """Given a parsed YAML dict, return {path: {methods}} for all route keys."""
     if not data:
         return {}
-    return {
-        key: val.get("method", "GET").upper()
-        for key, val in data.items()
-        if isinstance(key, str) and key.startswith("/")
-    }
+    routes = {}
+    for key, value in data.items():
+        if not (isinstance(key, str) and key.startswith("/")):
+            continue
+        methods = routes.setdefault(key, set())
+        for block in _route_blocks(value):
+            methods.add((block.get("method") or "GET").upper())
+    return routes
 
 
 def get_yaml_routes():
@@ -130,21 +144,20 @@ def check_examples():
             if not isinstance(data, dict):
                 continue
             rel = os.path.relpath(filepath, YAML_DIR)
-            for route, block in data.items():
+            for route, value in data.items():
                 if not (isinstance(route, str) and route.startswith("/")):
                     continue
-                if not isinstance(block, dict):
-                    continue
-                match = re.search(
-                    r"```json\s*\n(.*?)```", block.get("response") or "", re.DOTALL
-                )
-                if not match:
-                    continue
-                try:
-                    json.loads(match.group(1))
-                except json.JSONDecodeError as e:
-                    print(f"❌ INVALID EXAMPLE: '{route}' in {rel}: {e}")
-                    errors += 1
+                for block in _route_blocks(value):
+                    match = re.search(
+                        r"```json\s*\n(.*?)```", block.get("response") or "", re.DOTALL
+                    )
+                    if not match:
+                        continue
+                    try:
+                        json.loads(match.group(1))
+                    except json.JSONDecodeError as e:
+                        print(f"❌ INVALID EXAMPLE: '{route}' in {rel}: {e}")
+                        errors += 1
     return errors
 
 
@@ -165,15 +178,17 @@ def run_validation():
             continue
 
         yml_controller = base_routes.get(controller, {})
-        for path, method in routes.items():
+        for path, methods in routes.items():
             if path not in yml_controller:
                 print(f"❌ MISSING DOCS: '{path}' in {controller}.cs is not documented in YAML.")
                 errors_found += 1
             else:
-                yml_method = yml_controller[path]
-                if method != yml_method:
+                yml_methods = yml_controller[path]
+                if methods != yml_methods:
                     print(
-                        f"⚠️ METHOD MISMATCH: '{path}' in {controller} is {method} in C# but {yml_method} in YAML."
+                        f"⚠️ METHOD MISMATCH: '{path}' in {controller} is "
+                        f"{'/'.join(sorted(methods))} in C# but "
+                        f"{'/'.join(sorted(yml_methods))} in YAML."
                     )
                     warnings_found += 1
 

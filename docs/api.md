@@ -4,9 +4,9 @@
 {# --- Dynamically count endpoints --- #}
 {% set ns = namespace(endpoint_count=0) %}
 {% for controller_name, controller in current_api.controllers.items() %}
-    {% for path in controller.keys() %}
+    {% for path, data in controller.items() %}
         {% if path.startswith('/') %}
-            {% set ns.endpoint_count = ns.endpoint_count + 1 %}
+            {% set ns.endpoint_count = ns.endpoint_count + (data | length if data is not mapping else 1) %}
         {% endif %}
     {% endfor %}
 {% endfor %}
@@ -32,12 +32,17 @@
 
 {% for path, data in controller.items() %}
 {% if path.startswith('/') %}
+{# A path that answers several methods holds a list of blocks, one per method;
+   a single-method path holds the block itself. #}
+{% set blocks = [data] if data is mapping else data -%}
+{% for block in blocks -%}
+{% set suffix = '' if loop.first else '-' ~ (block.method | default('GET') | lower) -%}
 ---
 
-<h4 id="{{ path | replace('/', '') | replace('-', '') | replace('{', '') | replace('}', '') | lower }}">
+<h4 id="{{ path | replace('/', '') | replace('-', '') | replace('{', '') | replace('}', '') | lower }}{{ suffix }}">
 <div class="doc-api-container">
 <div class="doc-api-header">
-<div class="doc-api-method doc-api-method-{{ data.method | default('GET') | lower }}">{{ data.method | default('GET') | upper }}</div>
+<div class="doc-api-method doc-api-method-{{ block.method | default('GET') | lower }}">{{ block.method | default('GET') | upper }}</div>
 <div class="doc-api-endpoint">
 <code>
 ```
@@ -45,37 +50,38 @@
 ```
 
 </code>
-<a class="headerlink" href="#{{ path | replace('/', '') | replace('-', '') | replace('{', '') | replace('}', '') | lower }}" title="Permanent link">¶</a>
+<a class="headerlink" href="#{{ path | replace('/', '') | replace('-', '') | replace('{', '') | replace('}', '') | lower }}{{ suffix }}" title="Permanent link">¶</a>
 </div>
 </div>
 </div>
 </h4>
 
-{% if data.tags %}
+{% if block.tags %}
 <div class="doc-api-tags" style="margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
-  {% for tag in data.tags %}
+  {% for tag in block.tags %}
   <span class="doc-tag">{{ tag }}</span>
   {% endfor %}
 </div>
 {% endif %}
 
-{{ data.desc | default('') }}
+{{ block.desc | default('') }}
 
-{{ data.curl | default('') }}
+{{ block.curl | default('') }}
 
-{{ data.request | default('') }}
+{{ block.request | default('') }}
 
-{{ data.response | default('') }}
+{{ block.response | default('') }}
 
-{% if data.github_link %}
+{% if block.github_link %}
 
 <div class="doc-github-container">
-<a href="{{ data.github_link }}" class="doc-github-link">
-{{ data.github_name | default('View Source') }}
+<a href="{{ block.github_link }}" class="doc-github-link">
+{{ block.github_name | default('View Source') }}
 </a>
 </div>
 {% endif %}
 
+{% endfor %}
 {% endif %}
 {% endfor %}
 

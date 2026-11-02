@@ -9,8 +9,8 @@ desc: |-
     control over how close or far the camera is on the game map.
   method: POST
   tags:
-  - UI
-  - Camera
+    - UI
+    - Camera
   curl: |-
     **Example:**
     ```bash
@@ -54,8 +54,8 @@ desc: |-
     Useful for cinematic capture or tracking a specific colonist, animal, or enemy.
   method: POST
   tags:
-  - UI
-  - Camera
+    - UI
+    - Camera
   curl: |-
     **Example:**
     ```bash
@@ -79,8 +79,8 @@ desc: |-
     width/height resizing — omit both to return the native resolution.
   method: POST
   tags:
-  - UI
-  - Camera
+    - UI
+    - Camera
   curl: |-
     **Example:**
     ```bash
@@ -118,8 +118,8 @@ desc: |-
     directly to the host machine's hard drive using Unity's built-in capture.
   method: POST
   tags:
-  - UI
-  - Camera
+    - UI
+    - Camera
   curl: |-
     **Example:**
     ```bash

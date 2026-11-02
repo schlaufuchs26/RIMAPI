@@ -784,47 +784,103 @@ desc: |-
     ```
   method: GET
 /api/v1/map/zone/growing:
-  desc: |-
-    Returns detailed information about all growing zones on the map,
-    including their plant types, growth progress, and zone settings.
-  curl: |-
-    **Example:**
-    ```bash
-    curl --request POST \
-    --url http://localhost:8765/api/v1/map/zone/growing?map_id=0
-    ```
-  request: ''
-  response: |-
-    **Response:**
-    ```json
-    {
+  - desc: |-
+      Returns detailed information about all growing zones on the map,
+      including their plant types, growth progress, and zone settings.
+    curl: |-
+      **Example:**
+      ```bash
+      curl --request GET \
+      --url http://localhost:8765/api/v1/map/zone/growing?map_id=0
+      ```
+    request: ''
+    response: |-
+      **Response:**
+      ```json
+      {
+          "success": true,
+          "data": {
+              "zone": {
+              "id": 0,
+              "cells_count": 24,
+              "label": "Growing zone 1",
+              "base_label": "Growing zone"
+              },
+              "plant_def_name": "Plant_Potato",
+              "plant_count": 2,
+              "def_expected_yield": 0,
+              "expected_yield": 0,
+              "infected_count": 0,
+              "growth_progress": 0.5825427,
+              "is_sowing": true,
+              "soil_type": "Soil",
+              "fertility": 1.0,
+              "has_dying": false,
+              "has_dying_from_pollution": false,
+              "has_dying_from_no_pollution": false
+          },
+          "errors": [],
+          "warnings": [],
+          "timestamp": "2025-12-11T19:53:31.8379705Z"
+      }
+      ```
+    method: GET
+  - desc: Create a new growing zone for a specific plant type across a list of targeted cells. Cells that are out of bounds or already occupied by other zones will be skipped.
+    curl: |-
+      **Example:**
+      ```bash
+      curl --request POST \
+      --url 'http://localhost:8765/api/v1/map/zone/growing' \
+      --header 'content-type: application/json' \
+      --data '{
+        "map_id": 0,
+        "plant_def": "Plant_Rice",
+        "point_a": {"x":120,"y":0,"z":130},
+        "point_b": {"x":125,"y":0,"z":135}
+      }'
+      ```
+    request: |-
+      **Request:**
+      ```json
+      {
+        "map_id": 0,
+        "plant_def": "Plant_Rice",
+        "point_a": {"x":120,"y":0,"z":130},
+        "point_b": {"x":125,"y":0,"z":135}
+      }
+      ```
+    response: |-
+      **Response:**
+      ```json
+      {
         "success": true,
         "data": {
-            "zone": {
-            "id": 0,
-            "cells_count": 24,
+          "zone": {
+            "id": 5,
+            "cells_count": 36,
             "label": "Growing zone 1",
             "base_label": "Growing zone"
-            },
-            "plant_def_name": "Plant_Potato",
-            "plant_count": 2,
-            "def_expected_yield": 0,
-            "expected_yield": 0,
-            "infected_count": 0,
-            "growth_progress": 0.5825427,
-            "is_sowing": true,
-            "soil_type": "Soil",
-            "fertility": 1.0,
-            "has_dying": false,
-            "has_dying_from_pollution": false,
-            "has_dying_from_no_pollution": false
+          },
+          "plant_def_name": "Plant_Rice",
+          "plant_count": 6,
+          "def_expected_yield": 174,
+          "expected_yield": 0,
+          "infected_count": 0,
+          "growth_progress": 0.202831179,
+          "is_sowing": true,
+          "soil_type": "Mud",
+          "fertility": 0.6,
+          "has_dying": false,
+          "has_dying_from_pollution": false,
+          "has_dying_from_no_pollution": false
         },
         "errors": [],
         "warnings": [],
-        "timestamp": "2025-12-11T19:53:31.8379705Z"
-    }
-    ```
-  method: GET
+        "timestamp": "2026-03-28T13:51:53.9267279Z"
+      }
+      ```
+    method: POST
+    csharp_method: CreateGrowingZone
 /api/v1/map/rooms:
   desc: |-
     Returns every room the map's region grid knows: an enclosed area of cells with
@@ -1252,63 +1308,6 @@ desc: |-
   method: POST
   csharp_method: SetBuildingPower
 
-/api/v1/map/zone/growing:
-  desc: Create a new growing zone for a specific plant type across a list of targeted cells. Cells that are out of bounds or already occupied by other zones will be skipped.
-  curl: |-
-    **Example:**
-    ```bash
-    curl --request POST \
-    --url 'http://localhost:8765/api/v1/map/zone/growing' \
-    --header 'content-type: application/json' \
-    --data '{
-      "map_id": 0,
-      "plant_def": "Plant_Rice",
-      "point_a": {"x":120,"y":0,"z":130},
-      "point_b": {"x":125,"y":0,"z":135}
-    }'
-    ```
-  request: |-
-    **Request:**
-    ```json
-    {
-      "map_id": 0,
-      "plant_def": "Plant_Rice",
-      "point_a": {"x":120,"y":0,"z":130},
-      "point_b": {"x":125,"y":0,"z":135}
-    }
-    ```
-  response: |-
-    **Response:**
-    ```json
-    {
-      "success": true,
-      "data": {
-        "zone": {
-          "id": 5,
-          "cells_count": 36,
-          "label": "Growing zone 1",
-          "base_label": "Growing zone"
-        },
-        "plant_def_name": "Plant_Rice",
-        "plant_count": 6,
-        "def_expected_yield": 174,
-        "expected_yield": 0,
-        "infected_count": 0,
-        "growth_progress": 0.202831179,
-        "is_sowing": true,
-        "soil_type": "Mud",
-        "fertility": 0.6,
-        "has_dying": false,
-        "has_dying_from_pollution": false,
-        "has_dying_from_no_pollution": false
-      },
-      "errors": [],
-      "warnings": [],
-      "timestamp": "2026-03-28T13:51:53.9267279Z"
-    }
-    ```
-  method: POST
-  csharp_method: CreateGrowingZone
 /api/v1/datetime:
   desc: Retrieves the current in-game date and time according to the RimWorld world calendar.
   curl: |-

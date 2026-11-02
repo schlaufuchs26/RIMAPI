@@ -45,7 +45,10 @@ def get_csharp_routes():
 
                 matches = ROUTE_REGEX.findall(content)
                 for method, path in matches:
-                    csharp_data[controller_name][path] = method.upper()
+                    # a path can answer several methods (GET to read, POST to create)
+                    csharp_data[controller_name].setdefault(path, set()).add(
+                        method.upper()
+                    )
 
     return csharp_data
 
@@ -90,19 +93,45 @@ def fix_yaml_methods():
 
             # Compare YAML endpoints to C# truth
             for path, endpoint_data in data.items():
-                if path.startswith("/"):
-                    # Look up what the C# file says this path should be
-                    cs_method = cs_routes[controller_name].get(path)
+                if not path.startswith("/"):
+                    continue
+                # Look up what the C# file says this path should be
+                cs_methods = cs_routes[controller_name].get(path)
+                if not cs_methods:
+                    continue
 
-                    if cs_method:
-                        yml_method = endpoint_data.get("method", "GET").upper()
+                if isinstance(endpoint_data, list):
+                    # One block per method: the script cannot tell which block
+                    # is wrong, so it only says that the sets disagree.
+                    yml_methods = {
+                        (block.get("method") or "GET").upper()
+                        for block in endpoint_data
+                        if isinstance(block, dict)
+                    }
+                    if yml_methods != cs_methods:
+                        print(
+                            f"⚠️ Cannot fix {path} in {filepath}: C# answers "
+                            f"{'/'.join(sorted(cs_methods))}, documented as "
+                            f"{'/'.join(sorted(yml_methods)) or 'nothing'}. "
+                            "Edit its method blocks by hand."
+                        )
+                    continue
 
-                        # If they don't match (or if YAML is missing the method entirely)
-                        if yml_method != cs_method or "method" not in endpoint_data:
-                            endpoint_data["method"] = cs_method
-                            made_changes = True
-                            methods_fixed += 1
-                            print(f"✅ Fixed {path} in {filepath} -> {cs_method}")
+                if len(cs_methods) > 1:
+                    print(
+                        f"⚠️ Cannot fix {path} in {filepath}: C# answers "
+                        f"{'/'.join(sorted(cs_methods))}, but the YAML holds one "
+                        "block. Give the path a list with one block per method."
+                    )
+                    continue
+
+                cs_method = next(iter(cs_methods))
+                yml_method = (endpoint_data.get("method") or "GET").upper()
+                if yml_method != cs_method or "method" not in endpoint_data:
+                    endpoint_data["method"] = cs_method
+                    made_changes = True
+                    methods_fixed += 1
+                    print(f"✅ Fixed {path} in {filepath} -> {cs_method}")
 
             # If we updated anything, write the file back out
             if made_changes:

@@ -67,7 +67,11 @@ class Skip(Exception):
 
 
 def load_route_blocks(path):
-    """Yield (route, block) for every documented route in one YAML file."""
+    """Yield (route, block) for every documented route in one YAML file.
+
+    A path that answers several methods holds a list of blocks, one per
+    method; each of them is a block of that route.
+    """
     with open(path, "r", encoding="utf-8") as f:
         try:
             data = yaml.safe_load(f)
@@ -75,9 +79,13 @@ def load_route_blocks(path):
             raise Skip(f"YAML does not parse: {e}")
     if not isinstance(data, dict):
         return
-    for route, block in data.items():
-        if isinstance(route, str) and route.startswith("/") and isinstance(block, dict):
-            yield route, block
+    for route, value in data.items():
+        if not (isinstance(route, str) and route.startswith("/")):
+            continue
+        blocks = value if isinstance(value, list) else [value]
+        for block in blocks:
+            if isinstance(block, dict):
+                yield route, block
 
 
 def example_json(block):
