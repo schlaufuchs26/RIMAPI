@@ -124,7 +124,10 @@ namespace RIMAPI.Helpers
 
         private static string Cells(float cells)
         {
-            return cells.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)
+            // Two decimals: a diagonal neighbour is 1.41 cells away and a
+            // projectile's minimum range is 1.42, and one decimal rounds both to
+            // "1.4", which reads as a check that contradicts itself.
+            return cells.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)
                 + (cells == 1f ? " cell" : " cells");
         }
     }

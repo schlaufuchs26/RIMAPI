@@ -106,6 +106,11 @@ namespace RIMAPI.Services
             {
                 return ApiResult<OrderResultDto>.Fail($"{pawn.LabelShort} refused the attack order");
             }
+            // The answer names the target and the job it queued, so a run does
+            // not read "attack - (id 0)" and wonder what went out (fox #4160).
+            result.Job = job.def.defName;
+            result.TargetId = target.thingIDNumber;
+            result.Target = target.LabelShort;
             result.PathHazards = walk.HazardText();
             // Whether the attack can land from where the pawn stands (fox #3737):
             // the order took and the job reads back, but a target behind a wall
