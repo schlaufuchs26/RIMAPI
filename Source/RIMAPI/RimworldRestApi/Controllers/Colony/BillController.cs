@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
@@ -17,6 +18,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/buildings/bills")]
+        [ResponseBody(typeof(List<BillDto>))]
         [QueryParameters("building_id:integer")]
         [EndpointMetadata("List all bills on a work table")]
         public async Task GetBills(HttpListenerContext context)
@@ -27,6 +29,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/buildings/bills/add")]
+        [ResponseBody(typeof(BillDto))]
         [RequestBody(typeof(CreateBillRequest))]
         [QueryParameters("building_id:integer")]
         [EndpointMetadata("Create a new bill on a work table")]
@@ -39,6 +42,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/buildings/bills/remove")]
+        [ResponseBody]
         [QueryParameters("building_id:integer")]
         [EndpointMetadata("Clear all bills from a work table")]
         public async Task ClearBills(HttpListenerContext context)
@@ -49,6 +53,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/buildings/bill")]
+        [ResponseBody(typeof(BillDto))]
         [QueryParameters("bill_id:integer", "building_id:integer")]
         [EndpointMetadata("Get a specific bill on a work table")]
         public async Task GetBill(HttpListenerContext context)
@@ -60,6 +65,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/buildings/bill/update")]
+        [ResponseBody(typeof(BillDto))]
         [RequestBody(typeof(UpdateBillRequest))]
         [QueryParameters("bill_id:integer", "building_id:integer")]
         [EndpointMetadata("Update a bill on a work table")]
@@ -73,6 +79,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/buildings/bill/remove")]
+        [ResponseBody]
         [QueryParameters("bill_id:integer", "building_id:integer")]
         [EndpointMetadata("Delete a bill from a work table")]
         public async Task DeleteBill(HttpListenerContext context)
@@ -84,6 +91,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/buildings/bill/reorder")]
+        [ResponseBody]
         [RequestBody(typeof(BillReorderRequest))]
         [QueryParameters("bill_id:integer", "building_id:integer")]
         [EndpointMetadata("Reorder a bill on a work table")]
@@ -97,6 +105,7 @@ namespace RIMAPI.Controllers
         }
 
         [Put("/api/v1/buildings/bill/suspend")]
+        [ResponseBody]
         [RequestBody(typeof(BillSuspendRequest))]
         [QueryParameters("bill_id:integer", "building_id:integer")]
         [EndpointMetadata("Suspend or resume a bill on a work table")]
@@ -110,6 +119,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/buildings/recipes")]
+        [ResponseBody(typeof(List<RecipeDto>))]
         [QueryParameters("building_id:integer", "only_researched:boolean?")]
         [EndpointMetadata("Get available recipes for a work table")]
         public async Task GetAvailableRecipes(HttpListenerContext context)
@@ -121,6 +131,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/map/work-tables")]
+        [ResponseBody(typeof(List<WorkTableDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Get all work tables on a map")]
         public async Task GetWorkTables(HttpListenerContext context)

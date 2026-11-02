@@ -1,6 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
+using RIMAPI.Models;
 using RIMAPI.Http;
 using RIMAPI.Services;
 
@@ -20,6 +21,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/ideo")]
+        [ResponseBody(typeof(IdeoSummaryDto))]
         [EndpointMetadata("The colony ideoligion: name, structure, memes, precepts and whether it can be reformed")]
         public async Task GetIdeo(HttpListenerContext context)
         {
@@ -30,6 +32,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/ideo/roles")]
+        [ResponseBody(typeof(IdeoRolesDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("The colony ideoligion's roles with the pawns that fill them")]
         public async Task GetRoles(HttpListenerContext context)
@@ -40,6 +43,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/ideo/role/assign")]
+        [ResponseBody(typeof(RoleAssignResultDto))]
         [QueryParameters("map_id:integer", "pawn_id:integer", "role:string")]
         [EndpointMetadata("Fill an ideoligion role with one colonist (the game's own assign)")]
         public async Task AssignRole(HttpListenerContext context)
@@ -52,6 +56,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/ideo/rituals")]
+        [ResponseBody(typeof(IdeoRitualsDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("The ideoligion's rituals with the game's readiness verdict and repeat penalty")]
         public async Task GetRituals(HttpListenerContext context)
@@ -62,6 +67,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/ideo/ritual/start")]
+        [ResponseBody(typeof(RitualStartResultDto))]
         [QueryParameters("map_id:integer", "pawn_id:integer", "ritual:string", "target_id:integer", "x:integer", "z:integer")]
         [EndpointMetadata("Start an ideoligion ritual or the leader's speech (the game's own start)")]
         public async Task StartRitual(HttpListenerContext context)
@@ -83,6 +89,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/ideo/ritual/end")]
+        [ResponseBody(typeof(RitualEndResultDto))]
         [QueryParameters("map_id:integer", "ritual:string")]
         [EndpointMetadata("End a running ritual through the game's own cancel")]
         public async Task EndRitual(HttpListenerContext context)

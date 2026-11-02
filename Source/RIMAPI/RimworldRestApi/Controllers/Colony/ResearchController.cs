@@ -1,6 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using RIMAPI.Core;
+using RIMAPI.Models;
 using RIMAPI.Http;
 using RIMAPI.Services;
 
@@ -16,6 +17,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/progress")]
+        [ResponseBody(typeof(ResearchProjectDto))]
         public async Task GetResearchProgress(HttpListenerContext context)
         {
             var result = _researchService.GetResearchProgress();
@@ -23,6 +25,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/finished")]
+        [ResponseBody(typeof(ResearchFinishedDto))]
         public async Task GetResearchFinished(HttpListenerContext context)
         {
             var result = _researchService.GetResearchFinished();
@@ -30,6 +33,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/tree")]
+        [ResponseBody(typeof(ResearchTreeDto))]
         public async Task GetResearchTree(HttpListenerContext context)
         {
             var result = _researchService.GetResearchTree();
@@ -37,6 +41,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/project")]
+        [ResponseBody(typeof(ResearchProjectDto))]
         [QueryParameters("name:string")]
         public async Task GetResearchProjectByName(HttpListenerContext context)
         {
@@ -46,6 +51,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/research/summary")]
+        [ResponseBody(typeof(ResearchSummaryDto))]
         public async Task GetResearchSummary(HttpListenerContext context)
         {
             var result = _researchService.GetResearchSummary();
@@ -53,6 +59,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/research/target")]
+        [ResponseBody(typeof(ResearchProjectDto))]
         [QueryParameters("force:boolean?", "name:string")]
         [EndpointMetadata("Set the current research project by defName")]
         public async Task SetResearchTarget(HttpListenerContext context)
@@ -64,6 +71,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/research/stop")]
+        [ResponseBody]
         [EndpointMetadata("Stop the currently active research project")]
         public async Task StopCurrentProject(HttpListenerContext context)
         {

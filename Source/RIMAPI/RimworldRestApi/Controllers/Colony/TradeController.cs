@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Net;
 using RIMAPI.Core;
 using RIMAPI.Http;
@@ -20,6 +21,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/traders/defs")]
+        [ResponseBody(typeof(List<TraderKindDto>))]
         public async Task GetTradersDefs(HttpListenerContext context)
         {
             await _cachingService.CacheAwareResponseAsync(
@@ -36,6 +38,7 @@ namespace RIMAPI.Controllers
         // it holds and what it sells. Not cached: a caravan leaves, a ship
         // departs and a stock shrinks with every purchase.
         [Get("/api/v1/traders")]
+        [ResponseBody(typeof(List<TraderDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Traders on the map with their silver and stock")]
         public async Task GetTraders(HttpListenerContext context)
@@ -49,6 +52,7 @@ namespace RIMAPI.Controllers
         // orbit (fox ticket #3632). A beacon is a map fact: a colony reads it
         // to build, power and stock one before a trader arrives.
         [Get("/api/v1/traders/beacons")]
+        [ResponseBody(typeof(List<TradeBeaconDto>))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Orbital trade beacons on the map with cell and power")]
         public async Task GetTradeBeacons(HttpListenerContext context)
@@ -59,6 +63,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/traders/trade")]
+        [ResponseBody(typeof(TradeResultDto))]
         [RequestBody(typeof(TradeRequestDto))]
         [QueryParameters("map_id:integer")]
         [EndpointMetadata("Buy or sell one def through the game's own trade deal")]

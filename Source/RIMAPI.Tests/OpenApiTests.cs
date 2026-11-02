@@ -288,6 +288,22 @@ namespace RIMAPI.Tests
             );
         }
 
+        [Fact]
+        public void AFieldTheSerializerLeavesOutIsNotRequired()
+        {
+            JObject document = OpenApiDocument.Build(Fixture());
+            JObject schema = (JObject)document["components"]["schemas"]["OpenApiTestRequest"];
+            var required = schema["required"].Select(token => (string)token).ToArray();
+
+            // Count and Forbidden are plain value types and always written;
+            // Omitted is a bool with DefaultValueHandling.Ignore and may be
+            // absent, and Name is a string and may be null.
+            Assert.Contains("count", required);
+            Assert.Contains("forbidden", required);
+            Assert.DoesNotContain("omitted", required);
+            Assert.DoesNotContain("name", required);
+        }
+
         /// <summary>
         /// The gate the ticket asks for (fox ticket #4304): no schema in the
         /// document may be a bare object, and no property may be untyped. A
@@ -457,6 +473,15 @@ namespace RIMAPI.Models
         public string ThingDef { get; set; }
         public int Count { get; set; }
         public bool Forbidden { get; set; }
+
+        // True by default and left out of the JSON at its default, the way
+        // StockRuleDto.Buys is: the schema must not call it required.
+        [Newtonsoft.Json.JsonProperty(
+            DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore
+        )]
+        [System.ComponentModel.DefaultValue(true)]
+        public bool Omitted { get; set; } = true;
+
         public OpenApiTestKind Kind { get; set; }
         public List<OpenApiTestRequest> Nested { get; set; }
     }

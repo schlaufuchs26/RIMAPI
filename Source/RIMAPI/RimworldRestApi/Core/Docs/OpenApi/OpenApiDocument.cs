@@ -595,8 +595,19 @@ namespace RIMAPI.Core
 
                         properties[property.PropertyName] = Build(property.PropertyType);
 
-                        if (property.PropertyType.IsValueType
-                            && Nullable.GetUnderlyingType(property.PropertyType) == null)
+                        // A field is required only when the serializer always
+                        // writes it: a nullable or reference-typed field can be
+                        // null and is then left out, and a field with
+                        // DefaultValueHandling.Ignore is left out at its default
+                        // (ticket #4304: StockRuleDto.Buys is true by default
+                        // and absent from the wire).
+                        bool nullable = !property.PropertyType.IsValueType
+                            || Nullable.GetUnderlyingType(property.PropertyType) != null;
+                        bool omittedAtDefault = property.DefaultValueHandling.HasValue
+                            && (property.DefaultValueHandling.Value & DefaultValueHandling.Ignore)
+                                == DefaultValueHandling.Ignore;
+
+                        if (!nullable && !omittedAtDefault)
                             required.Add(property.PropertyName);
                     }
                 }
