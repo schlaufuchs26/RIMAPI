@@ -15,8 +15,9 @@ namespace RIMAPI.Models
         public List<string> Rewards { get; set; } = new List<string>();
         // What the choice's item rewards hold: a Reward_Items names only its
         // kind, so without this a caller picks a choice blind (fox ticket
-        // #3950). Empty for a choice with no item reward, and for one the game
-        // already handed out, whose items are gone.
+        // #3950). Empty for a choice with no item reward. A reward the game
+        // already handed out lists what it gave, from the labels it remembers
+        // (fox ticket #4009).
         public List<QuestChoiceItemDto> Items { get; set; } = new List<QuestChoiceItemDto>();
     }
 
@@ -31,6 +32,9 @@ namespace RIMAPI.Models
         // The quality label when the thing has one (QualityUtility.GetLabel),
         // empty for a thing without quality.
         public string Quality { get; set; }
+        // True when the game already handed the reward out, so these are the
+        // labels it remembers rather than things still waiting to drop.
+        public bool Remembered { get; set; }
     }
 
     // Accept one quest by the id the quests read prints. pawn_id names the

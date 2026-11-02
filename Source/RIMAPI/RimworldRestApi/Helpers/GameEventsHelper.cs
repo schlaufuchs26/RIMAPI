@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using RIMAPI.Models;
 using RimWorld;
 using Verse;
@@ -78,12 +80,29 @@ namespace RIMAPI.Helpers
             return choices;
         }
 
-        // GetRewardItems names the things a Reward_Items holds. The class
-        // generates them when the quest is drawn (Reward_Items.InitFromValue
+        // Reward_Items keeps the things it generated in `items` only while the
+        // reward is unused; once the game hands it out or cleans it up it
+        // remembers them as `itemDefs`, a private list of labels, and drops the
+        // things. Reading only `items` answered a used reward with its class
+        // alone (fox ticket #4009).
+        private static readonly FieldInfo ItemDefsField = typeof(Reward_Items).GetField(
+            "itemDefs",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        );
+
+        // Reward.usedOrCleanedUp is protected, the flag the game itself decides
+        // a reward's stack elements by.
+        private static readonly FieldInfo UsedOrCleanedUpField = typeof(Reward).GetField(
+            "usedOrCleanedUp",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        );
+
+        // GetRewardItems names the things a Reward_Items holds or gave. The
+        // class generates them when the quest is drawn (Reward_Items.InitFromValue
         // fills `items` from ThingSetMakerDefOf.Reward_ItemsStandard), so a
         // quest on offer has them; a reward the game already used keeps only
-        // its remembered labels, so this answers nothing for it rather than
-        // guessing (fox ticket #3950).
+        // its remembered labels, which this reads instead of guessing (fox
+        // tickets #3950, #4009).
         public static List<QuestChoiceItemDto> GetRewardItems(Reward reward)
         {
             var items = new List<QuestChoiceItemDto>();
@@ -106,7 +125,65 @@ namespace RIMAPI.Helpers
                 };
                 items.Add(item);
             }
+            // The game's own rule (Reward_Items.StackElements): a used reward
+            // reads from the labels it remembered, not from things that are
+            // gone. The count fallback keeps a bridge honest whose game renamed
+            // the flag.
+            if (items.Count == 0 || IsUsedOrCleanedUp(rewardItems))
+            {
+                items.Clear();
+                AddRememberedItems(rewardItems, items);
+            }
             return items;
+        }
+
+        // IsUsedOrCleanedUp is the game's own verdict on a reward, read through
+        // reflection because the field is protected.
+        private static bool IsUsedOrCleanedUp(Reward reward)
+        {
+            if (UsedOrCleanedUpField == null)
+                return false;
+            return UsedOrCleanedUpField.GetValue(reward) is bool used && used;
+        }
+
+        // AddRememberedItems names what a used item reward gave, from the
+        // labels Reward_Items.RememberItems wrote before the game dropped the
+        // things; the Quests tab draws those same entries as icons
+        // (QuestPartUtility.GetRewardStackElementsForThings). The pair carries
+        // def, stuff and quality, so the label and the stack's market value
+        // come out as they do for a reward still on offer (fox ticket #4009).
+        private static void AddRememberedItems(
+            Reward_Items rewardItems,
+            List<QuestChoiceItemDto> items
+        )
+        {
+            if (ItemDefsField == null)
+                return;
+            var remembered = ItemDefsField.GetValue(rewardItems) as IEnumerable;
+            if (remembered == null)
+                return;
+            foreach (Reward_Items.RememberedItem entry in remembered)
+            {
+                var pair = entry.thing;
+                if (pair.thing == null)
+                    continue;
+                items.Add(
+                    new QuestChoiceItemDto
+                    {
+                        Label = GenLabel.ThingLabel(pair.thing, pair.stuff, 1),
+                        Count = entry.stackCount,
+                        MarketValue =
+                            pair.GetStatValue(StatDefOf.MarketValue) * entry.stackCount,
+                        // RememberItems records QualityCategory.Normal for a
+                        // thing without CompQuality, so the def decides whether
+                        // there is a quality to print.
+                        Quality = pair.thing.HasComp(typeof(CompQuality))
+                            ? pair.Quality.GetLabel()
+                            : "",
+                        Remembered = true,
+                    }
+                );
+            }
         }
 
         public static List<string> GetQuestRewardString(Quest quest)
