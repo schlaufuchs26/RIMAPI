@@ -158,6 +158,124 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void AForbiddenStackIsNamedWithTheAllowCall()
+        {
+            // Fox ticket #3984: the colony has the twisted meat, but the only
+            // stack carries the forbidden flag, so hauling and waiting both do
+            // nothing. The line has to name the stack and the call that lifts
+            // the flag.
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "twisted meat" };
+            facts.ForbiddenStock = new List<BillStateReason.ForbiddenMaterial>
+            {
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Twisted",
+                    Count = 10,
+                    ThingIds = new List<int> { 12345 },
+                },
+            };
+
+            var state = BillStateReason.Describe(facts);
+
+            Assert.Equal(BillStateReason.MissingIngredients, state.Name);
+            Assert.Equal(
+                "nothing to work with: no twisted meat; forbidden: 10 Meat_Twisted "
+                + "(thing 12345); action allow ids=12345 clears the flag",
+                state.Reason);
+        }
+
+        [Fact]
+        public void AForbiddenDefSplitOverSeveralStacksNamesAllTheirIds()
+        {
+            // One `allow` call can carry several ids, so the line names every
+            // stack the flag sits on instead of one that leaves the rest.
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "caribou meat" };
+            facts.ForbiddenStock = new List<BillStateReason.ForbiddenMaterial>
+            {
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Caribou",
+                    Count = 30,
+                    ThingIds = new List<int> { 4711, 4712 },
+                },
+            };
+
+            Assert.Equal(
+                "nothing to work with: no caribou meat; forbidden: 30 Meat_Caribou "
+                + "(things 4711, 4712); action allow ids=4711,4712 clears the flag",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
+        public void OnlyTheFirstFewForbiddenStacksAreNamed()
+        {
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "meat" };
+            facts.ForbiddenStock = new List<BillStateReason.ForbiddenMaterial>
+            {
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Twisted", Count = 30, ThingIds = new List<int> { 1 },
+                },
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Boar", Count = 12, ThingIds = new List<int> { 2 },
+                },
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Caribou", Count = 5, ThingIds = new List<int> { 3 },
+                },
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Hare", Count = 2, ThingIds = new List<int> { 4 },
+                },
+            };
+
+            Assert.Equal(
+                "nothing to work with: no meat; forbidden: 30 Meat_Twisted (thing 1), "
+                + "12 Meat_Boar (thing 2), 5 Meat_Caribou (thing 3), +1 more; "
+                + "action allow ids=1,2,3 clears the flag",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
+        public void ABillThatRunsNeverCarriesTheForbiddenNote()
+        {
+            var facts = Facts();
+            facts.ForbiddenStock = new List<BillStateReason.ForbiddenMaterial>
+            {
+                new BillStateReason.ForbiddenMaterial
+                {
+                    DefName = "Meat_Twisted", Count = 10, ThingIds = new List<int> { 1 },
+                },
+            };
+
+            var state = BillStateReason.Describe(facts);
+
+            Assert.Equal(BillStateReason.Running, state.Name);
+            Assert.Null(state.Reason);
+        }
+
+        [Fact]
+        public void AForbiddenStackWithNoThingIdNamesNoCall()
+        {
+            // A mod build that reports the stack but no id cannot name a call
+            // that would work, so the sentence stops at the stack.
+            var facts = Facts();
+            facts.MissingIngredients = new List<string> { "twisted meat" };
+            facts.ForbiddenStock = new List<BillStateReason.ForbiddenMaterial>
+            {
+                new BillStateReason.ForbiddenMaterial { DefName = "Meat_Twisted", Count = 10 },
+            };
+
+            Assert.Equal(
+                "nothing to work with: no twisted meat; forbidden: 10 Meat_Twisted",
+                BillStateReason.Describe(facts).Reason);
+        }
+
+        [Fact]
         public void ARecipeNobodyCanDoNamesTheSkillAndTheBestColonist()
         {
             var facts = Facts();

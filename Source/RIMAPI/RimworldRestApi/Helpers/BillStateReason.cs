@@ -49,6 +49,13 @@ namespace RIMAPI.Helpers
             // the same whether the colony is out of twisted meat or the filter
             // keeps it out, and the fixes are opposite.
             public IList<ExcludedMaterial> FilterExcluded;
+            // ForbiddenStock names what the colony has of an ingredient the
+            // bill cannot get because every stack of it carries the forbidden
+            // flag (fox ticket #3984). "nothing to work with: no twisted meat"
+            // read the same whether the colony was out of twisted meat or the
+            // only 10 sat behind a flag nobody lifted, and a run then hauled
+            // or waited instead of calling allow.
+            public IList<ForbiddenMaterial> ForbiddenStock;
             // Skill is the recipe's skill requirement, null when it has none;
             // SkilledColonists is how many free colonists meet it, BestSkill
             // the highest level any of them has.
@@ -85,6 +92,17 @@ namespace RIMAPI.Helpers
             public int Count;
         }
 
+        // ForbiddenMaterial is one thing the bill would work with whose every
+        // stack on the map is forbidden (fox ticket #3984). ThingIds are the
+        // ids `action allow ids=` takes, so one call lifts the flag on the
+        // stack the line names; empty on a caller that cannot read them.
+        public struct ForbiddenMaterial
+        {
+            public string DefName;
+            public int Count;
+            public IList<int> ThingIds;
+        }
+
         // Describe answers the state and, when the bill is not simply running,
         // the sentence that says what to fix. The order is the order a player
         // checks: the switch they flipped, the game's own pause, the target,
@@ -119,7 +137,7 @@ namespace RIMAPI.Helpers
                 return new State
                 {
                     Name = MissingIngredients,
-                    Reason = Join(MissingText(f), FilterExcludedText(f)),
+                    Reason = Join(Join(MissingText(f), FilterExcludedText(f)), ForbiddenText(f)),
                 };
             }
             // The assignment comes before the skill: a bench whose work type
@@ -190,5 +208,57 @@ namespace RIMAPI.Helpers
         // FilterExcludedCap keeps the sentence short: a broad filter can drop
         // dozens of things the colony has, and the rest is counted.
         private const int FilterExcludedCap = 3;
+
+        // ForbiddenText names what the colony has of a missing ingredient and
+        // cannot use because the flag sits on every stack (fox ticket #3984):
+        // the defName, the amount, the thing ids and the call that lifts the
+        // flag. Without it "nothing to work with: no twisted meat" sends a run
+        // hauling or waiting while the 10 it wants are one `allow` away.
+        private static string ForbiddenText(Facts f)
+        {
+            if (f.ForbiddenStock == null || f.ForbiddenStock.Count == 0)
+            {
+                return null;
+            }
+
+            var parts = new List<string>();
+            var ids = new List<string>();
+            int named = 0;
+            foreach (ForbiddenMaterial material in f.ForbiddenStock)
+            {
+                if (named == ForbiddenCap)
+                {
+                    parts.Add(string.Format("+{0} more", f.ForbiddenStock.Count - named));
+                    break;
+                }
+                bool hasIds = material.ThingIds != null && material.ThingIds.Count > 0;
+                string stacks = !hasIds
+                    ? string.Empty
+                    : material.ThingIds.Count == 1
+                        ? string.Format(" (thing {0})", material.ThingIds[0])
+                        : string.Format(" (things {0})", string.Join(", ", material.ThingIds));
+                parts.Add(string.Format("{0} {1}{2}", material.Count, material.DefName, stacks));
+                if (hasIds)
+                {
+                    foreach (int id in material.ThingIds)
+                    {
+                        ids.Add(id.ToString());
+                    }
+                }
+                named++;
+            }
+
+            string text = "forbidden: " + string.Join(", ", parts);
+            if (ids.Count == 0)
+            {
+                return text;
+            }
+            return text + "; action allow ids=" + string.Join(",", ids) + " clears the flag";
+        }
+
+        // ForbiddenCap is the same budget as the filter note: a colony can have
+        // several forbidden materials of one recipe and the line stays one
+        // sentence.
+        private const int ForbiddenCap = 3;
     }
 }

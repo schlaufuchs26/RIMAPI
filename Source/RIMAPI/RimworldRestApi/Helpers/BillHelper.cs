@@ -85,7 +85,8 @@ namespace RIMAPI.Helpers
             dto.ProductsInColony = have;
             List<string> missing;
             List<BillStateReason.ExcludedMaterial> excluded;
-            BillIngredients(bill, map, out missing, out excluded);
+            List<BillStateReason.ForbiddenMaterial> forbiddenStock;
+            BillIngredients(bill, map, out missing, out excluded, out forbiddenStock);
             dto.MissingIngredients = missing;
 
             var facts = new BillStateReason.Facts
@@ -98,6 +99,7 @@ namespace RIMAPI.Helpers
                 TargetText = TargetText(bill, product, have),
                 MissingIngredients = missing,
                 FilterExcluded = excluded,
+                ForbiddenStock = forbiddenStock,
                 PowerFault = BenchPowerFault(bill),
             };
 
@@ -287,18 +289,23 @@ namespace RIMAPI.Helpers
         // nothing usable of, in the recipe's own labels; excluded names what
         // the colony has in stock and the recipe takes but the bill's filter
         // drops, biggest stock first, with the defName the filter read and
-        // `bill op=set allow=` take.
+        // `bill op=set allow=` take; forbiddenStock names what the bill would
+        // take and whose every stack carries the forbidden flag, with the ids
+        // `action allow ids=` clears (fox ticket #3984).
         private static void BillIngredients(
             Bill_Production bill, Map map,
-            out List<string> missing, out List<BillStateReason.ExcludedMaterial> excluded)
+            out List<string> missing, out List<BillStateReason.ExcludedMaterial> excluded,
+            out List<BillStateReason.ForbiddenMaterial> forbiddenStock)
         {
             missing = new List<string>();
             excluded = new List<BillStateReason.ExcludedMaterial>();
+            forbiddenStock = new List<BillStateReason.ForbiddenMaterial>();
             RecipeDef recipe = bill.recipe;
             if (recipe?.ingredients == null || map.listerThings == null)
                 return;
 
             var seen = new HashSet<string>();
+            var seenForbidden = new HashSet<string>();
             foreach (IngredientCount ingredient in recipe.ingredients)
             {
                 if (ingredient?.filter == null)
@@ -306,11 +313,17 @@ namespace RIMAPI.Helpers
 
                 bool usable = false;
                 string label = null;
+                // The flag is the first thing to try, so a slot held back only
+                // by it names the forbidden def rather than one with no stock.
+                string forbiddenLabel = null;
+                var slotForbidden = new List<BillStateReason.ForbiddenMaterial>();
                 foreach (ThingDef def in ingredient.filter.AllowedThingDefs)
                 {
                     if (def == null)
                         continue;
-                    int count = CountUsable(map, def);
+                    int forbiddenCount;
+                    List<int> forbiddenIds;
+                    int count = CountStacks(map, def, out forbiddenCount, out forbiddenIds);
                     if (bill.ingredientFilter == null || bill.ingredientFilter.Allows(def))
                     {
                         // The first def the bill would take is the one to name
@@ -318,7 +331,20 @@ namespace RIMAPI.Helpers
                         if (label == null)
                             label = def.label;
                         if (count > 0)
+                        {
                             usable = true;
+                        }
+                        else if (forbiddenCount > 0 && seenForbidden.Add(def.defName))
+                        {
+                            if (forbiddenLabel == null)
+                                forbiddenLabel = def.label;
+                            slotForbidden.Add(new BillStateReason.ForbiddenMaterial
+                            {
+                                DefName = def.defName,
+                                Count = forbiddenCount,
+                                ThingIds = forbiddenIds,
+                            });
+                        }
                     }
                     else if (count > 0 && seen.Add(def.defName))
                     {
@@ -331,27 +357,41 @@ namespace RIMAPI.Helpers
                 }
                 if (!usable)
                 {
+                    if (forbiddenLabel != null)
+                        label = forbiddenLabel;
                     missing.Add(label
                         ?? ingredient.filter.AnyAllowedDef?.label
                         ?? recipe.label);
+                    forbiddenStock.AddRange(slotForbidden);
                 }
             }
             excluded.Sort((a, b) => b.Count.CompareTo(a.Count));
+            forbiddenStock.Sort((a, b) => b.Count.CompareTo(a.Count));
         }
 
-        // CountUsable is what the game's own PotentiallyMissingIngredients
+        // CountStacks is what the game's own PotentiallyMissingIngredients
         // counts: the haulable things of one def on the map that the colony may
         // use (Verse.RecipeDef.PotentiallyMissingIngredients scans
         // listerThings.ThingsInGroup(HaulableEver) and skips a forbidden thing).
         // Map.resourceCounter answers a stale number for a stack that appeared
         // after the load, which would hide the material a bill waits for.
-        private static int CountUsable(Map map, ThingDef def)
+        // forbiddenCount and forbiddenIds carry the stacks the same walk
+        // skipped, because a bill short of material has to say whether the
+        // colony has none or the flag sits on it (fox ticket #3984).
+        private static int CountStacks(
+            Map map, ThingDef def, out int forbiddenCount, out List<int> forbiddenIds)
         {
             int count = 0;
+            forbiddenCount = 0;
+            forbiddenIds = new List<int>();
             foreach (Thing thing in map.listerThings.ThingsOfDef(def))
             {
                 if (thing.IsForbidden(Faction.OfPlayer))
+                {
+                    forbiddenCount += thing.stackCount;
+                    forbiddenIds.Add(thing.thingIDNumber);
                     continue;
+                }
                 count += thing.stackCount;
             }
             return count;
