@@ -113,6 +113,16 @@ namespace RIMAPI.Models
         // label reads by its defName.
         public string MentalState { get; set; }
 
+        // MentalStateAggro says the game itself calls the state aggressive
+        // (Pawn.InAggroMentalState): a berserk or murderous-rage pawn attacks
+        // the others, a pawn in a sad wander or a corpse obsession only stops
+        // working. The fox's wait stops for the first kind and steps game time
+        // through the second (fox, #3761), and it needs the game's verdict
+        // rather than a list of labels, which the game translates. Null when
+        // the pawn is in no state, so an older fox reading this build can tell
+        // "no state" from "not aggressive".
+        public bool? MentalStateAggro { get; set; }
+
         // Capacities (0.0 to 1.0+)
         public float Consciousness { get; set; }
         public float Moving { get; set; }

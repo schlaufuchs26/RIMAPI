@@ -209,6 +209,7 @@ namespace RIMAPI.Helpers
                         IsDowned = pawn.Downed,
                         DownedReason = DownedReason(pawn),
                         MentalState = MentalStateOf(pawn),
+                        MentalStateAggro = MentalStateAggroOf(pawn),
                         Consciousness = CapacityOrZero(pawn, PawnCapacityDefOf.Consciousness),
                         Moving = CapacityOrZero(pawn, PawnCapacityDefOf.Moving),
                         Health = pawn.health?.summaryHealth?.SummaryHealthPercent ?? 1f,
@@ -301,6 +302,20 @@ namespace RIMAPI.Helpers
 
             MentalStateDef state = pawn.MentalStateDef;
             return state == null ? "" : CombatRefusal.MentalStateName(state.label, state.defName);
+        }
+
+        // MentalStateAggroOf is the game's own verdict on whether the pawn's
+        // mental state attacks people (fox, #3761): a berserk pawn beats his
+        // neighbours, a pawn in a sad wander or a corpse obsession only stops
+        // working. The fox's wait steps game time through the harmless ones,
+        // because a colony that cannot work cannot tend, feed or haul either,
+        // and a list of state labels would break on a translated game. Null
+        // for a pawn in no state.
+        public static bool? MentalStateAggroOf(Pawn pawn)
+        {
+            if (pawn?.MentalStateDef == null)
+                return null;
+            return pawn.InAggroMentalState;
         }
 
         // NoJobReason names why the game would take no ordered job from this

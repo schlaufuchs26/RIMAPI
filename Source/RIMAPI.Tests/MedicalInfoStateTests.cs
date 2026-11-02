@@ -40,5 +40,25 @@ namespace RIMAPI.Tests
 
             Assert.Equal(JTokenType.Null, json["mental_state"].Type);
         }
+
+        // The game's own verdict on the state travels beside its label (fox
+        // ticket #3761): the fox's wait steps game time through a harmless
+        // state and stops for an aggressive one, and it reads the verdict
+        // rather than a label list, which a translated game would break.
+        [Fact]
+        public void TheStatesVerdictTravelsAsMentalStateAggro()
+        {
+            JObject json = Json(new MedicalInfoDto { MentalState = "berserk", MentalStateAggro = true });
+
+            Assert.Equal(true, (bool?)json["mental_state_aggro"]);
+        }
+
+        [Fact]
+        public void NoMentalStateSendsNoVerdict()
+        {
+            JObject json = Json(new MedicalInfoDto());
+
+            Assert.Equal(JTokenType.Null, json["mental_state_aggro"].Type);
+        }
     }
 }
