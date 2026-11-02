@@ -479,7 +479,8 @@ namespace RIMAPI.Services
                 Autoload = comp.Autoload,
                 AllRequiredLoaded = comp.AllRequiredThingsLoaded,
                 LaunchProblem = LaunchProblemOf(comp),
-                PilotRequired = comp.IsPlayerShuttle,
+                PilotRequired = comp.Props != null && comp.Props.shipDef != null
+                    && comp.Props.shipDef.playerShuttle,
                 HasPilot = comp.HasPilot,
                 RequiredColonistCount = comp.requiredColonistCount,
                 RequireAllColonistsOnMap = comp.requireAllColonistsOnMap,

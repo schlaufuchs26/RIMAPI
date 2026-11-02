@@ -48,11 +48,14 @@ namespace RIMAPI.Models
         public string LaunchProblem { get; set; }
 
         /// <summary>
-        /// True when the game asks this shuttle for a pilot before it launches
-        /// (CompShuttle.IsPlayerShuttle, fox ticket #4155): a spawned player
-        /// shuttle needs a free colonist aboard whose piloting ability clears
-        /// the game's 10% floor. A quest shuttle that is not a player shuttle
-        /// needs no pilot.
+        /// True when the game asks this shuttle for a pilot before it launches:
+        /// the shipDef is a player shuttle, which is the branch CanLaunch
+        /// checks. Deliberately not CompShuttle.IsPlayerShuttle, which also
+        /// asks ModLister.OdysseyInstalled and therefore reads false in a
+        /// Steam-less debug clone while CanLaunch still refuses for the pilot
+        /// (measured 2026-11-02, fox ticket #4155). A player shuttle needs a
+        /// free colonist aboard whose piloting ability clears the game's 10%
+        /// floor; a quest shuttle whose def is not a player shuttle needs none.
         /// </summary>
         public bool PilotRequired { get; set; }
 
