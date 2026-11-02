@@ -369,7 +369,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/weather/change")]
+        [Post("/api/v1/dev/map/weather/change")]
         [EndpointMetadata("Set weather on the map")]
         public async Task SetWeather(HttpListenerContext context)
         {
@@ -379,7 +379,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/destroy/corpses")]
+        [Post("/api/v1/dev/map/destroy/corpses")]
         public async Task DestroyCorpses(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -387,7 +387,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/destroy/forbidden")]
+        [Post("/api/v1/dev/map/destroy/forbidden")]
         public async Task DestroyForbiddenItems(HttpListenerContext context)
         {
             var mapId = RequestParser.GetMapId(context);
@@ -395,7 +395,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/destroy/rect")]
+        [Post("/api/v1/dev/map/destroy/rect")]
         public async Task DestroyThingsInRect(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<DestroyRectRequestDto>();
@@ -403,7 +403,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/repair/positions")]
+        [Post("/api/v1/dev/map/repair/positions")]
         public async Task RepairAtPositions(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<RepairPositionsRequestDto>();
@@ -411,7 +411,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/repair/rect")]
+        [Post("/api/v1/dev/map/repair/rect")]
         public async Task RepairInRect(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<RepairRectRequestDto>();
@@ -419,7 +419,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/map/droppod")]
+        [Post("/api/v1/dev/map/droppod")]
         public async Task SpawnDropPod(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SpawnDropPodRequestDto>();

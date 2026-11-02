@@ -61,7 +61,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/pawns/interactions/force")]
+        [Post("/api/v1/dev/pawns/interactions/force")]
         [EndpointMetadata("Forces a specific social interaction to occur immediately between two pawns.")]
         public async Task ForceInteraction(HttpListenerContext context)
         {
@@ -70,7 +70,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/pawns/relations/add")]
+        [Post("/api/v1/dev/pawns/relations/add")]
         [EndpointMetadata("Instantly creates a permanent social bond between two pawns.")]
         public async Task AddRelation(HttpListenerContext context)
         {
@@ -79,7 +79,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Delete("/api/v1/pawns/relations/remove")]
+        [Delete("/api/v1/dev/pawns/relations/remove")]
         [EndpointMetadata("Severs a specific social bond between two pawns.")]
         public async Task RemoveRelation(HttpListenerContext context)
         {

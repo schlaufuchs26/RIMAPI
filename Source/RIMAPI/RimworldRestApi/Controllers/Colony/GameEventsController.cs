@@ -54,7 +54,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/incident/trigger")]
+        [Post("/api/v1/dev/incident/trigger")]
         [EndpointMetadata("Trigger game incident")]
         public async Task TriggerIncident(HttpListenerContext context)
         {

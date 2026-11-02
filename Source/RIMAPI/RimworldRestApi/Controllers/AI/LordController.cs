@@ -15,7 +15,7 @@ namespace RIMAPI.Controllers
             _lordService = lordService;
         }
 
-        [Post("/api/v1/lords/create")]
+        [Post("/api/v1/dev/lords/create")]
         public async Task CreateLord(HttpListenerContext context)
         {
             // Helper to parse body safely

@@ -15,7 +15,7 @@ namespace RIMAPI.Controllers
             _pawnSpawnService = pawnSpawnService;
         }
 
-        [Post("/api/v1/pawn/spawn")]
+        [Post("/api/v1/dev/pawn/spawn")]
         public async Task EditPawn(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<PawnSpawnRequestDto>();

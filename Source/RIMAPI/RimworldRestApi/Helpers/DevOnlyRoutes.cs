@@ -30,34 +30,12 @@ namespace RIMAPI.Helpers
     {
         private static readonly string[] Prefixes =
         {
-            // The dev namespace itself: dev actions, the debug console, the
-            // material atlas, stuff colours.
+            // The dev namespace: every route that does what only the game's own
+            // dev tools do lives under it (pawn edits, spawning, droppod,
+            // rectangle delete and repair, weather, forced incidents, faction
+            // goodwill, devquick, lords, forced social, an injected letter), next
+            // to the dev action and the debug console.
             "/api/v1/dev/",
-            // PawnEditController: every edit of a pawn the game does not offer.
-            "/api/v1/pawn/edit/",
-            // Spawning and placing things.
-            "/api/v1/pawn/spawn",
-            "/api/v1/item/spawn",
-            "/api/v1/map/droppod",
-            // Deleting and repairing without work.
-            "/api/v1/map/destroy/",
-            "/api/v1/map/repair/",
-            // Weather and incidents at will.
-            "/api/v1/map/weather/change",
-            "/api/v1/incident/trigger",
-            // Faction goodwill by the point.
-            "/api/v1/faction/change/goodwill",
-            // A game started with dev tools on.
-            "/api/v1/game/start/devquick",
-            // A letter the game never wrote, injected into the player's stack:
-            // a test aid, since no player can create a letter.
-            "/api/v1/game/send/letter",
-            // A lord (raid, party) placed on the map.
-            "/api/v1/lords/create",
-            // Social interactions and relations written by hand.
-            "/api/v1/pawns/interactions/force",
-            "/api/v1/pawns/relations/add",
-            "/api/v1/pawns/relations/remove",
         };
 
         /// <summary>

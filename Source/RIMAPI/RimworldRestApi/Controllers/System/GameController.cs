@@ -188,7 +188,7 @@ namespace RIMAPI.Controllers
             );
         }
 
-        [Post("/api/v1/game/send/letter")]
+        [Post("/api/v1/dev/game/send/letter")]
         public async Task PostLetter(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SendLetterRequestDto>();
@@ -236,7 +236,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/game/start/devquick")]
+        [Post("/api/v1/dev/game/start/devquick")]
         public async Task GameDevQuickStart(HttpListenerContext context)
         {
             var result = _gameStateService.GameDevQuickStart();

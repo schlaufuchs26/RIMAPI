@@ -63,7 +63,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/faction/change/goodwill")]
+        [Post("/api/v1/dev/faction/change/goodwill")]
         public async Task ChangeFactionRelationWith(HttpListenerContext context)
         {
             FactionChangeRelationRequestDto body =

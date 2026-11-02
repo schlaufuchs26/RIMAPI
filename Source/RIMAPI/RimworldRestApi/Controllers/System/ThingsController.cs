@@ -52,7 +52,7 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
-        [Post("/api/v1/item/spawn")]
+        [Post("/api/v1/dev/item/spawn")]
         public async Task SpawnItem(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<SpawnItemRequestDto>();
