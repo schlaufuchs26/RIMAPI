@@ -23,6 +23,19 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // The same order over the cells the caller names (fox ticket #4095): a
+        // zone whose shape is not a rectangle has a box that marks the cells
+        // beside it too, so a caller that knows the zone's own cells marks
+        // exactly those.
+        [Post("/api/v1/order/designate/cells")]
+        [EndpointMetadata("Mark an explicit list of cells for one designation kind (chop, cut, blight, harvest, mine, deconstruct, hunt), so a zone that is not a rectangle is marked without the cells beside it")]
+        public async Task DesignateCells(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<DesignateCellsRequestDto>();
+            var result = _orderService.DesignateCells(body);
+            await context.SendJsonResponse(result);
+        }
+
         // Taking a designation back (fox ticket #3425): the same rectangle and
         // type the designate call took, so a wrong sweep is cleared in one call.
         [Post("/api/v1/order/undesignate/area")]

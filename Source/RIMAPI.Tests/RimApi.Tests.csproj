@@ -205,5 +205,9 @@
          stacks a builder may haul, and the forbidden one named with the call
          that lifts the flag. Plain C#, so the wording is tested here. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ConstructMaterialRules.cs" Link="Linked\ConstructMaterialRules.cs" />
+    <!-- Which cells a designate call marks (fox ticket #4095): a cell named
+         twice is marked once, and the map is flat, so two entries that differ
+         only in y are one cell. Plain C#, so the rule is tested here. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DesignationCells.cs" Link="Linked\DesignationCells.cs" />
   </ItemGroup>
 </Project>

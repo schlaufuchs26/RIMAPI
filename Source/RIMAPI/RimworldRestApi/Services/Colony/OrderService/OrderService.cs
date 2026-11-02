@@ -9,6 +9,12 @@ using Verse;
 
 public partial class OrderService : IOrderService
 {
+    // Marking a rectangle (fox ticket #3053), and the same sweep over a list of
+    // cells the caller names (fox ticket #4095): a zone whose shape is not a
+    // rectangle has a box that reaches into the cells beside it, so an order
+    // aimed at an L-shaped stockpile or a field around a wall needs the zone's
+    // own cells instead of the rectangle around them.
+
     public ApiResult DesignateArea(DesignateRequestDto request)
     {
         var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
@@ -17,7 +23,30 @@ public partial class OrderService : IOrderService
         IntVec3 start = new IntVec3(request.PointA.X, 0, request.PointA.Z);
         IntVec3 end = new IntVec3(request.PointB.X, 0, request.PointB.Z);
         CellRect rect = CellRect.FromLimits(start, end);
+        return Designate(map, request.Type, rect, rect.Area);
+    }
 
+    // The same order over the cells the caller names (fox ticket #4095): a
+    // ragged zone's box covers cells that are not the zone's, and this route
+    // marks exactly what it is given. A cell listed twice is marked once.
+    public ApiResult DesignateCells(DesignateCellsRequestDto request)
+    {
+        var map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+        if (map == null) return ApiResult.Fail(mapError);
+
+        List<PositionDto> asked = DesignationCells.Unique(request.Cells);
+        if (asked.Count == 0)
+            return ApiResult.Fail("cells is empty: send the cells to mark, one {x, z} object each");
+
+        return Designate(map, request.Type, asked.Select(c => new IntVec3(c.X, 0, c.Z)).ToList(), asked.Count);
+    }
+
+    // Designate is the sweep both routes share: what a cell carries decides
+    // whether the order marks it, so a cell without a matching target is
+    // skipped rather than refused. `sent` is how many cells were asked for, so
+    // the answer can say how many of them the map does not hold.
+    private ApiResult Designate(Map map, string orderType, IEnumerable<IntVec3> asked, int sent)
+    {
         int count = 0;
         int cells = 0;
         // already counts the targets the rectangle covered that carried this
@@ -54,14 +83,14 @@ public partial class OrderService : IOrderService
         {
             if (targets.Count < 24) targets.Add(target);
         }
-        string type = request.Type.ToLower(); // Cache lowercase type
+        string type = orderType.ToLower(); // Cache lowercase type
         // The plant orders walk each cell's things anyway, so they count the
         // blight in that walk; only the other orders need a pass of their own
         // (fox ticket #3562). A map-wide sweep used to read every cell's thing
         // list twice.
         bool plantOrder = type == "chop" || type == "cut" || type == "blight";
 
-        foreach (IntVec3 c in rect)
+        foreach (IntVec3 c in asked)
         {
             if (!c.InBounds(map)) continue;
             cells++;
@@ -244,12 +273,14 @@ public partial class OrderService : IOrderService
         }
 
         // The caller cannot see what was marked, so it gets the numbers: how many
-        // cells the rectangle covered, how many designations were added, and how
+        // cells the request covered, how many designations were added, and how
         // many targets already carried this order. Fox ticket #3530 adds the
-        // added entries themselves and the blighted plants the rectangle
+        // added entries themselves and the blighted plants the request
         // covers, so a sweep that marked nothing can say why. Fox ticket #3648
         // adds the products the marked plants yield, so the caller can ask the
-        // storage read whether the harvest has anywhere to go.
-        return ApiResult.Ok(new { cells, designated = count, already, designated_cells = designated, blighted, prevented, crops, workers, refusals, harvest_thing_defs = harvestDefs });
+        // storage read whether the harvest has anywhere to go. Fox ticket #4095
+        // adds off_map: the cells that were asked for but lie outside the map,
+        // which a rectangle sweep reports as a difference rather than a refusal.
+        return ApiResult.Ok(new { cells, off_map = sent - cells, designated = count, already, designated_cells = designated, blighted, prevented, crops, workers, refusals, harvest_thing_defs = harvestDefs });
     }
 }
