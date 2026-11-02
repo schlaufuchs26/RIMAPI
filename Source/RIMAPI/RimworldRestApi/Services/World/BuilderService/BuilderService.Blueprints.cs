@@ -64,7 +64,7 @@ namespace RIMAPI.Services
                 // wall a run did not ask to lose must be readable.
                 void WipeBlockers(BuildableDef buildable, IntVec3 pos, Rot4 rot)
                 {
-                    foreach (Thing onCell in pos.GetThingList(map).ToList())
+                    foreach (Thing onCell in new List<Thing>(pos.GetThingList(map)))
                     {
                         if (onCell is Frame frame
                             && buildable.blueprintDef != null
@@ -80,7 +80,7 @@ namespace RIMAPI.Services
                     }
                     foreach (IntVec3 cell in GenAdj.CellsOccupiedBy(pos, rot, buildable.Size))
                     {
-                        foreach (Thing onCell in cell.GetThingList(map).ToList())
+                        foreach (Thing onCell in new List<Thing>(cell.GetThingList(map)))
                         {
                             if (GenSpawn.SpawningWipes(buildable.blueprintDef, onCell.def))
                             {

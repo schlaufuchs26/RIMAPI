@@ -390,9 +390,14 @@ namespace RIMAPI.Services
                         ? "; its own job for that cell comes first, and `prioritize` without a job takes it."
                         : "; nothing he can do clears it, so the plan needs another cell.");
             }
-            if (planned is Blueprint blueprint && !GenConstruct.CanGetResources_NewTemp(blueprint, pawn, true))
+            Blueprint blueprint = planned as Blueprint;
+            if (blueprint != null)
             {
-                return $"The game counts no usable material for the {label} at {at}: {MissingFor(pawn, blueprint)}.";
+                string missing = MissingFor(pawn, blueprint);
+                if (missing != null)
+                {
+                    return $"The game counts no usable material for the {label} at {at}: {missing}.";
+                }
             }
             JobFailReason.Clear();
             if (GenConstruct.CanConstruct(planned, pawn, checkSkills: true, forced: true))
@@ -421,12 +426,12 @@ namespace RIMAPI.Services
                 {
                     if (!stack.IsForbidden(pawn))
                     {
-                        have += stack.StackCount;
+                        have += stack.stackCount;
                     }
                 }
                 parts.Add($"{needed} {need.thingDef.label} needed, {have} on the map he may use");
             }
-            return parts.Count > 0 ? string.Join("; ", parts) : "no material is counted for it";
+            return parts.Count > 0 ? string.Join("; ", parts) : null;
         }
 
         // CellNote is why the cell itself built no job, which is what a caller
