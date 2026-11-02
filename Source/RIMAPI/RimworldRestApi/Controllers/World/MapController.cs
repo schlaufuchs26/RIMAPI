@@ -385,7 +385,6 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/map/building/power")]
         [EndpointMetadata("Toggle a building's power")]
         [ResponseBody(typeof(PoweredBuildingDto))]
-        [EndpointMetadata("Toggle power on/off for a flickable building")]
         public async Task SetBuildingPower(HttpListenerContext context)
         {
             var buildingId = RequestParser.GetIntParameter(context, "buildingId");
@@ -414,7 +413,6 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/map/building/bed-owner")]
         [EndpointMetadata("Assign a bed to a colonist")]
         [ResponseBody(typeof(BedOwnerDto))]
-        [EndpointMetadata("Assign a humanlike bed to a colonist, or clear its owner")]
         public async Task SetBedOwner(HttpListenerContext context)
         {
             var buildingId = RequestParser.GetIntParameter(context, "buildingId");
