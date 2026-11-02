@@ -63,6 +63,8 @@
     <!-- The rules of forming a caravan (fox ticket #4212, wave 2): the mass
          comparison and the game's own refusal keys. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CaravanRules.cs" Link="Linked\CaravanRules.cs" />
+    <!-- The wording of an apparel policy's refusals (fox ticket #4212, gap 2). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApparelPolicyRules.cs" Link="Linked\ApparelPolicyRules.cs" />
     <!-- The body a quest offer letter carries (fox ticket #3881): the letter's
          own words plus the quest's description. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\QuestOfferText.cs" Link="Linked\QuestOfferText.cs" />
