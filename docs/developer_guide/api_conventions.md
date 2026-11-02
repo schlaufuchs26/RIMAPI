@@ -49,33 +49,30 @@ Status codes are derived from error message content:
 | 400 | Error message contains "validation" |
 | 401 | Error message contains "unauthorized" |
 | 404 | Error message contains "not found" |
-| 411 | POST request without `Content-Length` header (see below) |
 | 500 | All other errors |
 
-## Content-Length Header Requirement
+## Request Framing
 
-All `POST` endpoints require a `Content-Length` header. The underlying .NET `HttpListener` rejects POST requests that omit this header with an HTTP 411 "Length Required" response.
+The .NET `HttpListener` this mod is built on rejects a `POST` or `PUT` that
+carries neither `Content-Length` nor `Transfer-Encoding` with an HTTP 411
+"Length Required", before any handler runs. A bare `curl -X POST
+http://localhost:8765/api/v1/research/target?name=Electricity` used to fail that
+way while `-d ''` worked.
 
-Even if the request body is empty or the endpoint only uses query parameters, you must send a body (an empty JSON object `{}` is sufficient).
+The server now opens its configured port through a front that fills the missing
+length in before the listener sees the request (fox ticket #4233), so a client
+may send no body at all when the endpoint takes none. Nothing changes for
+clients that do send one:
 
-Most HTTP clients handle this automatically:
-
-| Client | Behavior |
-|--------|----------|
-| Python `httpx` | Sends Content-Length automatically when `json=` is used |
-| Python `requests` | Sends Content-Length automatically when `json=` is used |
-| `curl` | Requires `-d '{}'` or `--data '{}'` to include a body |
-| JavaScript `fetch` | Sends Content-Length automatically with `body: JSON.stringify({})` |
-
-**Example with curl:**
 ```bash
-# This fails with 411 Length Required:
-curl -X POST http://localhost:8765/api/v1/research/target?name=Electricity
-
-# This works:
+# Both of these reach the handler:
+curl -X POST 'http://localhost:8765/api/v1/research/target?name=Electricity'
 curl -X POST -H "Content-Type: application/json" -d '{}' \
-  http://localhost:8765/api/v1/research/target?name=Electricity
+  'http://localhost:8765/api/v1/research/target?name=Electricity'
 ```
+
+An endpoint that reads a body still needs one, of course; it just no longer
+fails with 411 when it doesn't get it.
 
 ## JSON Naming Standard (`snake_case`)
 

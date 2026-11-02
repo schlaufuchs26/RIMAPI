@@ -125,6 +125,12 @@
     <!-- Which addresses the bridge binds (fox ticket #3767): a loopback setting
          has to answer on 127.0.0.1 as well as on localhost. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ListenPrefixes.cs" Link="Linked\ListenPrefixes.cs" />
+    <!-- The door in front of the listener (fox ticket #4233): the head it
+         rewrites, the sockets it binds, and the splice itself. Plain C#, so the
+         listener's 411 is reproduced and answered without the game. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\RequestFraming.cs" Link="Linked\RequestFraming.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\ListenAddresses.cs" Link="Linked\ListenAddresses.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\ListenerFront.cs" Link="Linked\ListenerFront.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SlaughterRules.cs" Link="Linked\SlaughterRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\HostilityRules.cs" Link="Linked\HostilityRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\PatientRules.cs" Link="Linked\PatientRules.cs" />

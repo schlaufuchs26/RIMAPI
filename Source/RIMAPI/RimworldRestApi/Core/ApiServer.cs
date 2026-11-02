@@ -13,7 +13,9 @@ namespace RIMAPI.Core
 {
     public class ApiServer : IDisposable
     {
-        private readonly HttpListener _listener;
+        private HttpListener _listener;
+        private ListenerFront _front;
+        private int _internalPort;
         private readonly Router _router;
         private readonly SseService _sseService;
         public SseService SseService => _sseService;
@@ -63,17 +65,11 @@ namespace RIMAPI.Core
                 LogApi.Info($"EventRegistry resolved: {_eventRegistry != null}");
 
                 LogApi.Info("Initializing HTTP components...");
-                _listener = new HttpListener();
-
-                // A loopback setting binds both loopback addresses, so a client
-                // that dials 127.0.0.1 is not refused while localhost answers
-                // (fox ticket #3767).
-                foreach (string listenerPrefix in ListenPrefixes.For(ServerIP, Port))
-                {
-                    _listener.Prefixes.Add(listenerPrefix);
-                    LogApi.Info($"Listening on {listenerPrefix}");
-                }
-
+                // The listener itself stays private (fox ticket #4233): a door
+                // in front of it (ListenerFront) accepts on the addresses the
+                // setting names, so it can add the Content-Length the listener
+                // insists on before the listener ever sees the request. Both
+                // are created in Start(), which is where the listener binds.
                 _router = new Router();
                 _requestQueue = new Queue<HttpListenerContext>();
 
@@ -307,7 +303,14 @@ namespace RIMAPI.Core
 
             try
             {
-                _listener.Start();
+                if (!StartListenerOnLoopback())
+                    throw new InvalidOperationException(
+                        "no free loopback port for the HTTP listener"
+                    );
+
+                _front = new ListenerFront(ListenAddresses.For(ServerIP, Port), _internalPort);
+                _front.Start();
+
                 _isRunning = true;
 
                 // Start background listener
@@ -327,6 +330,43 @@ namespace RIMAPI.Core
                 LogApi.Error($"Failed to start API server - {ex}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Binds the listener to a private loopback port (fox ticket #4233). The
+        /// port is picked just before binding and a taken one costs another
+        /// attempt, because a port nothing listened on a moment ago can be taken
+        /// by the time it is bound.
+        /// </summary>
+        private bool StartListenerOnLoopback()
+        {
+            for (int attempt = 1; attempt <= 10; attempt++)
+            {
+                int candidate = ListenerFront.FreeLoopbackPort();
+                var listener = new HttpListener();
+                listener.Prefixes.Add($"http://127.0.0.1:{candidate}/");
+                try
+                {
+                    listener.Start();
+                }
+                catch (Exception ex)
+                {
+                    LogApi.Warning($"loopback port {candidate} refused ({ex.Message}), trying another");
+                    try
+                    {
+                        listener.Close();
+                    }
+                    catch { }
+                    continue;
+                }
+
+                _listener = listener;
+                _internalPort = candidate;
+                LogApi.Info($"HTTP listener bound to 127.0.0.1:{candidate}");
+                return true;
+            }
+
+            return false;
         }
 
         private async Task ListenForRequestsAsync()
@@ -483,6 +523,12 @@ namespace RIMAPI.Core
             try
             {
                 LogApi.Info("Disposing API server...");
+
+                if (_front != null)
+                {
+                    _front.Dispose();
+                    _front = null;
+                }
 
                 if (_listener?.IsListening == true)
                 {
