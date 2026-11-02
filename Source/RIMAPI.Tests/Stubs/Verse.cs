@@ -110,4 +110,15 @@ namespace Verse
         Some = 1,
         Deadly = 2,
     }
+
+    /// <summary>
+    /// Stands in for Verse.Prefs, the game's options (fox ticket #4212). Only
+    /// the one switch the dev boundary reads is here: DevMode is the same
+    /// field the game's own dev tools check, and a test sets it to drive the
+    /// boundary's two answers.
+    /// </summary>
+    public static class Prefs
+    {
+        public static bool DevMode;
+    }
 }

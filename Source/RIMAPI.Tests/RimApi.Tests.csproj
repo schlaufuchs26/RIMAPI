@@ -56,6 +56,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ShuttleRules.cs" Link="Linked\ShuttleRules.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FrameConstruction.cs" Link="Linked\FrameConstruction.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\CombatRefusal.cs" Link="Linked\CombatRefusal.cs" />
+    <!-- The dev boundary (fox ticket #4212): which routes only dev mode may
+         run, and the one line that reads the game's own switch. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DevOnlyRoutes.cs" Link="Linked\DevOnlyRoutes.cs" />
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DevGate.cs" Link="Linked\DevGate.cs" />
     <!-- The body a quest offer letter carries (fox ticket #3881): the letter's
          own words plus the quest's description. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\QuestOfferText.cs" Link="Linked\QuestOfferText.cs" />

@@ -132,7 +132,7 @@ namespace RIMAPI.Core
             try
             {
                 // Create a generic handler that resolves the controller from DI
-                var handler = CreateRouteHandler(controllerType, method);
+                var handler = CreateRouteHandler(controllerType, method, routeAttr.Pattern);
 
                 // Use AddRoute instead of Register to match your Router API
                 _router.AddRoute(routeAttr.Method, routeAttr.Pattern, handler);
@@ -153,13 +153,24 @@ namespace RIMAPI.Core
 
         private Func<HttpListenerContext, Task> CreateRouteHandler(
             Type controllerType,
-            MethodInfo method
+            MethodInfo method,
+            string pattern
         )
         {
             return async context =>
             {
                 try
                 {
+                    // The dev boundary (fox ticket #4212): a route that does what
+                    // only the game's dev tools do answers its refusal before the
+                    // controller is resolved, so nothing in the game is touched.
+                    string devRefusal = Helpers.DevGate.Refuse(pattern);
+                    if (devRefusal != null)
+                    {
+                        await context.SendJsonResponse(ApiResult.Fail(devRefusal));
+                        return;
+                    }
+
                     // Resolve controller from DI container
                     var controller = _serviceProvider.GetService(controllerType);
                     if (controller == null)
