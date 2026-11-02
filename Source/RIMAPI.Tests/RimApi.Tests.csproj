@@ -156,6 +156,10 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\UI\LetterDtos.cs" Link="Linked\LetterDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\JobLogDtos.cs" Link="Linked\JobLogDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\ColonistDto.cs" Link="Linked\ColonistDto.cs" />
+    <!-- The detailed read's answer shape and its reservation holder (fox
+         ticket #4172): a renamed property would silently rename the JSON key
+         the fox's digest reads. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\PawnDtos.cs" Link="Linked\PawnDtos.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Models\Pawns\PersonDtos.cs" Link="Linked\PersonDtos.cs" />
     <!-- The rotting-food answer (fox ticket #3672): which food counts as a rot
          risk, and the keys the tool decodes. -->

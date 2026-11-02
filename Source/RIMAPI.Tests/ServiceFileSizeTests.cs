@@ -36,7 +36,7 @@ namespace RIMAPI.Tests
                 { "Source/RIMAPI/RimworldRestApi/Services/Client/LetterService/LetterService.cs", 706 },
                 { "Source/RIMAPI/RimworldRestApi/Services/Pawns/CombatService/CombatService.cs", 774 },
                 { "Source/RIMAPI/RimworldRestApi/Services/Colony/IdeoService.cs", 984 },
-                { "Source/RIMAPI/RimworldRestApi/Services/Pawns/ColonistService/ColonistService.cs", 1048 },
+                { "Source/RIMAPI/RimworldRestApi/Services/Pawns/ColonistService/ColonistService.cs", 735 },
                 { "Source/RIMAPI/RimworldRestApi/Services/System/DevActionService/DevActionService.cs", 1150 },
             };
 

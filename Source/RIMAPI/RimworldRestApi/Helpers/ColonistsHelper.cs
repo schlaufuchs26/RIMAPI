@@ -59,6 +59,34 @@ namespace RIMAPI.Helpers
             return result;
         }
 
+        // ToApiV1 builds the detailed read's answer from the two halves the
+        // colonist helpers return (ticket #4172). The same 25-line mapping stood
+        // twice in ColonistService, a file already past the size cap, so a new
+        // field had to be added in both places and neither could be tested
+        // without the game.
+        public static ApiV1PawnDetailedDto ToApiV1(PawnDetailedRequestDto data)
+        {
+            return new ApiV1PawnDetailedDto
+            {
+                Colonist = data.Pawn,
+                BodySize = data.Detailes.BodySize,
+                Sleep = data.Detailes.Sleep,
+                Comfort = data.Detailes.Comfort,
+                Beauty = data.Detailes.Beauty,
+                Joy = data.Detailes.Joy,
+                Energy = data.Detailes.Energy,
+                DrugsDesire = data.Detailes.DrugsDesire,
+                SurroundingBeauty = data.Detailes.SurroundingBeauty,
+                FreshAir = data.Detailes.FreshAir,
+                ColonistWorkInfo = data.Detailes.WorkInfo,
+                MoodInfo = data.Detailes.MoodInfo,
+                PoliciesInfo = data.Detailes.PoliciesInfo,
+                ColonistMedicalInfo = data.Detailes.MedicalInfo,
+                SocialInfo = data.Detailes.SocialInfo,
+                ReservedBy = data.Detailes.ReservedBy,
+            };
+        }
+
         public static List<PawnPositionDto> GetColonistPositions()
         {
             var positions = new List<PawnPositionDto>();

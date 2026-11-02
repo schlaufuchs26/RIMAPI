@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RIMAPI.Models
 {
     public class PawnDto
@@ -39,6 +41,17 @@ namespace RIMAPI.Models
         public string Note { get; set; }
     }
 
+    // ReservedByDto is one pawn that holds a reservation on a colonist and the
+    // job it holds him for (fox ticket #4172). The tend order could learn a held
+    // patient only from its own refusal, so the read carries the same fact the
+    // game's reservation manager knows.
+    public class ReservedByDto
+    {
+        public int ClaimantId { get; set; }
+        public string Claimant { get; set; }
+        public string Job { get; set; }
+    }
+
     public class PawnDetailedDto
     {
         public float BodySize { get; set; }
@@ -55,6 +68,12 @@ namespace RIMAPI.Models
         public PoliciesInfoDto PoliciesInfo { get; set; }
         public MedicalInfoDto MedicalInfo { get; set; }
         public SocialInfoDto SocialInfo { get; set; }
+
+        // ReservedBy names the pawns that hold a reservation on this colonist
+        // (fox ticket #4172). An empty list means nobody holds him; a bridge
+        // from before the field sends nothing at all, and the caller must not
+        // read that as a free pawn.
+        public List<ReservedByDto> ReservedBy { get; set; }
     }
 
     public class ApiV1PawnDetailedDto
@@ -74,6 +93,11 @@ namespace RIMAPI.Models
         public PoliciesInfoDto PoliciesInfo { get; set; }
         public MedicalInfoDto ColonistMedicalInfo { get; set; }
         public SocialInfoDto SocialInfo { get; set; }
+
+        // ReservedBy names the pawns that hold a reservation on this colonist
+        // (fox ticket #4172), so a digest or an order can see a held patient
+        // before a call goes out instead of learning it from a refusal.
+        public List<ReservedByDto> ReservedBy { get; set; }
     }
 
 

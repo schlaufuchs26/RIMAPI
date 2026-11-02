@@ -221,6 +221,7 @@ namespace RIMAPI.Helpers
                         InBed = pawn.InBed(),
                     },
                     SocialInfo = CreatePawnSocialInfoDto(pawn),
+                    ReservedBy = ReservationsOn(pawn),
                 };
             }
             catch (Exception ex)
@@ -228,6 +229,35 @@ namespace RIMAPI.Helpers
                 Core.LogApi.Error($"Error converting pawn to DTO - {ex}");
                 return null;
             }
+        }
+
+        // ReservationsOn lists the pawns that hold a reservation on this pawn
+        // and the job each holds it for (fox ticket #4172). The game's own
+        // manager is the source, so the read says exactly what the tend driver
+        // will hit: it reserves the patient with maxPawns 1 and ends the job
+        // when someone else holds him. A carried or off-map pawn has no map and
+        // sends an empty list rather than a stale claim.
+        private static List<ReservedByDto> ReservationsOn(Pawn pawn)
+        {
+            var holders = new List<ReservedByDto>();
+            ReservationManager manager = pawn.Map?.reservationManager;
+            if (manager == null)
+                return holders;
+            foreach (var reservation in manager.ReservationsReadOnly)
+            {
+                Pawn claimant = reservation.Claimant;
+                if (claimant == null || reservation.Target.Thing != pawn)
+                    continue;
+                holders.Add(
+                    new ReservedByDto
+                    {
+                        ClaimantId = claimant.thingIDNumber,
+                        Claimant = claimant.LabelShort,
+                        Job = reservation.Job?.def?.defName ?? "",
+                    }
+                );
+            }
+            return holders;
         }
 
         // DownedReason says why a downed pawn is down (ticket #3288). The state

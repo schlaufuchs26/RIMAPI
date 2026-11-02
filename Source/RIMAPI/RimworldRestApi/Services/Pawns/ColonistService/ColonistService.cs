@@ -705,24 +705,7 @@ namespace RIMAPI.Services
             List<ApiV1PawnDetailedDto> result = new List<ApiV1PawnDetailedDto>();
             foreach (PawnDetailedRequestDto data in ColonistsHelper.GetColonistsDetailedDtos())
             {
-                result.Add(new ApiV1PawnDetailedDto
-                {
-                    Colonist = data.Pawn,
-                    BodySize = data.Detailes.BodySize,
-                    Sleep = data.Detailes.Sleep,
-                    Comfort = data.Detailes.Comfort,
-                    Beauty = data.Detailes.Beauty,
-                    Joy = data.Detailes.Joy,
-                    Energy = data.Detailes.Energy,
-                    DrugsDesire = data.Detailes.DrugsDesire,
-                    SurroundingBeauty = data.Detailes.SurroundingBeauty,
-                    FreshAir = data.Detailes.FreshAir,
-                    ColonistWorkInfo = data.Detailes.WorkInfo,
-                    MoodInfo = data.Detailes.MoodInfo,
-                    PoliciesInfo = data.Detailes.PoliciesInfo,
-                    ColonistMedicalInfo = data.Detailes.MedicalInfo,
-                    SocialInfo = data.Detailes.SocialInfo,
-                });
+                result.Add(ColonistsHelper.ToApiV1(data));
             }
             return ApiResult<List<ApiV1PawnDetailedDto>>.Ok(result);
         }
@@ -733,24 +716,7 @@ namespace RIMAPI.Services
             {
                 PawnDetailedRequestDto data = ColonistsHelper.GetSingleColonistDetailedDto(pawnId);
 
-                ApiV1PawnDetailedDto result = new ApiV1PawnDetailedDto
-                {
-                    Colonist = data.Pawn,
-                    BodySize = data.Detailes.BodySize,
-                    Sleep = data.Detailes.Sleep,
-                    Comfort = data.Detailes.Comfort,
-                    Beauty = data.Detailes.Beauty,
-                    Joy = data.Detailes.Joy,
-                    Energy = data.Detailes.Energy,
-                    DrugsDesire = data.Detailes.DrugsDesire,
-                    SurroundingBeauty = data.Detailes.SurroundingBeauty,
-                    FreshAir = data.Detailes.FreshAir,
-                    ColonistWorkInfo = data.Detailes.WorkInfo,
-                    MoodInfo = data.Detailes.MoodInfo,
-                    PoliciesInfo = data.Detailes.PoliciesInfo,
-                    ColonistMedicalInfo = data.Detailes.MedicalInfo,
-                    SocialInfo = data.Detailes.SocialInfo,
-                };
+                ApiV1PawnDetailedDto result = ColonistsHelper.ToApiV1(data);
 
                 if (result == null)
                 {
