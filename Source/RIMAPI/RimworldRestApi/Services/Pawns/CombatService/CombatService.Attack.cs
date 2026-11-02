@@ -117,17 +117,24 @@ namespace RIMAPI.Services
             // or beyond the weapon leaves the pawn standing and firing nothing,
             // which reads as "the shot missed" for hours. The reason is the
             // game's own check, so the answer says what the game would say.
-            string block = BlockReason(pawn, target, swing);
-            if (block != null)
-            {
-                result.Note = $"from {pawn.Position.x},{pawn.Position.z} the attack cannot land: {block}, "
-                    + "so the pawn stands and does not fire until it can; move him into the open or closer first";
-            }
-            else if (swing && ranged != null)
+            // A swinging order is different (fox #4163): the melee job walks the
+            // pawn to the target, so its note is the reason the shot is not the
+            // answer and never "he stands"; only a shot that cannot land leaves
+            // the pawn standing.
+            if (swing)
             {
                 result.Note = AttackBlockRules.MeleeNote(rangedFacts);
             }
-            else if (walk.Worst != Danger.None)
+            else
+            {
+                string block = BlockReason(pawn, target, false);
+                if (block != null)
+                {
+                    result.Note = $"from {pawn.Position.x},{pawn.Position.z} the attack cannot land: {block}, "
+                        + "so the pawn stands and does not fire until it can; move him into the open or closer first";
+                }
+            }
+            if (string.IsNullOrEmpty(result.Note) && walk.Worst != Danger.None)
             {
                 result.Note = $"the path crosses {walk.HazardText()}, tolerated at max_danger={DangerText(maxDanger)}";
             }
@@ -170,6 +177,7 @@ namespace RIMAPI.Services
                     : 0f,
                 IsMelee = verb != null && verb.verbProps != null && verb.verbProps.IsMeleeAttack,
                 HasRanged = ranged != null,
+                HasMeleeVerb = melee != null,
                 MeleeCanHit = melee != null && melee.CanHitTargetFrom(pawn.Position, target),
                 From = $"{pawn.Position.x},{pawn.Position.z}",
                 Target = $"{target.Position.x},{target.Position.z}",

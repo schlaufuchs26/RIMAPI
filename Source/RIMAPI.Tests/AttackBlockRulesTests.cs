@@ -136,6 +136,7 @@ namespace RIMAPI.Tests
             facts.CanHit = false;
             facts.Distance = 1f;
             facts.MinRange = 1.4f;
+            facts.HasMeleeVerb = true;
             facts.MeleeCanHit = true;
             facts.From = "120,88";
             facts.Target = "121,88";
@@ -169,14 +170,50 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
-        public void AGunnerWhoseGunCannotLandStillQueuesTheShot()
+        public void AGunnerOutOfRangeWalksInLikeTheRightClick()
         {
             AttackBlockRules.Facts facts = InRange();
             facts.CanHit = false;
             facts.Distance = 30f;
+            facts.HasMeleeVerb = true;
+            facts.MeleeCanHit = false;
+            facts.From = "120,88";
+            facts.Target = "150,88";
+
+            Assert.Equal(AttackBlockRules.AttackJob.Melee, AttackBlockRules.Choose(facts));
+            string note = AttackBlockRules.MeleeNote(facts);
+            Assert.Contains("out of range", note);
+            Assert.Contains("30 cells", note);
+            Assert.Contains("walks to it", note);
+        }
+
+        [Fact]
+        public void APawnWithNothingToSwingWithStillQueuesTheShot()
+        {
+            AttackBlockRules.Facts facts = InRange();
+            facts.CanHit = false;
+            facts.Distance = 30f;
+            facts.HasMeleeVerb = false;
             facts.MeleeCanHit = false;
 
             Assert.Equal(AttackBlockRules.AttackJob.Ranged, AttackBlockRules.Choose(facts));
+        }
+
+        [Fact]
+        public void ABlowOutOfReachSaysThePawnWalksThere()
+        {
+            AttackBlockRules.Facts facts = InRange();
+            facts.HasRanged = false;
+            facts.IsMelee = true;
+            facts.CanHit = false;
+            facts.Distance = 3f;
+            facts.Range = 1.4f;
+            facts.HasMeleeVerb = true;
+
+            string note = AttackBlockRules.MeleeNote(facts);
+
+            Assert.Contains("out of reach", note);
+            Assert.Contains("walks to it and swings", note);
         }
     }
 }

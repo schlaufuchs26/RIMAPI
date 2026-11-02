@@ -23,6 +23,12 @@ namespace RIMAPI.Helpers
     // exactly when the melee verb can reach, so an order now takes the same
     // choice, and every reason names the two cells it measured, because the
     // distance alone read as a contradiction with the map.
+    //
+    // fox ticket #4163: the same float menu, read one step further. A human who
+    // right-clicks an enemy beyond the weapon's range gets the melee option and
+    // the pawn walks to it (JobDriver_AttackStatic stops the pawn dead and never
+    // paths); the order queued the shot and only said "move him closer first",
+    // so the pawn stood until the run issued a second order.
     public static class AttackBlockRules
     {
         /// <summary>One ordered attack, as the game reports it.</summary>
@@ -44,6 +50,8 @@ namespace RIMAPI.Helpers
             public bool IsMelee;
             /// <summary>The pawn carries a ranged weapon, whatever verb was read.</summary>
             public bool HasRanged;
+            /// <summary>The pawn has a melee verb for this target, so it can swing once it arrives.</summary>
+            public bool HasMeleeVerb;
             /// <summary>The pawn's melee verb reaches the target from where it stands.</summary>
             public bool MeleeCanHit;
             /// <summary>The cell the check measured from, e.g. "120,88"; empty when unread.</summary>
@@ -64,15 +72,20 @@ namespace RIMAPI.Helpers
         /// <summary>
         /// The job an ordered attack queues, the same way the game's own float
         /// menu picks between its two options: the ranged job while the weapon
-        /// can hit from where the pawn stands, the melee job when only a blow
-        /// reaches, and the ranged job when nothing can land (the note then
-        /// says why). A pawn without a ranged weapon always fights in contact.
+        /// can hit from where the pawn stands, the melee job when the gun cannot
+        /// fire (too close, out of range, no line of sight) and the pawn can
+        /// still swing, and the ranged job when there is nothing to swing with.
+        /// A pawn without a ranged weapon always fights in contact.
         /// </summary>
         public static AttackJob Choose(Facts facts)
         {
             if (!facts.HasRanged) return AttackJob.Melee;
             if (facts.CanHit) return AttackJob.Ranged;
-            if (facts.MeleeCanHit) return AttackJob.Melee;
+            // The game's own right-click on an enemy beyond the weapon's reach
+            // queues the melee job, which walks the pawn to the target; ordering
+            // the shot there left the pawn standing until the run moved it by
+            // hand (fox #4163).
+            if (facts.HasMeleeVerb) return AttackJob.Melee;
             return AttackJob.Ranged;
         }
 
@@ -107,13 +120,23 @@ namespace RIMAPI.Helpers
 
         /// <summary>
         /// The note for an order that swings instead of shooting: the weapon's
-        /// own reason, then what the pawn does about it.
+        /// own reason, then what the pawn does about it. A target out of the
+        /// blow's reach is one the pawn walks to, and the note says so, because
+        /// the job alone reads like a swing that never happens (fox #4163).
         /// </summary>
         public static string MeleeNote(Facts facts)
         {
             string reason = Reason(facts);
             if (reason.Length == 0) return "";
-            return reason + ", so he fights in contact instead of shooting";
+            if (!facts.MeleeCanHit)
+            {
+                return reason + (facts.HasRanged
+                    ? ", so he walks to it and fights in contact instead of shooting"
+                    : ", so he walks to it and swings");
+            }
+            return reason + (facts.HasRanged
+                ? ", so he fights in contact instead of shooting"
+                : "");
         }
 
         private static string Where(Facts facts)
