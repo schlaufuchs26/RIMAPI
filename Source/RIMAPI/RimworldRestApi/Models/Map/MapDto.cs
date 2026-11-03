@@ -185,6 +185,11 @@ namespace RIMAPI.Models
         public int InfectedCount { get; set; }
         public float GrowthProgress { get; set; }
         public bool IsSowing { get; set; }
+
+        // The Cut gizmo (fox ticket #4316): a growing zone with cut off leaves
+        // the trees standing inside it, and the zone read said nothing about it.
+        public bool AllowCut { get; set; }
+
         public string SoilType { get; set; }
         public float Fertility { get; set; }
         public bool HasDying { get; set; }
@@ -240,6 +245,11 @@ namespace RIMAPI.Models
         public string PlantDefName { get; set; }
         public string PlantLabel { get; set; }
         public bool AllowSow { get; set; }
+
+        // AllowCut is the zone's second gizmo toggle (fox ticket #4316): a
+        // growing zone whose cut is off leaves the trees inside it alone, and
+        // nothing in the read said so before.
+        public bool AllowCut { get; set; }
         public bool InSeason { get; set; }
         public int SownCells { get; set; }
         public int UnsownCells { get; set; }

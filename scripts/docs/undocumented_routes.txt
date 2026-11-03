@@ -28,7 +28,6 @@ IdeoController.cs /api/v1/ideo/rituals
 IdeoController.cs /api/v1/ideo/role/assign
 IdeoController.cs /api/v1/ideo/roles
 JobLogController.cs /api/v1/colonists/job-log
-MapController.cs /api/v1/map/area
 MapController.cs /api/v1/map/area/expand
 MapController.cs /api/v1/map/blueprints
 MapController.cs /api/v1/map/building/bed-for-prisoners

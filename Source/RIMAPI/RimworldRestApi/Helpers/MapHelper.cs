@@ -428,19 +428,7 @@ namespace RIMAPI.Helpers
 
                 foreach (Zone zone in map.zoneManager.AllZones)
                 {
-                    Zone_Stockpile stockpile = zone as Zone_Stockpile;
-                    zones.Add(
-                        new ZoneDto
-                        {
-                            Id = zone.ID,
-                            CellsCount = zone.CellCount,
-                            Label = zone.label,
-                            BaseLabel = zone.BaseLabel,
-                            Type = zone.GetType().Name,
-                            Storage = stockpile == null ? null : GetStorageFilter(stockpile.settings),
-                            Growing = GetZoneGrowing(zone as Zone_Growing, map),
-                        }
-                    );
+                    zones.Add(GetZoneDto(zone, map));
                 }
 
                 return zones;
@@ -449,6 +437,24 @@ namespace RIMAPI.Helpers
             {
                 throw;
             }
+        }
+
+        // One zone in the shape the zones read reports it (fox ticket #4316:
+        // the rename route answers the zone it wrote, and a second copy of
+        // these five fields would drift from this one).
+        public static ZoneDto GetZoneDto(Zone zone, Map map)
+        {
+            Zone_Stockpile stockpile = zone as Zone_Stockpile;
+            return new ZoneDto
+            {
+                Id = zone.ID,
+                CellsCount = zone.CellCount,
+                Label = zone.label,
+                BaseLabel = zone.BaseLabel,
+                Type = zone.GetType().Name,
+                Storage = stockpile == null ? null : GetStorageFilter(stockpile.settings),
+                Growing = GetZoneGrowing(zone as Zone_Growing, map),
+            };
         }
 
         // GetZoneGrowing counts one growing zone's cells: which of them carry a
@@ -476,6 +482,7 @@ namespace RIMAPI.Helpers
                 PlantDefName = plantDef?.defName ?? "None",
                 PlantLabel = plantDef?.label,
                 AllowSow = zone.allowSow,
+                AllowCut = zone.allowCut,
             };
 
             // Every plant count stays on the zone's own crop (fox tickets #3677,

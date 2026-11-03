@@ -177,6 +177,7 @@ namespace RIMAPI.Helpers
                 HasDyingFromPollution = false,
                 HasDyingFromNoPollution = false,
                 IsSowing = zone.allowSow,
+                AllowCut = zone.allowCut,
                 SoilType = GetSoilType(zone.Cells.FirstOrDefault(), map),
                 Fertility = GetZoneFertility(zone, map),
             };

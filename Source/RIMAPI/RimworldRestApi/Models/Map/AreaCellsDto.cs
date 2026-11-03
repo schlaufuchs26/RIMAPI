@@ -43,6 +43,9 @@ namespace RIMAPI.Models.Map
         /// <summary>Cells the expand call turned on; 0 on a plain read.</summary>
         public int Added { get; set; }
 
+        /// <summary>Cells the shrink call turned off; 0 on a plain read.</summary>
+        public int Removed { get; set; }
+
         /// <summary>Cells of the rectangle the area already held; 0 on a plain read.</summary>
         public int Already { get; set; }
 

@@ -1396,3 +1396,366 @@ desc: |-
     }
     ```
   method: GET
+
+/api/v1/map/zone/growing/plants:
+  desc: |-
+    Lists the crops this growing zone's Plant button offers: the game's own
+    list of valid plants for the zone, minus the crops whose research is not
+    finished and the ones that need a permanent darkness the map does not have.
+    Each entry names the Plants skill a colonist needs to sow it.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request GET \
+    --url 'http://localhost:8765/api/v1/map/zone/growing/plants?map_id=0&zone_id=5'
+    ```
+  request: ''
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "zone_id": 5,
+            "plant_def_name": "Plant_Rice",
+            "plants": [
+                {
+                    "def_name": "Plant_Potato",
+                    "label": "potato plant",
+                    "sow_min_skill": 0,
+                    "purpose": "Food"
+                },
+                {
+                    "def_name": "Plant_Rice",
+                    "label": "rice plant",
+                    "sow_min_skill": 0,
+                    "purpose": "Food"
+                }
+            ]
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: GET
+
+/api/v1/map/zone/growing/update:
+  desc: |-
+    Sets a growing zone's crop and its two gizmo toggles. Every field except
+    map_id and zone_id is optional, and a body that names none of them is
+    refused. The crop must be one the zone's own Plant list offers; a crop no
+    colonist can plant answers with the game's warning instead of failing.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/zone/growing/update' \
+    --header 'content-type: application/json' \
+    --data '{
+      "map_id": 0,
+      "zone_id": 5,
+      "plant_def": "Plant_Rice",
+      "allow_sow": true,
+      "allow_cut": false
+    }'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+      "map_id": 0,
+      "zone_id": 5,
+      "plant_def": "Plant_Rice",
+      "allow_sow": true,
+      "allow_cut": false
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "zone": {
+                "id": 5,
+                "cells_count": 36,
+                "label": "Growing zone 1",
+                "base_label": "Growing zone"
+            },
+            "plant_def_name": "Plant_Rice",
+            "plant_count": 6,
+            "def_expected_yield": 0,
+            "expected_yield": 0,
+            "infected_count": 0,
+            "growth_progress": 0.5825427,
+            "is_sowing": true,
+            "allow_cut": false,
+            "soil_type": "Soil",
+            "fertility": 1.0,
+            "has_dying": false,
+            "has_dying_from_pollution": false,
+            "has_dying_from_no_pollution": false
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/zone/rename:
+  desc: |-
+    Renames a zone, whatever its type, under the same rules as the game's
+    rename dialog: an empty name, a name longer than 28 characters, a name
+    another zone carries and a name a storage group carries are refused.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/zone/rename' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "zone_id": 5, "label": "Rice field"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "zone_id": 5, "label": "Rice field"}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 5,
+            "cells_count": 36,
+            "label": "Rice field",
+            "base_label": "Growing zone",
+            "type": "Zone_Growing"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/area:
+  - desc: |-
+      Reads one area's cells as rectangles: where the Home area reaches, which
+      is where colonists haul and therefore where a blueprint is ever built.
+      An empty label means Home.
+    curl: |-
+      **Example:**
+      ```bash
+      curl --request GET \
+      --url 'http://localhost:8765/api/v1/map/area?map_id=0&label=Home'
+      ```
+    request: ''
+    response: |-
+      **Response:**
+      ```json
+      {
+          "success": true,
+          "data": {
+              "id": 1,
+              "label": "Home",
+              "type": "Area_Home",
+              "cells_count": 1200,
+              "bounds": {"x1": 100, "z1": 100, "x2": 150, "z2": 130},
+              "rects": [{"x1": 100, "z1": 100, "x2": 150, "z2": 130}]
+          },
+          "errors": [],
+          "warnings": [],
+          "timestamp": "2025-12-11T19:53:31.8379705Z"
+      }
+      ```
+    method: GET
+  - desc: |-
+      The Manage areas dialog's New area button: an empty allowed area, at most
+      10 per map. Without a label the game's own default name is used, and an
+      empty area paints no cells until the expand route is called.
+    curl: |-
+      **Example:**
+      ```bash
+      curl --request POST \
+      --url 'http://localhost:8765/api/v1/map/area' \
+      --header 'content-type: application/json' \
+      --data '{"map_id": 0, "label": "Rice field"}'
+      ```
+    request: |-
+      **Request:**
+      ```json
+      {"map_id": 0, "label": "Rice field"}
+      ```
+    response: |-
+      **Response:**
+      ```json
+      {
+          "success": true,
+          "data": {
+              "id": 12,
+              "label": "Rice field",
+              "type": "Area_Allowed",
+              "cells_count": 0
+          },
+          "errors": [],
+          "warnings": [],
+          "timestamp": "2025-12-11T19:53:31.8379705Z"
+      }
+      ```
+    method: POST
+
+/api/v1/map/area/rename:
+  desc: |-
+    The Manage areas dialog's Rename button, under the dialog's own rules. The
+    game's own areas (Home, Build roof, No roof) have no rename button and are
+    refused here too.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/area/rename' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "label": "Area 1", "new_label": "Rice field"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "label": "Area 1", "new_label": "Rice field"}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 12,
+            "label": "Rice field",
+            "type": "Area_Allowed",
+            "cells_count": 24,
+            "rects": [{"x1": 120, "z1": 130, "x2": 125, "z2": 133}]
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/area/invert:
+  desc: |-
+    The Manage areas dialog's Invert button: every cell outside the area comes
+    in and every cell inside goes out, over the whole map grid. Only the allowed
+    areas the dialog lists can be inverted.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/area/invert' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "label": "Rice field"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "label": "Rice field"}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 12,
+            "label": "Rice field",
+            "type": "Area_Allowed",
+            "cells_count": 23689
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/area/shrink:
+  desc: |-
+    The Manage areas dialog's Shrink button: clears a rectangle from the area,
+    the game's own shrink designator applied at once. The answer counts the
+    cells that left the area, the ones the rectangle covered but the area never
+    held, and the ones outside the map.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/area/shrink' \
+    --header 'content-type: application/json' \
+    --data '{
+      "map_id": 0,
+      "label": "Rice field",
+      "point_a": {"x":120,"y":0,"z":130},
+      "point_b": {"x":125,"y":0,"z":133}
+    }'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+      "map_id": 0,
+      "label": "Rice field",
+      "point_a": {"x":120,"y":0,"z":130},
+      "point_b": {"x":125,"y":0,"z":133}
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 12,
+            "label": "Rice field",
+            "type": "Area_Allowed",
+            "cells_count": 0,
+            "removed": 24,
+            "already": 0,
+            "outside": 0
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/area/delete:
+  desc: |-
+    The Manage areas dialog's Delete button: the area leaves the list and every
+    pawn restricted to it loses the restriction. The game's own areas cannot be
+    deleted.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request DELETE \
+    --url 'http://localhost:8765/api/v1/map/area/delete?map_id=0&label=Rice%20field'
+    ```
+  request: ''
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "area_id": 12,
+            "label": "Rice field",
+            "type": "Area_Allowed",
+            "cells_count": 0
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: DELETE

@@ -72,6 +72,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\SettlementRules.cs" Link="Linked\SettlementRules.cs" />
     <!-- The wording of an apparel policy's refusals (fox ticket #4212, gap 2). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApparelPolicyRules.cs" Link="Linked\ApparelPolicyRules.cs" />
+    <!-- The rules the game's own rename dialogs and Plant button enforce
+         (fox ticket #4316, parity wave 6). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ZoneEditRules.cs" Link="Linked\ZoneEditRules.cs" />
     <!-- The bounds of a drug policy write (fox ticket #4212, gap 3). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DrugPolicyRules.cs" Link="Linked\DrugPolicyRules.cs" />
     <!-- The wording of an operation's refusals (fox ticket #4212, gap 4). -->

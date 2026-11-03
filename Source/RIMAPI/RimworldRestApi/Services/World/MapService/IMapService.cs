@@ -49,6 +49,16 @@ namespace RIMAPI.Services
         ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request);
         ApiResult<StorageSettingsDto> UpdateThingStorage(UpdateStorageRequestDto request);
 
+        // The zone and area writes of parity wave 6 (fox ticket #4316).
+        ApiResult<GrowingZonePlantsDto> GetGrowingZonePlants(int mapId, int zoneId);
+        ApiResult<GrowingZoneDto> UpdateGrowingZone(UpdateGrowingZoneRequestDto request);
+        ApiResult<ZoneDto> RenameZone(RenameZoneRequestDto request);
+        ApiResult<AreaCellsDto> CreateArea(CreateAreaRequestDto request);
+        ApiResult<AreaCellsDto> RenameArea(RenameAreaRequestDto request);
+        ApiResult<AreaCellsDto> InvertArea(AreaChangeRequestDto request);
+        ApiResult<AreaCellsDto> ShrinkArea(ShrinkAreaRequestDto request);
+        ApiResult DeleteArea(AreaChangeRequestDto request);
+
         ApiResult<MapTimeDto> GetCurrentMapDatetime();
         ApiResult<MapTimeDto> GetWorldTileDatetime(int tileID);
     }

@@ -126,6 +126,81 @@ namespace RIMAPI.Services
 
         public ApiResult<StockpileResponseDto> UpdateStockpile(UpdateStockpileRequestDto request) => MapHelper.UpdateStockpile(request);
 
+        // The zone and area writes of parity wave 6 (fox ticket #4316). The map
+        // is resolved here, so the helper stays free of the lookup every route
+        // would otherwise repeat.
+        public ApiResult<GrowingZonePlantsDto> GetGrowingZonePlants(int mapId, int zoneId)
+        {
+            if (!TryMap(mapId, out Map map, out string error))
+            {
+                return ApiResult<GrowingZonePlantsDto>.Fail(error);
+            }
+            return ZoneEdit.GetSelectablePlants(map, zoneId);
+        }
+
+        public ApiResult<GrowingZoneDto> UpdateGrowingZone(UpdateGrowingZoneRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<GrowingZoneDto>.Fail(error);
+            }
+            return ZoneEdit.UpdateGrowingZone(map, request);
+        }
+
+        public ApiResult<ZoneDto> RenameZone(RenameZoneRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<ZoneDto>.Fail(error);
+            }
+            return ZoneEdit.RenameZone(map, request);
+        }
+
+        public ApiResult<AreaCellsDto> CreateArea(CreateAreaRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ZoneEdit.CreateArea(map, request);
+        }
+
+        public ApiResult<AreaCellsDto> RenameArea(RenameAreaRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ZoneEdit.RenameArea(map, request);
+        }
+
+        public ApiResult<AreaCellsDto> InvertArea(AreaChangeRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ZoneEdit.InvertArea(map, request);
+        }
+
+        public ApiResult<AreaCellsDto> ShrinkArea(ShrinkAreaRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ZoneEdit.ShrinkArea(map, request);
+        }
+
+        public ApiResult DeleteArea(AreaChangeRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult.Fail(error);
+            }
+            return ZoneEdit.DeleteArea(map, request);
+        }
+
         public ApiResult<StorageSettingsDto> UpdateThingStorage(UpdateStorageRequestDto request) => MapHelper.UpdateThingStorage(request);
     }
 }

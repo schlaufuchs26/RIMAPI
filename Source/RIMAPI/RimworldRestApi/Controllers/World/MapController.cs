@@ -241,6 +241,98 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Get("/api/v1/map/zone/growing/plants")]
+        [ResponseBody(typeof(GrowingZonePlantsDto))]
+        [QueryParameters("map_id:integer", "zone_id:integer")]
+        [EndpointMetadata("List the crops a growing zone can sow", Notes = "The crops this zone's Plant button offers: the game's own list, minus the ones whose research is missing, with the Plants skill each needs")]
+        public async Task GetGrowingZonePlants(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var zoneId = RequestParser.GetZoneId(context);
+            var result = _mapService.GetGrowingZonePlants(mapId, zoneId);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/zone/growing/update")]
+        [ResponseBody(typeof(GrowingZoneDto))]
+        [RequestBody(typeof(UpdateGrowingZoneRequestDto))]
+        [EndpointMetadata("Set a growing zone's crop and toggles", Notes = "The Plant button's crop and the Sow and Cut gizmos; a crop outside the zone's own list is refused, and a crop no colonist can plant answers the game's warning")]
+        public async Task UpdateGrowingZone(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<UpdateGrowingZoneRequestDto>();
+            var result = _mapService.UpdateGrowingZone(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/zone/rename")]
+        [ResponseBody(typeof(ZoneDto))]
+        [RequestBody(typeof(RenameZoneRequestDto))]
+        [EndpointMetadata("Rename a zone", Notes = "The zone's rename dialog: an empty name, one longer than 28 characters, one another zone carries or one a storage group carries is refused")]
+        public async Task RenameZone(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<RenameZoneRequestDto>();
+            var result = _mapService.RenameZone(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/area")]
+        [ResponseBody(typeof(AreaCellsDto))]
+        [RequestBody(typeof(CreateAreaRequestDto))]
+        [EndpointMetadata("Create an allowed area", Notes = "The Manage areas dialog's New area button: an empty allowed area, at most 10 per map, with the game's own default name unless one is sent")]
+        public async Task CreateArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<CreateAreaRequestDto>();
+            var result = _mapService.CreateArea(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/area/rename")]
+        [ResponseBody(typeof(AreaCellsDto))]
+        [RequestBody(typeof(RenameAreaRequestDto))]
+        [EndpointMetadata("Rename an allowed area", Notes = "The Manage areas dialog's Rename button, under the dialog's own rules; the game's own areas (Home, Build roof) have no rename")]
+        public async Task RenameArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<RenameAreaRequestDto>();
+            var result = _mapService.RenameArea(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/area/invert")]
+        [ResponseBody(typeof(AreaCellsDto))]
+        [RequestBody(typeof(AreaChangeRequestDto))]
+        [EndpointMetadata("Invert an allowed area", Notes = "The Manage areas dialog's Invert button: every cell outside the area comes in and every cell inside goes out, over the whole map grid")]
+        public async Task InvertArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<AreaChangeRequestDto>();
+            var result = _mapService.InvertArea(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/area/shrink")]
+        [ResponseBody(typeof(AreaCellsDto))]
+        [RequestBody(typeof(ShrinkAreaRequestDto))]
+        [EndpointMetadata("Shrink an area by a rectangle", Notes = "The Manage areas dialog's Shrink button: clear a rectangle from the area and report how many cells left it, how many were never in it and how many were outside the map")]
+        public async Task ShrinkArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<ShrinkAreaRequestDto>();
+            var result = _mapService.ShrinkArea(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Delete("/api/v1/map/area/delete")]
+        [ResponseBody]
+        [QueryParameters("map_id:integer", "label:string?")]
+        [EndpointMetadata("Delete an allowed area", Notes = "The Manage areas dialog's Delete button: the area leaves the list and every pawn restricted to it loses the restriction; the game's own areas cannot be deleted")]
+        public async Task DeleteArea(HttpListenerContext context)
+        {
+            var mapId = RequestParser.GetMapId(context);
+            var label = RequestParser.GetStringParameter(context, "label", false);
+            var result = _mapService.DeleteArea(
+                new AreaChangeRequestDto { MapId = mapId, Label = label }
+            );
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/zones")]
         [ResponseBody(typeof(MapZonesDto))]
         [QueryParameters("map_id:integer")]
