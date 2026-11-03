@@ -33,15 +33,18 @@
     <Error Text="Release-1.5 was dropped (#3285): this mod builds only for RimWorld 1.6. Use -c Release-1.6." />
   </Target>
 
-  <!-- Embed git hash into AssemblyInformationalVersion as "1.9.0+<hash>" -->
+  <!-- Embed the commit hash into AssemblyInformationalVersion as "1.9.0+<hash>".
+       The SDK fills SourceRevisionId from the checkout's own .git, so the build
+       needs no git on PATH: a hand-run `nix-shell -p dotnet-sdk_8` has none, and
+       an Exec that shells out to git fails hard when the tool itself is missing,
+       which IgnoreExitCode does not cover (ticket #4324). A tree without .git,
+       such as an unpacked source tarball, gets "unknown". -->
   <Target Name="SetSourceRevisionId" BeforeTargets="AddSourceRevisionToInformationalVersion">
-    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true"
-          WorkingDirectory="$(MSBuildProjectDirectory)">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_GitRevisionRaw" />
-    </Exec>
     <PropertyGroup>
-      <SourceRevisionId Condition="'$(_GitRevisionRaw.Trim())' != ''">$(_GitRevisionRaw.Trim())</SourceRevisionId>
-      <SourceRevisionId Condition="'$(_GitRevisionRaw.Trim())' == ''">unknown</SourceRevisionId>
+      <_GitRevision>$([System.String]::Copy('$(SourceRevisionId)'))</_GitRevision>
+      <!-- Short form: the mod's settings page shows this next to the version. -->
+      <SourceRevisionId Condition="'$(_GitRevision)' != ''">$(_GitRevision.Substring(0, 7))</SourceRevisionId>
+      <SourceRevisionId Condition="'$(SourceRevisionId)' == ''">unknown</SourceRevisionId>
     </PropertyGroup>
   </Target>
 
