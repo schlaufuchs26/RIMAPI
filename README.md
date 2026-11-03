@@ -60,6 +60,15 @@ Share your projects - send integrations on discord server
 
 > More information in the documentation.
 
+### TypeScript client
+
+`clients/typescript/` holds a type-safe TypeScript client generated from the
+mod's own OpenAPI document: one typed method per operation, request and
+response types from the schemas, a refusal raised as an error carrying the
+game's sentence, retry, a read-only mode and a one-agent-at-a-time claim. See
+[`clients/typescript/README.md`](clients/typescript/README.md) for use and for
+how to regenerate it after an API change.
+
 ![alt text](../media/media/banner_post_edit_pawn.jpg)
 
 ## 📄 License

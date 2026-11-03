@@ -1,0 +1,20 @@
+{
+  "name": "rimapi-client",
+  "version": "0.1.0",
+  "description": "Type-safe TypeScript client for the RIMAPI RimWorld mod, generated from its own OpenAPI document.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate:rimworld-client": "bun scripts/generate.ts",
+    "snapshot:rimworld-spec": "bun scripts/snapshot.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test",
+    "check": "bun scripts/generate.ts --check && bun run typecheck && bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4",
+    "typescript": "5.9.3"
+  }
+}

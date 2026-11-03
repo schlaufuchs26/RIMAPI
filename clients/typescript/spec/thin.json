@@ -1,0 +1,16 @@
+{
+  "counts": {
+    "freeFormFields": 1,
+    "operations": 298,
+    "typedRoutes": 298,
+    "untypedRoutes": 0
+  },
+  "fields": [
+    {
+      "property": "statistics",
+      "reason": "property has no schema",
+      "schema": "CacheStatusDto"
+    }
+  ],
+  "routes": []
+}

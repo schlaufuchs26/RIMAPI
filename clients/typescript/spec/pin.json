@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "operations": 298,
+  "paths": 293,
+  "sha256": "7cea954071d33b70346b48f2d100566e3a49224c2b1852f84f98148ab760443d",
+  "source": "http://localhost:8767/api/v1/docs?format=openapi-json",
+  "taken": "2026-11-03",
+  "version": "1.10.0"
+}
