@@ -38,6 +38,11 @@ The checker allows such a route and reports the line as stale as soon as the
 route is documented or gone, so the list cannot hide a doc block that later
 disappears.
 
+The English YAML under `docs/_api_macroses/controllers/` is the documentation;
+upstream's Russian mirror in `ru/` is not required. The checker therefore
+reports a route with no `ru` entry only under `--translations`, which is how
+that mirror is kept in sync on purpose rather than on every new endpoint.
+
 `mkdocs_check_api.py` only proves that every route is documented, not that the
 example under it is true. The examples are hand-written, so they keep fields a
 route no longer sends. `mkdocs_capture_examples.py` repeats each block's own

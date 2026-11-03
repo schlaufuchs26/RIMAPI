@@ -156,7 +156,7 @@ without a summary and a summary outside that format.
 
 Finally, add an entry for your new endpoint to the controller's YAML file in `docs/_api_macroses/controllers/` (for example `UIController.yml`). This makes it visible in the API documentation.
 
-`python scripts/docs/mkdocs_check_api.py` fails while a route has no YAML block. If you mean to leave the endpoint undocumented for now, add its line to `scripts/docs/undocumented_routes.txt` instead: the checker then allows it and reports the line as stale once the route is documented or removed.
+`python scripts/docs/mkdocs_check_api.py` fails while a route has no YAML block. If you mean to leave the endpoint undocumented for now, add its line to `scripts/docs/undocumented_routes.txt` instead: the checker then allows it and reports the line as stale once the route is documented or removed. Upstream's Russian mirror under `docs/_api_macroses/controllers/ru/` is optional: only `--translations` asks for a `ru` entry per route.
 
 ```yaml
     "/api/v1/example":

@@ -7,6 +7,10 @@ Three states matter (ticket #4109 in fuchs):
   its line stands in scripts/docs/undocumented_routes.txt;
 - a line in that list whose route is documented now, or gone from C#, is stale
   and counts as a warning: it would hide a later deletion of that documentation.
+
+The upstream Russian mirror under docs/_api_macroses/controllers/ru/ is checked
+only with --translations (ticket #4319): the fork documents in English, so a
+route that upstream's translator has not reached yet must not fail the gate.
 """
 
 import argparse
@@ -217,8 +221,13 @@ def check_examples(root="."):
     return errors
 
 
-def run_validation(root=".", allowlist=None):
-    """Runs every check and returns the counts; prints one line per finding."""
+def run_validation(root=".", allowlist=None, translations=False):
+    """Runs every check and returns the counts; prints one line per finding.
+
+    translations=False skips the mirror checks (section 3), so a route without
+    a <Controller>.<lang>.yml entry is not reported: the fork keeps English docs
+    and upstream's Russian files lag behind its new routes (ticket #4319).
+    """
     print("🔍 Scanning C# Controllers and YAML Documentation...\n")
 
     allowlist_path = allowlist or os.path.join(root, ALLOWLIST)
@@ -291,9 +300,11 @@ def run_validation(root=".", allowlist=None):
             )
             result.warnings += 1
 
-    # ── 3. Translation checks ─────────────────────────────────────────────────
+    # ── 3. Translation checks (opt-in, --translations) ────────────────────────
 
-    for lang, lang_controllers in translation_routes.items():
+    for lang, lang_controllers in (
+        translation_routes.items() if translations else ()
+    ):
         for controller, trans_routes in lang_controllers.items():
 
             # Orphaned translation: no base file exists
@@ -352,9 +363,17 @@ def main(argv=None):
         default=None,
         help=f"routes deliberately left undocumented (default: <root>/{ALLOWLIST})",
     )
+    parser.add_argument(
+        "--translations",
+        action="store_true",
+        help="also require a <Controller>.<lang>.yml entry for every documented "
+        "route (off by default: the fork documents in English, ticket #4319)",
+    )
     args = parser.parse_args(argv)
 
-    result = run_validation(root=args.root, allowlist=args.allowlist)
+    result = run_validation(
+        root=args.root, allowlist=args.allowlist, translations=args.translations
+    )
     return 0 if result.errors == 0 and result.warnings == 0 else 1
 
 
