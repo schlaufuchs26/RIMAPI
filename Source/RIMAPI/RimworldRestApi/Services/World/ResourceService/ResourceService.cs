@@ -49,12 +49,12 @@ namespace RIMAPI.Services
         public ApiResult SpawnItem(SpawnItemRequestDto request)
         {
             Map map = Find.CurrentMap;
-            IntVec3 cell = new IntVec3(request.x, 0, request.z);
+            IntVec3 cell = new IntVec3(request.X, 0, request.Z);
 
             // 1. Safety Checks
             if (map == null || !cell.InBounds(map)) return ApiResult.Fail("Safety Checks");
 
-            ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(request.defName);
+            ThingDef def = DefDatabase<ThingDef>.GetNamedSilentFail(request.DefName);
             if (def == null) return ApiResult.Fail("def == null");
 
             // 2. STOP if trying to spawn a Pawn (Human/Animal) with this method
@@ -68,9 +68,9 @@ namespace RIMAPI.Services
             ThingDef stuffDef = null;
             if (def.MadeFromStuff)
             {
-                if (!string.IsNullOrEmpty(request.stuffDefName))
+                if (!string.IsNullOrEmpty(request.StuffDefName))
                 {
-                    stuffDef = DefDatabase<ThingDef>.GetNamedSilentFail(request.stuffDefName);
+                    stuffDef = DefDatabase<ThingDef>.GetNamedSilentFail(request.StuffDefName);
                 }
 
                 // Fallback: If no stuff provided, pick the default cheap one (usually Wood/Steel)
@@ -82,14 +82,14 @@ namespace RIMAPI.Services
 
             // 4. Create the Thing
             Thing thing = ThingMaker.MakeThing(def, stuffDef);
-            thing.stackCount = UnityEngine.Mathf.Min(request.amount, def.stackLimit);
+            thing.stackCount = UnityEngine.Mathf.Min(request.Amount, def.stackLimit);
 
             // 5. Apply Quality (Optional)
             // Only applies if the item HAS a quality component (like weapons/art/apparel)
             CompQuality compQuality = thing.TryGetComp<CompQuality>();
-            if (compQuality != null && !string.IsNullOrEmpty(request.quality))
+            if (compQuality != null && !string.IsNullOrEmpty(request.Quality))
             {
-                if (Enum.TryParse(request.quality, true, out QualityCategory qc))
+                if (Enum.TryParse(request.Quality, true, out QualityCategory qc))
                 {
                     compQuality.SetQuality(qc, ArtGenerationContext.Outsider);
                 }

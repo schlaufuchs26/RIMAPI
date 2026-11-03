@@ -196,11 +196,20 @@ namespace RIMAPI.Models
 
     public class SpawnItemRequestDto
     {
-        public string defName;      // "Gun_Revolver"
-        public string stuffDefName; // "Steel" (Optional, can be null)
-        public string quality;      // "Normal", "Good", "Legendary" (Optional)
-        public int amount;
-        public int x;
-        public int z;
+        [ParameterDescription("The def name of the item to spawn, e.g. \"Gun_Revolver\".")]
+        public string DefName { get; set; }
+
+        [ParameterDescription("The material to build it from, e.g. \"Steel\"; empty for a def without one.")]
+        public string StuffDefName { get; set; }
+
+        [ParameterDescription("The quality to give it: Awful through Legendary; empty leaves the game's default.")]
+        public string Quality { get; set; }
+
+        [ParameterDescription("How many units to spawn, capped at the def's stack limit.")]
+        public int Amount { get; set; }
+
+        public int X { get; set; }
+
+        public int Z { get; set; }
     }
 }

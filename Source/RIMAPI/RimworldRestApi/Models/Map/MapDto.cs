@@ -45,14 +45,20 @@ namespace RIMAPI.Models
         public int TotalConsumption { get; set; }
         [ParameterDescription("How much of that draw comes from machines that are switched on.")]
         public int ConsumptionPowerOn { get; set; }
-        public List<int> ProducePowerBuildings = new List<int>();
-        public List<int> ConsumePowerBuildings = new List<int>();
-        public List<int> StorePowerBuildings = new List<int>();
+        [ParameterDescription("The producers the power net feeds, by building id.")]
+        public List<int> ProducePowerBuildings { get; set; } = new List<int>();
+
+        [ParameterDescription("The consumers the power net feeds, by building id.")]
+        public List<int> ConsumePowerBuildings { get; set; } = new List<int>();
+
+        [ParameterDescription("The batteries the power net holds, by building id.")]
+        public List<int> StorePowerBuildings { get; set; } = new List<int>();
         // Buildings answers every built building with a power comp, one row
         // each (fox ticket #3762). The figures above sum the nets, so a machine
         // no net reaches is in none of them; this row list is where an
         // unconnected stove or cooler becomes visible.
-        public List<PoweredBuildingDto> Buildings = new List<PoweredBuildingDto>();
+        [ParameterDescription("Every built building with a power comp, one row each.")]
+        public List<PoweredBuildingDto> Buildings { get; set; } = new List<PoweredBuildingDto>();
 
         // TicksSinceLoad is how many ticks the colony has run since it was
         // loaded, -1 when this build saw no load (fox ticket #3781). Every
