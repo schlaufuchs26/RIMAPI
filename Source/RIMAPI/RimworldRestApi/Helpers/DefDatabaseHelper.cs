@@ -401,7 +401,7 @@ namespace RIMAPI.Helpers
                     DefName = ms.defName,
                     Label = ms.LabelCap,
                     Description = ms.description,
-                    RecoveryMtbDays = ms.recoveryMtbDays,
+                    RecoveryMtbDays = FiniteFloat.OrNull(ms.recoveryMtbDays),
                     IsAggro = ms.IsAggro,
                 })
                 .ToList();

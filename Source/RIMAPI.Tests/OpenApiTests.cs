@@ -289,6 +289,21 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void ANullableFloatIsANumberOrNull()
+        {
+            JObject schema = (JObject)
+                OpenApiDocument.Build(Fixture())["components"]["schemas"]["OpenApiTestRequest"];
+
+            // Ticket #4315: a float the game never set is null on the wire, so
+            // the schema may not call it a plain number.
+            var branches = schema["properties"]["average"]["anyOf"]
+                .Select(token => (string)token["type"])
+                .ToArray();
+            Assert.Equal(new[] { "number", "null" }, branches);
+            Assert.DoesNotContain("average", schema["required"].Select(token => (string)token));
+        }
+
+        [Fact]
         public void AFieldTheSerializerLeavesOutIsNotRequired()
         {
             JObject document = OpenApiDocument.Build(Fixture());
@@ -484,5 +499,9 @@ namespace RIMAPI.Models
 
         public OpenApiTestKind Kind { get; set; }
         public List<OpenApiTestRequest> Nested { get; set; }
+
+        // A float the game may not set, the way MentalStateDefDto's recovery
+        // time is (ticket #4315): the schema has to allow null beside number.
+        public float? Average { get; set; }
     }
 }

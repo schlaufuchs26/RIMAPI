@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using RimWorld;
 using RIMAPI.Core;
 
@@ -624,8 +625,9 @@ namespace RIMAPI.Models
         public string DefName { get; set; }
         public string Label { get; set; }
         public string Description { get; set; }
-        [ParameterDescription("How many days until the state ends, on average.")]
-        public float RecoveryMtbDays { get; set; }
+        [ParameterDescription("How many days until the state ends, on average; null when the game sets no value.")]
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
+        public float? RecoveryMtbDays { get; set; }
         [ParameterDescription("Whether the state attacks others.")]
         public bool IsAggro { get; set; }
     }

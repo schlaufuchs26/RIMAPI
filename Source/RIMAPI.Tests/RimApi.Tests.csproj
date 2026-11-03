@@ -173,6 +173,9 @@
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ApiSecurityHelper.cs" Link="Linked\ApiSecurityHelper.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Services\Pawns\CombatService\GasHazard.cs" Link="Linked\GasHazard.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\SnakeCaseContractResolver.cs" Link="Linked\SnakeCaseContractResolver.cs" />
+    <!-- A float the game never set is NaN, which the serializer would quote as
+         "NaN" (fox ticket #4315): it travels as null instead. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FiniteFloat.cs" Link="Linked\FiniteFloat.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\HttpContext\QueryFilter.cs" Link="Linked\QueryFilter.cs" />
     <!-- What a malformed call answers with (fox ticket #3769): a missing
          parameter is a 400 with its own sentence, not a server fault whose text
