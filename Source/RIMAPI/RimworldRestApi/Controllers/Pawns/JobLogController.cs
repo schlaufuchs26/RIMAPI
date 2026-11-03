@@ -22,7 +22,7 @@ namespace RIMAPI.Controllers
         // entry each pawn was in at that tick, so the first span has a start.
         [Get("/api/v1/colonists/job-log")]
         [ResponseBody(typeof(JobLogDto))]
-        [QueryParameters("since_tick:string?")]
+        [QueryParameters("since_tick:string?=Only job changes after this game tick are listed.")]
         [EndpointMetadata("List the job changes since a tick", Notes = "Job changes of the colony's colonists since a tick: pawn, job def, label, target")]
         public async Task GetJobLog(HttpListenerContext context)
         {

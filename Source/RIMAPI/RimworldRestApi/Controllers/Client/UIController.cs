@@ -78,7 +78,7 @@ namespace RIMAPI.BaseControllers
         }
 
         [Get("/api/v1/ui/letters")]
-        [QueryParameters("archive:string?", "limit:integer?", "peek:string?", "since:integer?")]
+        [QueryParameters("archive:string?=When true, read the archived letters instead of the live stack.", "limit:integer?", "peek:string?=Which field of each letter to read, by name.", "since:integer?")]
         [EndpointMetadata("List the letters on the stack", Notes = "List the letters on the game's letter stack: id, title, first line of the body, kind (LetterDef), arrival tick, whether no earlier reporting read has shown it, whether the game's own dismiss applies, and whether the game's auto-pause rule pauses the clock for it. The read marks the stack seen; add ?peek=1 to look without marking it, which is what the digest and the wait do. Add ?archive=1 to read the letters the game received instead of the ones still standing (query: since=<tick>, limit=<n>): the stack drops a letter whose target is gone, so a letter that paused the game can be off it by the next look.")]
         [ResponseBody(typeof(List<LetterDto>))]
         public async Task ListLetters(HttpListenerContext context)

@@ -45,7 +45,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/research/project")]
         [ResponseBody(typeof(ResearchProjectDto))]
-        [QueryParameters("name:string")]
+        [QueryParameters("name:string=The research project's def name, e.g. \"Electricity\".")]
         [EndpointMetadata("Get one research project")]
         public async Task GetResearchProjectByName(HttpListenerContext context)
         {
@@ -65,7 +65,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/research/target")]
         [ResponseBody(typeof(ResearchProjectDto))]
-        [QueryParameters("force:boolean?", "name:string")]
+        [QueryParameters("force:boolean?=Set the project even when another one is already running.", "name:string=The research project's def name, e.g. \"Electricity\".")]
         [EndpointMetadata("Set the current research project by defName")]
         public async Task SetResearchTarget(HttpListenerContext context)
         {

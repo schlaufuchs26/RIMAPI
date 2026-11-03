@@ -7,16 +7,16 @@ namespace RIMAPI.Models
     [ModelDescription("Standard API response wrapper")]
     public class ApiResponse<T>
     {
-        [ParameterDescription("Indicates if the request was successful")]
+        [ParameterDescription("False when the game refused the call, true when it ran")]
         public bool Success { get; set; }
 
-        [ParameterDescription("The actual response data")]
+        [ParameterDescription("The route's payload, when the answer carries one")]
         public T Data { get; set; }
 
-        [ParameterDescription("Any warnings that occurred during processing")]
+        [ParameterDescription("What the call did but the caller should know")]
         public string[] Warnings { get; set; } = Array.Empty<string>();
 
-        [ParameterDescription("Error message if success is false")]
+        [ParameterDescription("Why the call failed, one sentence per refusal")]
         public string Error { get; set; }
     }
 

@@ -57,7 +57,7 @@ namespace RIMAPI.Controllers
 
         [Delete("/api/v1/pawn/operation")]
         [ResponseBody(typeof(PawnOperationsDto))]
-        [QueryParameters("id:string", "pawn_id:integer")]
+        [QueryParameters("id:string=The bill's id string, as the operation list reports it.", "pawn_id:integer")]
         [EndpointMetadata("Cancel an operation bill (?pawn_id=N&id=Bill_...)")]
         public async Task CancelOperation(HttpListenerContext context)
         {

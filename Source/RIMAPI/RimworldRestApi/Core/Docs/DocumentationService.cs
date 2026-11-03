@@ -153,6 +153,7 @@ namespace RIMAPI.Core
                             Type = spec.Type,
                             Source = "query",
                             Required = spec.Required,
+                            Description = spec.Description,
                         }
                     );
                 }
@@ -184,7 +185,11 @@ namespace RIMAPI.Core
                             ? "path"
                             : "query",
                         Required = !param.IsOptional,
-                        Description = paramDesc?.Description ?? GetParameterDescription(param),
+                        // The text sits on the parameter; a shared name
+                        // (pawn_id, map_id) takes it from the registry, so the
+                        // sentence is written once (ticket #4313).
+                        Description = paramDesc?.Description
+                            ?? ParameterDescriptions.For(param.Name),
                         Example = paramDesc?.Example,
                     }
                 );
@@ -310,22 +315,6 @@ namespace RIMAPI.Core
                 return $"{baseName}<{string.Join(", ", genericArgs.Select(GetTypeDisplayName))}>";
             }
             return type.Name;
-        }
-
-        private string GetParameterDescription(ParameterInfo param)
-        {
-            var paramName = param.Name.ToLower();
-
-            if (paramName.Contains("id"))
-                return "Unique identifier";
-            if (paramName.Contains("name"))
-                return "Display name";
-            if (paramName.Contains("type"))
-                return "Type classification";
-            if (paramName.Contains("count"))
-                return "Number of items";
-
-            return $"Parameter: {param.Name}";
         }
 
         private string GetTagCssClass(string tag)

@@ -31,7 +31,7 @@ namespace RIMAPI.Controllers
         [Post("/api/v1/world/caravan/form")]
         [ResponseBody(typeof(FormCaravanResultDto))]
         [RequestBody(typeof(FormCaravanRequest))]
-        [QueryParameters("destination_tile:integer?", "map_id:integer?")]
+        [QueryParameters("destination_tile:integer?=The world tile to travel to, as the world grid numbers them.", "map_id:integer?")]
         [EndpointMetadata("Form a caravan", Notes = "Send named pawns and goods off as a caravan to a tile, the game's own form-and-send jobs")]
         public async Task FormCaravan(HttpListenerContext context)
         {

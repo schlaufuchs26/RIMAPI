@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -198,8 +199,10 @@ namespace RIMAPI.Core
                     ["required"] = location == "path" || parameter.Required,
                     ["schema"] = schema,
                 };
-                if (!string.IsNullOrWhiteSpace(parameter.Description))
-                    entry["description"] = parameter.Description;
+                string description = parameter.Description
+                    ?? ParameterDescriptions.For(parameter.Name);
+                if (!string.IsNullOrWhiteSpace(description))
+                    entry["description"] = description;
 
                 parameters.Add(entry);
             }
@@ -218,6 +221,8 @@ namespace RIMAPI.Core
                         ["in"] = "path",
                         ["required"] = true,
                         ["schema"] = new JObject { ["type"] = "string" },
+                        ["description"] = ParameterDescriptions.For(name)
+                            ?? "The record's key, as the route pattern names it.",
                     }
                 );
             }
@@ -498,19 +503,30 @@ namespace RIMAPI.Core
                 schema["required"] = new JArray("success", "timestamp", "tick");
                 schema["properties"] = new JObject
                 {
-                    ["success"] = new JObject { ["type"] = "boolean" },
+                    ["success"] = new JObject
+                    {
+                        ["type"] = "boolean",
+                        ["description"] = "False when the game refused the call; the reason is in errors.",
+                    },
                     ["data"] = data,
                     ["errors"] = new JObject
                     {
                         ["type"] = "array",
                         ["items"] = new JObject { ["type"] = "string" },
+                        ["description"] = "Why the call failed, one sentence per refusal; empty on success.",
                     },
                     ["warnings"] = new JObject
                     {
                         ["type"] = "array",
                         ["items"] = new JObject { ["type"] = "string" },
+                        ["description"] = "What the call did but the caller should know; empty when nothing applies.",
                     },
-                    ["timestamp"] = new JObject { ["type"] = "string", ["format"] = "date-time" },
+                    ["timestamp"] = new JObject
+                    {
+                        ["type"] = "string",
+                        ["format"] = "date-time",
+                        ["description"] = "When the answer was built, as the server's UTC clock reads it.",
+                    },
                     ["tick"] = new JObject
                     {
                         ["type"] = "integer",
@@ -570,6 +586,12 @@ namespace RIMAPI.Core
                         ["type"] = "object",
                         ["additionalProperties"] = false,
                     };
+                    var model = type
+                        .GetCustomAttributes(typeof(ModelDescriptionAttribute), true)
+                        .OfType<ModelDescriptionAttribute>()
+                        .FirstOrDefault();
+                    if (model != null)
+                        schema["description"] = model.Description;
                     Components[name] = schema;
                     Fill(type, schema);
                 }
@@ -593,7 +615,16 @@ namespace RIMAPI.Core
                         if (property.Ignored || string.IsNullOrEmpty(property.PropertyName))
                             continue;
 
-                        properties[property.PropertyName] = Build(property.PropertyType);
+                        JToken propertySchema = Build(property.PropertyType);
+
+                        // The text sits on the C# property, or comes from the
+                        // shared registry for a name that means the same thing
+                        // everywhere (label, def_name, map_id); ticket #4313.
+                        string description = PropertyDescription(property);
+                        if (!string.IsNullOrWhiteSpace(description))
+                            propertySchema["description"] = description;
+
+                        properties[property.PropertyName] = propertySchema;
 
                         // A field is required only when the serializer always
                         // writes it: a nullable or reference-typed field can be
@@ -620,8 +651,35 @@ namespace RIMAPI.Core
                 _building.Remove(type);
             }
 
-            private static bool IsModel(Type type)
+            /// <summary>
+            /// What the field means: the text on the C# property, or the
+            /// shared sentence for a name that means the same thing on every
+            /// route. Null when neither exists, which the description gate
+            /// reports (ticket #4313).
+            /// </summary>
+            private static string PropertyDescription(JsonProperty property)
             {
+                PropertyInfo info = property.DeclaringType == null || property.UnderlyingName == null
+                    ? null
+                    : property.DeclaringType.GetProperty(
+                        property.UnderlyingName,
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
+                    );
+
+                if (info != null)
+                {
+                    var declared = info
+                        .GetCustomAttributes(typeof(ParameterDescriptionAttribute), true)
+                        .OfType<ParameterDescriptionAttribute>()
+                        .FirstOrDefault();
+                    if (declared != null && !string.IsNullOrWhiteSpace(declared.Description))
+                        return declared.Description;
+                }
+
+                return ParameterDescriptions.For(property.PropertyName);
+            }
+
+            private static bool IsModel(Type type)            {
                 if (type.IsPrimitive)
                     return false;
 

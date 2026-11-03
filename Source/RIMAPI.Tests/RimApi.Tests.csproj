@@ -222,6 +222,10 @@
          the handler's service call answers. -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\ResponseBodyAttribute.cs" Link="Linked\ResponseBodyAttribute.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\QueryParametersAttribute.cs" Link="Linked\QueryParametersAttribute.cs" />
+    <!-- The description of a parameter or field, and the rule a gate applies
+         to it (fox ticket #4313): the shared sentences live here, the text a
+         route or DTO adds sits next to the thing it describes. -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\ParameterDescriptions.cs" Link="Linked\ParameterDescriptions.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\OpenApiDocument.cs" Link="Linked\OpenApiDocument.cs" />
     <Compile Include="..\RIMAPI\RimworldRestApi\Core\Docs\OpenApi\YamlWriter.cs" Link="Linked\YamlWriter.cs" />
     <!-- The route pattern conversion (fox ticket #4234): a parameter that

@@ -457,9 +457,13 @@ namespace RIMAPI.Tests
 
                 foreach (Match queryAttribute in QueryAttribute.Matches(attributes))
                 {
-                    foreach (Match literal in Regex.Matches(queryAttribute.Groups["args"].Value, "\"([^\"]*)\""))
+                    // A description may carry escaped quotes ("e.g. \"Steel\""),
+                    // so the literal ends at an unescaped quote.
+                    foreach (Match literal in Regex.Matches(queryAttribute.Groups["args"].Value, "\"((?:[^\"\\\\]|\\\\.)*)\""))
                     {
-                        QueryParameterSpec spec = QueryParameterSpec.Parse(literal.Groups[1].Value);
+                        QueryParameterSpec spec = QueryParameterSpec.Parse(
+                            literal.Groups[1].Value.Replace("\\\"", "\"")
+                        );
                         DeclaredQueryParameters[spec.Name] = spec;
                     }
                 }

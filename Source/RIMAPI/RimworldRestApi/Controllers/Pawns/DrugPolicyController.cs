@@ -55,7 +55,7 @@ namespace RIMAPI.Controllers
 
         [Delete("/api/v1/drug-policies/delete")]
         [ResponseBody(typeof(DrugPolicyDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The drug policy's numeric id, as the policy list reports it.")]
         [EndpointMetadata("Delete a drug policy", Notes = "Delete a drug policy; the game refuses its default one and one a pawn still follows")]
         public async Task DeleteDrugPolicy(HttpListenerContext context)
         {
@@ -77,7 +77,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/drug-policies/set-default")]
         [ResponseBody(typeof(DrugPolicyDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The drug policy's numeric id, as the policy list reports it.")]
         [EndpointMetadata("Set the default drug policy", Notes = "Make a drug policy the default one a new pawn gets, the dialog's star")]
         public async Task SetDefaultDrugPolicy(HttpListenerContext context)
         {

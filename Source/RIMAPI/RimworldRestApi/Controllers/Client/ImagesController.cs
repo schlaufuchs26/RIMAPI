@@ -17,7 +17,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/item/image")]
-        [QueryParameters("name:string")]
+        [QueryParameters("name:string=The item def's internal name, e.g. \"Steel\".")]
         [EndpointMetadata("Get an item's image")]
         [ResponseBody(typeof(ImageDto))]
         public async Task GetItemImage(HttpListenerContext context)
@@ -28,7 +28,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/terrain/image")]
-        [QueryParameters("name:string")]
+        [QueryParameters("name:string=The terrain def's internal name, e.g. \"Soil\".")]
         [EndpointMetadata("Get a terrain image")]
         [ResponseBody(typeof(ImageDto))]
         public async Task GetTerrainImage(HttpListenerContext context)

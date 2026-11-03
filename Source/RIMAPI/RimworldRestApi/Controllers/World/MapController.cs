@@ -357,7 +357,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/map/storage/capacity")]
         [ResponseBody(typeof(StorageCapacityDto))]
-        [QueryParameters("def:string", "map_id:integer")]
+        [QueryParameters("def:string=The def's internal name, e.g. \"Steel\".", "map_id:integer")]
         [EndpointMetadata("Get the storage room the map has for one product")]
         public async Task GetStorageCapacity(HttpListenerContext context)
         {
@@ -521,7 +521,7 @@ namespace RIMAPI.Controllers
         // medicine policy is the pawn's, not the bed's.
         [Post("/api/v1/map/building/bed-medical")]
         [ResponseBody(typeof(BedMedicalDto))]
-        [QueryParameters("medical:boolean?")]
+        [QueryParameters("medical:boolean?=True marks the bed for medical use, false clears the setting.")]
         [EndpointMetadata("Get or set a bed's medical setting", Notes = "Read or set a bed's own medical setting (the medical bed toggle)")]
         public async Task SetBedMedical(HttpListenerContext context)
         {
@@ -538,7 +538,7 @@ namespace RIMAPI.Controllers
         // `target` reads it, with `target` it sets it and reads it back.
         [Post("/api/v1/map/building/temperature-target")]
         [ResponseBody(typeof(TemperatureTargetDto))]
-        [QueryParameters("target:number")]
+        [QueryParameters("target:number=The target temperature in degrees Celsius.")]
         [EndpointMetadata("Read or set a cooler's or heater's target temperature")]
         public async Task SetTemperatureTarget(HttpListenerContext context)
         {
@@ -551,7 +551,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/dev/map/weather/change")]
-        [QueryParameters("map_id:integer", "name:string")]
+        [QueryParameters("map_id:integer", "name:string=The weather def name, e.g. \"Clear\".")]
         [EndpointMetadata("Set weather on the map")]
         [ResponseBody]
         public async Task SetWeather(HttpListenerContext context)

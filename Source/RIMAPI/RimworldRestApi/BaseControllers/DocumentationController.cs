@@ -165,7 +165,9 @@ namespace RIMAPI.Core
         [Get("/api/v1/docs/extensions/{extensionId}")]
         [EndpointMetadata("Get one extension's documentation", Notes = "The body is the extension's own document as JSON, not the API envelope.")]
         [ResponseBody(typeof(string))]
-        public async Task GetExtensionDocumentation(HttpListenerContext context, string extensionId)
+        public async Task GetExtensionDocumentation(HttpListenerContext context,
+            [ParameterDescription("The extension's id, as the extension list names it.")] string extensionId
+        )
         {
             try
             {
@@ -237,7 +239,9 @@ namespace RIMAPI.Core
         [QueryParameters("format:string?")]
         [EndpointMetadata("Export the API documentation", Notes = "The body is the document itself, not the API envelope.")]
         [ResponseBody(typeof(string))]
-        public async Task ExportDocumentation(HttpListenerContext context, bool saveFile = false)
+        public async Task ExportDocumentation(HttpListenerContext context,
+            [ParameterDescription("When true, the document is also written to a file on the server.")] bool saveFile = false
+        )
         {
             try
             {

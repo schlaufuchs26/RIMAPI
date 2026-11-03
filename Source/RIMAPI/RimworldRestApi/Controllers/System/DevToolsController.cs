@@ -28,7 +28,7 @@ namespace RIMAPI.Controllers
         // a colony the fox plays honestly cannot be tampered with.
         [Post("/api/v1/dev/action")]
         [RequestBody(typeof(DevActionRequest))]
-        [QueryParameters("name:string?", "op:string?")]
+        [QueryParameters("name:string?=The subject the operation names, e.g. the hediff or trait def.", "op:string?=The dev operation to run, as the action menu names it.")]
         [EndpointMetadata("Build a test situation in a dev game", Notes = "Build a test situation in a dev-mode game: damage, heal, hediff, spawn, mental state, skill, trait, incident, quest, wealth, ticks")]
         [ResponseBody(typeof(DevActionResultDto))]
         public async Task PostDevAction(HttpListenerContext context)
@@ -53,7 +53,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/dev/console")]
         [RequestBody(typeof(DebugConsoleRequest))]
-        [QueryParameters("action:string?", "message:string?")]
+        [QueryParameters("action:string?=The console command to run, e.g. \"destroy\".", "message:string?=The text the command writes into the console.")]
         [EndpointMetadata("Send message to the debug console")]
         [ResponseBody]
         public async Task PostConsoleAction(HttpListenerContext context)

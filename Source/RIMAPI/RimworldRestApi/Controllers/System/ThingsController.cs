@@ -32,7 +32,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/resources/stored")]
-        [QueryParameters("category:string?", "map_id:integer")]
+        [QueryParameters("category:string?=The storage category to list; omit for every category.", "map_id:integer")]
         // The query narrows one shape rather than switching to another: a
         // stack list per category, with the one category the query names (fox
         // ticket #4304). The category branch answered a flat list before, so

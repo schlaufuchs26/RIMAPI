@@ -44,7 +44,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/ideo/role/assign")]
         [ResponseBody(typeof(RoleAssignResultDto))]
-        [QueryParameters("map_id:integer", "pawn_id:integer", "role:string")]
+        [QueryParameters("map_id:integer", "pawn_id:integer", "role:string=The role's def name in the ideoligion.")]
         [EndpointMetadata("Assign a colonist to a role", Notes = "Fill an ideoligion role with one colonist (the game's own assign)")]
         public async Task AssignRole(HttpListenerContext context)
         {
@@ -68,7 +68,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/ideo/ritual/start")]
         [ResponseBody(typeof(RitualStartResultDto))]
-        [QueryParameters("map_id:integer", "pawn_id:integer", "ritual:string", "target_id:integer", "x:integer", "z:integer")]
+        [QueryParameters("map_id:integer", "pawn_id:integer", "ritual:string=The ritual's def name, e.g. \"Ritual_AnimaTreeLinking\".", "target_id:integer=The ritual target's numeric id; the ritual def names what kind of target it takes.", "x:integer", "z:integer")]
         [EndpointMetadata("Start an ideoligion ritual", Notes = "Start an ideoligion ritual or the leader's speech (the game's own start)")]
         public async Task StartRitual(HttpListenerContext context)
         {
@@ -90,7 +90,7 @@ namespace RIMAPI.Controllers
 
         [Post("/api/v1/ideo/ritual/end")]
         [ResponseBody(typeof(RitualEndResultDto))]
-        [QueryParameters("map_id:integer", "ritual:string")]
+        [QueryParameters("map_id:integer", "ritual:string=The ritual's def name, e.g. \"Ritual_AnimaTreeLinking\".")]
         [EndpointMetadata("End a running ritual")]
         public async Task EndRitual(HttpListenerContext context)
         {

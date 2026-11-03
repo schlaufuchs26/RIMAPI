@@ -103,7 +103,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/info")]
-        [QueryParameters("package_id:string", "uid:string")]
+        [QueryParameters("package_id:string=The mod's package id, e.g. \"Ludeon.RimWorld\".", "uid:string=The mod's unique id string, as the mod list reports it.")]
         [EndpointMetadata("Get one mod")]
         [ResponseExample(typeof(ApiResponse<ModInfoDto>))]
         [ResponseBody(typeof(ModInfoDto))]
@@ -118,7 +118,7 @@ namespace RIMAPI.Controllers
         }
 
         [Get("/api/v1/mods/preview")]
-        [QueryParameters("package_id:string", "uid:string")]
+        [QueryParameters("package_id:string=The mod's package id, e.g. \"Ludeon.RimWorld\".", "uid:string=The mod's unique id string, as the mod list reports it.")]
         [EndpointMetadata("Get a mod's preview image")]
         [ResponseExample(typeof(ApiResponse<string>))]
         [ResponseBody(typeof(string))]
@@ -144,7 +144,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/select")]
-        [QueryParameters("id:integer", "type:string")]
+        [QueryParameters("id:integer=The object's numeric id, as the read for its kind reports it.", "type:string=The object kind to select: pawn, building, item or zone.")]
         [EndpointMetadata("Select game object")]
         [ResponseBody]
         public async Task Select(HttpListenerContext context)
@@ -165,7 +165,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/open-tab")]
-        [QueryParameters("name:string")]
+        [QueryParameters("name:string=The tab's def name, e.g. \"Work\".")]
         [EndpointMetadata("Open interface tab")]
         [ResponseBody]
         public async Task OpenTab(HttpListenerContext context)
@@ -177,7 +177,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/def/all")]
         [RequestBody(typeof(AllDefsRequestDto))]
-        [QueryParameters("filter:string?", "include:string?")]
+        [QueryParameters("filter:string?=The def groups to list, comma-separated, e.g. things_defs.", "include:string?=Alias of filter: the def groups to list, comma-separated.")]
         [EndpointMetadata("Get all game definitions with optional filtering")]
         [ResponseBody(typeof(DefsDto))]
         public async Task GetAllDefs(HttpListenerContext context)
@@ -221,7 +221,7 @@ namespace RIMAPI.Controllers
         }
 
         [Post("/api/v1/game/speed")]
-        [QueryParameters("speed:integer")]
+        [QueryParameters("speed:integer=The game speed to set, 0 to 4 (0 pauses the game).")]
         [EndpointMetadata("Set the game speed")]
         [ResponseBody]
         public async Task SetGameSpeed(HttpListenerContext context)

@@ -57,7 +57,7 @@ namespace RIMAPI.Controllers
         // target there is no direction, so the call needs one.
         [Get("/api/v1/map/cover")]
         [ResponseBody(typeof(CoverStateDto))]
-        [QueryParameters("map_id:integer", "pawn_id:integer", "radius:integer", "target_id:integer", "target_x:integer", "target_z:integer", "x:integer", "z:integer")]
+        [QueryParameters("map_id:integer", "pawn_id:integer", "radius:integer", "target_id:integer=The hostile's numeric id, as the combat read reports it.", "target_x:integer=The target cell's x coordinate, in map cells.", "target_z:integer=The target cell's z coordinate, in map cells.", "x:integer", "z:integer")]
         [EndpointMetadata("Get the cover cells around a point", Notes = "Cover cells around a pawn or cell, with the game's cover chance and line of sight to a target")]
         public async Task GetCover(HttpListenerContext context)
         {

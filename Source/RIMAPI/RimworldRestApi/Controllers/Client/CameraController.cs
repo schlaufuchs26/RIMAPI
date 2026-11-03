@@ -21,7 +21,7 @@ namespace RimworldRestApi.Controllers
         }
 
         [Post("/api/v1/camera/change/zoom")]
-        [QueryParameters("zoom:integer")]
+        [QueryParameters("zoom:integer=The camera zoom level; 1 is the default distance.")]
         [EndpointMetadata("Change game camera zoom")]
         [ResponseBody]
         public async Task ChangeZoom(HttpListenerContext context)

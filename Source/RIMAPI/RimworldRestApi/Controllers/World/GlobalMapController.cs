@@ -37,7 +37,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/caravan/path")]
         [ResponseBody(typeof(CaravanPathDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The caravan's numeric id, as the caravan list reports it.")]
         [EndpointMetadata("Get a caravan's path")]
         public async Task GetCaravanPath(HttpListenerContext context)
         {
@@ -96,7 +96,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile")]
         [ResponseBody(typeof(TileDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The world tile's numeric id, as the world grid numbers them.")]
         [EndpointMetadata("Get one world tile")]
         public async Task GetTile(HttpListenerContext context)
         {
@@ -112,7 +112,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile/coordinates")]
         [ResponseBody(typeof(CoordinatesDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The world tile's numeric id, as the world grid numbers them.")]
         [EndpointMetadata("Get a tile's coordinates")]
         public async Task GetTileCoordinates(HttpListenerContext context)
         {
@@ -128,7 +128,7 @@ namespace RIMAPI.Controllers
 
         [Get("/api/v1/world/tile/details")]
         [ResponseBody(typeof(TileDetailsDto))]
-        [QueryParameters("id:integer")]
+        [QueryParameters("id:integer=The world tile's numeric id, as the world grid numbers them.")]
         [EndpointMetadata("Get a tile's details")]
         public async Task GetTileDetails(HttpListenerContext context)
         {

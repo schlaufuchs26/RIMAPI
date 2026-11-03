@@ -94,7 +94,7 @@ namespace RIMAPI.Controllers
         }
 
         [Delete("/api/v1/dev/pawns/relations/remove")]
-        [QueryParameters("relation_def_name:string")]
+        [QueryParameters("relation_def_name:string=The relation's def name, e.g. \"Spouse\".")]
         [EndpointMetadata("Sever a social bond")]
         [ResponseBody]
         public async Task RemoveRelation(HttpListenerContext context)
