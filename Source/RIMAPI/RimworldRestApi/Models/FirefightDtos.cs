@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RIMAPI.Core;
 
 namespace RIMAPI.Models
 {
@@ -15,9 +16,12 @@ namespace RIMAPI.Models
 
         // "home" fights every fire inside the colony's Home area. Empty means
         // the rectangle in point_a/point_b; giving both is refused.
+        [ParameterDescription("The area to fight fires in, as the game names it.")]
         public string Area { get; set; }
 
+        [ParameterDescription("One corner of the area to cover.")]
         public PositionDto PointA { get; set; }
+        [ParameterDescription("The opposite corner of the area.")]
         public PositionDto PointB { get; set; }
 
         // PawnId names the colonist who fights; 0 lets the mod pick, the
@@ -36,6 +40,7 @@ namespace RIMAPI.Models
         public int X { get; set; }
         public int Z { get; set; }
         public int PawnId { get; set; }
+        [ParameterDescription("The pawn assigned to fight the fire.")]
         public string Pawn { get; set; }
     }
 
@@ -45,6 +50,7 @@ namespace RIMAPI.Models
     {
         public int X { get; set; }
         public int Z { get; set; }
+        [ParameterDescription("Why the pawn was skipped.")]
         public string Reason { get; set; }
     }
 
@@ -56,11 +62,17 @@ namespace RIMAPI.Models
     /// </summary>
     public class FirefightResultDto
     {
+        [ParameterDescription("How many cells the plan covers.")]
         public int Cells { get; set; }
+        [ParameterDescription("How many fires the plan found.")]
         public int Fires { get; set; }
+        [ParameterDescription("How many fires burn inside the home area.")]
         public bool Home { get; set; }
+        [ParameterDescription("The pawns the plan assigned to the fires.")]
         public List<FirefightAssignmentDto> Assignments { get; set; }
+        [ParameterDescription("The pawns the plan skipped and why.")]
         public List<FirefightSkipDto> Skipped { get; set; }
+        [ParameterDescription("Why the plan was refused, when it was.")]
         public string Refusal { get; set; }
     }
 }

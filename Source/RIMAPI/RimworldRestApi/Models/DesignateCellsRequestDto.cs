@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RIMAPI.Core;
 
 namespace RIMAPI.Models
 {
@@ -9,7 +10,9 @@ namespace RIMAPI.Models
     public class DesignateCellsRequestDto
     {
         public int MapId { get; set; }
+        [ParameterDescription("The designation to place, e.g. mine or haul.")]
         public string Type { get; set; } // "Mine", "Deconstruct", "Harvest", "Hunt", "Chop", "Blight"
+        [ParameterDescription("The cells to mark, as x and z pairs.")]
         public List<PositionDto> Cells { get; set; }
     }
 }

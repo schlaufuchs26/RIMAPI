@@ -13,7 +13,7 @@ namespace RIMAPI.Tests
     /// a wave describes its area's types and removes the area here. An area
     /// covers the model directories that belong to it (Models/Map and
     /// Models/World are map-world, Models/Pawns and Models/Combat are pawn,
-    /// the root files are colony). Wave 1 (pawn) emptied the pawn area. When
+    /// the root files are colony). Waves 1 and 2 (pawn, colony) emptied those areas. When
     /// the list is empty every field of every schema says what it means. Add
     /// an area here only to open a new migration, never to silence a field:
     /// a new type in a finished area fails the gate at once.
@@ -21,7 +21,7 @@ namespace RIMAPI.Tests
     internal static class PendingFieldDescriptions
     {
         public static readonly HashSet<string> Areas = new HashSet<string>(
-            new[] { "colony", "map-world", "system", "client", "other" },
+            new[] { "map-world", "system", "client", "other" },
             StringComparer.Ordinal
         );
     }

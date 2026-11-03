@@ -1,3 +1,5 @@
+using RIMAPI.Core;
+
 namespace RIMAPI.Models
 {
     /// <summary>
@@ -12,6 +14,7 @@ namespace RIMAPI.Models
         public int MapId { get; set; }
 
         /// <summary>The shuttle's thing id; 0 takes the only one on the map.</summary>
+        [ParameterDescription("The shuttle's numeric id.")]
         public int ShuttleId { get; set; }
     }
 }
