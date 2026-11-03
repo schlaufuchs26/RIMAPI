@@ -303,6 +303,70 @@ namespace RIMAPI.Tests
             Assert.DoesNotContain("average", schema["required"].Select(token => (string)token));
         }
 
+        /// <summary>
+        /// A DTO property may point at a class outside RIMAPI.Models; that
+        /// shape is on the wire just the same and the document names it
+        /// (ticket #4327: CacheStatusDto.statistics stayed free-form while
+        /// CacheStatistics sat in RIMAPI.Core).
+        /// </summary>
+        [Fact]
+        public void AModelOutsideTheModelsNamespaceGetsItsOwnSchema()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "GET",
+                    Path = "/api/v1/things/core-nested",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "GetCoreNested",
+                    DeclaresResponseBody = true,
+                    ResponseBodyType = typeof(OpenApiCoreNestedTest),
+                }
+            );
+
+            JObject schemas = (JObject)OpenApiDocument.Build(docs)["components"]["schemas"];
+            JObject dto = (JObject)schemas["OpenApiCoreNestedTest"];
+            Assert.Equal(
+                "#/components/schemas/OpenApiCoreStatistics",
+                (string)dto["properties"]["statistics"]["$ref"]
+            );
+
+            JObject statistics = (JObject)schemas["OpenApiCoreStatistics"];
+            Assert.Equal("object", (string)statistics["type"]);
+            Assert.Equal("integer", (string)statistics["properties"]["hits"]["type"]);
+            Assert.Contains("hits", statistics["required"].Select(token => (string)token));
+        }
+
+        /// <summary>
+        /// A type from another assembly stays free-form: expanding it would
+        /// drag the game into the document (ticket #4327).
+        /// </summary>
+        [Fact]
+        public void ATypeFromAnotherAssemblyStaysFreeForm()
+        {
+            ApiDocumentation docs = Fixture();
+            docs.Sections[0].Endpoints.Add(
+                new DocumentedEndpoint
+                {
+                    Method = "GET",
+                    Path = "/api/v1/things/core-nested",
+                    Category = "ThingsController",
+                    Controller = "ThingsController",
+                    Action = "GetCoreNested",
+                    DeclaresResponseBody = true,
+                    ResponseBodyType = typeof(OpenApiCoreNestedTest),
+                }
+            );
+
+            JObject schemas = (JObject)OpenApiDocument.Build(docs)["components"]["schemas"];
+            JObject foreign = (JObject)
+                schemas["OpenApiCoreNestedTest"]["properties"]["version"];
+
+            Assert.Empty(foreign.Properties());
+        }
+
         [Fact]
         public void AFieldTheSerializerLeavesOutIsNotRequired()
         {
@@ -473,9 +537,9 @@ namespace RIMAPI.Tests
 namespace RIMAPI.Models
 {
     /// <summary>
-    /// A fixture DTO, in the models namespace on purpose: the schema builder
-    /// only expands types the API actually serializes, which is RIMAPI.Models
-    /// (a game type would drag the whole game into the document).
+    /// A fixture DTO. The schema builder expands every concrete type of this
+    /// assembly, so a DTO is documented wherever it sits; a game type (another
+    /// assembly) stays free-form and never drags the game into the document.
     /// </summary>
     public enum OpenApiTestKind
     {
@@ -503,5 +567,26 @@ namespace RIMAPI.Models
         // A float the game may not set, the way MentalStateDefDto's recovery
         // time is (ticket #4315): the schema has to allow null beside number.
         public float? Average { get; set; }
+    }
+
+    /// <summary>
+    /// A DTO whose nested shape lives outside RIMAPI.Models, the way
+    /// CacheStatusDto carries CacheStatistics (ticket #4327), plus one field
+    /// from another assembly that has to stay free-form.
+    /// </summary>
+    public class OpenApiCoreNestedTest
+    {
+        public RIMAPI.Core.OpenApiCoreStatistics Statistics { get; set; }
+        public Version Version { get; set; }
+    }
+}
+
+namespace RIMAPI.Core
+{
+    /// <summary>Stands in for a statistics class that the cache answers with.</summary>
+    public class OpenApiCoreStatistics
+    {
+        public int Hits { get; set; }
+        public double HitRatio { get; set; }
     }
 }

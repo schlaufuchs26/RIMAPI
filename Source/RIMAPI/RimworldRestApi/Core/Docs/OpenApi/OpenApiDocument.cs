@@ -679,12 +679,20 @@ namespace RIMAPI.Core
                 return ParameterDescriptions.For(property.PropertyName);
             }
 
-            private static bool IsModel(Type type)            {
+            private static bool IsModel(Type type)
+            {
                 if (type.IsPrimitive)
                     return false;
+                if (type.IsInterface || type.IsAbstract)
+                    return false;
 
-                string ns = type.Namespace ?? string.Empty;
-                return ns == "RIMAPI.Models" || ns.StartsWith("RIMAPI.Models.", StringComparison.Ordinal);
+                // A type the mod declares, wherever it sits in the assembly: a
+                // DTO property may point at a class outside RIMAPI.Models
+                // (CacheStatistics lives in RIMAPI.Core), and that shape is on
+                // the wire just the same (ticket #4327). A type from another
+                // assembly stays free-form, so a game type never drags the game
+                // into the document.
+                return type.Assembly == typeof(OpenApiDocument).Assembly;
             }
         }
     }
