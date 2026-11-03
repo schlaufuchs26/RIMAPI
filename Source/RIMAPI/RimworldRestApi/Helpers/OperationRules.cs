@@ -80,5 +80,16 @@ namespace RIMAPI.Helpers
         {
             return pawnLabel + " already takes " + care + " medicine";
         }
+
+        /// <summary>
+        /// The health tab hides an "Administer drug" entry while the colony
+        /// holds none of that drug, so a bill added anyway leaves a doctor
+        /// waiting for stock that may never come (fox ticket #4323).
+        /// </summary>
+        public static string NoDrugInColony(string recipe, string drug)
+        {
+            return "the colony holds no " + drug + ", so \"" + recipe
+                + "\" cannot be given: the health tab lists it once the drug is in stock";
+        }
     }
 }

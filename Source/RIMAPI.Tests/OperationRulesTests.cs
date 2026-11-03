@@ -58,6 +58,17 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void AMissingDrugIsNamedWithTheRecipe()
+        {
+            // The health tab hides an "Administer drug" entry while the colony
+            // holds none of that drug, so the refusal has to name both the
+            // recipe and the drug the caller has to get (fox ticket #4323).
+            string text = OperationRules.NoDrugInColony("Administer flake", "flake");
+            Assert.Contains("Administer flake", text);
+            Assert.Contains("flake", text);
+        }
+
+        [Fact]
         public void TheCareRefusalListsTheFivePolicies()
         {
             string text = OperationRules.UnknownCare("Bestest");
@@ -88,6 +99,31 @@ namespace RIMAPI.Tests
             Assert.Contains("CreateSurgeryBill(", text);
             Assert.Contains("BillStack.Delete(", text);
             Assert.DoesNotContain("new Bill_Medical(", text);
+        }
+
+        [Fact]
+        public void TheDrugCheckIsTheHealthTabsOwnFilter()
+        {
+            // The health tab hides an "Administer drug" entry while the colony
+            // holds none of that drug: it drops every recipe whose
+            // PotentiallyMissingIngredients names a drug. The write has to ask
+            // the same check, or the bill waits for stock that never comes
+            // (fox ticket #4323).
+            string root = SourceTree.RepoRoot();
+            string service = Path.Combine(
+                root,
+                "Source",
+                "RIMAPI",
+                "RimworldRestApi",
+                "Services",
+                "Pawns",
+                "OperationService",
+                "OperationService.cs"
+            );
+
+            string text = File.ReadAllText(service);
+            Assert.Contains("Recipe_AdministerIngestible", text);
+            Assert.Contains("PotentiallyMissingIngredients(", text);
         }
     }
 }

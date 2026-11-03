@@ -102,6 +102,21 @@ namespace RIMAPI.Services
                 if (!recipe.IsSurgery)
                     return ApiResult<PawnOperationsDto>.Fail(OperationRules.NotSurgery(request.Recipe));
 
+                // The health tab hides an "Administer drug" entry while the
+                // colony holds none of that drug: DrawMedOperationsTab drops
+                // every recipe whose PotentiallyMissingIngredients names a
+                // drug. A bill added anyway leaves the doctor waiting for
+                // stock that may never come, so the write asks the same check
+                // (fox ticket #4323).
+                if (recipe.Worker is Recipe_AdministerIngestible)
+                {
+                    string missingDrug = MissingDrug(pawn, recipe);
+                    if (missingDrug != null)
+                        return ApiResult<PawnOperationsDto>.Fail(
+                            OperationRules.NoDrugInColony(recipe.LabelCap, missingDrug)
+                        );
+                }
+
                 BodyPartRecord part = null;
                 if (recipe.targetsBodyPart)
                 {
@@ -238,6 +253,22 @@ namespace RIMAPI.Services
             {
                 return ApiResult<PawnOperationsDto>.Fail(ex.ToString());
             }
+        }
+
+        /// <summary>
+        /// The drug the recipe is short of, as the game's own ingredient walk
+        /// names it, or null when the colony holds some. HealthCardUtility
+        /// passes a null billDoer, so a forbidden stack still counts and the
+        /// answer matches the list the player sees (fox ticket #4323).
+        /// </summary>
+        private static string MissingDrug(Pawn pawn, RecipeDef recipe)
+        {
+            if (recipe.ingredients == null || pawn.MapHeld == null)
+                return null;
+            return recipe
+                .PotentiallyMissingIngredients(null, pawn.MapHeld)
+                .FirstOrDefault(def => def != null && def.IsDrug)
+                ?.label;
         }
 
         private static PawnOperationsDto ReadOperations(Pawn pawn)
