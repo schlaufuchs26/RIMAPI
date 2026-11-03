@@ -217,6 +217,81 @@ namespace RIMAPI.Helpers
             return ApiResult<AreaCellsDto>.Ok(MapHelper.GetAreaCells(map, area));
         }
 
+        /// <summary>
+        /// The Manage areas dialog's Copy button: a new allowed area that holds
+        /// the source's cells. The game makes the new area first and then sets
+        /// every active cell of the source in it, so a copy of a 24-cell area is
+        /// a second area with the same 24 cells and its own default name.
+        /// </summary>
+        public static ApiResult<AreaCellsDto> CopyArea(Map map, CopyAllowedAreaRequestDto request)
+        {
+            if (request == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail("Request cannot be null.");
+            }
+
+            string copyError = ZoneEditRules.CopyRefusal(request.Label);
+            if (copyError != null)
+            {
+                return ApiResult<AreaCellsDto>.Fail(copyError);
+            }
+
+            Area source = MapHelper.FindArea(map, request.Label, out string areaError);
+            if (source == null)
+            {
+                return ApiResult<AreaCellsDto>.Fail(areaError);
+            }
+
+            string mutableError = MutableRefusal(source, "copied");
+            if (mutableError != null)
+            {
+                return ApiResult<AreaCellsDto>.Fail(mutableError);
+            }
+
+            if (!string.IsNullOrEmpty(request.NewLabel))
+            {
+                string refusal = ZoneEditRules.LabelRefusal(
+                    request.NewLabel,
+                    map.areaManager.AllAreas.Select(a => a.Label).ToList()
+                );
+                if (refusal != null)
+                {
+                    return ApiResult<AreaCellsDto>.Fail(refusal);
+                }
+            }
+
+            if (!map.areaManager.CanMakeNewAllowed())
+            {
+                return ApiResult<AreaCellsDto>.Fail(
+                    $"The map already holds {AreaManager.MaxAllowedAreas} allowed areas; "
+                        + "the game's Manage areas dialog stops there and refuses the copy."
+                );
+            }
+
+            Area_Allowed copy;
+            if (!map.areaManager.TryMakeNewAllowed(out copy))
+            {
+                return ApiResult<AreaCellsDto>.Fail(
+                    "The game refused a new allowed area on this map."
+                );
+            }
+
+            if (!string.IsNullOrEmpty(request.NewLabel))
+            {
+                copy.RenamableLabel = request.NewLabel;
+            }
+
+            foreach (IntVec3 cell in source.ActiveCells)
+            {
+                copy[cell] = true;
+            }
+
+            LogApi.Info(
+                $"Copied area {source.ID} ('{source.Label}') into area {copy.ID} ('{copy.Label}')"
+            );
+            return ApiResult<AreaCellsDto>.Ok(MapHelper.GetAreaCells(map, copy));
+        }
+
         /// <summary>Rename one allowed area, under the dialog's own rules.</summary>
         public static ApiResult<AreaCellsDto> RenameArea(Map map, RenameAreaRequestDto request)
         {

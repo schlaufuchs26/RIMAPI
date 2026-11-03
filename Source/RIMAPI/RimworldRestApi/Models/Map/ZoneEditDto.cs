@@ -83,6 +83,24 @@ namespace RIMAPI.Models.Map
     }
 
     /// <summary>
+    /// The Manage areas dialog's Copy button: a new allowed area that holds the
+    /// source's cells. `label` names the row the button sits on, `new_label`
+    /// names the copy and falls back to the game's own default ("Area 2").
+    /// </summary>
+    public class CopyAllowedAreaRequestDto
+    {
+        public int MapId { get; set; }
+
+        /// <summary>The area to copy, by its label or type name; there is no default.</summary>
+        [ParameterDescription("The area to copy, by its label or type name; there is no default.")]
+        public string Label { get; set; }
+
+        /// <summary>The name to give the copy; empty takes the game's own default.</summary>
+        [ParameterDescription("The name to give the copy; empty takes the game's own default (\"Area 2\").")]
+        public string NewLabel { get; set; }
+    }
+
+    /// <summary>
     /// Rename one area. `label` names the area the way the area reads do (its
     /// label or its type name), `new_label` is the name the dialog would take.
     /// </summary>

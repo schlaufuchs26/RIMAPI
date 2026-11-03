@@ -54,6 +54,17 @@ namespace RIMAPI.Tests
         }
 
         [Fact]
+        public void ACopyNamesItsSource()
+        {
+            // The dialog copies the row its button sits on; there is no row for
+            // an unnamed source, and Home (the default elsewhere) has no button.
+            Assert.Null(ZoneEditRules.CopyRefusal("Garden"));
+            Assert.NotNull(ZoneEditRules.CopyRefusal(""));
+            Assert.NotNull(ZoneEditRules.CopyRefusal("   "));
+            Assert.NotNull(ZoneEditRules.CopyRefusal(null));
+        }
+
+        [Fact]
         public void AnUpdateThatNamesNothingIsRefused()
         {
             string refusal = ZoneEditRules.GrowingRefusal(null, null, null);

@@ -59,6 +59,7 @@ namespace RIMAPI.Services
         ApiResult<GrowingZoneDto> UpdateGrowingZone(UpdateGrowingZoneRequestDto request);
         ApiResult<ZoneDto> RenameZone(RenameZoneRequestDto request);
         ApiResult<AreaCellsDto> CreateArea(CreateAreaRequestDto request);
+        ApiResult<AreaCellsDto> CopyArea(CopyAllowedAreaRequestDto request);
         ApiResult<AreaCellsDto> RenameArea(RenameAreaRequestDto request);
         ApiResult<AreaCellsDto> InvertArea(AreaChangeRequestDto request);
         ApiResult<AreaCellsDto> ShrinkArea(ShrinkAreaRequestDto request);

@@ -322,6 +322,17 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/map/area/copy")]
+        [ResponseBody(typeof(AreaCellsDto))]
+        [RequestBody(typeof(CopyAllowedAreaRequestDto))]
+        [EndpointMetadata("Copy an allowed area", Notes = "The Manage areas dialog's Copy button: a new allowed area holding the source's cells, at most 10 per map, with the game's own default name unless one is sent")]
+        public async Task CopyArea(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<CopyAllowedAreaRequestDto>();
+            var result = _mapService.CopyArea(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/area/rename")]
         [ResponseBody(typeof(AreaCellsDto))]
         [RequestBody(typeof(RenameAreaRequestDto))]

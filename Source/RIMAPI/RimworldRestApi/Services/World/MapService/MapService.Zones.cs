@@ -165,6 +165,15 @@ namespace RIMAPI.Services
             return ZoneEdit.CreateArea(map, request);
         }
 
+        public ApiResult<AreaCellsDto> CopyArea(CopyAllowedAreaRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<AreaCellsDto>.Fail(error);
+            }
+            return ZoneEdit.CopyArea(map, request);
+        }
+
         public ApiResult<AreaCellsDto> RenameArea(RenameAreaRequestDto request)
         {
             if (!TryMap(request?.MapId ?? 0, out Map map, out string error))

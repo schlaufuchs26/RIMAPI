@@ -1607,6 +1607,45 @@ desc: |-
       ```
     method: POST
 
+/api/v1/map/area/copy:
+  desc: |-
+    The Manage areas dialog's Copy button: a new allowed area that holds every
+    cell of the source, at most 10 allowed areas per map, with the game's own
+    default name unless one is sent. The dialog offers the button only on the
+    allowed areas it lists, so the game's own areas (Home, Build roof) are
+    refused as a source.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/area/copy' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "label": "Rice field", "new_label": "Rice field 2"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "label": "Rice field", "new_label": "Rice field 2"}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 13,
+            "label": "Rice field 2",
+            "type": "Area_Allowed",
+            "cells_count": 24,
+            "rects": [{"x1": 120, "z1": 130, "x2": 125, "z2": 133}]
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
 /api/v1/map/area/rename:
   desc: |-
     The Manage areas dialog's Rename button, under the dialog's own rules. The

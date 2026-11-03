@@ -59,6 +59,23 @@ namespace RIMAPI.Helpers
         }
 
         /// <summary>
+        /// CopyRefusal answers why a copy names no source area, or null when it
+        /// does. The dialog's Copy button sits on a row, so the source is always
+        /// named; an empty label would otherwise fall back to Home, and the
+        /// dialog offers no Copy button on the game's own areas.
+        /// </summary>
+        public static string CopyRefusal(string label)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                return "label names the area to copy; the dialog copies the row its button "
+                    + "sits on, so there is no default (Home has no Copy button)";
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// GrowingRefusal answers why a growing-zone update asks for nothing,
         /// or null when the body names at least one setting. A call that
         /// changes nothing would answer "success" while the zone stayed as it
