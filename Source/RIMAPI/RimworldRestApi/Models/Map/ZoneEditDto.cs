@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RIMAPI.Core;
 
 namespace RIMAPI.Models.Map
 {
@@ -13,7 +14,9 @@ namespace RIMAPI.Models.Map
     public class GrowingZonePlantsDto
     {
         public int ZoneId { get; set; }
+        [ParameterDescription("The crop's def name.")]
         public string PlantDefName { get; set; }
+        [ParameterDescription("One entry per plant the zone could sow.")]
         public List<SelectablePlantDto> Plants { get; set; }
     }
 
@@ -27,9 +30,11 @@ namespace RIMAPI.Models.Map
         /// crop; 0 for a crop anyone can sow. The game's Plant menu prints it
         /// beside the name and warns when nobody in the colony reaches it.
         /// </summary>
+        [ParameterDescription("The Plants skill a colonist needs before the game lets it sow this crop; 0 for a crop anyone can sow.")]
         public int SowMinSkill { get; set; }
 
         /// <summary>The game's plant purpose (Food, Health, Beauty, ...).</summary>
+        [ParameterDescription("The game's plant purpose (Food, Health, Beauty, ...).")]
         public string Purpose { get; set; }
     }
 
@@ -44,12 +49,15 @@ namespace RIMAPI.Models.Map
         public int ZoneId { get; set; }
 
         /// <summary>The crop to grow; must be one the zone's Plant button offers.</summary>
+        [ParameterDescription("The crop to grow; must be one the zone's Plant button offers.")]
         public string PlantDef { get; set; }
 
         /// <summary>The Sow toggle: whether the zone's cells are sown at all.</summary>
+        [ParameterDescription("The Sow toggle: whether the zone's cells are sown at all.")]
         public bool? AllowSow { get; set; }
 
         /// <summary>The Cut toggle: whether plants in the zone may be cut.</summary>
+        [ParameterDescription("The Cut toggle: whether plants in the zone may be cut.")]
         public bool? AllowCut { get; set; }
     }
 
@@ -82,6 +90,7 @@ namespace RIMAPI.Models.Map
     {
         public int MapId { get; set; }
         public string Label { get; set; }
+        [ParameterDescription("The name to give the area.")]
         public string NewLabel { get; set; }
     }
 
@@ -101,7 +110,9 @@ namespace RIMAPI.Models.Map
     {
         public int MapId { get; set; }
         public string Label { get; set; }
+        [ParameterDescription("One corner of the rectangle the area keeps.")]
         public PositionDto PointA { get; set; }
+        [ParameterDescription("The opposite corner of that rectangle.")]
         public PositionDto PointB { get; set; }
     }
 }

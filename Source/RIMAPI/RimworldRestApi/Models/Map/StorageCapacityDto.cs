@@ -1,3 +1,5 @@
+using RIMAPI.Core;
+
 namespace RIMAPI.Models
 {
     /// <summary>
@@ -13,10 +15,15 @@ namespace RIMAPI.Models
     public class StorageCapacityDto
     {
         public string DefName { get; set; }
+        [ParameterDescription("The plant the capacity was measured for.")]
         public string PlantDef { get; set; }
+        [ParameterDescription("The thing the capacity was measured for.")]
         public string ThingDef { get; set; }
+        [ParameterDescription("How many storages the check counted.")]
         public int Storages { get; set; }
+        [ParameterDescription("How many cells those storages hold.")]
         public int Cells { get; set; }
+        [ParameterDescription("How many of them stand empty.")]
         public int FreeCells { get; set; }
     }
 }

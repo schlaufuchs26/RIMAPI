@@ -1,3 +1,5 @@
+using RIMAPI.Core;
+
 namespace RIMAPI.Models
 {
     /// <summary>
@@ -16,6 +18,7 @@ namespace RIMAPI.Models
         public string Label { get; set; }
 
         /// <summary>"cell" for a cell designation, "thing" for one that hangs on a thing.</summary>
+        [ParameterDescription("\"cell\" for a cell designation, \"thing\" for one that hangs on a thing.")]
         public string Target { get; set; }
 
         public int X { get; set; }
@@ -26,9 +29,11 @@ namespace RIMAPI.Models
         public int ThingId { get; set; }
 
         /// <summary>The targeted thing's defName, null for a cell designation.</summary>
+        [ParameterDescription("The targeted thing's defName, null for a cell designation.")]
         public string ThingDefName { get; set; }
 
         /// <summary>The targeted thing's short label, null for a cell designation.</summary>
+        [ParameterDescription("The targeted thing's short label, null for a cell designation.")]
         public string ThingLabel { get; set; }
 
         /// <summary>
@@ -37,6 +42,7 @@ namespace RIMAPI.Models
         /// that marks prey reads here which of the marked animals can turn on
         /// the hunter: a cassowary answers 1.0, an alpaca 0.
         /// </summary>
+        [ParameterDescription("The hunted animal's race chance to turn manhunter when it is hurt (0..1), null for every order that is not a hunt (fox #4183).")]
         public float? ManhunterOnDamageChance { get; set; }
     }
 
@@ -48,17 +54,21 @@ namespace RIMAPI.Models
     /// </summary>
     public class WorkVerdictDto
     {
+        [ParameterDescription("The pawn's numeric id.")]
         public int Id { get; set; }
 
         public string Name { get; set; }
 
         /// <summary>The level in the work type's own skill (Plants for plant cutting), 0 when it has none.</summary>
+        [ParameterDescription("The level in the work type's own skill (Plants for plant cutting), 0 when it has none.")]
         public int Skill { get; set; }
 
         /// <summary>The skill's label, e.g. Plants; null when the work type has no skill.</summary>
+        [ParameterDescription("The skill's label, e.g.")]
         public string SkillLabel { get; set; }
 
         /// <summary>Why the colonist will not take the job; null for a worker.</summary>
+        [ParameterDescription("Why the colonist will not take the job; null for a worker.")]
         public string Reason { get; set; }
     }
 }

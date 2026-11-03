@@ -1,3 +1,5 @@
+using RIMAPI.Core;
+
 namespace RIMAPI.Models
 {
     /// <summary>
@@ -9,20 +11,25 @@ namespace RIMAPI.Models
     /// </summary>
     public class BedMedicalDto
     {
+        [ParameterDescription("The bed's numeric id.")]
         public int Id { get; set; }
         public string Label { get; set; }
         public string DefName { get; set; }
 
         /// <summary>True when the def has the toggle at all: false for an animal bed or a sleeping spot.</summary>
+        [ParameterDescription("True when the def has the toggle at all: false for an animal bed or a sleeping spot.")]
         public bool CanBeMedical { get; set; }
 
         /// <summary>The flag as the bed holds it now.</summary>
+        [ParameterDescription("The flag as the bed holds it now.")]
         public bool Medical { get; set; }
 
         /// <summary>The flag before this call wrote it; equal to Medical on a read.</summary>
+        [ParameterDescription("The flag before this call wrote it; equal to Medical on a read.")]
         public bool PreviousMedical { get; set; }
 
         /// <summary>True when this call changed the flag.</summary>
+        [ParameterDescription("True when this call changed the flag.")]
         public bool Changed { get; set; }
     }
 }

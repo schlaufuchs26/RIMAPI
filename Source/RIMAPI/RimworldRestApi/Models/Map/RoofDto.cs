@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RIMAPI.Core;
 
 namespace RIMAPI.Models
 {
@@ -15,7 +16,9 @@ namespace RIMAPI.Models
     {
         public int MapId { get; set; }
 
+        [ParameterDescription("One corner of the rectangle to roof.")]
         public PositionDto PointA { get; set; }
+        [ParameterDescription("The opposite corner of the rectangle.")]
         public PositionDto PointB { get; set; }
 
         /// <summary>The constructor who takes the job; 0 lets the mod pick.</summary>
@@ -26,6 +29,7 @@ namespace RIMAPI.Models
     public class RoofJobDto
     {
         public int PawnId { get; set; }
+        [ParameterDescription("The pawn the call put on the roof job.")]
         public string Pawn { get; set; }
         public int X { get; set; }
         public int Z { get; set; }
@@ -37,10 +41,14 @@ namespace RIMAPI.Models
     /// </summary>
     public class RoofRoomDto
     {
+        [ParameterDescription("The room's numeric id.")]
         public int RoomId { get; set; }
         public string Label { get; set; }
+        [ParameterDescription("How many cells the room holds.")]
         public int Cells { get; set; }
+        [ParameterDescription("How many of them lack a roof.")]
         public int OpenRoofs { get; set; }
+        [ParameterDescription("The room's temperature, in Celsius.")]
         public float TemperatureC { get; set; }
     }
 
@@ -52,23 +60,34 @@ namespace RIMAPI.Models
     /// </summary>
     public class RoofResultDto
     {
+        [ParameterDescription("How many cells the rectangle holds.")]
         public int Cells { get; set; }
+        [ParameterDescription("How many cells already carry a roof.")]
         public int AlreadyRoofed { get; set; }
+        [ParameterDescription("How many cells the call marked for roof work.")]
         public int RoofWork { get; set; }
+        [ParameterDescription("How many cells nothing can carry a roof on.")]
         public int Unsupported { get; set; }
+        [ParameterDescription("How many cells something blocks.")]
         public int Blocked { get; set; }
+        [ParameterDescription("How many cells lie outside the home area.")]
         public int Outside { get; set; }
 
         /// <summary>Build roof area cells this call turned on.</summary>
+        [ParameterDescription("Build roof area cells this call turned on.")]
         public int AreaAdded { get; set; }
 
         /// <summary>Build roof area cells after the call.</summary>
+        [ParameterDescription("Build roof area cells after the call.")]
         public int AreaCells { get; set; }
 
+        [ParameterDescription("The pawns the call put on the work.")]
         public List<RoofJobDto> Jobs { get; set; }
+        [ParameterDescription("The rooms the rectangle touches, with their temperatures.")]
         public List<RoofRoomDto> Rooms { get; set; }
 
         /// <summary>Why no job was queued, in the game's own terms; null when one was.</summary>
+        [ParameterDescription("Why no job was queued, in the game's own terms; null when one was.")]
         public string Refusal { get; set; }
     }
 }
