@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,6 +41,7 @@ namespace RIMAPI.Core
                 ["bed_id"] = "The bed's numeric id, as the building list reports it.",
                 ["item_id"] = "The item stack's numeric id, as a map read reports it.",
                 ["tile_id"] = "The world tile's numeric id, as the world grid numbers them.",
+                ["target_thing_id"] = "The thing the order acts on, as a map read reports its id.",
 
                 // Fields every read repeats.
                 ["label"] = "The label the game shows for this thing in its UI.",
