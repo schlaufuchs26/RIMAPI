@@ -1759,3 +1759,92 @@ desc: |-
     }
     ```
   method: DELETE
+
+/api/v1/map/building/uninstall:
+  desc: |-
+    The Designator Uninstall: marks a minifiable building of the colony so a
+    constructor takes it down and leaves the item it becomes. A building with no
+    work to build comes apart at once, which is what the game does. A building
+    the UI refuses (not minifiable, another faction's, already marked for
+    deconstruction) is refused with the designator's reason.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/building/uninstall' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "building_id": 77261}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "building_id": 77261}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "building_id": 77261,
+            "def_name": "Table2x2c",
+            "label": "table",
+            "mode": "designated",
+            "note": "A constructor takes it down; the item stays where the building stood."
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/building/install:
+  desc: |-
+    The Designator Install: a minified item becomes an install blueprint on the
+    given cell and rotation, under the game's own placement check. A cell the
+    check refuses answers with its reason instead of a blueprint.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/building/install' \
+    --header 'content-type: application/json' \
+    --data '{
+      "map_id": 0,
+      "thing_id": 88310,
+      "position": {"x":120,"y":0,"z":130},
+      "rotation": 0
+    }'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+      "map_id": 0,
+      "thing_id": 88310,
+      "position": {"x":120,"y":0,"z":130},
+      "rotation": 0
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "blueprint_id": 90012,
+            "thing_id": 88310,
+            "def_name": "Table2x2c",
+            "label": "table",
+            "x": 120,
+            "z": 130,
+            "rotation": 0,
+            "note": "A constructor installs it; the item leaves the stockpile when the work starts."
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST

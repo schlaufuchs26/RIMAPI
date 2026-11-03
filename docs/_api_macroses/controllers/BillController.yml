@@ -279,3 +279,34 @@
     ```
   method: PUT
   csharp_method: SuspendBill
+
+/api/v1/buildings/bill/copy:
+  desc: |-
+    The bills tab's copy and paste in one call: the source bill's settings land
+    on the target table. The paste button's own refusals apply, so a recipe the
+    table cannot make, one that is not available and a full stack of 15 bills
+    are refused with the reason.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/buildings/bill/copy?building_id=77261&bill_id=3'
+    ```
+  request: ''
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "id": 9,
+            "recipe_def_name": "Make_ComponentIndustrial",
+            "repeat_mode": "Forever",
+            "target_count": 10
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST

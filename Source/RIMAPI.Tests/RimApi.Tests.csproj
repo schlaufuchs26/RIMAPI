@@ -75,6 +75,9 @@
     <!-- The rules the game's own rename dialogs and Plant button enforce
          (fox ticket #4316, parity wave 6). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\ZoneEditRules.cs" Link="Linked\ZoneEditRules.cs" />
+    <!-- The per-cell verdicts of the two floor designators (fox ticket #4316,
+         parity wave 7). -->
+    <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\FloorWorkRules.cs" Link="Linked\FloorWorkRules.cs" />
     <!-- The bounds of a drug policy write (fox ticket #4212, gap 3). -->
     <Compile Include="..\RIMAPI\RimworldRestApi\Helpers\DrugPolicyRules.cs" Link="Linked\DrugPolicyRules.cs" />
     <!-- The wording of an operation's refusals (fox ticket #4212, gap 4). -->

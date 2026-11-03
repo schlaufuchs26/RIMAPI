@@ -474,6 +474,30 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // Moving a building (fox ticket #4316, parity wave 7): the two halves
+        // of the player's uninstall and install orders.
+        [Post("/api/v1/map/building/uninstall")]
+        [ResponseBody(typeof(UninstallResultDto))]
+        [RequestBody(typeof(UninstallRequestDto))]
+        [EndpointMetadata("Mark a building for uninstalling", Notes = "The Designator Uninstall: a minifiable building of the colony is marked, a constructor takes it down, and a building with no work to build comes apart at once")]
+        public async Task UninstallBuilding(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<UninstallRequestDto>();
+            var result = _buildingService.Uninstall(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/building/install")]
+        [ResponseBody(typeof(InstallResultDto))]
+        [RequestBody(typeof(InstallRequestDto))]
+        [EndpointMetadata("Place a minified building again", Notes = "The Designator Install: a minified item becomes an install blueprint on the given cell and rotation, under the game's own placement check")]
+        public async Task InstallBuilding(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<InstallRequestDto>();
+            var result = _buildingService.Install(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/map/building/power")]
         [EndpointMetadata("Toggle a building's power")]
         [ResponseBody(typeof(PoweredBuildingDto))]

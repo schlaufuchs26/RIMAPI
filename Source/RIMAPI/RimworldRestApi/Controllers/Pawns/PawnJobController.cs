@@ -26,6 +26,17 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/pawn/strip")]
+        [ResponseBody]
+        [RequestBody(typeof(StripRequestDto))]
+        [EndpointMetadata("Order a colonist to strip a pawn", Notes = "The right-click Strip order: a corpse or a downed prisoner loses its apparel, under the game's own strippable and reach checks")]
+        public async Task Strip(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<StripRequestDto>();
+            var result = _pawnJobService.Strip(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Post("/api/v1/pawn/medical/tend")]
         [ResponseBody]
         [RequestBody(typeof(MedicalTendRequestDto))]

@@ -535,6 +535,17 @@ namespace RIMAPI.Models
         public PositionDto TargetPosition { get; set; }
     }
 
+    /// <summary>
+    /// The Strip order (fox ticket #4316, parity wave 7): a colonist takes the
+    /// apparel off a corpse or a downed pawn, the right-click order the game
+    /// offers when the target can be stripped.
+    /// </summary>
+    public class StripRequestDto
+    {
+        public int PawnId { get; set; }
+        public int TargetThingId { get; set; }
+    }
+
     public class MedicalTendRequestDto
     {
         [ParameterDescription("The patient's numeric id.")]

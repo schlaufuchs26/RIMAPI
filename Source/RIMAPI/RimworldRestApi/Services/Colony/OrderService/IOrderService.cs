@@ -1,5 +1,6 @@
 using RIMAPI.Core;
 using RIMAPI.Models;
+using RIMAPI.Models.Map;
 
 namespace RIMAPI.Services
 {
@@ -23,5 +24,9 @@ namespace RIMAPI.Services
         // area, through the game's own BeatFire job (fox ticket #3444): the
         // Firefighter work priority sends him to whatever fire the game picks.
         ApiResult<FirefightResultDto> Firefight(FirefightRequestDto request);
+
+        // The Architect tab's Smooth and Remove floor orders over a rectangle
+        // (fox ticket #4316, parity wave 7): cell designators the player drags.
+        ApiResult<FloorWorkResultDto> FloorOrder(FloorOrderRequestDto request);
     }
 }

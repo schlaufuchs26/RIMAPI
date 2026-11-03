@@ -25,11 +25,11 @@ public partial class OrderService
             return ApiResult.Fail("point_a and point_b are required: the rectangle to clear.");
         }
 
-        DesignationDef def = DesignationDefFor((request.Type ?? "").ToLower());
-        if (def == null)
+        List<DesignationDef> defs = DesignationDefsFor((request.Type ?? "").ToLower());
+        if (defs.Count == 0)
         {
             return ApiResult.Fail(
-                $"unknown designation type '{request.Type}': use chop, blight, harvest, mine, deconstruct or hunt");
+                $"unknown designation type '{request.Type}': use chop, blight, harvest, mine, deconstruct, hunt, smooth or remove-floor");
         }
 
         IntVec3 a = new IntVec3(request.PointA.X, 0, request.PointA.Z);
@@ -48,17 +48,20 @@ public partial class OrderService
         // Collect before removing: RemoveDesignation edits the list this
         // enumeration walks.
         List<Designation> doomed = new List<Designation>();
-        foreach (Designation des in map.designationManager.SpawnedDesignationsOfDef(def))
+        foreach (DesignationDef def in defs)
         {
-            CellRect target = des.target.HasThing
-                ? des.target.Thing.OccupiedRect()
-                : CellRect.SingleCell(des.target.Cell);
-            if (!DesignationRules.Covers(target.minX, target.minZ, target.maxX, target.maxZ,
-                    rect.minX, rect.minZ, rect.maxX, rect.maxZ))
+            foreach (Designation des in map.designationManager.SpawnedDesignationsOfDef(def))
             {
-                continue;
+                CellRect target = des.target.HasThing
+                    ? des.target.Thing.OccupiedRect()
+                    : CellRect.SingleCell(des.target.Cell);
+                if (!DesignationRules.Covers(target.minX, target.minZ, target.maxX, target.maxZ,
+                        rect.minX, rect.minZ, rect.maxX, rect.maxZ))
+                {
+                    continue;
+                }
+                doomed.Add(des);
             }
-            doomed.Add(des);
         }
 
         // The removed entries travel with the count (ticket #3508): a count
@@ -92,24 +95,35 @@ public partial class OrderService
     // The order's word is the one `designate` takes, so the call that went
     // wrong can be repeated with the other verb. Blight and chop share one
     // designation, so clearing either clears both (fox ticket #3530).
-    private static DesignationDef DesignationDefFor(string type)
+    private static List<DesignationDef> DesignationDefsFor(string type)
     {
         switch (type)
         {
             case "chop":
             case "cut":
             case "blight":
-                return DesignationDefOf.CutPlant;
+                return new List<DesignationDef> { DesignationDefOf.CutPlant };
             case "harvest":
-                return DesignationDefOf.HarvestPlant;
+                return new List<DesignationDef> { DesignationDefOf.HarvestPlant };
             case "mine":
-                return DesignationDefOf.Mine;
+                return new List<DesignationDef> { DesignationDefOf.Mine };
             case "deconstruct":
-                return DesignationDefOf.Deconstruct;
+                return new List<DesignationDef> { DesignationDefOf.Deconstruct };
             case "hunt":
-                return DesignationDefOf.Hunt;
+                return new List<DesignationDef> { DesignationDefOf.Hunt };
+            // A smooth order leaves one of two designations depending on the
+            // cell (a wall or a stone floor), so clearing the word clears both
+            // (fox ticket #4316).
+            case "smooth":
+                return new List<DesignationDef>
+                {
+                    DesignationDefOf.SmoothFloor,
+                    DesignationDefOf.SmoothWall,
+                };
+            case "remove-floor":
+                return new List<DesignationDef> { DesignationDefOf.RemoveFloor };
             default:
-                return null;
+                return new List<DesignationDef>();
         }
     }
 }

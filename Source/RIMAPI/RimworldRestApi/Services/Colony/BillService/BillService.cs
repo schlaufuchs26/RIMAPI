@@ -84,6 +84,49 @@ namespace RIMAPI.Services
             }
         }
 
+        // The bills tab's Copy and Paste (fox ticket #4316, parity wave 7): the
+        // copy button puts a bill on the game's clipboard and the paste button
+        // adds a clone of it to another table, refusing a recipe that table
+        // cannot make and a stack that is full. The route does both at once, so
+        // no global clipboard has to survive between two calls.
+        public ApiResult<BillDto> CopyBill(int buildingId, int billId)
+        {
+            var target = FindWorkTable(buildingId);
+            if (target == null)
+                return ApiResult<BillDto>.Fail(DescribeMissingWorkTable(buildingId));
+
+            Bill_Production source = null;
+            foreach (var map in Find.Maps)
+            {
+                foreach (var table in map.listerBuildings.allBuildingsColonist.OfType<Building_WorkTable>())
+                {
+                    source = FindBill(table, billId);
+                    if (source != null) break;
+                }
+                if (source != null) break;
+            }
+            if (source == null)
+                return ApiResult<BillDto>.Fail(
+                    $"Bill {billId} not found on any work table; GET /api/v1/buildings/bills?building_id= names the bills of one table");
+
+            if (!target.def.AllRecipes.Contains(source.recipe))
+                return ApiResult<BillDto>.Fail(
+                    $"The bills tab refuses the paste: {target.def.label} has no recipe {source.recipe.defName} (ClipboardBillNotAvailableHere)");
+
+            if (!source.recipe.AvailableNow || !source.recipe.AvailableOnNow(target))
+                return ApiResult<BillDto>.Fail(
+                    $"The bills tab refuses the paste: {source.recipe.defName} is not available on {target.def.label} right now");
+
+            if (target.BillStack.Bills.Count >= MaxBillsPerStack)
+                return ApiResult<BillDto>.Fail(
+                    $"The bills tab refuses the paste: {target.def.label} already holds {MaxBillsPerStack} bills (PasteBillTip_LimitReached)");
+
+            Bill_Production copy = (Bill_Production)source.Clone();
+            copy.InitializeAfterClone();
+            target.BillStack.AddBill(copy);
+            return ApiResult<BillDto>.Ok(BillHelper.ToDto(copy));
+        }
+
         public ApiResult<BillDto> UpdateBill(int buildingId, int billId, UpdateBillRequest request)
         {
             try

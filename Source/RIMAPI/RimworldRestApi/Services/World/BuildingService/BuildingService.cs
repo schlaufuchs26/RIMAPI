@@ -4,6 +4,7 @@ using System.Linq;
 using RIMAPI.Core;
 using RIMAPI.Helpers;
 using RIMAPI.Models;
+using RIMAPI.Models.Map;
 using RimWorld;
 using Verse;
 
@@ -12,6 +13,74 @@ namespace RIMAPI.Services
     public class BuildingService : IBuildingService
     {
         public BuildingService() { }
+
+        // Moving a building (fox ticket #4316, parity wave 7): the Designator
+        // Uninstall marks it, and the Install order puts the minified item back
+        // down. The game's own designators decide both; this resolves the
+        // building or the item and hands over.
+        public ApiResult<UninstallResultDto> Uninstall(UninstallRequestDto request)
+        {
+            Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+            if (map == null)
+            {
+                return ApiResult<UninstallResultDto>.Fail(mapError);
+            }
+
+            Building building =
+                map.listerBuildings.allBuildingsColonist.FirstOrDefault(
+                    b => b.thingIDNumber == request.BuildingId
+                )
+                ?? map.listerBuildings.allBuildingsNonColonist.FirstOrDefault(
+                    b => b.thingIDNumber == request.BuildingId
+                );
+            if (building == null)
+            {
+                return ApiResult<UninstallResultDto>.Fail(
+                    $"No building with id {request.BuildingId} stands on map {request.MapId}. "
+                        + "GET /api/v1/map/buildings lists the colony's buildings."
+                );
+            }
+
+            return BuildingPlacement.Uninstall(building);
+        }
+
+        public ApiResult<InstallResultDto> Install(InstallRequestDto request)
+        {
+            Map map = MapLookup.Resolve(request.MapId, MapHelper.GetMapByID, out string mapError);
+            if (map == null)
+            {
+                return ApiResult<InstallResultDto>.Fail(mapError);
+            }
+
+            if (request.Position == null)
+            {
+                return ApiResult<InstallResultDto>.Fail(
+                    "position is required: the cell the building should stand on."
+                );
+            }
+
+            Thing thing = map
+                .listerThings.AllThings.FirstOrDefault(t => t.thingIDNumber == request.ThingId);
+            if (thing == null)
+            {
+                return ApiResult<InstallResultDto>.Fail(
+                    $"No thing with id {request.ThingId} lies on map {request.MapId}. "
+                        + "An uninstalled building becomes a minified item where it stood."
+                );
+            }
+
+            MinifiedThing minified = thing as MinifiedThing;
+            if (minified == null)
+            {
+                return ApiResult<InstallResultDto>.Fail(
+                    $"{thing.LabelShort} ({thing.def.defName}) is not a minified item; "
+                        + "only an uninstalled building can be installed again."
+                );
+            }
+
+            IntVec3 cell = new IntVec3(request.Position.X, 0, request.Position.Z);
+            return BuildingPlacement.Install(minified, map, cell, request.Rotation);
+        }
 
         public ApiResult<BuildingDto> GetBuildingInfo(int buildingId)
         {

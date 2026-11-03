@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using System.Net;
 using RIMAPI.Core;
 using RIMAPI.Models;
+using RIMAPI.Models.Map;
 using RIMAPI.Services;
 
 namespace RIMAPI.Controllers
@@ -80,6 +81,19 @@ namespace RIMAPI.Controllers
         {
             var body = await context.Request.ReadBodyAsync<RoofRequestDto>();
             var result = _orderService.BuildRoof(body);
+            await context.SendJsonResponse(result);
+        }
+
+        // Smoothing and removing floors (fox ticket #4316, parity wave 7): the
+        // Architect tab's two cell designators, over a rectangle.
+        [Post("/api/v1/order/floor")]
+        [ResponseBody(typeof(FloorWorkResultDto))]
+        [RequestBody(typeof(FloorOrderRequestDto))]
+        [EndpointMetadata("Order smooth or remove-floor work", Notes = "Smooth a wall or a stone floor, or mark a floor for removal, over a rectangle: the Architect tab's two cell designators, with the game's per-cell refusals counted")]
+        public async Task FloorOrder(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<FloorOrderRequestDto>();
+            var result = _orderService.FloorOrder(body);
             await context.SendJsonResponse(result);
         }
     }

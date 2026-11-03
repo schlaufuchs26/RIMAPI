@@ -38,3 +38,59 @@ desc: The **Order Controller** is for issuing commands to pawns.
     }
     ```
   method: POST
+
+/api/v1/order/floor:
+  desc: |-
+    The Architect tab's two floor designators over a rectangle: smooth a wall
+    or a stone floor, or mark a floor for removal. Each cell goes through the
+    game's own checks, and the answer counts what it marked, what already
+    carried the order, what the player cannot see and what was refused.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/order/floor' \
+    --header 'content-type: application/json' \
+    --data '{
+      "map_id": 0,
+      "type": "smooth",
+      "point_a": {"x":120,"y":0,"z":130},
+      "point_b": {"x":124,"y":0,"z":133}
+    }'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {
+      "map_id": 0,
+      "type": "smooth",
+      "point_a": {"x":120,"y":0,"z":130},
+      "point_b": {"x":124,"y":0,"z":133}
+    }
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "map_id": 0,
+            "type": "smooth",
+            "cells": 20,
+            "designated": 14,
+            "already": 2,
+            "unseen": 0,
+            "refused": 4,
+            "smooth_floor": 12,
+            "smooth_wall": 2,
+            "refusals": [
+                {"x": 121, "z": 131, "reason": "MessageMustDesignateSmoothableSurface"}
+            ],
+            "refusals_truncated": false
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST

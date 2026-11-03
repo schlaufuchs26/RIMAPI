@@ -64,6 +64,18 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        [Post("/api/v1/buildings/bill/copy")]
+        [ResponseBody(typeof(BillDto))]
+        [QueryParameters("building_id:integer", "bill_id:integer")]
+        [EndpointMetadata("Copy a bill onto another table", Notes = "The bills tab's copy and paste in one call: the source bill's settings land on the target table, under the paste button's own refusals (recipe, availability, 15-bill limit)")]
+        public async Task CopyBill(HttpListenerContext context)
+        {
+            var buildingId = RequestParser.GetBuildingId(context);
+            var billId = RequestParser.GetIntParameter(context, "bill_id");
+            var result = _billService.CopyBill(buildingId, billId);
+            await context.SendJsonResponse(result);
+        }
+
         [Put("/api/v1/buildings/bill/update")]
         [ResponseBody(typeof(BillDto))]
         [RequestBody(typeof(UpdateBillRequest))]

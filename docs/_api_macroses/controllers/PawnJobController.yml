@@ -146,3 +146,38 @@ desc: |-
     ```
   method: POST
   csharp_method: AssignBedRest
+
+/api/v1/pawn/strip:
+  desc: |-
+    The right-click Strip order: a corpse or a downed prisoner loses its
+    apparel. The game's own gates decide, so a target the colony may not strip,
+    a quest pawn and an unreachable cell are refused with the reason.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/pawn/strip' \
+    --header 'content-type: application/json' \
+    --data '{"pawn_id": 140572, "target_thing_id": 88412}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"pawn_id": 140572, "target_thing_id": 88412}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "pawn_id": 140572,
+            "target_thing_id": 88412,
+            "target_label": "Cassowary"
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
