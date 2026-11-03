@@ -27,7 +27,7 @@ namespace RIMAPI.Controllers
         [Get("/api/v1/maps")]
         [ResponseBody(typeof(List<MapDto>))]
         [EndpointMetadata("Get all generated maps list the in game session")]
-        public async Task GetGameState(HttpListenerContext context)
+        public async Task ListMaps(HttpListenerContext context)
         {
             var result = _mapService.GetMaps();
             await context.SendJsonResponse(result);
@@ -326,7 +326,7 @@ namespace RIMAPI.Controllers
         [ResponseBody(typeof(AreaCellsDto))]
         [RequestBody(typeof(CopyAllowedAreaRequestDto))]
         [EndpointMetadata("Copy an allowed area", Notes = "The Manage areas dialog's Copy button: a new allowed area holding the source's cells, at most 10 per map, with the game's own default name unless one is sent")]
-        public async Task CopyArea(HttpListenerContext context)
+        public async Task CopyAllowedArea(HttpListenerContext context)
         {
             var body = await context.Request.ReadBodyAsync<CopyAllowedAreaRequestDto>();
             var result = _mapService.CopyArea(body);

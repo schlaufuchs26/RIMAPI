@@ -278,6 +278,48 @@ namespace RIMAPI.Tests
             Assert.True(problems.Count == 0, string.Join("\n", problems));
         }
 
+        /// <summary>
+        /// The document's operationId is the handler's name, and only a
+        /// duplicate falls back to "Controller.Action" (ticket #4328). A dot
+        /// in the id makes a client generate a prefixed method, so the
+        /// collision is caught here where the fix is a name, not in the
+        /// captured spec.
+        /// </summary>
+        [Fact]
+        public void EveryRouteKeepsAnOperationIdWithoutAControllerPrefix()
+        {
+            var problems = new List<string>();
+            var seen = new Dictionary<string, RouteMethod>(StringComparer.Ordinal);
+
+            foreach (RouteMethod route in Routes())
+            {
+                string where = route.Location + " " + route.HttpMethod + " " + route.Path;
+
+                if (route.Action.Length == 0)
+                {
+                    problems.Add(where + " declares no handler name");
+                    continue;
+                }
+
+                if (route.Action.IndexOf('.') >= 0)
+                    problems.Add(where + " names the handler \"" + route.Action + "\", which carries a dot");
+
+                if (seen.TryGetValue(route.Action, out RouteMethod other))
+                {
+                    problems.Add(
+                        where + " and " + other.Location + " " + other.HttpMethod + " "
+                            + other.Path + " both handle " + route.Action
+                            + "; the document would prefix one with its controller"
+                    );
+                    continue;
+                }
+
+                seen[route.Action] = route;
+            }
+
+            Assert.True(problems.Count == 0, string.Join("\n", problems));
+        }
+
         private static IEnumerable<RouteMethod> Routes()
         {
             string root = SourceTree.RepoRoot();
@@ -306,6 +348,7 @@ namespace RIMAPI.Tests
                     yield return new RouteMethod(
                         route.Groups[1].Value.ToUpperInvariant(),
                         route.Groups[2].Value,
+                        declaration.Groups["name"].Value,
                         SourceTree.Relative(root, path) + ":" + line,
                         attributes,
                         body,
@@ -437,6 +480,7 @@ namespace RIMAPI.Tests
             public RouteMethod(
                 string httpMethod,
                 string path,
+                string action,
                 string location,
                 string attributes,
                 string body,
@@ -446,6 +490,7 @@ namespace RIMAPI.Tests
             {
                 HttpMethod = httpMethod;
                 Path = path;
+                Action = action;
                 Location = location;
                 Attributes = attributes;
                 ReturnsTask = signature.IndexOf("Task", StringComparison.Ordinal) >= 0;
@@ -476,6 +521,7 @@ namespace RIMAPI.Tests
 
             public string HttpMethod { get; }
             public string Path { get; }
+            public string Action { get; }
             public bool ReturnsTask { get; }
             public List<ParameterShape> Parameters { get; }
             public string Location { get; }
