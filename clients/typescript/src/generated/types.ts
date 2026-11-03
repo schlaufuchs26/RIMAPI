@@ -29,6 +29,7 @@ export interface AbilityDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The verb the ability fires with. */
   verb_properties?: string;
 }
 
@@ -53,15 +54,20 @@ export interface AddRelationRequestDto {
 }
 
 export interface AlertDto {
+  /** The cells the alert points at. */
   cells?: string[];
+  /** The explanation the alert shows the player. */
   explanation?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** e.g., "Critical", "High", "Medium" */
   priority?: string;
+  /** The things the alert points at. */
   targets?: number[];
 }
 
 export interface AllDefsRequestDto {
+  /** The def kinds to return, by name. */
   filters?: string[];
 }
 
@@ -73,18 +79,25 @@ export interface AnimalAreaRequest {
 }
 
 export interface AnimalDefDto {
+  /** The body size the race starts with. */
   base_body_size: number;
+  /** The hit point scale the race starts with. */
   base_health_scale: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** What the race eats: meat, plants or both. */
   food_type?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The life stages the race passes, from baby to adult. */
   life_stages?: LifeStageAgeDto[];
+  /** Whether the race carries caravan loads. */
   pack_animal: boolean;
+  /** How likely the race is kept as a pet. */
   petness: number;
+  /** Whether the race hunts other pawns. */
   predator: boolean;
 }
 
@@ -475,17 +488,23 @@ export interface BillSuspendRequest {
 }
 
 export interface BiomeDefDto {
+  /** Every plant the biome grows wild. */
   all_wild_plants?: string[];
+  /** How many animals the biome holds per cell. */
   animal_density: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** How many days between diseases, on average. */
   disease_mtb_days: number;
+  /** The food foragers find in the biome. */
   foraged_food?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How much slower travel is through it. */
   movement_difficulty: number;
+  /** How many plants the biome holds per cell. */
   plant_density: number;
 }
 
@@ -530,21 +549,26 @@ export interface BlueprintEntryDto {
 }
 
 export interface BodyDefDto {
+  /** The body's core part, usually the torso. */
   core_part?: string;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Every part the body holds. */
   parts?: string[];
 }
 
 export interface BodyPartDefDto {
+  /** How fast the part bleeds when hurt. */
   bleed_rate: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** How much damage the part takes. */
   hit_points: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How likely a wound here leaves a scar. */
   permanent_injury_chance_factor: number;
 }
 
@@ -583,34 +607,50 @@ export interface BuildingDto {
 export interface CacheStatusDto {
   /** Whether the setting is on. */
   enabled: boolean;
+  /** The cache's counters, as the server reports them. */
   statistics?: Json;
 }
 
 export interface CameraScreenshotRequestDto {
   /** The answer's format: html, json, markdown or openapi. */
   format?: string;
+  /** How many pixels tall the screenshot is. */
   height?: number | null;
+  /** Whether the UI is left out of the shot. */
   hide_ui: boolean;
   /** The minimum quality a bill accepts, one of Awful through Legendary. */
   quality: number;
+  /** How many pixels wide the screenshot is. */
   width?: number | null;
 }
 
 export interface CameraScreenshotResponseDto {
+  /** The cells the picture covers (fox ticket #4025). */
   camera?: CameraViewDto;
+  /** The game tick the shot was taken on. */
   game_context?: GameContext;
+  /** The image itself, as a data URI. */
   image?: ImageData;
+  /** The image's size and byte count. */
   metadata?: ImageMetadata;
 }
 
 export interface CameraViewDto {
+  /** Whether the camera looks at map cells at all. */
   has_cells: boolean;
+  /** Half the picture's height in cells; the width follows its aspect. */
   root_size: number;
+  /** The camera's root position: the cell at the picture's centre. */
   root_x: number;
+  /** The top edge of the visible cells, z. */
   root_z: number;
+  /** The visible cells, rounded outward and cut to the map. */
   x1: number;
+  /** The visible rectangle's far corner x. */
   x2: number;
+  /** The first visible row's z. */
   z1: number;
+  /** The visible rectangle's far corner z. */
   z2: number;
 }
 
@@ -646,14 +686,21 @@ export interface CancelResultDto {
 }
 
 export interface CandidateBatchDto {
+  /** The generated pawns the batch offers as its pick. */
   candidates?: PawnCandidateDto[];
   /** How many of the item this entry holds. */
   count: number;
+  /** How many candidates the batch holds. */
   pawn_count: number;
+  /** What went wrong, when something did. */
   problem?: string;
+  /** The scenario's def name. */
   scenario?: string;
+  /** The scenario's name, as the game shows it. */
   scenario_label?: string;
+  /** The seed the candidates are generated from. */
   seed?: string;
+  /** Where the batch stands: generating, ready or failed. */
   state?: string;
 }
 
@@ -912,7 +959,9 @@ export interface CombatantDto {
 }
 
 export interface ConfigureModsRequestDto {
+  /** The mods to switch on, by package id. */
   package_ids?: string[];
+  /** Whether the game restarts afterwards. */
   restart_game: boolean;
 }
 
@@ -1084,10 +1133,15 @@ export interface CreatureAttackerDto {
 }
 
 export interface CriticalResourcesDto {
+  /** The colony's food numbers. */
   food_summary?: ResourcesFoodSummaryDto;
+  /** FuelSummary is the wood and the tanks (fox ticket #3678). */
   fuel_summary?: FuelSummaryDto;
+  /** How many medicine units the colony holds. */
   medicine_total: number;
+  /** How many weapons the colony holds. */
   weapon_count: number;
+  /** What those weapons are worth. */
   weapon_value: number;
 }
 
@@ -1151,41 +1205,77 @@ export interface DebugConsoleRequest {
 }
 
 export interface DefsDto {
+  /** Every ability def the game holds. */
   ability_defs?: AbilityDefDto[];
+  /** Every animal race def the game holds. */
   animal_defs?: AnimalDefDto[];
+  /** Every biome def the game holds. */
   biome_defs?: BiomeDefDto[];
+  /** Every body def the game holds. */
   body_defs?: BodyDefDto[];
+  /** Every body part def the game holds. */
   body_part_defs?: BodyPartDefDto[];
+  /** Every quest and ritual condition def. */
   conditions_defs?: GameConditionDefDto[];
+  /** Every designation category def. */
   designation_category_defs?: DesignationCategoryDefDto[];
+  /** Every difficulty def the game holds. */
   difficulty_defs?: DifficultyDefDto[];
+  /** Every drug policy def the game holds. */
   drug_policy_defs?: DrugPolicyDefDto[];
+  /** Every faction def the game holds. */
   faction_defs?: FactionDefDto[];
+  /** Every gene def the game holds. */
   gene_defs?: GeneDefDto[];
+  /** Every hediff def the game holds. */
   hediff_defs?: HediffDefDto[];
+  /** Every incident def the game holds. */
   incidents_defs?: IncidentDefDto[];
+  /** Every job def the game holds. */
   job_defs?: JobDefDto[];
+  /** Every joy kind def the game holds. */
   joy_kind_defs?: JoyKindDefDto[];
+  /** Every ideoligion meme def. */
   meme_defs?: MemeDefDto[];
+  /** Every mental state def the game holds. */
   mental_state_defs?: MentalStateDefDto[];
+  /** Every need def the game holds. */
   need_defs?: NeedDefDto[];
+  /** Every pawn kind def the game holds. */
   pawn_kind_defs?: PawnKindDefDto[];
+  /** Every plant def the game holds. */
   plant_defs?: PlantDefDto[];
+  /** Every precept def the game holds. */
   precept_defs?: PreceptDefDto[];
+  /** Every recipe def the game holds. */
   recipe_defs?: RecipeDefDto[];
+  /** Every research project def. */
   research_defs?: ResearchProjectDefDto[];
+  /** Every room role def the game holds. */
   room_role_defs?: RoomRoleDefDto[];
+  /** Every room stat def the game holds. */
   room_stat_defs?: RoomStatDefDto[];
+  /** Every skill def the game holds. */
   skill_defs?: SkillDefDto[];
+  /** Every sound def the game holds. */
   sound_defs?: SoundDefDto[];
+  /** Every stat def the game holds. */
   stat_defs?: StatDefDto[];
+  /** Every storyteller def the game holds. */
   storyteller_defs?: StorytellerDefDto[];
+  /** Every terrain def the game holds. */
   terrain_defs?: TerrainDefDto[];
+  /** Every thing def the game holds. */
   things_defs?: ThingDefDto[];
+  /** Every thought def the game holds. */
   thought_defs?: ThoughtDefDto[];
+  /** Every trait def the game holds. */
   trait_defs?: TraitDefDto[];
+  /** Every weather def the game holds. */
   weather_defs?: WeatherDefDto[];
+  /** Every work type def the game holds. */
   work_type_defs?: WorkTypeDefDto[];
+  /** Every world object def the game holds. */
   world_object_defs?: WorldObjectDefDto[];
 }
 
@@ -1249,26 +1339,38 @@ export interface DestroyRectRequestDto {
 }
 
 export interface DevActionNodeDto {
+  /** The category the node sits under. */
   category?: string;
+  /** action (runs at once), menu (holds entries) or tool (acts on a clicked cell). */
   kind?: string;
+  /** The path a `debug_action` call names, e.g. */
   path?: string;
 }
 
 export interface DevActionRequest {
+  /** `quest` only: take the quest the call just offered, through the same accept path the Quests tab runs, so its parts start and a pending delay can be found without a second call (fox ticket #4049). */
   accept?: boolean | null;
+  /** Damage in hit points, a hediff's severity, or silver for wealth. */
   amount?: number | null;
+  /** `quest` with accept only: the reward choice's index when the quest offers several, 0 for the first (fox ticket #4049). */
   choice?: number | null;
   /** How many of the item this entry holds. */
   count?: number | null;
+  /** `spawn_pawn` only: which faction the pawn joins, as the game names it (a faction's name or defName), or player, or none for a pawn no faction owns (a wild man). */
   faction?: string;
+  /** A skill's new level, 0 to 20. */
   level?: number | null;
   /** The name the game shows for this thing. */
   name?: string;
+  /** `debug_actions` only: how many matching entries to skip before the answer starts listing, so a caller pages through a menu instead of guessing substrings (ticket #3947). */
   offset?: number | null;
+  /** One of DevActionRules.Ops, e.g. */
   op?: string;
+  /** The body part a damage or hediff op acts on, by defName or label (leg, arm, head). */
   part?: string;
   /** The pawn's numeric id, as the pawn list reports it. */
   pawn_id?: number | null;
+  /** Ticks to run by hand. */
   ticks?: number | null;
   /** The cell's x coordinate, in map cells. */
   x?: number | null;
@@ -1277,74 +1379,118 @@ export interface DevActionRequest {
 }
 
 export interface DevActionResultDto {
+  /** The dev actions the menu offers. */
   actions?: DevActionsStateDto;
+  /** One sentence naming what changed, in the game's own words. */
   detail?: string;
+  /** True when the game took the change. */
   done: boolean;
+  /** The incident the action fired, when it fired one. */
   incident?: DevIncidentStateDto;
+  /** The dev action that ran. */
   op?: string;
+  /** The pawn the action left, when it touched one. */
   pawn?: DevPawnStateDto;
+  /** The quest delay the action set, in ticks. */
   quest_delay?: DevQuestDelayStateDto;
+  /** Real seconds the call spent, measured around the work. */
   seconds: number;
+  /** The thing the action left, when it touched one. */
   thing?: DevThingStateDto;
+  /** The tick state the action left. */
   ticks?: DevTickStateDto;
+  /** The wealth numbers the action changed. */
   wealth?: DevWealthStateDto;
 }
 
 export interface DevActionsStateDto {
+  /** `debug_action` only: true when the colony's own counts and pawn states moved between the call's before and after (ticket #3922). */
   changed: boolean;
+  /** True when the walk reached the menu's end, so Walked is the whole menu. */
   complete: boolean;
+  /** What moved, one phrase per counter, e.g. */
   differences?: string[];
+  /** The menu's nodes, one per dev action. */
   nodes?: DevActionNodeDto[];
+  /** How many of them this answer lists. */
   shown: number;
+  /** The entries the walk visited on its way. */
   walked: number;
 }
 
 export interface DevHediffDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** Whether the hediff is an injury. */
   injury: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The body part the hediff sits on. */
   part?: string;
+  /** How strong the hediff is. */
   severity: number;
+  /** Whether the hediff is tended. */
   tended: boolean;
 }
 
 export interface DevIncidentStateDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The game's answer to TryExecute, or the quest it made. */
   executed: boolean;
+  /** How many incidents the map's own log holds now. */
   incidents: number;
+  /** How many letters stand on the stack, so a raid that wrote one is visible. */
   letters: number;
+  /** The incident that fired last, by defName. */
   newest?: string;
 }
 
 export interface DevPawnStateDto {
+  /** Whether the pawn is dead. */
   dead: boolean;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** Whether the pawn is downed. */
   downed: boolean;
+  /** The faction the pawn belongs to, as the game names it; empty when none owns him. */
   faction?: string;
+  /** Share of the body's hit points left, 0 to 1. */
   health_percent: number;
+  /** The hediffs the pawn carries, one entry each. */
   hediffs?: DevHediffDto[];
+  /** The pawn's numeric id. */
   id: number;
+  /** How many injuries the pawn carries (Hediff_Injury and missing parts). */
   injuries: number;
+  /** The mental state's defName, empty when the pawn is calm. */
   mental_state?: string;
   /** The name the game shows for this thing. */
   name?: string;
+  /** The pawn's skills, one entry each. */
   skills?: DevSkillDto[];
+  /** The pawn's traits, one entry each. */
   traits?: string[];
+  /** True for a wild man or wild woman: a humanlike no faction owns. */
   wild: boolean;
 }
 
 export interface DevQuestDelayStateDto {
+  /** Ticks the delay holds after the op; 0 when it ended in the call. */
   after: number;
+  /** Ticks the delay held before the op. */
   before: number;
+  /** True when the op ended the delay in the call instead of moving it. */
   ended: boolean;
+  /** Other enabled delays in that quest, left as they were. */
   others: number;
+  /** The part's own type, e.g. */
   part_type?: string;
+  /** The quest's own id, as the `quests` read prints it. */
   quest_id: number;
+  /** The quest's name, e.g. */
   quest_name?: string;
+  /** The defName of the script the quest was built from. */
   script_def_name?: string;
 }
 
@@ -1353,37 +1499,49 @@ export interface DevSkillDto {
   def_name?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The skill's level, 0 to 20. */
   level: number;
+  /** The passion the skill carries: none, minor or major. */
   passion?: string;
 }
 
 export interface DevThingStateDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The thing's numeric id. */
   id: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
   /** The cell the thing stands on, as x and z map coordinates. */
   position?: PositionDto;
+  /** How many units the stack holds. */
   stack_count: number;
 }
 
 export interface DevTickStateDto {
+  /** The tick after the action ran. */
   after: number;
+  /** The tick before the action ran. */
   before: number;
+  /** How many ticks the action ran. */
   ran: number;
 }
 
 export interface DevWealthStateDto {
+  /** The silver the op placed; wealth is derived, so this is what moved it. */
   added: number;
+  /** The wealth after the action ran. */
   after: number;
+  /** The wealth before the action ran. */
   before: number;
 }
 
 export interface DialogOptionDto {
+  /** Optional: Perform an action when clicked? */
   action_id?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether choosing it closes the window. */
   resolve_tree: boolean;
 }
 
@@ -1393,10 +1551,15 @@ export interface DifficultyDefDto {
 }
 
 export interface DocumentationHealthDto {
+  /** When the document check ran. */
   generated_at: string;
+  /** One entry per document section. */
   sections?: string[];
+  /** Whether the document is healthy. */
   status?: string;
+  /** How many routes the document lists. */
   total_endpoints: number;
+  /** How many extensions it carries. */
   total_extensions: number;
 }
 
@@ -1421,6 +1584,7 @@ export interface DraftResultDto {
 export interface DrugPolicyDefDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** One entry per drug the policy rules on. */
   entries?: DrugPolicyEntryDto[];
   /** The label the game shows for this thing in its UI. */
   label?: string;
@@ -1440,12 +1604,19 @@ export interface DrugPolicyDto {
 }
 
 export interface DrugPolicyEntryDto {
+  /** Whether the policy allows a scheduled dose. */
   allow_scheduled: boolean;
+  /** Whether the policy allows it for addiction. */
   allowed_for_addiction: boolean;
+  /** Whether the policy allows it for joy. */
   allowed_for_joy: boolean;
+  /** How many days between scheduled doses. */
   days_frequency: number;
+  /** The drug the entry rules on. */
   drug?: string;
+  /** Take it only when joy falls below this. */
   only_if_joy_below: number;
+  /** Take it only when mood falls below this. */
   only_if_mood_below: number;
 }
 
@@ -1576,7 +1747,9 @@ export interface FactionDto {
 }
 
 export interface FactionIconImageDto {
+  /** The colour the icon is tinted with. */
   color?: string;
+  /** The icon as base64 text. */
   image?: ImageDto;
 }
 
@@ -1770,19 +1943,29 @@ export interface FormCaravanResultDto {
 }
 
 export interface FuelBuildingDto {
+  /** The bills the building runs right now. */
   bills: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** How much fuel it holds. */
   fuel: number;
+  /** How much fuel it can hold. */
   fuel_capacity: number;
+  /** The fuel's def name. */
   fuel_type?: string;
+  /** Whether it has any fuel. */
   has_fuel: boolean;
+  /** The building's numeric id. */
   id: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The bills the building runs that cook meals. */
   meal_bills: number;
+  /** Whether a colonist may refuel it. */
   refuel_available: boolean;
+  /** Why refuelling is blocked, when it is. */
   refuel_blocked?: string;
+  /** Whether refuelling is forced. */
   refuel_forced: boolean;
 }
 
@@ -1796,11 +1979,14 @@ export interface FuelStockDto {
 }
 
 export interface FuelSummaryDto {
+  /** The buildings that burn fuel. */
   buildings?: FuelBuildingDto[];
+  /** The fuel stacks the colony holds. */
   stocks?: FuelStockDto[];
 }
 
 export interface GameConditionDefDto {
+  /** Whether the condition may last forever. */
   can_be_permanent: boolean;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
@@ -1808,94 +1994,159 @@ export interface GameConditionDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The text the condition's letter shows. */
   letter_text?: string;
+  /** The sky colour the condition draws. */
   sky_target: number;
+  /** How fast the sky fades into that colour. */
   sky_target_lerp_factor: number;
+  /** How much the condition moves the temperature, in Celsius. */
   temperature_offset: number;
 }
 
 export interface GameContext {
+  /** The game tick the answer was built on. */
   current_tick: number;
 }
 
 export interface GameLoadRequestDto {
+  /** Whether to check the save's version first. */
   check_version: boolean;
+  /** The save to load, by name. */
   file_name?: string;
+  /** Whether to load despite a mod mismatch. */
   skip_mod_mismatch: boolean;
 }
 
 export interface GameSaveRequestDto {
+  /** The name to save under. */
   file_name?: string;
 }
 
 export interface GameSettingsDto {
+  /** Whether any letter pauses the game. */
   automatic_pause_on_letter: boolean;
+  /** How many days between autosaves. */
   autosave_interval: boolean;
+  /** Whether the custom cursor is on. */
   custom_cursor_enabled: boolean;
+  /** Whether dev mode is on. */
   development_mode: boolean;
+  /** Whether the camera scrolls at the screen edge. */
   edge_screen_scroll: boolean;
+  /** Whether the game runs fullscreen. */
   fullscreen: boolean;
+  /** Whether pawns wear hats only on the map. */
   hats_only_on_map: boolean;
+  /** The language the game's text shows in. */
   language?: string;
+  /** Whether the log records everything. */
   log_verbose: boolean;
+  /** Manual work priorities: while off, the game treats every active work type as 3 and a pawn's stored level orders nothing. */
   manual_priorities: boolean;
+  /** How fast dragging moves the map. */
   map_drag_sensitivity: number;
+  /** How many settlements the player may found. */
   max_number_of_player_settlements: number;
+  /** Whether the game pauses once a save has loaded. */
   pause_on_load: boolean;
+  /** Whether an urgent letter pauses the game. */
   pause_on_urgent_letter?: string;
+  /** Whether plants sway in the wind. */
   plant_wind_sway: boolean;
+  /** Whether the mod list resets after a crash. */
   reset_mods_config_on_crash: boolean;
+  /** The screen resolution the game runs at. */
   resolution?: string;
+  /** Whether the resource readout groups by category. */
   resource_readout_categorized: boolean;
+  /** Whether the game keeps running unfocused. */
   run_in_background: boolean;
+  /** Whether animals show their names. */
   show_animal_names: boolean;
+  /** Whether the clock shows the real time of day. */
   show_realtime_clock: boolean;
+  /** Whether temperatures show in Celsius or Fahrenheit. */
   temperature_mode?: string;
+  /** Whether textures are compressed. */
   texture_compression: number;
+  /** How large the UI is drawn. */
   user_interface_scale: number;
+  /** The ambient sound volume, 0 to 1. */
   volume_ambient: number;
+  /** The game sound volume, 0 to 1. */
   volume_game: number;
+  /** --- Audio (Volumes 0.0 to 1.0) --- */
   volume_master: number;
+  /** The music volume, 0 to 1. */
   volume_music: number;
+  /** Whether zooming follows the mouse. */
   zoom_to_mouse: boolean;
 }
 
 export interface GameStateDto {
+  /** The current map's clock offset in ticks (fox ticket #3412): the game adds the tile's whole-hour time zone to its own start tick, so a second settlement on another longitude reads hours off from... */
   clock_offset_ticks?: number | null;
+  /** How many free colonists the colony has. */
   colonist_count: number;
+  /** The name the player gave the colony. */
   colony_name?: string;
+  /** The colony's wealth in silver. */
   colony_wealth: number;
+  /** The screen the player looks at. */
   current_view?: string;
+  /** The game tick the answer was built on. */
   game_tick: number;
+  /** What is loaded (#3098). */
   has_game: boolean;
+  /** Whether a map is loaded. */
   has_map: boolean;
+  /** Whether the game is loading right now. */
   is_loading: boolean;
+  /** Whether the mod settings dialog is open. */
   is_mod_settings_open: boolean;
+  /** Whether the game is paused. */
   is_paused: boolean;
+  /** Whether the options dialog is open. */
   is_settings_open: boolean;
+  /** Which file a save writes (fox #3603). */
   loaded_save?: string;
+  /** How many maps the game holds. */
   map_count: number;
+  /** What paused the game, e.g. a letter or the player. */
   pause_source?: string;
+  /** Why the game cannot start, when it cannot. */
   pick_problem?: string;
+  /** What a founding installed from a candidate batch (ticket #3924): the picked candidates as "#7 Mia (34), #11 Tam (31)", or why the pick was refused and the scenario's own random colonists stayed. */
   picked_pawns?: string;
+  /** Where the game stands: menu, loading or playing. */
   program_state?: string;
+  /** The save the colony was loaded from. */
   save_name?: string;
+  /** The scenario the colony was founded under (ticket #3930), so a run can tell Crashlanded from Lost Tribe without remembering the call. */
   scenario?: string;
+  /** The scenario's name, as the game shows it. */
   scenario_label?: string;
+  /** The storyteller's def name. */
   storyteller?: string;
+  /** Why the clock stands still (fox ticket #3490). */
   time_speed?: string;
 }
 
 export interface GeneDefDto {
+  /** How much complexity the gene adds to the genome. */
   biostat_cpx: number;
+  /** How much metabolism the gene adds to the genome. */
   biostat_met: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The category the gene shows under. */
   display_category?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The age from which the gene works. */
   min_age_active: number;
 }
 
@@ -1965,20 +2216,29 @@ export interface GrowingZonePlantsDto {
 }
 
 export interface HediffDefDto {
+  /** The comps the hediff carries, such as its immunity driver. */
   comp_props?: string;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The C# class the hediff runs. */
   hediff_class?: string;
+  /** Whether the hediff is an addiction. */
   is_addiction: boolean;
+  /** Whether the game counts it as a bad condition. */
   is_bad: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether it makes the pawn feel sick. */
   makes_sick_thought: boolean;
+  /** The highest severity the hediff reaches. */
   max_severity: number;
+  /** How much the severity moves per day. */
   severity_per_day: number;
+  /** The severity stages the hediff passes. */
   stages?: HediffStageDto[];
+  /** Whether a doctor can tend it. */
   tendable: boolean;
 }
 
@@ -2054,14 +2314,21 @@ export interface HediffDto {
 }
 
 export interface HediffStageDto {
+  /** The hediffs the pawn becomes immune to. */
   become_immune_to?: string[];
+  /** How many days until the stage kills, on average. */
   death_mtb_days: number;
+  /** How many days between the memories the stage erases. */
   forget_memory_thought_mtb_days: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How many days between the mental breaks it forces. */
   mental_break_mtb_days: number;
+  /** The severity the stage starts at. */
   min_severity: number;
+  /** How much pain the stage causes, as a multiplier. */
   pain_factor: number;
+  /** How many days between the vomiting the stage causes. */
   vomit_mtb_days: number;
 }
 
@@ -2169,36 +2436,51 @@ export interface IdeoSummaryDto {
 }
 
 export interface ImageData {
+  /** The image encoded as a data URI. */
   data_uri?: string;
 }
 
 export interface ImageDto {
+  /** The image as base64 text. */
   image_base64?: string;
+  /** Whether the upload worked, as the mod reports it. */
   result?: string;
 }
 
 export interface ImageMetadata {
   /** The answer's format: html, json, markdown or openapi. */
   format?: string;
+  /** How many pixels tall the image is. */
   height: number;
+  /** How many bytes the image takes. */
   size_bytes: number;
+  /** How many pixels wide the image is. */
   width: number;
 }
 
 export interface ImageUploadRequest {
+  /** Which direction the texture faces. */
   direction?: string;
+  /** The image to upload, as base64 text. */
   image?: string;
+  /** Whether the uploaded texture stacks on its cell. */
   is_stackable?: string;
+  /** The mask texture the upload uses. */
   mask_image?: string;
   /** The name the game shows for this thing. */
   name?: string;
+  /** Where the texture sits on its cell. */
   offset?: string;
+  /** How large the texture is drawn. */
   scale?: string;
+  /** Which kind of thing the texture belongs to. */
   thing_type?: string;
+  /** Whether the upload reuses an existing index. */
   update_item_index: number;
 }
 
 export interface IncidentChanceDto {
+  /** The chance the incident fires, 0 to 1. */
   value: number;
 }
 
@@ -2208,92 +2490,162 @@ export interface IncidentChanceRequestDto {
 }
 
 export interface IncidentDefDto {
+  /** The biomes where it may fire. */
   allowed_biomes?: string[];
+  /** The base chance the incident fires per check. */
   base_chance: number;
+  /** The chance when Royalty content is loaded. */
   base_chance_with_royalty: number;
+  /** The category the incident falls in. */
   category?: string;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The biomes where it never fires. */
   disallowed_biomes?: string[];
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The letter the incident sends, by def name. */
   letter_def_name?: string;
+  /** The text the incident's letter shows. */
   letter_text?: string;
+  /** The highest threat points it fires at. */
   max_threat_points: number;
+  /** The fewest colonists needed for it to fire. */
   min_population: number;
+  /** The lowest threat points it fires at. */
   min_threat_points: number;
+  /** How the incident changes the colony's population. */
   population_effect?: string;
+  /** Whether colonists must stand on the map for it. */
   require_colonists_present: boolean;
+  /** Whether the recent-incident weighting skips it. */
   should_ignore_recent_weighting: boolean;
+  /** The tags that decide when it may fire. */
   tags?: string[];
 }
 
 export interface IncidentDto {
+  /** The category the incident falls in. */
   category?: string;
+  /** How many in-game days ago it fired. */
   days_since_occurred: number;
+  /** The incident's def name. */
   incident_def?: string;
+  /** The hour of the day the incident fired. */
   incident_hour: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
 }
 
 export interface IncidentParmsDto {
+  /** Target and gift parameters */
   attack_targets?: string[];
+  /** How often raiders wear biocoded apparel. */
   biocode_apparel_chance: number;
+  /** How often raiders carry biocoded weapons. */
   biocode_weapons_chance: number;
+  /** Whether the incident skips the storyteller's rules. */
   bypass_storyteller_settings: boolean;
+  /** Whether the attackers may kidnap. */
   can_kidnap: boolean;
+  /** Whether the attackers may steal. */
   can_steal: boolean;
+  /** Whether the attackers may give up and leave. */
   can_timeout_or_flee: boolean;
+  /** Controller and location parameters */
   controller_pawn?: string;
+  /** The letter def the call set. */
   custom_letter_def?: string;
+  /** The letter label the call set. */
   custom_letter_label?: string;
+  /** The letter text the call set. */
   custom_letter_text?: string;
+  /** Whether raiders skip single-use launchers. */
   dont_use_single_use_rocket_launchers: boolean;
+  /** The faction the incident comes from. */
   faction?: string;
+  /** Whether the call forced the incident. */
   forced: boolean;
+  /** Raid and combat parameters */
   generate_fighters_only: boolean;
+  /** The gifts the incident brings along. */
   gifts?: string[];
+  /** Signal and spawn parameters */
   in_signal_end?: string;
+  /** The cell the infestation is forced to. */
   infestation_loc_override?: string;
+  /** The hediffs the letter links to. */
   letter_hyperlink_hediff_defs?: string[];
+  /** The things the letter links to. */
   letter_hyperlink_thing_defs?: string[];
+  /** The lord the spawned pawns join. */
   lord?: string;
+  /** The mech cluster the incident drops. */
   mech_cluster_sketch?: string;
+  /** How many pawns it spawns. */
   pawn_count: number;
+  /** How many pawn groups it spawns. */
   pawn_group_count: number;
+  /** The kind of pawn group it spawns, e.g. a raid. */
   pawn_group_kind?: string;
+  /** The seed the pawn groups are made from. */
   pawn_group_maker_seed?: number | null;
+  /** The pawn groups the incident spawns, one entry each. */
   pawn_groups?: Record<string, number>;
+  /** The ideoligion the spawned pawns follow. */
   pawn_ideo?: string;
+  /** The pawn kind it spawns, by def name. */
   pawn_kind?: string;
+  /** How many ticks a drop pod takes to open. */
   pod_open_delay: number;
+  /** How much the points are multiplied. */
   point_multiplier: number;
+  /** The threat points the incident was generated with. */
   points: number;
+  /** The psychic ritual the incident starts. */
   psychic_ritual_def?: string;
+  /** The quest the incident belongs to. */
   quest?: string;
+  /** The quest script the incident starts. */
   quest_script_def?: string;
+  /** The tag the incident puts on its quest. */
   quest_tag?: string;
+  /** The age band the raid draws from. */
   raid_age_restriction?: string;
+  /** How the raid arrives: walking, drop pods or edge. */
   raid_arrival_mode?: string;
+  /** How a quick military aid raid arrives. */
   raid_arrival_mode_for_quick_military_aid: boolean;
+  /** Whether one raider is always left downed. */
   raid_force_one_downed: boolean;
+  /** Whether raiders never flee alone. */
   raid_never_flee_individual: boolean;
+  /** The strategy the raid follows, e.g. immediate attack. */
   raid_strategy?: string;
+  /** Whether the incident sends a letter. */
   send_letter: boolean;
+  /** Whether the incident stays silent. */
   silent: boolean;
+  /** The cell the incident spawns at. */
   spawn_center?: string;
+  /** The rotation the incident spawns with. */
   spawn_rotation?: string;
+  /** Whether generated neutral pawns stay on the map. */
   store_generated_neutral_pawns?: string[];
+  /** The thing the incident is aimed at. */
   target?: string;
+  /** The body size of everything it spawns. */
   total_body_size: number;
+  /** The trader kind the incident brings, by def name. */
   trader_kind?: string;
 }
 
 export interface IncidentWeightDto {
+  /** The incident category the weight belongs to. */
   category?: string;
+  /** The weight the storyteller gives the category now. */
   current_weight: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
@@ -2302,6 +2654,7 @@ export interface IncidentWeightDto {
 }
 
 export interface IncidentsDto {
+  /** One entry per incident the map has seen. */
   incidents?: IncidentDto[];
 }
 
@@ -2380,12 +2733,16 @@ export interface ItemDto {
 }
 
 export interface ItemRecipesDto {
+  /** The item's def name. */
   item_def_name?: string;
+  /** The item's label, as the game shows it. */
   item_label?: string;
+  /** The recipes that make the item. */
   recipes?: ThingRecipeDto[];
 }
 
 export interface JobDefDto {
+  /** Whether the pawn always shows its weapon during it. */
   always_show_weapon: boolean;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
@@ -2393,8 +2750,11 @@ export interface JobDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether the pawn never shows its weapon during it. */
   never_show_weapon: boolean;
+  /** Whether a player order may break the job. */
   player_interruptible: boolean;
+  /** Whether the job may be suspended and resumed. */
   suspendable: boolean;
 }
 
@@ -2509,8 +2869,11 @@ export interface LandingCriterionDto {
 export interface LearningConceptDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The text the learning helper shows for it. */
   help_text?: string;
+  /** Whether the player has learned it fully. */
   is_completed: boolean;
+  /** How much of it the player has learned, 0 to 1. */
   knowledge_progress: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
@@ -2519,80 +2882,123 @@ export interface LearningConceptDto {
 export interface LearningConceptMarkDto {
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** Whether the concept now counts as learned. */
   is_completed: boolean;
 }
 
 export interface LetterAnswerRequestDto {
+  /** The letter to answer, by id. */
   id: number;
+  /** The option to choose, by index. */
   option?: string;
 }
 
 export interface LetterAnswerResultDto {
+  /** True when the option was pressed; a letter that offers no dialog, or an option that matches none, answers false with a reason instead. */
   answered: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether answering opened a window. */
   open_window?: string;
+  /** Options are the choices the dialog drew, so a caller that matched nothing learns what it can say. */
   options?: string[];
+  /** Pressed is the label of the option that was run, the game's own text. */
   pressed?: string;
+  /** Why nothing was pressed, empty on success. */
   reason?: string;
+  /** How many letters stand afterwards. */
   remaining: number;
+  /** StillOpen says a dialog holds the clock after the press: a choice that leads to a second node is answered again with the options it now offers. */
   still_open: boolean;
 }
 
 export interface LetterDismissRequestDto {
+  /** The letter to dismiss, by id. */
   id: number;
 }
 
 export interface LetterDismissResultDto {
+  /** Whether the letter was dismissed. */
   dismissed: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Why a letter could not be dismissed, empty on success. */
   reason?: string;
+  /** How many letters stand afterwards. */
   remaining: number;
 }
 
 export interface LetterDto {
+  /** The whole body the game shows when the letter is opened: a paragraph or two. */
   body?: string;
+  /** Whether the game's own right-click dismiss applies. */
   can_dismiss: boolean;
+  /** LetterDef defName: ThreatBig, ThreatSmall, PositiveEvent, NegativeEvent, Quest, Event, ... */
   def?: string;
+  /** The letter's numeric id. */
   id: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether this read is the first to report the letter. */
   new: boolean;
+  /** NoTraitOption says a growth letter also offers "no trait". */
   no_trait_option: boolean;
+  /** The labels the letter's dialog draws, in the order it draws them: a joiner offers Accept and Reject. */
   options?: string[];
+  /** PassionChoices are the skills a growth letter offers for the child's new passion, in the order its dialog draws them: the index is what the growth call takes (ticket #3714). */
   passion_choices?: string[];
+  /** PassionGains is how many of the offered skills the growth letter asks for: one, in practice. */
   passion_gains: number;
+  /** Whether the game's own auto-pause rule pauses the clock when this letter is received: the player's pause setting is at or above the letter's own mode (LetterStack.ReceiveLetter). */
   pauses: boolean;
+  /** The quest this letter announces, for a NewQuestLetter; null for every other letter. */
   quest_id?: number | null;
+  /** The first line of the letter's own body, so a caller can tell a raid from a trade caravan without opening it. */
   text?: string;
+  /** The game tick the letter arrived, the same clock the game state reads. */
   tick: number;
+  /** TraitChoices are the traits a growth letter offers. */
   trait_choices?: string[];
 }
 
 export interface LetterGrowthRequestDto {
+  /** The letter to answer, by id. */
   id: number;
+  /** Passion names the skill that gains a passion, or the index the letters read prints. */
   passion?: string;
+  /** Trait names the trait, or "none" for the letter's own no-trait option. */
   trait?: string;
 }
 
 export interface LetterGrowthResultDto {
+  /** Applied is true when the game made the choice: the skill gained its passion, the trait was gained and the letter left the stack. */
   applied: boolean;
+  /** ChosenPassions names what was gained, e.g. */
   chosen_passions?: string[];
+  /** ChosenTrait is the trait gained, empty when the child gained none. */
   chosen_trait?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** NoTraitOption says the letter offers "no trait" as well. */
   no_trait_option: boolean;
+  /** PassionChoices are the skills the letter offers, one per index. */
   passion_choices?: string[];
+  /** PassionGains is how many of the offered skills the letter asks for. */
   passion_gains: number;
+  /** Pawn is the child whose growth moment this is. */
   pawn?: string;
+  /** Why nothing was applied, empty on success. */
   reason?: string;
+  /** How many letters stand afterwards. */
   remaining: number;
+  /** TraitChoices are the traits the letter offers. */
   trait_choices?: string[];
 }
 
 export interface LifeStageAgeDto {
+  /** The stage's name, e.g. adult. */
   life_stage?: string;
+  /** The age the stage starts at, in years. */
   min_age: number;
 }
 
@@ -2619,18 +3025,31 @@ export interface LordCreateRequestDto {
 }
 
 export interface LordDto {
+  /** Whether any of its pawns is still active. */
   any_active_pawn: boolean;
+  /** The toil the group is in right now. */
   current_toil_name?: string;
+  /** The faction's def name. */
   faction_def_name?: string;
+  /** The faction's name, as the game shows it. */
   faction_name?: string;
+  /** Whether the lord waits for a leave signal. */
   in_signal_leave?: string;
+  /** The lord's load id, which survives a save. */
   load_id: number;
+  /** The lord job the group runs. */
   lord_job_type?: string;
+  /** How many pawns it ever gained. */
   num_pawns_ever_gained: number;
+  /** How many of its pawns died violently. */
   num_pawns_lost_violently: number;
+  /** The buildings the lord owns, by numeric id. */
   owned_building_ids?: string[];
+  /** The pawns the lord owns, by numeric id. */
   owned_pawn_ids?: string[];
+  /** The quest tags the lord carries, one per tag. */
   quest_tags?: string[];
+  /** How many ticks the group has spent in that toil. */
   ticks_in_toil: number;
 }
 
@@ -2696,7 +3115,9 @@ export interface MapFarmSummaryDto {
 }
 
 export interface MapPowerInfoDto {
+  /** Every built building with a power comp, one row each. */
   buildings?: PoweredBuildingDto[];
+  /** The consumers the power net feeds, by building id. */
   consume_power_buildings?: number[];
   /** How much of that draw comes from machines that are switched on. */
   consumption_power_on: number;
@@ -2704,7 +3125,9 @@ export interface MapPowerInfoDto {
   current_power: number;
   /** How much power the batteries hold right now. */
   currently_stored_power: number;
+  /** The producers the power net feeds, by building id. */
   produce_power_buildings?: number[];
+  /** The batteries the power net holds, by building id. */
   store_power_buildings?: number[];
   /** TicksSinceLoad is how many ticks the colony has run since it was loaded, -1 when this build saw no load (fox ticket #3781). */
   ticks_since_load: number;
@@ -2839,23 +3262,32 @@ export interface MentalStateDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** Whether the state attacks others. */
   is_aggro: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
-  recovery_mtb_days: number;
+  /** How many days until the state ends, on average; null when the game sets no value. */
+  recovery_mtb_days?: number | null;
 }
 
 export interface MessageDto {
+  /** The entry's class as the save writes it: Message for a notification, StandardLetter / DeathLetter / ChoiceLetter_... */
   class?: string;
+  /** The MessageTypeDef defName: NegativeEvent, ThreatSmall, ThreatBig, PositiveEvent, SilentInput, ... */
   def?: string;
+  /** Whether the message points at a thing. */
   has_target: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
   /** The map's numeric id; 0 is the player's home map. */
   map_id: number;
+  /** The def of the thing it points at. */
   target_def?: string;
+  /** The target thing's label ("Rice plant") when the message names one; empty when the target is only a cell. */
   target_label?: string;
+  /** The game's own text, e.g. */
   text?: string;
+  /** The game tick the entry was created (a letter: when it arrived), the same clock the game state reads. */
   tick: number;
   /** The cell's x coordinate, in map cells. */
   x: number;
@@ -2866,16 +3298,23 @@ export interface MessageDto {
 }
 
 export interface ModInfoDto {
+  /** The author the mod's About file names. */
   author?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The mod's place in the load order. */
   load_order: number;
   /** The name the game shows for this thing. */
   name?: string;
+  /** The mod's package id. */
   package_id?: string;
+  /** The folder the mod lives in. */
   root_dir?: string;
+  /** The game versions the mod supports. */
   supported_versions?: string[];
+  /** The mod's home page. */
   url?: string;
+  /** The version the mod's About file names. */
   version?: string;
 }
 
@@ -2908,87 +3347,156 @@ export interface MoodThoughtDto {
 }
 
 export interface NativeScreenshotRequestDto {
+  /** The cell the camera centres on, x. */
   center_x?: number | null;
+  /** The cell the camera centres on, z. */
   center_z?: number | null;
+  /** The file name to write the shot under, in the save folder. */
   file_name?: string;
+  /** Whether the UI is left out of the shot. */
   hide_ui: boolean;
+  /** How far the camera zooms in, 1 is the game's default. */
   zoom_level?: number | null;
 }
 
 export interface NeedDefDto {
+  /** The level the need starts at. */
   base_level: number;
+  /** Whether only colonists and prisoners carry it. */
   colonist_and_prisoners_only: boolean;
+  /** Whether only colonists carry it. */
   colonists_only: boolean;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The life stages the need applies to. */
   developmental_stage_filter?: string;
+  /** How much the need falls per day. */
   fall_per_day: number;
+  /** Whether the need stops moving in a mental state. */
   freeze_in_mental_state: boolean;
+  /** Whether the need stops moving while the pawn sleeps. */
   freeze_while_sleeping: boolean;
+  /** The hediffs that must be present for the need. */
   hediff_required_any?: string[];
+  /** The order the need takes in the list. */
   list_priority: number;
+  /** Whether the need is a major one. */
   major: boolean;
+  /** The lowest intelligence that carries the need. */
   min_intelligence?: string;
+  /** The C# class the need runs. */
   need_class_name?: string;
+  /** Whether prisoners never carry it. */
   never_on_prisoner: boolean;
+  /** Whether slaves never carry the need. */
   never_on_slave: boolean;
+  /** The precepts that remove the need. */
   nullifying_precepts?: string[];
+  /** Whether it appears only when a gene causes it. */
   only_if_caused_by_gene: boolean;
+  /** Whether it appears only when a hediff causes it. */
   only_if_caused_by_hediff: boolean;
+  /** Whether it appears only when a trait causes it. */
   only_if_caused_by_trait: boolean;
+  /** Whether only the player's mechs carry it. */
   player_mechs_only: boolean;
+  /** The comps a pawn needs to carry it. */
   required_comps?: string[];
+  /** Whether the need shows a bar. */
   scale_bar: boolean;
+  /** How fast the need falls per hour when the pawn seeks it. */
   seeker_fall_per_hour: number;
+  /** How fast it rises per hour while the pawn seeks it. */
   seeker_rise_per_hour: number;
+  /** Whether the need shows for caravan members. */
   show_for_caravan_members: boolean;
+  /** Whether the need appears in the needs list. */
   show_on_need_list: boolean;
+  /** Whether the need shows its value in ticks. */
   show_unit_ticks: boolean;
+  /** Whether only slaves carry it. */
   slaves_only: boolean;
+  /** The titles that must be held for the need. */
   title_required_any?: string[];
+  /** The tag the tutor uses to highlight it. */
   tutor_highlight_tag?: string;
 }
 
 export interface NewGameStartRequestDto {
+  /** CandidateCount is how many candidates a batch call draws (ticket #3924); StartingPawns is the pick a founding installs, 1-based ids from the batch answer. */
   candidate_count: number;
+  /** The difficulty to start on, by def name. */
   difficulty_name?: string;
+  /** IdeoMeme is the one normal meme a freshly built ideo carries (ticket #3927); empty keeps Individualist, which forces no precept. */
   ideo_meme?: string;
+  /** IdeoName picks a saved ideoligion by its name; empty builds the fox default (Helpers/IdeoSetup.cs, ticket #3612). */
   ideo_name?: string;
+  /** IdeoPrecepts are the precepts a freshly built ideo carries, by defName or by the "Issue: label" the ideoligion window shows (ticket #3927). */
   ideo_precepts?: string[];
+  /** How many landmarks the planet holds. */
   landmark_density: number;
+  /** How large the starting map is, in cells. */
   map_size: number;
+  /** NewIdeoName names the ideoligion this call builds (fox ticket #3929). */
   new_ideo_name?: string;
+  /** How populated the planet is. */
   overall_population: number;
+  /** How much rain the planet gets overall. */
   overall_rainfall: number;
+  /** How warm the planet is overall. */
   overall_temperature: number;
+  /** Whether the colony runs in permadeath. */
   permadeath: boolean;
+  /** How much of the planet the world covers, 0 to 1. */
   planet_coverage: number;
+  /** Scenario names the starting scenario by defName or label (ticket #3930); empty keeps the game's Crashlanded default. */
   scenario?: string;
+  /** The site wish (ticket #3930): what the starting tile should look like. */
   site_biomes?: string[];
+  /** The fewest growing days the site needs. */
   site_growing_days_min: number;
+  /** How hilly the landing site must be. */
   site_hilliness?: string[];
+  /** Whether the site needs a river. */
   site_river: boolean;
+  /** Whether the site needs a road. */
   site_road: boolean;
+  /** How far settlements must stay from the site. */
   site_settlement_radius: number;
+  /** SiteSettlementsMin other factions' settlements within SiteSettlementRadius tiles: neighbours worth trading with or raiding. */
   site_settlements_min: number;
+  /** The warmest it may be, in Celsius. */
   site_temperature_max?: number | null;
+  /** The coldest the landing site may be, in Celsius. */
   site_temperature_min?: number | null;
+  /** SiteVary takes the Nth best tile instead of the best, so a run can found a deliberately different colony on purpose. */
   site_vary: number;
+  /** The pawns the colony starts with. */
   starting_pawns?: number[];
+  /** The season to start in. */
   starting_season?: string;
+  /** The world tile to land on. */
   starting_tile?: string;
+  /** The storyteller to start with, by def name. */
   storyteller_name?: string;
+  /** The seed the world is generated from. */
   world_seed?: string;
 }
 
 export interface OpenWindowDto {
+  /** The buttons the open window offers. */
   buttons?: string[];
+  /** Whether the window forces a pause. */
   force_pause: boolean;
   /** The name the game shows for this thing. */
   name?: string;
+  /** The window's second name field. */
   second_name?: string;
+  /** The text the open window shows. */
   text?: string;
+  /** The title the open window shows. */
   title?: string;
+  /** The kind of window that is open. */
   window_type?: string;
 }
 
@@ -3171,21 +3679,30 @@ export interface PawnBasicRequest {
 }
 
 export interface PawnCandidateDto {
+  /** The candidate's age in years. */
   age: number;
+  /** Gender is "f" or "m": two bytes, and a colony of one sex is a decision a run may want to make on purpose. */
   gender?: string;
+  /** The candidate's health, as the game reports it. */
   health?: string[];
+  /** Id is 1-based and names the candidate in the batch answer, so a run writes the same number back in `picks`. */
   id: number;
+  /** The work the candidate cannot do. */
   incapable?: string[];
   /** The name the game shows for this thing. */
   name?: string;
+  /** The candidate's skills, one entry each. */
   skills?: PawnCandidateSkillDto[];
+  /** The candidate's traits, one entry each. */
   traits?: string[];
 }
 
 export interface PawnCandidateSkillDto {
+  /** The skill's level, 0 to 20. */
   level: number;
   /** The name the game shows for this thing. */
   name?: string;
+  /** Passion is the game's own enum: 0 none, 1 minor, 2 major. */
   passion: number;
 }
 
@@ -3339,16 +3856,23 @@ export interface PawnJobRequestDto {
 }
 
 export interface PawnKindDefDto {
+  /** The apparel tags it may wear. */
   apparel_tags?: string[];
+  /** The body size the kind starts with. */
   base_body_size: number;
+  /** The hit point scale the kind starts with. */
   base_health_scale: number;
+  /** The combat power the game rates it at. */
   combat_power: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The faction tags that may field it. */
   faction_tags?: string[];
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The race's def name. */
   race?: string;
+  /** The weapon tags it may carry. */
   weapon_tags?: string[];
 }
 
@@ -3693,9 +4217,13 @@ export interface PlantDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The lowest fertility the plant grows on. */
   fertility_min: number;
+  /** How much the ground's fertility helps it. */
   fertility_sensitivity: number;
+  /** How many days the plant needs to ripen. */
   grow_days: number;
+  /** The thing the plant yields when harvested. */
   harvested_thing_def?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
@@ -3780,13 +4308,19 @@ export interface PreceptDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** What the precept changes in play. */
   effects?: string[];
+  /** How strongly the precept shapes the ideoligion. */
   impact?: string;
+  /** Issue and TipLabel are what the ideoligion window shows and what a founding accepts as a precept name (ticket #3927). */
   issue?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** RequiredMemes names the memes a precept demands; Effects what it buys and costs, restated from the def. */
   required_memes?: string[];
+  /** The ritual the precept attaches to, when it names one. */
   ritual?: string;
+  /** The short label the tooltip shows. */
   tip_label?: string;
 }
 
@@ -3868,27 +4402,42 @@ export interface QuestChoiceItemDto {
 }
 
 export interface QuestDto {
+  /** Why the game refuses the quest; empty when it can be accepted. */
   accept_reason?: string;
+  /** The accepter the game recorded, once the quest was taken. */
   accepter?: string;
+  /** The game's own answer for this quest, the report its accept button greys out with (QuestUtility.CanAcceptQuest, ticket #3216). */
   can_accept: boolean;
+  /** Reward choices the game draws one accept button per choice for. */
   choices?: QuestChoiceDto[];
   /** The description the game shows for this thing. */
   description?: string;
+  /** The tick the quest ended in: Quest.cleanupTick, which the game sets when it cleans a quest up after the quest left the running state, -1 while it is on offer or running. */
   ended_tick: number;
+  /** How long ago that was, in game ticks (Quest.TicksSinceCleanup), -1 while the quest has not ended. */
   ended_ticks_ago: number;
+  /** How many hours are left before it expires. */
   expiry_hours: number;
+  /** The quest's numeric id. */
   id: number;
   /** The name the game shows for this thing. */
   name?: string;
+  /** The quest's def name. */
   quest_def?: string;
+  /** Why this quest could not be read, empty for a quest that reads normally. */
   read_error?: string;
+  /** Whether the quest needs a named colonist to accept it; without one the game takes the quest for the colony (Quest.Accept(null)). */
   requires_accepter: boolean;
+  /** What the quest pays out on completion. */
   reward?: string[];
+  /** The quest's state, as the game names it. */
   state?: string;
 }
 
 export interface QuestsDto {
+  /** The quests the colony can still take. */
   active_quests?: QuestDto[];
+  /** The quests the colony has finished or lost. */
   historical_quests?: QuestDto[];
 }
 
@@ -3897,14 +4446,21 @@ export interface RecipeDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The stat that decides the yield. */
   efficiency_stat?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The things one run of the recipe produces. */
   products?: string[];
+  /** The skill levels the crafter needs. */
   skill_requirements?: SkillRequirementDto[];
+  /** How much work the recipe takes. */
   work_amount: number;
+  /** The skill that speeds the recipe's work. */
   work_skill?: string;
+  /** How much skill the work teaches. */
   work_skill_learn_factor: number;
+  /** The stat that speeds the work. */
   work_speed_stat?: string;
 }
 
@@ -3926,10 +4482,13 @@ export interface RecipeDto {
 }
 
 export interface RecipeIngredientDto {
+  /** The defs the ingredient accepts, by name. */
   allowed_def_names?: string[];
   /** How many of the item this entry holds. */
   count: number;
+  /** Whether the ingredient is one fixed def. */
   is_fixed_item: boolean;
+  /** The ingredient as one sentence. */
   summary?: string;
 }
 
@@ -3948,7 +4507,9 @@ export interface RecipeProductDto {
 }
 
 export interface RecipeSkillDto {
+  /** The lowest level that satisfies it. */
   min_level: number;
+  /** The skill the requirement asks for. */
   skill?: string;
 }
 
@@ -4011,18 +4572,25 @@ export interface ResearchFinishedDto {
 }
 
 export interface ResearchProjectDefDto {
+  /** How many research points the project costs. */
   cost: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** Whether the game hides the project. */
   hidden: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The projects that must finish first. */
   prerequisites?: string[];
+  /** The bench a researcher needs to work on it. */
   required_research_building?: string;
+  /** The research tab the project sits on. */
   tab?: string;
+  /** The tech level the project belongs to. */
   tech_level?: string;
+  /** The defs the project unlocks when it finishes. */
   unlocked_defs?: string[];
 }
 
@@ -4087,25 +4655,37 @@ export interface ReservedByDto {
 }
 
 export interface ResourceCategoryDto {
+  /** The name of the resource category. */
   category?: string;
   /** How many of the item this entry holds. */
   count: number;
+  /** What the category is worth in silver. */
   market_value: number;
 }
 
 export interface ResourcesFoodSummaryDto {
+  /** How much food the colony holds. */
   food_total: number;
+  /** How many cooked meals it holds. */
   meals_count: number;
+  /** How many raw ingredients it holds. */
   raw_food_count: number;
+  /** How much of the food is about to rot. */
   rot_status_info?: RotStatusInfoDto;
+  /** How much nutrition all of it holds. */
   total_nutrition: number;
 }
 
 export interface ResourcesSummaryDto {
+  /** One entry per resource category. */
   categories?: ResourceCategoryDto[];
+  /** The food, medicine and weapons the colony must not run out of. */
   critical_resources?: CriticalResourcesDto;
+  /** The tick the summary was built on. */
   last_updated?: string;
+  /** How many item stacks the colony holds. */
   total_items: number;
+  /** What all of it is worth in silver. */
   total_market_value: number;
 }
 
@@ -4360,12 +4940,14 @@ export interface RoomStatDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The score bands the room stat reports. */
   score_stages?: RoomStatScoreStageDto[];
 }
 
 export interface RoomStatScoreStageDto {
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The score the band starts at. */
   min_score: number;
 }
 
@@ -4404,11 +4986,17 @@ export interface RoomThermostatDto {
 }
 
 export interface RotStatusInfoDto {
+  /** How much nutrition keeps. */
   nutrition_not_rotating: number;
+  /** How much nutrition will rot soon. */
   nutrition_rotating_soon: number;
+  /** How much of the food will rot soon, in percent. */
   percentage_rotating_soon: number;
+  /** The stacks that will rot soon. */
   soon_rotting_items?: RottingFoodItemDto[];
+  /** How many units will rot soon. */
   total_soon_rotting_items: number;
+  /** How many stacks will rot soon. */
   total_soon_rotting_stacks: number;
 }
 
@@ -4436,13 +5024,17 @@ export interface RottingFoodDto {
 }
 
 export interface RottingFoodItemDto {
+  /** How many days until it rots. */
   days_until_rot: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** How many hours until it rots. */
   hours_until_rot: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How much nutrition the stack holds. */
   nutrition: number;
+  /** How many units the stack holds. */
   stack_count: number;
   /** The thing's numeric id, as a map or storage read reports it. */
   thing_id: number;
@@ -4498,29 +5090,41 @@ export interface SelectablePlantDto {
 }
 
 export interface SendLetterRequestDto {
+  /** Extra text the letter carries for debugging. */
   debug_info?: string;
+  /** How many ticks to wait before showing it. */
   delay_ticks: number;
+  /** The faction the letter names, by its order id. */
   faction_order_id?: string;
+  /** The defs the letter links to. */
   hyperlink_thing_defs?: string[];
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The letter's def name. */
   letter_def?: string;
+  /** The thing the letter points the camera at. */
   look_target_thing_id?: string;
   /** The map's numeric id; 0 is the player's home map. */
   map_id?: string;
+  /** The text the letter shows the player. */
   message?: string;
+  /** The sound the letter plays when it arrives. */
   play_sound: boolean;
+  /** The quest the letter belongs to. */
   quest_id?: string;
 }
 
 export interface ServerCacheResponseDto {
+  /** A sentence about what the call did. */
   message?: string;
 }
 
 export interface SetForbiddenRequestDto {
+  /** Whether the things become forbidden. */
   forbidden: boolean;
   /** The map's numeric id; 0 is the player's home map. */
   map_id: number;
+  /** The things to change, by numeric id. */
   thing_ids?: number[];
 }
 
@@ -4714,9 +5318,11 @@ export interface SkillDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The work tags the skill switches off while it is missing. */
   disabling_work_tags?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether the skill can carry a passion. */
   passion_susceptible: boolean;
 }
 
@@ -4763,7 +5369,9 @@ export interface SkillEntryDto {
 }
 
 export interface SkillRequirementDto {
+  /** The lowest level that satisfies it. */
   min_level: number;
+  /** The skill the requirement asks for. */
   skill?: string;
 }
 
@@ -4783,6 +5391,7 @@ export interface SoundDefDto {
   def_name?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How many copies of the sound may play at once. */
   max_simultaneous: number;
 }
 
@@ -4800,11 +5409,13 @@ export interface SpawnDropPodRequestDto {
 }
 
 export interface SpawnItemRequestDto {
+  /** How many units to spawn, capped at the def's stack limit. */
   amount: number;
-  /** The def's internal name, e.g. "Steel". */
+  /** The def name of the item to spawn, e.g. "Gun_Revolver". */
   def_name?: string;
-  /** The minimum quality a bill accepts, one of Awful through Legendary. */
+  /** The quality to give it: Awful through Legendary; empty leaves the game's default. */
   quality?: string;
+  /** The material to build it from, e.g. "Steel"; empty for a def without one. */
   stuff_def_name?: string;
   /** The cell's x coordinate, in map cells. */
   x: number;
@@ -4813,21 +5424,31 @@ export interface SpawnItemRequestDto {
 }
 
 export interface StatDefDto {
+  /** Whether a base value of zero is allowed. */
   always_allow_base_zero: boolean;
+  /** The category the stat is listed under. */
   category?: string;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The value the stat starts at. */
   default_base_value: number;
   /** The description the game shows for this thing. */
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The highest value it can take. */
   max_value: number;
+  /** The lowest value the stat can take. */
   min_value: number;
+  /** Whether it shows for animals. */
   show_on_animals: boolean;
+  /** Whether it shows for humanlikes. */
   show_on_humanlikes: boolean;
+  /** Whether it shows for mechanoids. */
   show_on_mechanoids: boolean;
+  /** Whether it shows on things other than work tables. */
   show_on_non_work_tables: boolean;
+  /** Whether the stat shows for pawns. */
   show_on_pawns: boolean;
 }
 
@@ -4937,9 +5558,13 @@ export interface StorageSettingsDto {
 }
 
 export interface StoragesSummaryDto {
+  /** How many cells they cover. */
   total_cells: number;
+  /** How many stockpiles the map holds. */
   total_stockpiles: number;
+  /** How many of those cells hold something. */
   used_cells: number;
+  /** How full the storages are, in percent. */
   utilization_percent: number;
 }
 
@@ -4949,16 +5574,24 @@ export interface StorytellerDefDto {
 }
 
 export interface StreamConfigDto {
+  /** The address the stream is served at. */
   address?: string;
+  /** How many pixels tall one frame is. */
   frame_height: number;
+  /** How many pixels wide one frame is. */
   frame_width: number;
+  /** The JPEG quality, 1 to 100. */
   jpeg_quality: number;
+  /** The port the stream listens on. */
   port: number;
+  /** How many frames per second the stream aims for. */
   target_fps: number;
 }
 
 export interface StreamStatusDto {
+  /** The stream's frame size, frame rate and JPEG quality. */
   config?: StreamConfigDto;
+  /** Whether the camera stream is running. */
   is_streaming: boolean;
 }
 
@@ -4977,12 +5610,19 @@ export interface StuffColorRequest {
 }
 
 export interface StuffStatDto {
+  /** How much blunt armour the material gives. */
   armor_rating_blunt: number;
+  /** How much heat armour the material gives. */
   armor_rating_heat: number;
+  /** How much sharp armour the material gives. */
   armor_rating_sharp: number;
+  /** How much cold the material keeps out. */
   insulation_cold: number;
+  /** How much heat the material keeps out. */
   insulation_heat: number;
+  /** The material's def name. */
   stuff_def_name?: string;
+  /** The material's label, as the game shows it. */
   stuff_label?: string;
 }
 
@@ -5029,82 +5669,128 @@ export interface TemperatureTargetDto {
 }
 
 export interface TerrainDefDto {
+  /** What the terrain lets pawns do, such as walk or build. */
   affordances?: string[];
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** How much faster things on it wear out. */
   extra_deterioration_factor: number;
+  /** How well plants grow on it, 0 to 1. */
   fertility: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether another terrain may lie on it. */
   layerable: boolean;
+  /** How much movement the terrain costs. */
   path_cost: number;
+  /** The projects that must finish before it can be built. */
   research_prerequisites?: string[];
 }
 
 export interface ThingCostDto {
   /** How many of the item this entry holds. */
   count: number;
+  /** The def name of the thing the cost is paid in. */
   thing_def?: string;
 }
 
 export interface ThingDefDto {
+  /** How much blunt damage it stops, 0 to 1. */
   armor_rating_blunt: number;
+  /** How much heat damage it stops, 0 to 1. */
   armor_rating_heat: number;
+  /** How much sharp damage it stops, 0 to 1. */
   armor_rating_sharp: number;
+  /** How much beauty it adds to its room. */
   beauty: number;
+  /** The thing category the def belongs to. */
   category?: string;
+  /** What the thing costs to build. */
   cost_list?: ThingCostDto[];
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** How easily it catches fire, 0 to 1. */
   flammability: number;
+  /** How much cold it keeps out, in degrees. */
   insulation_cold: number;
+  /** How much heat it keeps out, in degrees. */
   insulation_heat: number;
+  /** Whether it is apparel. */
   is_apparel: boolean;
+  /** Whether it is a building. */
   is_building: boolean;
+  /** Whether it is a drug. */
   is_drug: boolean;
+  /** Whether it is an item. */
   is_item: boolean;
+  /** Whether it is medicine. */
   is_medicine: boolean;
+  /** Whether it is a pawn. */
   is_pawn: boolean;
+  /** Whether it is a plant. */
   is_plant: boolean;
+  /** Whether the def is a weapon. */
   is_weapon: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** What one unit is worth in silver. */
   market_value: number;
+  /** How much one unit weighs, in kilograms. */
   mass: number;
+  /** How much damage one unit takes. */
   max_hit_points: number;
+  /** How much nutrition one unit holds. */
   nutrition: number;
+  /** How many units one stack holds. */
   stack_limit: number;
+  /** The base values of the def's stats. */
   stat_base?: Record<string, number>;
+  /** The material categories it can be built from. */
   stuff_categories?: string[];
+  /** StuffStats holds the same armor and insulation numbers once per material the def accepts, and only for apparel (ticket #3615): an apparel's protection is mostly its material's, so the abstract... */
   stuff_stats?: StuffStatDto[];
+  /** The tech level the def belongs to. */
   tech_level?: string;
+  /** The C# class the thing runs. */
   thing_class?: string;
+  /** The trade tags that decide who deals in it. */
   trade_tags?: string[];
+  /** How much work building one takes. */
   work_to_build: number;
+  /** How much work making one takes. */
   work_to_make: number;
 }
 
 export interface ThingDto {
+  /** The thing categories the def belongs to. */
   categories?: string[];
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** The thing's current hit points. */
   hit_points: number;
+  /** Whether the colony is forbidden to touch it. */
   is_forbidden: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** What one unit is worth in silver. */
   market_value: number;
+  /** The thing's hit points when unhurt. */
   max_hit_points: number;
   /** The cell the thing stands on, as x and z map coordinates. */
   position?: PositionDto;
   /** The minimum quality a bill accepts, one of Awful through Legendary. */
   quality: number;
+  /** The thing's rotation: 0, 90, 180 or 270. */
   rotation: number;
+  /** How many cells the thing covers. */
   size?: PositionDto;
+  /** How many units the stack holds. */
   stack_count: number;
+  /** The material's def name, e.g. "Steel". */
   stuff_def_name?: string;
   /** The thing's numeric id, as a map or storage read reports it. */
   thing_id: number;
@@ -5130,32 +5816,50 @@ export interface ThingFilterDto {
 }
 
 export interface ThingRecipeDto {
+  /** The ingredients one run of the recipe takes. */
   ingredients?: RecipeIngredientDto[];
+  /** The sentence the bill shows while it runs. */
   job_string?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The work tables that run the recipe. */
   produced_at?: RecipeProducerDto[];
+  /** The recipe's def name. */
   recipe_def_name?: string;
+  /** The project that must finish first. */
   research_prerequisite?: string;
+  /** The skill levels the crafter needs. */
   skill_requirements?: RecipeSkillDto[];
+  /** How much work the recipe takes. */
   work_amount: number;
+  /** How many seconds that work takes at normal speed. */
   work_time_seconds: number;
 }
 
 export interface ThingSourcesDto {
+  /** Whether butchering a corpse yields it. */
   can_butcher: boolean;
+  /** Whether a work bench can make it. */
   can_craft: boolean;
+  /** Whether a plant yields it when harvested. */
   can_harvest: boolean;
+  /** Whether a miner digs it out. */
   can_mine: boolean;
+  /** Whether traders buy or sell it. */
   can_trade: boolean;
+  /** The recipes that produce it at a work bench. */
   crafting_recipes?: string[];
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
+  /** The plants that yield it when harvested. */
   harvested_from?: string[];
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The rocks that yield it when mined. */
   mined_from?: string[];
+  /** The thing categories this entry covers. */
   thing_categories?: string[];
+  /** The trade tags that decide who deals in it. */
   trade_tags?: string[];
 }
 
@@ -5171,16 +5875,22 @@ export interface ThoughtDefDto {
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** How many days the thought lasts. */
   duration_days: number;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** How much mood the thought moves. */
   mood_offset: number;
+  /** How many times the thought stacks. */
   stack_limit: number;
+  /** The stages the thought passes as it settles. */
   stages?: ThoughtStageDto[];
 }
 
 export interface ThoughtStageDto {
+  /** How much mood the stage moves. */
   base_mood_effect: number;
+  /** How much opinion the stage moves. */
   base_opinion_offset: number;
   /** The description the game shows for this thing. */
   description?: string;
@@ -5431,6 +6141,7 @@ export interface TraitEntryDto {
 }
 
 export interface TriggerIncidentRequestDto {
+  /** The parameters the incident is built with. */
   incident_parms?: IncidentParmsDto;
   /** The map's numeric id; 0 is the player's home map. */
   map_id?: string;
@@ -5562,14 +6273,20 @@ export interface UpdateStorageRequestDto {
 }
 
 export interface VersionDto {
+  /** The API version the routes answer with. */
   api_version?: string;
+  /** The mod's assembly version. */
   mod_version?: string;
+  /** The game version the mod runs on. */
   rim_world_version?: string;
+  /** The folder this game writes its saves into (ticket #4005): a caller that runs several games tells its own from another game that answers on the same port by it, since the folder is what a game is. */
   save_data_folder?: string;
+  /** The mod's version, as its About file names it. */
   version?: string;
 }
 
 export interface WeatherDefDto {
+  /** How much it spoils shooting. */
   accuracy_multiplier: number;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
@@ -5577,47 +6294,69 @@ export interface WeatherDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The highest temperature it occurs at. */
   max_temperature: number;
+  /** The lowest temperature the weather occurs at. */
   min_temperature: number;
+  /** How much it slows movement. */
   move_speed_multiplier: number;
+  /** How much wind it brings. */
   wind_speed_factor: number;
 }
 
 export interface WindowAcceptRequestDto {
   /** The name the game shows for this thing. */
   name?: string;
+  /** The name to type into the second field. */
   second_name?: string;
+  /** The window kinds to accept. */
   window_types?: string[];
 }
 
 export interface WindowAcceptResultDto {
+  /** How many windows the call accepted. */
   accepted_count: number;
+  /** The windows the call accepted, one entry each. */
   accepted_windows?: string[];
+  /** The label of the button each accepted window got, in the same order. */
   buttons?: string[];
+  /** The names a naming dialog was given, in the order the dialog asks them, so the caller can compare them with what the game holds. */
   names?: string[];
+  /** Why it accepted nothing, when it did not. */
   reason?: string;
+  /** Windows that matched but could not be pressed; Reason says why. */
   still_open?: string[];
 }
 
 export interface WindowCloseRequestDto {
+  /** Whether only a force-pause window is closed. */
   force_pause_only: boolean;
+  /** The window kinds to close. */
   window_types?: string[];
 }
 
 export interface WindowCloseResultDto {
+  /** How many windows the call closed. */
   closed_count: number;
+  /** The windows the call closed, one entry each. */
   closed_windows?: string[];
 }
 
 export interface WindowDialogRequestDto {
+  /** The options the dialog offers, one button each. */
   options?: DialogOptionDto[];
+  /** The text the dialog shows above its options. */
   text?: string;
+  /** The heading the dialog draws across its top. */
   title?: string;
 }
 
 export interface WindowMessageRequestDto {
+  /** The text on the one button. */
   button_text?: string;
+  /** The text the message window shows. */
   text?: string;
+  /** The title the message window shows. */
   title?: string;
 }
 
@@ -5701,23 +6440,32 @@ export interface WorkTypeDefDto {
   description?: string;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** The priority the game gives the work type by default. */
   natural_priority: number;
+  /** The skills that speed the work up. */
   relevant_skills?: string[];
+  /** Whether the work type shows only when work exists. */
   visible_only_with_work: boolean;
+  /** The work tags the work type covers. */
   work_tags?: string;
 }
 
 export interface WorldObjectDefDto {
+  /** Whether the game may place it at random. */
   can_be_randomly_placed: boolean;
+  /** Whether the object can belong to a faction. */
   can_have_faction: boolean;
   /** The def's internal name, e.g. "Steel". */
   def_name?: string;
   /** The description the game shows for this thing. */
   description?: string;
+  /** Whether its icon expands. */
   expanding_icon: boolean;
   /** The label the game shows for this thing in its UI. */
   label?: string;
+  /** Whether it refuses a multi-selection. */
   never_multi_select: boolean;
+  /** Whether the player can select it. */
   selectable: boolean;
 }
 

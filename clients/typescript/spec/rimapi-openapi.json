@@ -59,6 +59,7 @@
             "type": "string"
           },
           "verb_properties": {
+            "description": "The verb the ability fires with.",
             "type": "string"
           }
         },
@@ -125,12 +126,14 @@
         "additionalProperties": false,
         "properties": {
           "cells": {
+            "description": "The cells the alert points at.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "explanation": {
+            "description": "The explanation the alert shows the player.",
             "type": "string"
           },
           "label": {
@@ -138,9 +141,11 @@
             "type": "string"
           },
           "priority": {
+            "description": "e.g., \"Critical\", \"High\", \"Medium\"",
             "type": "string"
           },
           "targets": {
+            "description": "The things the alert points at.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -154,6 +159,7 @@
         "additionalProperties": false,
         "properties": {
           "filters": {
+            "description": "The def kinds to return, by name.",
             "items": {
               "type": "string"
             },
@@ -184,10 +190,12 @@
         "additionalProperties": false,
         "properties": {
           "base_body_size": {
+            "description": "The body size the race starts with.",
             "format": "float",
             "type": "number"
           },
           "base_health_scale": {
+            "description": "The hit point scale the race starts with.",
             "format": "float",
             "type": "number"
           },
@@ -200,6 +208,7 @@
             "type": "string"
           },
           "food_type": {
+            "description": "What the race eats: meat, plants or both.",
             "type": "string"
           },
           "label": {
@@ -207,19 +216,23 @@
             "type": "string"
           },
           "life_stages": {
+            "description": "The life stages the race passes, from baby to adult.",
             "items": {
               "$ref": "#/components/schemas/LifeStageAgeDto"
             },
             "type": "array"
           },
           "pack_animal": {
+            "description": "Whether the race carries caravan loads.",
             "type": "boolean"
           },
           "petness": {
+            "description": "How likely the race is kept as a pet.",
             "format": "float",
             "type": "number"
           },
           "predator": {
+            "description": "Whether the race hunts other pawns.",
             "type": "boolean"
           }
         },
@@ -8405,12 +8418,14 @@
         "additionalProperties": false,
         "properties": {
           "all_wild_plants": {
+            "description": "Every plant the biome grows wild.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "animal_density": {
+            "description": "How many animals the biome holds per cell.",
             "format": "float",
             "type": "number"
           },
@@ -8423,10 +8438,12 @@
             "type": "string"
           },
           "disease_mtb_days": {
+            "description": "How many days between diseases, on average.",
             "format": "float",
             "type": "number"
           },
           "foraged_food": {
+            "description": "The food foragers find in the biome.",
             "type": "string"
           },
           "label": {
@@ -8434,10 +8451,12 @@
             "type": "string"
           },
           "movement_difficulty": {
+            "description": "How much slower travel is through it.",
             "format": "float",
             "type": "number"
           },
           "plant_density": {
+            "description": "How many plants the biome holds per cell.",
             "format": "float",
             "type": "number"
           }
@@ -8564,6 +8583,7 @@
         "additionalProperties": false,
         "properties": {
           "core_part": {
+            "description": "The body's core part, usually the torso.",
             "type": "string"
           },
           "def_name": {
@@ -8575,6 +8595,7 @@
             "type": "string"
           },
           "parts": {
+            "description": "Every part the body holds.",
             "items": {
               "type": "string"
             },
@@ -8587,6 +8608,7 @@
         "additionalProperties": false,
         "properties": {
           "bleed_rate": {
+            "description": "How fast the part bleeds when hurt.",
             "format": "float",
             "type": "number"
           },
@@ -8595,6 +8617,7 @@
             "type": "string"
           },
           "hit_points": {
+            "description": "How much damage the part takes.",
             "format": "float",
             "type": "number"
           },
@@ -8603,6 +8626,7 @@
             "type": "string"
           },
           "permanent_injury_chance_factor": {
+            "description": "How likely a wound here leaves a scar.",
             "format": "float",
             "type": "number"
           }
@@ -8691,7 +8715,9 @@
             "description": "Whether the setting is on.",
             "type": "boolean"
           },
-          "statistics": {}
+          "statistics": {
+            "description": "The cache's counters, as the server reports them."
+          }
         },
         "required": [
           "enabled"
@@ -8714,9 +8740,11 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "How many pixels tall the screenshot is."
           },
           "hide_ui": {
+            "description": "Whether the UI is left out of the shot.",
             "type": "boolean"
           },
           "quality": {
@@ -8733,7 +8761,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "How many pixels wide the screenshot is."
           }
         },
         "required": [
@@ -8746,16 +8775,20 @@
         "additionalProperties": false,
         "properties": {
           "camera": {
-            "$ref": "#/components/schemas/CameraViewDto"
+            "$ref": "#/components/schemas/CameraViewDto",
+            "description": "The cells the picture covers (fox ticket #4025)."
           },
           "game_context": {
-            "$ref": "#/components/schemas/GameContext"
+            "$ref": "#/components/schemas/GameContext",
+            "description": "The game tick the shot was taken on."
           },
           "image": {
-            "$ref": "#/components/schemas/ImageData"
+            "$ref": "#/components/schemas/ImageData",
+            "description": "The image itself, as a data URI."
           },
           "metadata": {
-            "$ref": "#/components/schemas/ImageMetadata"
+            "$ref": "#/components/schemas/ImageMetadata",
+            "description": "The image's size and byte count."
           }
         },
         "type": "object"
@@ -8764,33 +8797,41 @@
         "additionalProperties": false,
         "properties": {
           "has_cells": {
+            "description": "Whether the camera looks at map cells at all.",
             "type": "boolean"
           },
           "root_size": {
+            "description": "Half the picture's height in cells; the width follows its aspect.",
             "format": "float",
             "type": "number"
           },
           "root_x": {
+            "description": "The camera's root position: the cell at the picture's centre.",
             "format": "float",
             "type": "number"
           },
           "root_z": {
+            "description": "The top edge of the visible cells, z.",
             "format": "float",
             "type": "number"
           },
           "x1": {
+            "description": "The visible cells, rounded outward and cut to the map.",
             "format": "int32",
             "type": "integer"
           },
           "x2": {
+            "description": "The visible rectangle's far corner x.",
             "format": "int32",
             "type": "integer"
           },
           "z1": {
+            "description": "The first visible row's z.",
             "format": "int32",
             "type": "integer"
           },
           "z2": {
+            "description": "The visible rectangle's far corner z.",
             "format": "int32",
             "type": "integer"
           }
@@ -8893,6 +8934,7 @@
         "additionalProperties": false,
         "properties": {
           "candidates": {
+            "description": "The generated pawns the batch offers as its pick.",
             "items": {
               "$ref": "#/components/schemas/PawnCandidateDto"
             },
@@ -8904,22 +8946,28 @@
             "type": "integer"
           },
           "pawn_count": {
+            "description": "How many candidates the batch holds.",
             "format": "int32",
             "type": "integer"
           },
           "problem": {
+            "description": "What went wrong, when something did.",
             "type": "string"
           },
           "scenario": {
+            "description": "The scenario's def name.",
             "type": "string"
           },
           "scenario_label": {
+            "description": "The scenario's name, as the game shows it.",
             "type": "string"
           },
           "seed": {
+            "description": "The seed the candidates are generated from.",
             "type": "string"
           },
           "state": {
+            "description": "Where the batch stands: generating, ready or failed.",
             "type": "string"
           }
         },
@@ -9610,12 +9658,14 @@
         "additionalProperties": false,
         "properties": {
           "package_ids": {
+            "description": "The mods to switch on, by package id.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "restart_game": {
+            "description": "Whether the game restarts afterwards.",
             "type": "boolean"
           }
         },
@@ -10147,20 +10197,25 @@
         "additionalProperties": false,
         "properties": {
           "food_summary": {
-            "$ref": "#/components/schemas/ResourcesFoodSummaryDto"
+            "$ref": "#/components/schemas/ResourcesFoodSummaryDto",
+            "description": "The colony's food numbers."
           },
           "fuel_summary": {
-            "$ref": "#/components/schemas/FuelSummaryDto"
+            "$ref": "#/components/schemas/FuelSummaryDto",
+            "description": "FuelSummary is the wood and the tanks (fox ticket #3678)."
           },
           "medicine_total": {
+            "description": "How many medicine units the colony holds.",
             "format": "int32",
             "type": "integer"
           },
           "weapon_count": {
+            "description": "How many weapons the colony holds.",
             "format": "int32",
             "type": "integer"
           },
           "weapon_value": {
+            "description": "What those weapons are worth.",
             "format": "double",
             "type": "number"
           }
@@ -10322,216 +10377,252 @@
         "additionalProperties": false,
         "properties": {
           "ability_defs": {
+            "description": "Every ability def the game holds.",
             "items": {
               "$ref": "#/components/schemas/AbilityDefDto"
             },
             "type": "array"
           },
           "animal_defs": {
+            "description": "Every animal race def the game holds.",
             "items": {
               "$ref": "#/components/schemas/AnimalDefDto"
             },
             "type": "array"
           },
           "biome_defs": {
+            "description": "Every biome def the game holds.",
             "items": {
               "$ref": "#/components/schemas/BiomeDefDto"
             },
             "type": "array"
           },
           "body_defs": {
+            "description": "Every body def the game holds.",
             "items": {
               "$ref": "#/components/schemas/BodyDefDto"
             },
             "type": "array"
           },
           "body_part_defs": {
+            "description": "Every body part def the game holds.",
             "items": {
               "$ref": "#/components/schemas/BodyPartDefDto"
             },
             "type": "array"
           },
           "conditions_defs": {
+            "description": "Every quest and ritual condition def.",
             "items": {
               "$ref": "#/components/schemas/GameConditionDefDto"
             },
             "type": "array"
           },
           "designation_category_defs": {
+            "description": "Every designation category def.",
             "items": {
               "$ref": "#/components/schemas/DesignationCategoryDefDto"
             },
             "type": "array"
           },
           "difficulty_defs": {
+            "description": "Every difficulty def the game holds.",
             "items": {
               "$ref": "#/components/schemas/DifficultyDefDto"
             },
             "type": "array"
           },
           "drug_policy_defs": {
+            "description": "Every drug policy def the game holds.",
             "items": {
               "$ref": "#/components/schemas/DrugPolicyDefDto"
             },
             "type": "array"
           },
           "faction_defs": {
+            "description": "Every faction def the game holds.",
             "items": {
               "$ref": "#/components/schemas/FactionDefDto"
             },
             "type": "array"
           },
           "gene_defs": {
+            "description": "Every gene def the game holds.",
             "items": {
               "$ref": "#/components/schemas/GeneDefDto"
             },
             "type": "array"
           },
           "hediff_defs": {
+            "description": "Every hediff def the game holds.",
             "items": {
               "$ref": "#/components/schemas/HediffDefDto"
             },
             "type": "array"
           },
           "incidents_defs": {
+            "description": "Every incident def the game holds.",
             "items": {
               "$ref": "#/components/schemas/IncidentDefDto"
             },
             "type": "array"
           },
           "job_defs": {
+            "description": "Every job def the game holds.",
             "items": {
               "$ref": "#/components/schemas/JobDefDto"
             },
             "type": "array"
           },
           "joy_kind_defs": {
+            "description": "Every joy kind def the game holds.",
             "items": {
               "$ref": "#/components/schemas/JoyKindDefDto"
             },
             "type": "array"
           },
           "meme_defs": {
+            "description": "Every ideoligion meme def.",
             "items": {
               "$ref": "#/components/schemas/MemeDefDto"
             },
             "type": "array"
           },
           "mental_state_defs": {
+            "description": "Every mental state def the game holds.",
             "items": {
               "$ref": "#/components/schemas/MentalStateDefDto"
             },
             "type": "array"
           },
           "need_defs": {
+            "description": "Every need def the game holds.",
             "items": {
               "$ref": "#/components/schemas/NeedDefDto"
             },
             "type": "array"
           },
           "pawn_kind_defs": {
+            "description": "Every pawn kind def the game holds.",
             "items": {
               "$ref": "#/components/schemas/PawnKindDefDto"
             },
             "type": "array"
           },
           "plant_defs": {
+            "description": "Every plant def the game holds.",
             "items": {
               "$ref": "#/components/schemas/PlantDefDto"
             },
             "type": "array"
           },
           "precept_defs": {
+            "description": "Every precept def the game holds.",
             "items": {
               "$ref": "#/components/schemas/PreceptDefDto"
             },
             "type": "array"
           },
           "recipe_defs": {
+            "description": "Every recipe def the game holds.",
             "items": {
               "$ref": "#/components/schemas/RecipeDefDto"
             },
             "type": "array"
           },
           "research_defs": {
+            "description": "Every research project def.",
             "items": {
               "$ref": "#/components/schemas/ResearchProjectDefDto"
             },
             "type": "array"
           },
           "room_role_defs": {
+            "description": "Every room role def the game holds.",
             "items": {
               "$ref": "#/components/schemas/RoomRoleDefDto"
             },
             "type": "array"
           },
           "room_stat_defs": {
+            "description": "Every room stat def the game holds.",
             "items": {
               "$ref": "#/components/schemas/RoomStatDefDto"
             },
             "type": "array"
           },
           "skill_defs": {
+            "description": "Every skill def the game holds.",
             "items": {
               "$ref": "#/components/schemas/SkillDefDto"
             },
             "type": "array"
           },
           "sound_defs": {
+            "description": "Every sound def the game holds.",
             "items": {
               "$ref": "#/components/schemas/SoundDefDto"
             },
             "type": "array"
           },
           "stat_defs": {
+            "description": "Every stat def the game holds.",
             "items": {
               "$ref": "#/components/schemas/StatDefDto"
             },
             "type": "array"
           },
           "storyteller_defs": {
+            "description": "Every storyteller def the game holds.",
             "items": {
               "$ref": "#/components/schemas/StorytellerDefDto"
             },
             "type": "array"
           },
           "terrain_defs": {
+            "description": "Every terrain def the game holds.",
             "items": {
               "$ref": "#/components/schemas/TerrainDefDto"
             },
             "type": "array"
           },
           "things_defs": {
+            "description": "Every thing def the game holds.",
             "items": {
               "$ref": "#/components/schemas/ThingDefDto"
             },
             "type": "array"
           },
           "thought_defs": {
+            "description": "Every thought def the game holds.",
             "items": {
               "$ref": "#/components/schemas/ThoughtDefDto"
             },
             "type": "array"
           },
           "trait_defs": {
+            "description": "Every trait def the game holds.",
             "items": {
               "$ref": "#/components/schemas/TraitDefDto"
             },
             "type": "array"
           },
           "weather_defs": {
+            "description": "Every weather def the game holds.",
             "items": {
               "$ref": "#/components/schemas/WeatherDefDto"
             },
             "type": "array"
           },
           "work_type_defs": {
+            "description": "Every work type def the game holds.",
             "items": {
               "$ref": "#/components/schemas/WorkTypeDefDto"
             },
             "type": "array"
           },
           "world_object_defs": {
+            "description": "Every world object def the game holds.",
             "items": {
               "$ref": "#/components/schemas/WorldObjectDefDto"
             },
@@ -10693,12 +10784,15 @@
         "additionalProperties": false,
         "properties": {
           "category": {
+            "description": "The category the node sits under.",
             "type": "string"
           },
           "kind": {
+            "description": "action (runs at once), menu (holds entries) or tool (acts on a clicked cell).",
             "type": "string"
           },
           "path": {
+            "description": "The path a `debug_action` call names, e.g.",
             "type": "string"
           }
         },
@@ -10715,7 +10809,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "`quest` only: take the quest the call just offered, through the same accept path the Quests tab runs, so its parts start and a pending delay can be found without a second call (fox ticket #4049)."
           },
           "amount": {
             "anyOf": [
@@ -10726,7 +10821,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Damage in hit points, a hediff's severity, or silver for wealth."
           },
           "choice": {
             "anyOf": [
@@ -10737,7 +10833,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "`quest` with accept only: the reward choice's index when the quest offers several, 0 for the first (fox ticket #4049)."
           },
           "count": {
             "anyOf": [
@@ -10752,6 +10849,7 @@
             "description": "How many of the item this entry holds."
           },
           "faction": {
+            "description": "`spawn_pawn` only: which faction the pawn joins, as the game names it (a faction's name or defName), or player, or none for a pawn no faction owns (a wild man).",
             "type": "string"
           },
           "level": {
@@ -10763,7 +10861,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "A skill's new level, 0 to 20."
           },
           "name": {
             "description": "The name the game shows for this thing.",
@@ -10778,12 +10877,15 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "`debug_actions` only: how many matching entries to skip before the answer starts listing, so a caller pages through a menu instead of guessing substrings (ticket #3947)."
           },
           "op": {
+            "description": "One of DevActionRules.Ops, e.g.",
             "type": "string"
           },
           "part": {
+            "description": "The body part a damage or hediff op acts on, by defName or label (leg, arm, head).",
             "type": "string"
           },
           "pawn_id": {
@@ -10807,7 +10909,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Ticks to run by hand."
           },
           "x": {
             "anyOf": [
@@ -10840,38 +10943,49 @@
         "additionalProperties": false,
         "properties": {
           "actions": {
-            "$ref": "#/components/schemas/DevActionsStateDto"
+            "$ref": "#/components/schemas/DevActionsStateDto",
+            "description": "The dev actions the menu offers."
           },
           "detail": {
+            "description": "One sentence naming what changed, in the game's own words.",
             "type": "string"
           },
           "done": {
+            "description": "True when the game took the change.",
             "type": "boolean"
           },
           "incident": {
-            "$ref": "#/components/schemas/DevIncidentStateDto"
+            "$ref": "#/components/schemas/DevIncidentStateDto",
+            "description": "The incident the action fired, when it fired one."
           },
           "op": {
+            "description": "The dev action that ran.",
             "type": "string"
           },
           "pawn": {
-            "$ref": "#/components/schemas/DevPawnStateDto"
+            "$ref": "#/components/schemas/DevPawnStateDto",
+            "description": "The pawn the action left, when it touched one."
           },
           "quest_delay": {
-            "$ref": "#/components/schemas/DevQuestDelayStateDto"
+            "$ref": "#/components/schemas/DevQuestDelayStateDto",
+            "description": "The quest delay the action set, in ticks."
           },
           "seconds": {
+            "description": "Real seconds the call spent, measured around the work.",
             "format": "float",
             "type": "number"
           },
           "thing": {
-            "$ref": "#/components/schemas/DevThingStateDto"
+            "$ref": "#/components/schemas/DevThingStateDto",
+            "description": "The thing the action left, when it touched one."
           },
           "ticks": {
-            "$ref": "#/components/schemas/DevTickStateDto"
+            "$ref": "#/components/schemas/DevTickStateDto",
+            "description": "The tick state the action left."
           },
           "wealth": {
-            "$ref": "#/components/schemas/DevWealthStateDto"
+            "$ref": "#/components/schemas/DevWealthStateDto",
+            "description": "The wealth numbers the action changed."
           }
         },
         "required": [
@@ -10884,28 +10998,34 @@
         "additionalProperties": false,
         "properties": {
           "changed": {
+            "description": "`debug_action` only: true when the colony's own counts and pawn states moved between the call's before and after (ticket #3922).",
             "type": "boolean"
           },
           "complete": {
+            "description": "True when the walk reached the menu's end, so Walked is the whole menu.",
             "type": "boolean"
           },
           "differences": {
+            "description": "What moved, one phrase per counter, e.g.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "nodes": {
+            "description": "The menu's nodes, one per dev action.",
             "items": {
               "$ref": "#/components/schemas/DevActionNodeDto"
             },
             "type": "array"
           },
           "shown": {
+            "description": "How many of them this answer lists.",
             "format": "int32",
             "type": "integer"
           },
           "walked": {
+            "description": "The entries the walk visited on its way.",
             "format": "int32",
             "type": "integer"
           }
@@ -10926,6 +11046,7 @@
             "type": "string"
           },
           "injury": {
+            "description": "Whether the hediff is an injury.",
             "type": "boolean"
           },
           "label": {
@@ -10933,13 +11054,16 @@
             "type": "string"
           },
           "part": {
+            "description": "The body part the hediff sits on.",
             "type": "string"
           },
           "severity": {
+            "description": "How strong the hediff is.",
             "format": "float",
             "type": "number"
           },
           "tended": {
+            "description": "Whether the hediff is tended.",
             "type": "boolean"
           }
         },
@@ -10958,17 +11082,21 @@
             "type": "string"
           },
           "executed": {
+            "description": "The game's answer to TryExecute, or the quest it made.",
             "type": "boolean"
           },
           "incidents": {
+            "description": "How many incidents the map's own log holds now.",
             "format": "int32",
             "type": "integer"
           },
           "letters": {
+            "description": "How many letters stand on the stack, so a raid that wrote one is visible.",
             "format": "int32",
             "type": "integer"
           },
           "newest": {
+            "description": "The incident that fired last, by defName.",
             "type": "string"
           }
         },
@@ -10983,6 +11111,7 @@
         "additionalProperties": false,
         "properties": {
           "dead": {
+            "description": "Whether the pawn is dead.",
             "type": "boolean"
           },
           "def_name": {
@@ -10990,30 +11119,37 @@
             "type": "string"
           },
           "downed": {
+            "description": "Whether the pawn is downed.",
             "type": "boolean"
           },
           "faction": {
+            "description": "The faction the pawn belongs to, as the game names it; empty when none owns him.",
             "type": "string"
           },
           "health_percent": {
+            "description": "Share of the body's hit points left, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "hediffs": {
+            "description": "The hediffs the pawn carries, one entry each.",
             "items": {
               "$ref": "#/components/schemas/DevHediffDto"
             },
             "type": "array"
           },
           "id": {
+            "description": "The pawn's numeric id.",
             "format": "int32",
             "type": "integer"
           },
           "injuries": {
+            "description": "How many injuries the pawn carries (Hediff_Injury and missing parts).",
             "format": "int32",
             "type": "integer"
           },
           "mental_state": {
+            "description": "The mental state's defName, empty when the pawn is calm.",
             "type": "string"
           },
           "name": {
@@ -11021,18 +11157,21 @@
             "type": "string"
           },
           "skills": {
+            "description": "The pawn's skills, one entry each.",
             "items": {
               "$ref": "#/components/schemas/DevSkillDto"
             },
             "type": "array"
           },
           "traits": {
+            "description": "The pawn's traits, one entry each.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "wild": {
+            "description": "True for a wild man or wild woman: a humanlike no faction owns.",
             "type": "boolean"
           }
         },
@@ -11050,31 +11189,39 @@
         "additionalProperties": false,
         "properties": {
           "after": {
+            "description": "Ticks the delay holds after the op; 0 when it ended in the call.",
             "format": "int32",
             "type": "integer"
           },
           "before": {
+            "description": "Ticks the delay held before the op.",
             "format": "int32",
             "type": "integer"
           },
           "ended": {
+            "description": "True when the op ended the delay in the call instead of moving it.",
             "type": "boolean"
           },
           "others": {
+            "description": "Other enabled delays in that quest, left as they were.",
             "format": "int32",
             "type": "integer"
           },
           "part_type": {
+            "description": "The part's own type, e.g.",
             "type": "string"
           },
           "quest_id": {
+            "description": "The quest's own id, as the `quests` read prints it.",
             "format": "int32",
             "type": "integer"
           },
           "quest_name": {
+            "description": "The quest's name, e.g.",
             "type": "string"
           },
           "script_def_name": {
+            "description": "The defName of the script the quest was built from.",
             "type": "string"
           }
         },
@@ -11099,10 +11246,12 @@
             "type": "string"
           },
           "level": {
+            "description": "The skill's level, 0 to 20.",
             "format": "int32",
             "type": "integer"
           },
           "passion": {
+            "description": "The passion the skill carries: none, minor or major.",
             "type": "string"
           }
         },
@@ -11119,6 +11268,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The thing's numeric id.",
             "format": "int32",
             "type": "integer"
           },
@@ -11131,6 +11281,7 @@
             "description": "The cell the thing stands on, as x and z map coordinates."
           },
           "stack_count": {
+            "description": "How many units the stack holds.",
             "format": "int32",
             "type": "integer"
           }
@@ -11145,14 +11296,17 @@
         "additionalProperties": false,
         "properties": {
           "after": {
+            "description": "The tick after the action ran.",
             "format": "int32",
             "type": "integer"
           },
           "before": {
+            "description": "The tick before the action ran.",
             "format": "int32",
             "type": "integer"
           },
           "ran": {
+            "description": "How many ticks the action ran.",
             "format": "int32",
             "type": "integer"
           }
@@ -11168,14 +11322,17 @@
         "additionalProperties": false,
         "properties": {
           "added": {
+            "description": "The silver the op placed; wealth is derived, so this is what moved it.",
             "format": "float",
             "type": "number"
           },
           "after": {
+            "description": "The wealth after the action ran.",
             "format": "float",
             "type": "number"
           },
           "before": {
+            "description": "The wealth before the action ran.",
             "format": "float",
             "type": "number"
           }
@@ -11191,6 +11348,7 @@
         "additionalProperties": false,
         "properties": {
           "action_id": {
+            "description": "Optional: Perform an action when clicked?",
             "type": "string"
           },
           "label": {
@@ -11198,6 +11356,7 @@
             "type": "string"
           },
           "resolve_tree": {
+            "description": "Whether choosing it closes the window.",
             "type": "boolean"
           }
         },
@@ -11220,23 +11379,28 @@
         "additionalProperties": false,
         "properties": {
           "generated_at": {
+            "description": "When the document check ran.",
             "format": "date-time",
             "type": "string"
           },
           "sections": {
+            "description": "One entry per document section.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "status": {
+            "description": "Whether the document is healthy.",
             "type": "string"
           },
           "total_endpoints": {
+            "description": "How many routes the document lists.",
             "format": "int32",
             "type": "integer"
           },
           "total_extensions": {
+            "description": "How many extensions it carries.",
             "format": "int32",
             "type": "integer"
           }
@@ -11304,6 +11468,7 @@
             "type": "string"
           },
           "entries": {
+            "description": "One entry per drug the policy rules on.",
             "items": {
               "$ref": "#/components/schemas/DrugPolicyEntryDto"
             },
@@ -11356,26 +11521,33 @@
         "additionalProperties": false,
         "properties": {
           "allow_scheduled": {
+            "description": "Whether the policy allows a scheduled dose.",
             "type": "boolean"
           },
           "allowed_for_addiction": {
+            "description": "Whether the policy allows it for addiction.",
             "type": "boolean"
           },
           "allowed_for_joy": {
+            "description": "Whether the policy allows it for joy.",
             "type": "boolean"
           },
           "days_frequency": {
+            "description": "How many days between scheduled doses.",
             "format": "float",
             "type": "number"
           },
           "drug": {
+            "description": "The drug the entry rules on.",
             "type": "string"
           },
           "only_if_joy_below": {
+            "description": "Take it only when joy falls below this.",
             "format": "float",
             "type": "number"
           },
           "only_if_mood_below": {
+            "description": "Take it only when mood falls below this.",
             "format": "float",
             "type": "number"
           }
@@ -11755,10 +11927,12 @@
         "additionalProperties": false,
         "properties": {
           "color": {
+            "description": "The colour the icon is tinted with.",
             "type": "string"
           },
           "image": {
-            "$ref": "#/components/schemas/ImageDto"
+            "$ref": "#/components/schemas/ImageDto",
+            "description": "The icon as base64 text."
           }
         },
         "type": "object"
@@ -12286,6 +12460,7 @@
         "additionalProperties": false,
         "properties": {
           "bills": {
+            "description": "The bills the building runs right now.",
             "format": "int32",
             "type": "integer"
           },
@@ -12294,20 +12469,25 @@
             "type": "string"
           },
           "fuel": {
+            "description": "How much fuel it holds.",
             "format": "float",
             "type": "number"
           },
           "fuel_capacity": {
+            "description": "How much fuel it can hold.",
             "format": "float",
             "type": "number"
           },
           "fuel_type": {
+            "description": "The fuel's def name.",
             "type": "string"
           },
           "has_fuel": {
+            "description": "Whether it has any fuel.",
             "type": "boolean"
           },
           "id": {
+            "description": "The building's numeric id.",
             "format": "int32",
             "type": "integer"
           },
@@ -12316,16 +12496,20 @@
             "type": "string"
           },
           "meal_bills": {
+            "description": "The bills the building runs that cook meals.",
             "format": "int32",
             "type": "integer"
           },
           "refuel_available": {
+            "description": "Whether a colonist may refuel it.",
             "type": "boolean"
           },
           "refuel_blocked": {
+            "description": "Why refuelling is blocked, when it is.",
             "type": "string"
           },
           "refuel_forced": {
+            "description": "Whether refuelling is forced.",
             "type": "boolean"
           }
         },
@@ -12367,12 +12551,14 @@
         "additionalProperties": false,
         "properties": {
           "buildings": {
+            "description": "The buildings that burn fuel.",
             "items": {
               "$ref": "#/components/schemas/FuelBuildingDto"
             },
             "type": "array"
           },
           "stocks": {
+            "description": "The fuel stacks the colony holds.",
             "items": {
               "$ref": "#/components/schemas/FuelStockDto"
             },
@@ -12385,6 +12571,7 @@
         "additionalProperties": false,
         "properties": {
           "can_be_permanent": {
+            "description": "Whether the condition may last forever.",
             "type": "boolean"
           },
           "def_name": {
@@ -12400,17 +12587,21 @@
             "type": "string"
           },
           "letter_text": {
+            "description": "The text the condition's letter shows.",
             "type": "string"
           },
           "sky_target": {
+            "description": "The sky colour the condition draws.",
             "format": "float",
             "type": "number"
           },
           "sky_target_lerp_factor": {
+            "description": "How fast the sky fades into that colour.",
             "format": "float",
             "type": "number"
           },
           "temperature_offset": {
+            "description": "How much the condition moves the temperature, in Celsius.",
             "format": "float",
             "type": "number"
           }
@@ -12427,6 +12618,7 @@
         "additionalProperties": false,
         "properties": {
           "current_tick": {
+            "description": "The game tick the answer was built on.",
             "format": "int32",
             "type": "integer"
           }
@@ -12440,12 +12632,15 @@
         "additionalProperties": false,
         "properties": {
           "check_version": {
+            "description": "Whether to check the save's version first.",
             "type": "boolean"
           },
           "file_name": {
+            "description": "The save to load, by name.",
             "type": "string"
           },
           "skip_mod_mismatch": {
+            "description": "Whether to load despite a mod mismatch.",
             "type": "boolean"
           }
         },
@@ -12459,6 +12654,7 @@
         "additionalProperties": false,
         "properties": {
           "file_name": {
+            "description": "The name to save under.",
             "type": "string"
           }
         },
@@ -12468,98 +12664,127 @@
         "additionalProperties": false,
         "properties": {
           "automatic_pause_on_letter": {
+            "description": "Whether any letter pauses the game.",
             "type": "boolean"
           },
           "autosave_interval": {
+            "description": "How many days between autosaves.",
             "type": "boolean"
           },
           "custom_cursor_enabled": {
+            "description": "Whether the custom cursor is on.",
             "type": "boolean"
           },
           "development_mode": {
+            "description": "Whether dev mode is on.",
             "type": "boolean"
           },
           "edge_screen_scroll": {
+            "description": "Whether the camera scrolls at the screen edge.",
             "type": "boolean"
           },
           "fullscreen": {
+            "description": "Whether the game runs fullscreen.",
             "type": "boolean"
           },
           "hats_only_on_map": {
+            "description": "Whether pawns wear hats only on the map.",
             "type": "boolean"
           },
           "language": {
+            "description": "The language the game's text shows in.",
             "type": "string"
           },
           "log_verbose": {
+            "description": "Whether the log records everything.",
             "type": "boolean"
           },
           "manual_priorities": {
+            "description": "Manual work priorities: while off, the game treats every active work type as 3 and a pawn's stored level orders nothing.",
             "type": "boolean"
           },
           "map_drag_sensitivity": {
+            "description": "How fast dragging moves the map.",
             "format": "float",
             "type": "number"
           },
           "max_number_of_player_settlements": {
+            "description": "How many settlements the player may found.",
             "format": "int32",
             "type": "integer"
           },
           "pause_on_load": {
+            "description": "Whether the game pauses once a save has loaded.",
             "type": "boolean"
           },
           "pause_on_urgent_letter": {
+            "description": "Whether an urgent letter pauses the game.",
             "type": "string"
           },
           "plant_wind_sway": {
+            "description": "Whether plants sway in the wind.",
             "type": "boolean"
           },
           "reset_mods_config_on_crash": {
+            "description": "Whether the mod list resets after a crash.",
             "type": "boolean"
           },
           "resolution": {
+            "description": "The screen resolution the game runs at.",
             "type": "string"
           },
           "resource_readout_categorized": {
+            "description": "Whether the resource readout groups by category.",
             "type": "boolean"
           },
           "run_in_background": {
+            "description": "Whether the game keeps running unfocused.",
             "type": "boolean"
           },
           "show_animal_names": {
+            "description": "Whether animals show their names.",
             "type": "boolean"
           },
           "show_realtime_clock": {
+            "description": "Whether the clock shows the real time of day.",
             "type": "boolean"
           },
           "temperature_mode": {
+            "description": "Whether temperatures show in Celsius or Fahrenheit.",
             "type": "string"
           },
           "texture_compression": {
+            "description": "Whether textures are compressed.",
             "format": "int32",
             "type": "integer"
           },
           "user_interface_scale": {
+            "description": "How large the UI is drawn.",
             "format": "float",
             "type": "number"
           },
           "volume_ambient": {
+            "description": "The ambient sound volume, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "volume_game": {
+            "description": "The game sound volume, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "volume_master": {
+            "description": "--- Audio (Volumes 0.0 to 1.0) ---",
             "format": "float",
             "type": "number"
           },
           "volume_music": {
+            "description": "The music volume, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "zoom_to_mouse": {
+            "description": "Whether zooming follows the mouse.",
             "type": "boolean"
           }
         },
@@ -12604,76 +12829,99 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The current map's clock offset in ticks (fox ticket #3412): the game adds the tile's whole-hour time zone to its own start tick, so a second settlement on another longitude reads hours off from..."
           },
           "colonist_count": {
+            "description": "How many free colonists the colony has.",
             "format": "int32",
             "type": "integer"
           },
           "colony_name": {
+            "description": "The name the player gave the colony.",
             "type": "string"
           },
           "colony_wealth": {
+            "description": "The colony's wealth in silver.",
             "format": "float",
             "type": "number"
           },
           "current_view": {
+            "description": "The screen the player looks at.",
             "type": "string"
           },
           "game_tick": {
+            "description": "The game tick the answer was built on.",
             "format": "int32",
             "type": "integer"
           },
           "has_game": {
+            "description": "What is loaded (#3098).",
             "type": "boolean"
           },
           "has_map": {
+            "description": "Whether a map is loaded.",
             "type": "boolean"
           },
           "is_loading": {
+            "description": "Whether the game is loading right now.",
             "type": "boolean"
           },
           "is_mod_settings_open": {
+            "description": "Whether the mod settings dialog is open.",
             "type": "boolean"
           },
           "is_paused": {
+            "description": "Whether the game is paused.",
             "type": "boolean"
           },
           "is_settings_open": {
+            "description": "Whether the options dialog is open.",
             "type": "boolean"
           },
           "loaded_save": {
+            "description": "Which file a save writes (fox #3603).",
             "type": "string"
           },
           "map_count": {
+            "description": "How many maps the game holds.",
             "format": "int32",
             "type": "integer"
           },
           "pause_source": {
+            "description": "What paused the game, e.g. a letter or the player.",
             "type": "string"
           },
           "pick_problem": {
+            "description": "Why the game cannot start, when it cannot.",
             "type": "string"
           },
           "picked_pawns": {
+            "description": "What a founding installed from a candidate batch (ticket #3924): the picked candidates as \"#7 Mia (34), #11 Tam (31)\", or why the pick was refused and the scenario's own random colonists stayed.",
             "type": "string"
           },
           "program_state": {
+            "description": "Where the game stands: menu, loading or playing.",
             "type": "string"
           },
           "save_name": {
+            "description": "The save the colony was loaded from.",
             "type": "string"
           },
           "scenario": {
+            "description": "The scenario the colony was founded under (ticket #3930), so a run can tell Crashlanded from Lost Tribe without remembering the call.",
             "type": "string"
           },
           "scenario_label": {
+            "description": "The scenario's name, as the game shows it.",
             "type": "string"
           },
           "storyteller": {
+            "description": "The storyteller's def name.",
             "type": "string"
           },
           "time_speed": {
+            "description": "Why the clock stands still (fox ticket #3490).",
             "type": "string"
           }
         },
@@ -12695,10 +12943,12 @@
         "additionalProperties": false,
         "properties": {
           "biostat_cpx": {
+            "description": "How much complexity the gene adds to the genome.",
             "format": "int32",
             "type": "integer"
           },
           "biostat_met": {
+            "description": "How much metabolism the gene adds to the genome.",
             "format": "int32",
             "type": "integer"
           },
@@ -12711,6 +12961,7 @@
             "type": "string"
           },
           "display_category": {
+            "description": "The category the gene shows under.",
             "type": "string"
           },
           "label": {
@@ -12718,6 +12969,7 @@
             "type": "string"
           },
           "min_age_active": {
+            "description": "The age from which the gene works.",
             "format": "float",
             "type": "number"
           }
@@ -12902,6 +13154,7 @@
         "additionalProperties": false,
         "properties": {
           "comp_props": {
+            "description": "The comps the hediff carries, such as its immunity driver.",
             "type": "string"
           },
           "def_name": {
@@ -12913,12 +13166,15 @@
             "type": "string"
           },
           "hediff_class": {
+            "description": "The C# class the hediff runs.",
             "type": "string"
           },
           "is_addiction": {
+            "description": "Whether the hediff is an addiction.",
             "type": "boolean"
           },
           "is_bad": {
+            "description": "Whether the game counts it as a bad condition.",
             "type": "boolean"
           },
           "label": {
@@ -12926,23 +13182,28 @@
             "type": "string"
           },
           "makes_sick_thought": {
+            "description": "Whether it makes the pawn feel sick.",
             "type": "boolean"
           },
           "max_severity": {
+            "description": "The highest severity the hediff reaches.",
             "format": "float",
             "type": "number"
           },
           "severity_per_day": {
+            "description": "How much the severity moves per day.",
             "format": "float",
             "type": "number"
           },
           "stages": {
+            "description": "The severity stages the hediff passes.",
             "items": {
               "$ref": "#/components/schemas/HediffStageDto"
             },
             "type": "array"
           },
           "tendable": {
+            "description": "Whether a doctor can tend it.",
             "type": "boolean"
           }
         },
@@ -13133,16 +13394,19 @@
         "additionalProperties": false,
         "properties": {
           "become_immune_to": {
+            "description": "The hediffs the pawn becomes immune to.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "death_mtb_days": {
+            "description": "How many days until the stage kills, on average.",
             "format": "float",
             "type": "number"
           },
           "forget_memory_thought_mtb_days": {
+            "description": "How many days between the memories the stage erases.",
             "format": "float",
             "type": "number"
           },
@@ -13151,18 +13415,22 @@
             "type": "string"
           },
           "mental_break_mtb_days": {
+            "description": "How many days between the mental breaks it forces.",
             "format": "float",
             "type": "number"
           },
           "min_severity": {
+            "description": "The severity the stage starts at.",
             "format": "float",
             "type": "number"
           },
           "pain_factor": {
+            "description": "How much pain the stage causes, as a multiplier.",
             "format": "float",
             "type": "number"
           },
           "vomit_mtb_days": {
+            "description": "How many days between the vomiting the stage causes.",
             "format": "float",
             "type": "number"
           }
@@ -13461,6 +13729,7 @@
         "additionalProperties": false,
         "properties": {
           "data_uri": {
+            "description": "The image encoded as a data URI.",
             "type": "string"
           }
         },
@@ -13470,9 +13739,11 @@
         "additionalProperties": false,
         "properties": {
           "image_base64": {
+            "description": "The image as base64 text.",
             "type": "string"
           },
           "result": {
+            "description": "Whether the upload worked, as the mod reports it.",
             "type": "string"
           }
         },
@@ -13486,14 +13757,17 @@
             "type": "string"
           },
           "height": {
+            "description": "How many pixels tall the image is.",
             "format": "int32",
             "type": "integer"
           },
           "size_bytes": {
+            "description": "How many bytes the image takes.",
             "format": "int32",
             "type": "integer"
           },
           "width": {
+            "description": "How many pixels wide the image is.",
             "format": "int32",
             "type": "integer"
           }
@@ -13509,15 +13783,19 @@
         "additionalProperties": false,
         "properties": {
           "direction": {
+            "description": "Which direction the texture faces.",
             "type": "string"
           },
           "image": {
+            "description": "The image to upload, as base64 text.",
             "type": "string"
           },
           "is_stackable": {
+            "description": "Whether the uploaded texture stacks on its cell.",
             "type": "string"
           },
           "mask_image": {
+            "description": "The mask texture the upload uses.",
             "type": "string"
           },
           "name": {
@@ -13525,15 +13803,19 @@
             "type": "string"
           },
           "offset": {
+            "description": "Where the texture sits on its cell.",
             "type": "string"
           },
           "scale": {
+            "description": "How large the texture is drawn.",
             "type": "string"
           },
           "thing_type": {
+            "description": "Which kind of thing the texture belongs to.",
             "type": "string"
           },
           "update_item_index": {
+            "description": "Whether the upload reuses an existing index.",
             "format": "int32",
             "type": "integer"
           }
@@ -13547,6 +13829,7 @@
         "additionalProperties": false,
         "properties": {
           "value": {
+            "description": "The chance the incident fires, 0 to 1.",
             "format": "float",
             "type": "number"
           }
@@ -13570,20 +13853,24 @@
         "additionalProperties": false,
         "properties": {
           "allowed_biomes": {
+            "description": "The biomes where it may fire.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "base_chance": {
+            "description": "The base chance the incident fires per check.",
             "format": "float",
             "type": "number"
           },
           "base_chance_with_royalty": {
+            "description": "The chance when Royalty content is loaded.",
             "format": "float",
             "type": "number"
           },
           "category": {
+            "description": "The category the incident falls in.",
             "type": "string"
           },
           "def_name": {
@@ -13595,6 +13882,7 @@
             "type": "string"
           },
           "disallowed_biomes": {
+            "description": "The biomes where it never fires.",
             "items": {
               "type": "string"
             },
@@ -13605,33 +13893,42 @@
             "type": "string"
           },
           "letter_def_name": {
+            "description": "The letter the incident sends, by def name.",
             "type": "string"
           },
           "letter_text": {
+            "description": "The text the incident's letter shows.",
             "type": "string"
           },
           "max_threat_points": {
+            "description": "The highest threat points it fires at.",
             "format": "float",
             "type": "number"
           },
           "min_population": {
+            "description": "The fewest colonists needed for it to fire.",
             "format": "int32",
             "type": "integer"
           },
           "min_threat_points": {
+            "description": "The lowest threat points it fires at.",
             "format": "float",
             "type": "number"
           },
           "population_effect": {
+            "description": "How the incident changes the colony's population.",
             "type": "string"
           },
           "require_colonists_present": {
+            "description": "Whether colonists must stand on the map for it.",
             "type": "boolean"
           },
           "should_ignore_recent_weighting": {
+            "description": "Whether the recent-incident weighting skips it.",
             "type": "boolean"
           },
           "tags": {
+            "description": "The tags that decide when it may fire.",
             "items": {
               "type": "string"
             },
@@ -13653,16 +13950,20 @@
         "additionalProperties": false,
         "properties": {
           "category": {
+            "description": "The category the incident falls in.",
             "type": "string"
           },
           "days_since_occurred": {
+            "description": "How many in-game days ago it fired.",
             "format": "float",
             "type": "number"
           },
           "incident_def": {
+            "description": "The incident's def name.",
             "type": "string"
           },
           "incident_hour": {
+            "description": "The hour of the day the incident fired.",
             "format": "float",
             "type": "number"
           },
@@ -13681,94 +13982,119 @@
         "additionalProperties": false,
         "properties": {
           "attack_targets": {
+            "description": "Target and gift parameters",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "biocode_apparel_chance": {
+            "description": "How often raiders wear biocoded apparel.",
             "format": "float",
             "type": "number"
           },
           "biocode_weapons_chance": {
+            "description": "How often raiders carry biocoded weapons.",
             "format": "float",
             "type": "number"
           },
           "bypass_storyteller_settings": {
+            "description": "Whether the incident skips the storyteller's rules.",
             "type": "boolean"
           },
           "can_kidnap": {
+            "description": "Whether the attackers may kidnap.",
             "type": "boolean"
           },
           "can_steal": {
+            "description": "Whether the attackers may steal.",
             "type": "boolean"
           },
           "can_timeout_or_flee": {
+            "description": "Whether the attackers may give up and leave.",
             "type": "boolean"
           },
           "controller_pawn": {
+            "description": "Controller and location parameters",
             "type": "string"
           },
           "custom_letter_def": {
+            "description": "The letter def the call set.",
             "type": "string"
           },
           "custom_letter_label": {
+            "description": "The letter label the call set.",
             "type": "string"
           },
           "custom_letter_text": {
+            "description": "The letter text the call set.",
             "type": "string"
           },
           "dont_use_single_use_rocket_launchers": {
+            "description": "Whether raiders skip single-use launchers.",
             "type": "boolean"
           },
           "faction": {
+            "description": "The faction the incident comes from.",
             "type": "string"
           },
           "forced": {
+            "description": "Whether the call forced the incident.",
             "type": "boolean"
           },
           "generate_fighters_only": {
+            "description": "Raid and combat parameters",
             "type": "boolean"
           },
           "gifts": {
+            "description": "The gifts the incident brings along.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "in_signal_end": {
+            "description": "Signal and spawn parameters",
             "type": "string"
           },
           "infestation_loc_override": {
+            "description": "The cell the infestation is forced to.",
             "type": "string"
           },
           "letter_hyperlink_hediff_defs": {
+            "description": "The hediffs the letter links to.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "letter_hyperlink_thing_defs": {
+            "description": "The things the letter links to.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "lord": {
+            "description": "The lord the spawned pawns join.",
             "type": "string"
           },
           "mech_cluster_sketch": {
+            "description": "The mech cluster the incident drops.",
             "type": "string"
           },
           "pawn_count": {
+            "description": "How many pawns it spawns.",
             "format": "int32",
             "type": "integer"
           },
           "pawn_group_count": {
+            "description": "How many pawn groups it spawns.",
             "format": "int32",
             "type": "integer"
           },
           "pawn_group_kind": {
+            "description": "The kind of pawn group it spawns, e.g. a raid.",
             "type": "string"
           },
           "pawn_group_maker_seed": {
@@ -13780,89 +14106,114 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The seed the pawn groups are made from."
           },
           "pawn_groups": {
             "additionalProperties": {
               "format": "int32",
               "type": "integer"
             },
+            "description": "The pawn groups the incident spawns, one entry each.",
             "type": "object"
           },
           "pawn_ideo": {
+            "description": "The ideoligion the spawned pawns follow.",
             "type": "string"
           },
           "pawn_kind": {
+            "description": "The pawn kind it spawns, by def name.",
             "type": "string"
           },
           "pod_open_delay": {
+            "description": "How many ticks a drop pod takes to open.",
             "format": "int32",
             "type": "integer"
           },
           "point_multiplier": {
+            "description": "How much the points are multiplied.",
             "format": "float",
             "type": "number"
           },
           "points": {
+            "description": "The threat points the incident was generated with.",
             "format": "float",
             "type": "number"
           },
           "psychic_ritual_def": {
+            "description": "The psychic ritual the incident starts.",
             "type": "string"
           },
           "quest": {
+            "description": "The quest the incident belongs to.",
             "type": "string"
           },
           "quest_script_def": {
+            "description": "The quest script the incident starts.",
             "type": "string"
           },
           "quest_tag": {
+            "description": "The tag the incident puts on its quest.",
             "type": "string"
           },
           "raid_age_restriction": {
+            "description": "The age band the raid draws from.",
             "type": "string"
           },
           "raid_arrival_mode": {
+            "description": "How the raid arrives: walking, drop pods or edge.",
             "type": "string"
           },
           "raid_arrival_mode_for_quick_military_aid": {
+            "description": "How a quick military aid raid arrives.",
             "type": "boolean"
           },
           "raid_force_one_downed": {
+            "description": "Whether one raider is always left downed.",
             "type": "boolean"
           },
           "raid_never_flee_individual": {
+            "description": "Whether raiders never flee alone.",
             "type": "boolean"
           },
           "raid_strategy": {
+            "description": "The strategy the raid follows, e.g. immediate attack.",
             "type": "string"
           },
           "send_letter": {
+            "description": "Whether the incident sends a letter.",
             "type": "boolean"
           },
           "silent": {
+            "description": "Whether the incident stays silent.",
             "type": "boolean"
           },
           "spawn_center": {
+            "description": "The cell the incident spawns at.",
             "type": "string"
           },
           "spawn_rotation": {
+            "description": "The rotation the incident spawns with.",
             "type": "string"
           },
           "store_generated_neutral_pawns": {
+            "description": "Whether generated neutral pawns stay on the map.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "target": {
+            "description": "The thing the incident is aimed at.",
             "type": "string"
           },
           "total_body_size": {
+            "description": "The body size of everything it spawns.",
             "format": "float",
             "type": "number"
           },
           "trader_kind": {
+            "description": "The trader kind the incident brings, by def name.",
             "type": "string"
           }
         },
@@ -13894,9 +14245,11 @@
         "additionalProperties": false,
         "properties": {
           "category": {
+            "description": "The incident category the weight belongs to.",
             "type": "string"
           },
           "current_weight": {
+            "description": "The weight the storyteller gives the category now.",
             "format": "float",
             "type": "number"
           },
@@ -13918,6 +14271,7 @@
         "additionalProperties": false,
         "properties": {
           "incidents": {
+            "description": "One entry per incident the map has seen.",
             "items": {
               "$ref": "#/components/schemas/IncidentDto"
             },
@@ -14122,12 +14476,15 @@
         "additionalProperties": false,
         "properties": {
           "item_def_name": {
+            "description": "The item's def name.",
             "type": "string"
           },
           "item_label": {
+            "description": "The item's label, as the game shows it.",
             "type": "string"
           },
           "recipes": {
+            "description": "The recipes that make the item.",
             "items": {
               "$ref": "#/components/schemas/ThingRecipeDto"
             },
@@ -14140,6 +14497,7 @@
         "additionalProperties": false,
         "properties": {
           "always_show_weapon": {
+            "description": "Whether the pawn always shows its weapon during it.",
             "type": "boolean"
           },
           "def_name": {
@@ -14155,12 +14513,15 @@
             "type": "string"
           },
           "never_show_weapon": {
+            "description": "Whether the pawn never shows its weapon during it.",
             "type": "boolean"
           },
           "player_interruptible": {
+            "description": "Whether a player order may break the job.",
             "type": "boolean"
           },
           "suspendable": {
+            "description": "Whether the job may be suspended and resumed.",
             "type": "boolean"
           }
         },
@@ -14462,12 +14823,15 @@
             "type": "string"
           },
           "help_text": {
+            "description": "The text the learning helper shows for it.",
             "type": "string"
           },
           "is_completed": {
+            "description": "Whether the player has learned it fully.",
             "type": "boolean"
           },
           "knowledge_progress": {
+            "description": "How much of it the player has learned, 0 to 1.",
             "format": "float",
             "type": "number"
           },
@@ -14490,6 +14854,7 @@
             "type": "string"
           },
           "is_completed": {
+            "description": "Whether the concept now counts as learned.",
             "type": "boolean"
           }
         },
@@ -14502,10 +14867,12 @@
         "additionalProperties": false,
         "properties": {
           "id": {
+            "description": "The letter to answer, by id.",
             "format": "int32",
             "type": "integer"
           },
           "option": {
+            "description": "The option to choose, by index.",
             "type": "string"
           }
         },
@@ -14518,6 +14885,7 @@
         "additionalProperties": false,
         "properties": {
           "answered": {
+            "description": "True when the option was pressed; a letter that offers no dialog, or an option that matches none, answers false with a reason instead.",
             "type": "boolean"
           },
           "label": {
@@ -14525,25 +14893,31 @@
             "type": "string"
           },
           "open_window": {
+            "description": "Whether answering opened a window.",
             "type": "string"
           },
           "options": {
+            "description": "Options are the choices the dialog drew, so a caller that matched nothing learns what it can say.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "pressed": {
+            "description": "Pressed is the label of the option that was run, the game's own text.",
             "type": "string"
           },
           "reason": {
+            "description": "Why nothing was pressed, empty on success.",
             "type": "string"
           },
           "remaining": {
+            "description": "How many letters stand afterwards.",
             "format": "int32",
             "type": "integer"
           },
           "still_open": {
+            "description": "StillOpen says a dialog holds the clock after the press: a choice that leads to a second node is answered again with the options it now offers.",
             "type": "boolean"
           }
         },
@@ -14558,6 +14932,7 @@
         "additionalProperties": false,
         "properties": {
           "id": {
+            "description": "The letter to dismiss, by id.",
             "format": "int32",
             "type": "integer"
           }
@@ -14571,6 +14946,7 @@
         "additionalProperties": false,
         "properties": {
           "dismissed": {
+            "description": "Whether the letter was dismissed.",
             "type": "boolean"
           },
           "label": {
@@ -14578,9 +14954,11 @@
             "type": "string"
           },
           "reason": {
+            "description": "Why a letter could not be dismissed, empty on success.",
             "type": "string"
           },
           "remaining": {
+            "description": "How many letters stand afterwards.",
             "format": "int32",
             "type": "integer"
           }
@@ -14595,15 +14973,19 @@
         "additionalProperties": false,
         "properties": {
           "body": {
+            "description": "The whole body the game shows when the letter is opened: a paragraph or two.",
             "type": "string"
           },
           "can_dismiss": {
+            "description": "Whether the game's own right-click dismiss applies.",
             "type": "boolean"
           },
           "def": {
+            "description": "LetterDef defName: ThreatBig, ThreatSmall, PositiveEvent, NegativeEvent, Quest, Event, ...",
             "type": "string"
           },
           "id": {
+            "description": "The letter's numeric id.",
             "format": "int32",
             "type": "integer"
           },
@@ -14612,28 +14994,34 @@
             "type": "string"
           },
           "new": {
+            "description": "Whether this read is the first to report the letter.",
             "type": "boolean"
           },
           "no_trait_option": {
+            "description": "NoTraitOption says a growth letter also offers \"no trait\".",
             "type": "boolean"
           },
           "options": {
+            "description": "The labels the letter's dialog draws, in the order it draws them: a joiner offers Accept and Reject.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "passion_choices": {
+            "description": "PassionChoices are the skills a growth letter offers for the child's new passion, in the order its dialog draws them: the index is what the growth call takes (ticket #3714).",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "passion_gains": {
+            "description": "PassionGains is how many of the offered skills the growth letter asks for: one, in practice.",
             "format": "int32",
             "type": "integer"
           },
           "pauses": {
+            "description": "Whether the game's own auto-pause rule pauses the clock when this letter is received: the player's pause setting is at or above the letter's own mode (LetterStack.ReceiveLetter).",
             "type": "boolean"
           },
           "quest_id": {
@@ -14645,16 +15033,20 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The quest this letter announces, for a NewQuestLetter; null for every other letter."
           },
           "text": {
+            "description": "The first line of the letter's own body, so a caller can tell a raid from a trade caravan without opening it.",
             "type": "string"
           },
           "tick": {
+            "description": "The game tick the letter arrived, the same clock the game state reads.",
             "format": "int32",
             "type": "integer"
           },
           "trait_choices": {
+            "description": "TraitChoices are the traits a growth letter offers.",
             "items": {
               "type": "string"
             },
@@ -14676,13 +15068,16 @@
         "additionalProperties": false,
         "properties": {
           "id": {
+            "description": "The letter to answer, by id.",
             "format": "int32",
             "type": "integer"
           },
           "passion": {
+            "description": "Passion names the skill that gains a passion, or the index the letters read prints.",
             "type": "string"
           },
           "trait": {
+            "description": "Trait names the trait, or \"none\" for the letter's own no-trait option.",
             "type": "string"
           }
         },
@@ -14695,15 +15090,18 @@
         "additionalProperties": false,
         "properties": {
           "applied": {
+            "description": "Applied is true when the game made the choice: the skill gained its passion, the trait was gained and the letter left the stack.",
             "type": "boolean"
           },
           "chosen_passions": {
+            "description": "ChosenPassions names what was gained, e.g.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "chosen_trait": {
+            "description": "ChosenTrait is the trait gained, empty when the child gained none.",
             "type": "string"
           },
           "label": {
@@ -14711,29 +15109,36 @@
             "type": "string"
           },
           "no_trait_option": {
+            "description": "NoTraitOption says the letter offers \"no trait\" as well.",
             "type": "boolean"
           },
           "passion_choices": {
+            "description": "PassionChoices are the skills the letter offers, one per index.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "passion_gains": {
+            "description": "PassionGains is how many of the offered skills the letter asks for.",
             "format": "int32",
             "type": "integer"
           },
           "pawn": {
+            "description": "Pawn is the child whose growth moment this is.",
             "type": "string"
           },
           "reason": {
+            "description": "Why nothing was applied, empty on success.",
             "type": "string"
           },
           "remaining": {
+            "description": "How many letters stand afterwards.",
             "format": "int32",
             "type": "integer"
           },
           "trait_choices": {
+            "description": "TraitChoices are the traits the letter offers.",
             "items": {
               "type": "string"
             },
@@ -14752,9 +15157,11 @@
         "additionalProperties": false,
         "properties": {
           "life_stage": {
+            "description": "The stage's name, e.g. adult.",
             "type": "string"
           },
           "min_age": {
+            "description": "The age the stage starts at, in years.",
             "format": "float",
             "type": "number"
           }
@@ -14826,54 +15233,67 @@
         "additionalProperties": false,
         "properties": {
           "any_active_pawn": {
+            "description": "Whether any of its pawns is still active.",
             "type": "boolean"
           },
           "current_toil_name": {
+            "description": "The toil the group is in right now.",
             "type": "string"
           },
           "faction_def_name": {
+            "description": "The faction's def name.",
             "type": "string"
           },
           "faction_name": {
+            "description": "The faction's name, as the game shows it.",
             "type": "string"
           },
           "in_signal_leave": {
+            "description": "Whether the lord waits for a leave signal.",
             "type": "string"
           },
           "load_id": {
+            "description": "The lord's load id, which survives a save.",
             "format": "int32",
             "type": "integer"
           },
           "lord_job_type": {
+            "description": "The lord job the group runs.",
             "type": "string"
           },
           "num_pawns_ever_gained": {
+            "description": "How many pawns it ever gained.",
             "format": "int32",
             "type": "integer"
           },
           "num_pawns_lost_violently": {
+            "description": "How many of its pawns died violently.",
             "format": "int32",
             "type": "integer"
           },
           "owned_building_ids": {
+            "description": "The buildings the lord owns, by numeric id.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "owned_pawn_ids": {
+            "description": "The pawns the lord owns, by numeric id.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "quest_tags": {
+            "description": "The quest tags the lord carries, one per tag.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "ticks_in_toil": {
+            "description": "How many ticks the group has spent in that toil.",
             "format": "int32",
             "type": "integer"
           }
@@ -15066,12 +15486,14 @@
         "additionalProperties": false,
         "properties": {
           "buildings": {
+            "description": "Every built building with a power comp, one row each.",
             "items": {
               "$ref": "#/components/schemas/PoweredBuildingDto"
             },
             "type": "array"
           },
           "consume_power_buildings": {
+            "description": "The consumers the power net feeds, by building id.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -15094,6 +15516,7 @@
             "type": "integer"
           },
           "produce_power_buildings": {
+            "description": "The producers the power net feeds, by building id.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -15101,6 +15524,7 @@
             "type": "array"
           },
           "store_power_buildings": {
+            "description": "The batteries the power net holds, by building id.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -15493,6 +15917,7 @@
             "type": "string"
           },
           "is_aggro": {
+            "description": "Whether the state attacks others.",
             "type": "boolean"
           },
           "label": {
@@ -15500,12 +15925,19 @@
             "type": "string"
           },
           "recovery_mtb_days": {
-            "format": "float",
-            "type": "number"
+            "anyOf": [
+              {
+                "format": "float",
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many days until the state ends, on average; null when the game sets no value."
           }
         },
         "required": [
-          "recovery_mtb_days",
           "is_aggro"
         ],
         "type": "object"
@@ -15514,12 +15946,15 @@
         "additionalProperties": false,
         "properties": {
           "class": {
+            "description": "The entry's class as the save writes it: Message for a notification, StandardLetter / DeathLetter / ChoiceLetter_...",
             "type": "string"
           },
           "def": {
+            "description": "The MessageTypeDef defName: NegativeEvent, ThreatSmall, ThreatBig, PositiveEvent, SilentInput, ...",
             "type": "string"
           },
           "has_target": {
+            "description": "Whether the message points at a thing.",
             "type": "boolean"
           },
           "label": {
@@ -15532,15 +15967,19 @@
             "type": "integer"
           },
           "target_def": {
+            "description": "The def of the thing it points at.",
             "type": "string"
           },
           "target_label": {
+            "description": "The target thing's label (\"Rice plant\") when the message names one; empty when the target is only a cell.",
             "type": "string"
           },
           "text": {
+            "description": "The game's own text, e.g.",
             "type": "string"
           },
           "tick": {
+            "description": "The game tick the entry was created (a letter: when it arrived), the same clock the game state reads.",
             "format": "int32",
             "type": "integer"
           },
@@ -15574,6 +16013,7 @@
         "additionalProperties": false,
         "properties": {
           "author": {
+            "description": "The author the mod's About file names.",
             "type": "string"
           },
           "description": {
@@ -15581,6 +16021,7 @@
             "type": "string"
           },
           "load_order": {
+            "description": "The mod's place in the load order.",
             "format": "int32",
             "type": "integer"
           },
@@ -15589,21 +16030,26 @@
             "type": "string"
           },
           "package_id": {
+            "description": "The mod's package id.",
             "type": "string"
           },
           "root_dir": {
+            "description": "The folder the mod lives in.",
             "type": "string"
           },
           "supported_versions": {
+            "description": "The game versions the mod supports.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "url": {
+            "description": "The mod's home page.",
             "type": "string"
           },
           "version": {
+            "description": "The version the mod's About file names.",
             "type": "string"
           }
         },
@@ -15696,7 +16142,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The cell the camera centres on, x."
           },
           "center_z": {
             "anyOf": [
@@ -15707,12 +16154,15 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The cell the camera centres on, z."
           },
           "file_name": {
+            "description": "The file name to write the shot under, in the save folder.",
             "type": "string"
           },
           "hide_ui": {
+            "description": "Whether the UI is left out of the shot.",
             "type": "boolean"
           },
           "zoom_level": {
@@ -15724,7 +16174,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "How far the camera zooms in, 1 is the game's default."
           }
         },
         "required": [
@@ -15736,13 +16187,16 @@
         "additionalProperties": false,
         "properties": {
           "base_level": {
+            "description": "The level the need starts at.",
             "format": "float",
             "type": "number"
           },
           "colonist_and_prisoners_only": {
+            "description": "Whether only colonists and prisoners carry it.",
             "type": "boolean"
           },
           "colonists_only": {
+            "description": "Whether only colonists carry it.",
             "type": "boolean"
           },
           "def_name": {
@@ -15750,97 +16204,123 @@
             "type": "string"
           },
           "developmental_stage_filter": {
+            "description": "The life stages the need applies to.",
             "type": "string"
           },
           "fall_per_day": {
+            "description": "How much the need falls per day.",
             "format": "float",
             "type": "number"
           },
           "freeze_in_mental_state": {
+            "description": "Whether the need stops moving in a mental state.",
             "type": "boolean"
           },
           "freeze_while_sleeping": {
+            "description": "Whether the need stops moving while the pawn sleeps.",
             "type": "boolean"
           },
           "hediff_required_any": {
+            "description": "The hediffs that must be present for the need.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "list_priority": {
+            "description": "The order the need takes in the list.",
             "format": "int32",
             "type": "integer"
           },
           "major": {
+            "description": "Whether the need is a major one.",
             "type": "boolean"
           },
           "min_intelligence": {
+            "description": "The lowest intelligence that carries the need.",
             "type": "string"
           },
           "need_class_name": {
+            "description": "The C# class the need runs.",
             "type": "string"
           },
           "never_on_prisoner": {
+            "description": "Whether prisoners never carry it.",
             "type": "boolean"
           },
           "never_on_slave": {
+            "description": "Whether slaves never carry the need.",
             "type": "boolean"
           },
           "nullifying_precepts": {
+            "description": "The precepts that remove the need.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "only_if_caused_by_gene": {
+            "description": "Whether it appears only when a gene causes it.",
             "type": "boolean"
           },
           "only_if_caused_by_hediff": {
+            "description": "Whether it appears only when a hediff causes it.",
             "type": "boolean"
           },
           "only_if_caused_by_trait": {
+            "description": "Whether it appears only when a trait causes it.",
             "type": "boolean"
           },
           "player_mechs_only": {
+            "description": "Whether only the player's mechs carry it.",
             "type": "boolean"
           },
           "required_comps": {
+            "description": "The comps a pawn needs to carry it.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "scale_bar": {
+            "description": "Whether the need shows a bar.",
             "type": "boolean"
           },
           "seeker_fall_per_hour": {
+            "description": "How fast the need falls per hour when the pawn seeks it.",
             "format": "float",
             "type": "number"
           },
           "seeker_rise_per_hour": {
+            "description": "How fast it rises per hour while the pawn seeks it.",
             "format": "float",
             "type": "number"
           },
           "show_for_caravan_members": {
+            "description": "Whether the need shows for caravan members.",
             "type": "boolean"
           },
           "show_on_need_list": {
+            "description": "Whether the need appears in the needs list.",
             "type": "boolean"
           },
           "show_unit_ticks": {
+            "description": "Whether the need shows its value in ticks.",
             "type": "boolean"
           },
           "slaves_only": {
+            "description": "Whether only slaves carry it.",
             "type": "boolean"
           },
           "title_required_any": {
+            "description": "The titles that must be held for the need.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "tutor_highlight_tag": {
+            "description": "The tag the tutor uses to highlight it.",
             "type": "string"
           }
         },
@@ -15873,84 +16353,105 @@
         "additionalProperties": false,
         "properties": {
           "candidate_count": {
+            "description": "CandidateCount is how many candidates a batch call draws (ticket #3924); StartingPawns is the pick a founding installs, 1-based ids from the batch answer.",
             "format": "int32",
             "type": "integer"
           },
           "difficulty_name": {
+            "description": "The difficulty to start on, by def name.",
             "type": "string"
           },
           "ideo_meme": {
+            "description": "IdeoMeme is the one normal meme a freshly built ideo carries (ticket #3927); empty keeps Individualist, which forces no precept.",
             "type": "string"
           },
           "ideo_name": {
+            "description": "IdeoName picks a saved ideoligion by its name; empty builds the fox default (Helpers/IdeoSetup.cs, ticket #3612).",
             "type": "string"
           },
           "ideo_precepts": {
+            "description": "IdeoPrecepts are the precepts a freshly built ideo carries, by defName or by the \"Issue: label\" the ideoligion window shows (ticket #3927).",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "landmark_density": {
+            "description": "How many landmarks the planet holds.",
             "format": "int32",
             "type": "integer"
           },
           "map_size": {
+            "description": "How large the starting map is, in cells.",
             "format": "int32",
             "type": "integer"
           },
           "new_ideo_name": {
+            "description": "NewIdeoName names the ideoligion this call builds (fox ticket #3929).",
             "type": "string"
           },
           "overall_population": {
+            "description": "How populated the planet is.",
             "format": "int32",
             "type": "integer"
           },
           "overall_rainfall": {
+            "description": "How much rain the planet gets overall.",
             "format": "int32",
             "type": "integer"
           },
           "overall_temperature": {
+            "description": "How warm the planet is overall.",
             "format": "int32",
             "type": "integer"
           },
           "permadeath": {
+            "description": "Whether the colony runs in permadeath.",
             "type": "boolean"
           },
           "planet_coverage": {
+            "description": "How much of the planet the world covers, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "scenario": {
+            "description": "Scenario names the starting scenario by defName or label (ticket #3930); empty keeps the game's Crashlanded default.",
             "type": "string"
           },
           "site_biomes": {
+            "description": "The site wish (ticket #3930): what the starting tile should look like.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "site_growing_days_min": {
+            "description": "The fewest growing days the site needs.",
             "format": "int32",
             "type": "integer"
           },
           "site_hilliness": {
+            "description": "How hilly the landing site must be.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "site_river": {
+            "description": "Whether the site needs a river.",
             "type": "boolean"
           },
           "site_road": {
+            "description": "Whether the site needs a road.",
             "type": "boolean"
           },
           "site_settlement_radius": {
+            "description": "How far settlements must stay from the site.",
             "format": "int32",
             "type": "integer"
           },
           "site_settlements_min": {
+            "description": "SiteSettlementsMin other factions' settlements within SiteSettlementRadius tiles: neighbours worth trading with or raiding.",
             "format": "int32",
             "type": "integer"
           },
@@ -15963,7 +16464,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The warmest it may be, in Celsius."
           },
           "site_temperature_min": {
             "anyOf": [
@@ -15974,13 +16476,16 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The coldest the landing site may be, in Celsius."
           },
           "site_vary": {
+            "description": "SiteVary takes the Nth best tile instead of the best, so a run can found a deliberately different colony on purpose.",
             "format": "int32",
             "type": "integer"
           },
           "starting_pawns": {
+            "description": "The pawns the colony starts with.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -15988,15 +16493,19 @@
             "type": "array"
           },
           "starting_season": {
+            "description": "The season to start in.",
             "type": "string"
           },
           "starting_tile": {
+            "description": "The world tile to land on.",
             "type": "string"
           },
           "storyteller_name": {
+            "description": "The storyteller to start with, by def name.",
             "type": "string"
           },
           "world_seed": {
+            "description": "The seed the world is generated from.",
             "type": "string"
           }
         },
@@ -16022,12 +16531,14 @@
         "additionalProperties": false,
         "properties": {
           "buttons": {
+            "description": "The buttons the open window offers.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "force_pause": {
+            "description": "Whether the window forces a pause.",
             "type": "boolean"
           },
           "name": {
@@ -16035,15 +16546,19 @@
             "type": "string"
           },
           "second_name": {
+            "description": "The window's second name field.",
             "type": "string"
           },
           "text": {
+            "description": "The text the open window shows.",
             "type": "string"
           },
           "title": {
+            "description": "The title the open window shows.",
             "type": "string"
           },
           "window_type": {
+            "description": "The kind of window that is open.",
             "type": "string"
           }
         },
@@ -16523,23 +17038,28 @@
         "additionalProperties": false,
         "properties": {
           "age": {
+            "description": "The candidate's age in years.",
             "format": "int32",
             "type": "integer"
           },
           "gender": {
+            "description": "Gender is \"f\" or \"m\": two bytes, and a colony of one sex is a decision a run may want to make on purpose.",
             "type": "string"
           },
           "health": {
+            "description": "The candidate's health, as the game reports it.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "id": {
+            "description": "Id is 1-based and names the candidate in the batch answer, so a run writes the same number back in `picks`.",
             "format": "int32",
             "type": "integer"
           },
           "incapable": {
+            "description": "The work the candidate cannot do.",
             "items": {
               "type": "string"
             },
@@ -16550,12 +17070,14 @@
             "type": "string"
           },
           "skills": {
+            "description": "The candidate's skills, one entry each.",
             "items": {
               "$ref": "#/components/schemas/PawnCandidateSkillDto"
             },
             "type": "array"
           },
           "traits": {
+            "description": "The candidate's traits, one entry each.",
             "items": {
               "type": "string"
             },
@@ -16572,6 +17094,7 @@
         "additionalProperties": false,
         "properties": {
           "level": {
+            "description": "The skill's level, 0 to 20.",
             "format": "int32",
             "type": "integer"
           },
@@ -16580,6 +17103,7 @@
             "type": "string"
           },
           "passion": {
+            "description": "Passion is the game's own enum: 0 none, 1 minor, 2 major.",
             "format": "int32",
             "type": "integer"
           }
@@ -16997,20 +17521,24 @@
         "additionalProperties": false,
         "properties": {
           "apparel_tags": {
+            "description": "The apparel tags it may wear.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "base_body_size": {
+            "description": "The body size the kind starts with.",
             "format": "float",
             "type": "number"
           },
           "base_health_scale": {
+            "description": "The hit point scale the kind starts with.",
             "format": "float",
             "type": "number"
           },
           "combat_power": {
+            "description": "The combat power the game rates it at.",
             "format": "float",
             "type": "number"
           },
@@ -17019,6 +17547,7 @@
             "type": "string"
           },
           "faction_tags": {
+            "description": "The faction tags that may field it.",
             "items": {
               "type": "string"
             },
@@ -17029,9 +17558,11 @@
             "type": "string"
           },
           "race": {
+            "description": "The race's def name.",
             "type": "string"
           },
           "weapon_tags": {
+            "description": "The weapon tags it may carry.",
             "items": {
               "type": "string"
             },
@@ -18001,18 +18532,22 @@
             "type": "string"
           },
           "fertility_min": {
+            "description": "The lowest fertility the plant grows on.",
             "format": "float",
             "type": "number"
           },
           "fertility_sensitivity": {
+            "description": "How much the ground's fertility helps it.",
             "format": "float",
             "type": "number"
           },
           "grow_days": {
+            "description": "How many days the plant needs to ripen.",
             "format": "float",
             "type": "number"
           },
           "harvested_thing_def": {
+            "description": "The thing the plant yields when harvested.",
             "type": "string"
           },
           "label": {
@@ -18236,15 +18771,18 @@
             "type": "string"
           },
           "effects": {
+            "description": "What the precept changes in play.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "impact": {
+            "description": "How strongly the precept shapes the ideoligion.",
             "type": "string"
           },
           "issue": {
+            "description": "Issue and TipLabel are what the ideoligion window shows and what a founding accepts as a precept name (ticket #3927).",
             "type": "string"
           },
           "label": {
@@ -18252,15 +18790,18 @@
             "type": "string"
           },
           "required_memes": {
+            "description": "RequiredMemes names the memes a precept demands; Effects what it buys and costs, restated from the def.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "ritual": {
+            "description": "The ritual the precept attaches to, when it names one.",
             "type": "string"
           },
           "tip_label": {
+            "description": "The short label the tooltip shows.",
             "type": "string"
           }
         },
@@ -18482,15 +19023,19 @@
         "additionalProperties": false,
         "properties": {
           "accept_reason": {
+            "description": "Why the game refuses the quest; empty when it can be accepted.",
             "type": "string"
           },
           "accepter": {
+            "description": "The accepter the game recorded, once the quest was taken.",
             "type": "string"
           },
           "can_accept": {
+            "description": "The game's own answer for this quest, the report its accept button greys out with (QuestUtility.CanAcceptQuest, ticket #3216).",
             "type": "boolean"
           },
           "choices": {
+            "description": "Reward choices the game draws one accept button per choice for.",
             "items": {
               "$ref": "#/components/schemas/QuestChoiceDto"
             },
@@ -18501,18 +19046,22 @@
             "type": "string"
           },
           "ended_tick": {
+            "description": "The tick the quest ended in: Quest.cleanupTick, which the game sets when it cleans a quest up after the quest left the running state, -1 while it is on offer or running.",
             "format": "int32",
             "type": "integer"
           },
           "ended_ticks_ago": {
+            "description": "How long ago that was, in game ticks (Quest.TicksSinceCleanup), -1 while the quest has not ended.",
             "format": "int32",
             "type": "integer"
           },
           "expiry_hours": {
+            "description": "How many hours are left before it expires.",
             "format": "float",
             "type": "number"
           },
           "id": {
+            "description": "The quest's numeric id.",
             "format": "int32",
             "type": "integer"
           },
@@ -18521,21 +19070,26 @@
             "type": "string"
           },
           "quest_def": {
+            "description": "The quest's def name.",
             "type": "string"
           },
           "read_error": {
+            "description": "Why this quest could not be read, empty for a quest that reads normally.",
             "type": "string"
           },
           "requires_accepter": {
+            "description": "Whether the quest needs a named colonist to accept it; without one the game takes the quest for the colony (Quest.Accept(null)).",
             "type": "boolean"
           },
           "reward": {
+            "description": "What the quest pays out on completion.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "state": {
+            "description": "The quest's state, as the game names it.",
             "type": "string"
           }
         },
@@ -18553,12 +19107,14 @@
         "additionalProperties": false,
         "properties": {
           "active_quests": {
+            "description": "The quests the colony can still take.",
             "items": {
               "$ref": "#/components/schemas/QuestDto"
             },
             "type": "array"
           },
           "historical_quests": {
+            "description": "The quests the colony has finished or lost.",
             "items": {
               "$ref": "#/components/schemas/QuestDto"
             },
@@ -18579,6 +19135,7 @@
             "type": "string"
           },
           "efficiency_stat": {
+            "description": "The stat that decides the yield.",
             "type": "string"
           },
           "label": {
@@ -18586,29 +19143,35 @@
             "type": "string"
           },
           "products": {
+            "description": "The things one run of the recipe produces.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "skill_requirements": {
+            "description": "The skill levels the crafter needs.",
             "items": {
               "$ref": "#/components/schemas/SkillRequirementDto"
             },
             "type": "array"
           },
           "work_amount": {
+            "description": "How much work the recipe takes.",
             "format": "float",
             "type": "number"
           },
           "work_skill": {
+            "description": "The skill that speeds the recipe's work.",
             "type": "string"
           },
           "work_skill_learn_factor": {
+            "description": "How much skill the work teaches.",
             "format": "float",
             "type": "number"
           },
           "work_speed_stat": {
+            "description": "The stat that speeds the work.",
             "type": "string"
           }
         },
@@ -18666,6 +19229,7 @@
         "additionalProperties": false,
         "properties": {
           "allowed_def_names": {
+            "description": "The defs the ingredient accepts, by name.",
             "items": {
               "type": "string"
             },
@@ -18677,9 +19241,11 @@
             "type": "number"
           },
           "is_fixed_item": {
+            "description": "Whether the ingredient is one fixed def.",
             "type": "boolean"
           },
           "summary": {
+            "description": "The ingredient as one sentence.",
             "type": "string"
           }
         },
@@ -18725,10 +19291,12 @@
         "additionalProperties": false,
         "properties": {
           "min_level": {
+            "description": "The lowest level that satisfies it.",
             "format": "int32",
             "type": "integer"
           },
           "skill": {
+            "description": "The skill the requirement asks for.",
             "type": "string"
           }
         },
@@ -18893,6 +19461,7 @@
         "additionalProperties": false,
         "properties": {
           "cost": {
+            "description": "How many research points the project costs.",
             "format": "float",
             "type": "number"
           },
@@ -18905,6 +19474,7 @@
             "type": "string"
           },
           "hidden": {
+            "description": "Whether the game hides the project.",
             "type": "boolean"
           },
           "label": {
@@ -18912,21 +19482,26 @@
             "type": "string"
           },
           "prerequisites": {
+            "description": "The projects that must finish first.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "required_research_building": {
+            "description": "The bench a researcher needs to work on it.",
             "type": "string"
           },
           "tab": {
+            "description": "The research tab the project sits on.",
             "type": "string"
           },
           "tech_level": {
+            "description": "The tech level the project belongs to.",
             "type": "string"
           },
           "unlocked_defs": {
+            "description": "The defs the project unlocks when it finishes.",
             "items": {
               "type": "string"
             },
@@ -19108,6 +19683,7 @@
         "additionalProperties": false,
         "properties": {
           "category": {
+            "description": "The name of the resource category.",
             "type": "string"
           },
           "count": {
@@ -19116,6 +19692,7 @@
             "type": "integer"
           },
           "market_value": {
+            "description": "What the category is worth in silver.",
             "format": "double",
             "type": "number"
           }
@@ -19130,21 +19707,26 @@
         "additionalProperties": false,
         "properties": {
           "food_total": {
+            "description": "How much food the colony holds.",
             "format": "int32",
             "type": "integer"
           },
           "meals_count": {
+            "description": "How many cooked meals it holds.",
             "format": "int32",
             "type": "integer"
           },
           "raw_food_count": {
+            "description": "How many raw ingredients it holds.",
             "format": "int32",
             "type": "integer"
           },
           "rot_status_info": {
-            "$ref": "#/components/schemas/RotStatusInfoDto"
+            "$ref": "#/components/schemas/RotStatusInfoDto",
+            "description": "How much of the food is about to rot."
           },
           "total_nutrition": {
+            "description": "How much nutrition all of it holds.",
             "format": "float",
             "type": "number"
           }
@@ -19161,22 +19743,27 @@
         "additionalProperties": false,
         "properties": {
           "categories": {
+            "description": "One entry per resource category.",
             "items": {
               "$ref": "#/components/schemas/ResourceCategoryDto"
             },
             "type": "array"
           },
           "critical_resources": {
-            "$ref": "#/components/schemas/CriticalResourcesDto"
+            "$ref": "#/components/schemas/CriticalResourcesDto",
+            "description": "The food, medicine and weapons the colony must not run out of."
           },
           "last_updated": {
+            "description": "The tick the summary was built on.",
             "type": "string"
           },
           "total_items": {
+            "description": "How many item stacks the colony holds.",
             "format": "int32",
             "type": "integer"
           },
           "total_market_value": {
+            "description": "What all of it is worth in silver.",
             "format": "double",
             "type": "number"
           }
@@ -19837,6 +20424,7 @@
             "type": "string"
           },
           "score_stages": {
+            "description": "The score bands the room stat reports.",
             "items": {
               "$ref": "#/components/schemas/RoomStatScoreStageDto"
             },
@@ -19853,6 +20441,7 @@
             "type": "string"
           },
           "min_score": {
+            "description": "The score the band starts at.",
             "format": "float",
             "type": "number"
           }
@@ -19953,28 +20542,34 @@
         "additionalProperties": false,
         "properties": {
           "nutrition_not_rotating": {
+            "description": "How much nutrition keeps.",
             "format": "float",
             "type": "number"
           },
           "nutrition_rotating_soon": {
+            "description": "How much nutrition will rot soon.",
             "format": "float",
             "type": "number"
           },
           "percentage_rotating_soon": {
+            "description": "How much of the food will rot soon, in percent.",
             "format": "float",
             "type": "number"
           },
           "soon_rotting_items": {
+            "description": "The stacks that will rot soon.",
             "items": {
               "$ref": "#/components/schemas/RottingFoodItemDto"
             },
             "type": "array"
           },
           "total_soon_rotting_items": {
+            "description": "How many units will rot soon.",
             "format": "int32",
             "type": "integer"
           },
           "total_soon_rotting_stacks": {
+            "description": "How many stacks will rot soon.",
             "format": "int32",
             "type": "integer"
           }
@@ -20052,6 +20647,7 @@
         "additionalProperties": false,
         "properties": {
           "days_until_rot": {
+            "description": "How many days until it rots.",
             "format": "float",
             "type": "number"
           },
@@ -20060,6 +20656,7 @@
             "type": "string"
           },
           "hours_until_rot": {
+            "description": "How many hours until it rots.",
             "format": "float",
             "type": "number"
           },
@@ -20068,10 +20665,12 @@
             "type": "string"
           },
           "nutrition": {
+            "description": "How much nutrition the stack holds.",
             "format": "float",
             "type": "number"
           },
           "stack_count": {
+            "description": "How many units the stack holds.",
             "format": "int32",
             "type": "integer"
           },
@@ -20210,16 +20809,20 @@
         "additionalProperties": false,
         "properties": {
           "debug_info": {
+            "description": "Extra text the letter carries for debugging.",
             "type": "string"
           },
           "delay_ticks": {
+            "description": "How many ticks to wait before showing it.",
             "format": "int32",
             "type": "integer"
           },
           "faction_order_id": {
+            "description": "The faction the letter names, by its order id.",
             "type": "string"
           },
           "hyperlink_thing_defs": {
+            "description": "The defs the letter links to.",
             "items": {
               "type": "string"
             },
@@ -20230,9 +20833,11 @@
             "type": "string"
           },
           "letter_def": {
+            "description": "The letter's def name.",
             "type": "string"
           },
           "look_target_thing_id": {
+            "description": "The thing the letter points the camera at.",
             "type": "string"
           },
           "map_id": {
@@ -20240,12 +20845,15 @@
             "type": "string"
           },
           "message": {
+            "description": "The text the letter shows the player.",
             "type": "string"
           },
           "play_sound": {
+            "description": "The sound the letter plays when it arrives.",
             "type": "boolean"
           },
           "quest_id": {
+            "description": "The quest the letter belongs to.",
             "type": "string"
           }
         },
@@ -20259,6 +20867,7 @@
         "additionalProperties": false,
         "properties": {
           "message": {
+            "description": "A sentence about what the call did.",
             "type": "string"
           }
         },
@@ -20268,6 +20877,7 @@
         "additionalProperties": false,
         "properties": {
           "forbidden": {
+            "description": "Whether the things become forbidden.",
             "type": "boolean"
           },
           "map_id": {
@@ -20276,6 +20886,7 @@
             "type": "integer"
           },
           "thing_ids": {
+            "description": "The things to change, by numeric id.",
             "items": {
               "format": "int32",
               "type": "integer"
@@ -20770,6 +21381,7 @@
             "type": "string"
           },
           "disabling_work_tags": {
+            "description": "The work tags the skill switches off while it is missing.",
             "type": "string"
           },
           "label": {
@@ -20777,6 +21389,7 @@
             "type": "string"
           },
           "passion_susceptible": {
+            "description": "Whether the skill can carry a passion.",
             "type": "boolean"
           }
         },
@@ -20913,10 +21526,12 @@
         "additionalProperties": false,
         "properties": {
           "min_level": {
+            "description": "The lowest level that satisfies it.",
             "format": "int32",
             "type": "integer"
           },
           "skill": {
+            "description": "The skill the requirement asks for.",
             "type": "string"
           }
         },
@@ -20966,6 +21581,7 @@
             "type": "string"
           },
           "max_simultaneous": {
+            "description": "How many copies of the sound may play at once.",
             "format": "int32",
             "type": "integer"
           }
@@ -21013,18 +21629,20 @@
         "additionalProperties": false,
         "properties": {
           "amount": {
+            "description": "How many units to spawn, capped at the def's stack limit.",
             "format": "int32",
             "type": "integer"
           },
           "def_name": {
-            "description": "The def's internal name, e.g. \"Steel\".",
+            "description": "The def name of the item to spawn, e.g. \"Gun_Revolver\".",
             "type": "string"
           },
           "quality": {
-            "description": "The minimum quality a bill accepts, one of Awful through Legendary.",
+            "description": "The quality to give it: Awful through Legendary; empty leaves the game's default.",
             "type": "string"
           },
           "stuff_def_name": {
+            "description": "The material to build it from, e.g. \"Steel\"; empty for a def without one.",
             "type": "string"
           },
           "x": {
@@ -21049,9 +21667,11 @@
         "additionalProperties": false,
         "properties": {
           "always_allow_base_zero": {
+            "description": "Whether a base value of zero is allowed.",
             "type": "boolean"
           },
           "category": {
+            "description": "The category the stat is listed under.",
             "type": "string"
           },
           "def_name": {
@@ -21059,6 +21679,7 @@
             "type": "string"
           },
           "default_base_value": {
+            "description": "The value the stat starts at.",
             "format": "float",
             "type": "number"
           },
@@ -21071,26 +21692,33 @@
             "type": "string"
           },
           "max_value": {
+            "description": "The highest value it can take.",
             "format": "float",
             "type": "number"
           },
           "min_value": {
+            "description": "The lowest value the stat can take.",
             "format": "float",
             "type": "number"
           },
           "show_on_animals": {
+            "description": "Whether it shows for animals.",
             "type": "boolean"
           },
           "show_on_humanlikes": {
+            "description": "Whether it shows for humanlikes.",
             "type": "boolean"
           },
           "show_on_mechanoids": {
+            "description": "Whether it shows for mechanoids.",
             "type": "boolean"
           },
           "show_on_non_work_tables": {
+            "description": "Whether it shows on things other than work tables.",
             "type": "boolean"
           },
           "show_on_pawns": {
+            "description": "Whether the stat shows for pawns.",
             "type": "boolean"
           }
         },
@@ -21388,18 +22016,22 @@
         "additionalProperties": false,
         "properties": {
           "total_cells": {
+            "description": "How many cells they cover.",
             "format": "int32",
             "type": "integer"
           },
           "total_stockpiles": {
+            "description": "How many stockpiles the map holds.",
             "format": "int32",
             "type": "integer"
           },
           "used_cells": {
+            "description": "How many of those cells hold something.",
             "format": "int32",
             "type": "integer"
           },
           "utilization_percent": {
+            "description": "How full the storages are, in percent.",
             "format": "int32",
             "type": "integer"
           }
@@ -21426,25 +22058,31 @@
         "additionalProperties": false,
         "properties": {
           "address": {
+            "description": "The address the stream is served at.",
             "type": "string"
           },
           "frame_height": {
+            "description": "How many pixels tall one frame is.",
             "format": "int32",
             "type": "integer"
           },
           "frame_width": {
+            "description": "How many pixels wide one frame is.",
             "format": "int32",
             "type": "integer"
           },
           "jpeg_quality": {
+            "description": "The JPEG quality, 1 to 100.",
             "format": "int32",
             "type": "integer"
           },
           "port": {
+            "description": "The port the stream listens on.",
             "format": "int32",
             "type": "integer"
           },
           "target_fps": {
+            "description": "How many frames per second the stream aims for.",
             "format": "int32",
             "type": "integer"
           }
@@ -21462,9 +22100,11 @@
         "additionalProperties": false,
         "properties": {
           "config": {
-            "$ref": "#/components/schemas/StreamConfigDto"
+            "$ref": "#/components/schemas/StreamConfigDto",
+            "description": "The stream's frame size, frame rate and JPEG quality."
           },
           "is_streaming": {
+            "description": "Whether the camera stream is running.",
             "type": "boolean"
           }
         },
@@ -21511,29 +22151,36 @@
         "additionalProperties": false,
         "properties": {
           "armor_rating_blunt": {
+            "description": "How much blunt armour the material gives.",
             "format": "float",
             "type": "number"
           },
           "armor_rating_heat": {
+            "description": "How much heat armour the material gives.",
             "format": "float",
             "type": "number"
           },
           "armor_rating_sharp": {
+            "description": "How much sharp armour the material gives.",
             "format": "float",
             "type": "number"
           },
           "insulation_cold": {
+            "description": "How much cold the material keeps out.",
             "format": "float",
             "type": "number"
           },
           "insulation_heat": {
+            "description": "How much heat the material keeps out.",
             "format": "float",
             "type": "number"
           },
           "stuff_def_name": {
+            "description": "The material's def name.",
             "type": "string"
           },
           "stuff_label": {
+            "description": "The material's label, as the game shows it.",
             "type": "string"
           }
         },
@@ -21658,6 +22305,7 @@
         "additionalProperties": false,
         "properties": {
           "affordances": {
+            "description": "What the terrain lets pawns do, such as walk or build.",
             "items": {
               "type": "string"
             },
@@ -21668,10 +22316,12 @@
             "type": "string"
           },
           "extra_deterioration_factor": {
+            "description": "How much faster things on it wear out.",
             "format": "float",
             "type": "number"
           },
           "fertility": {
+            "description": "How well plants grow on it, 0 to 1.",
             "format": "float",
             "type": "number"
           },
@@ -21680,13 +22330,16 @@
             "type": "string"
           },
           "layerable": {
+            "description": "Whether another terrain may lie on it.",
             "type": "boolean"
           },
           "path_cost": {
+            "description": "How much movement the terrain costs.",
             "format": "int32",
             "type": "integer"
           },
           "research_prerequisites": {
+            "description": "The projects that must finish before it can be built.",
             "items": {
               "type": "string"
             },
@@ -21710,6 +22363,7 @@
             "type": "integer"
           },
           "thing_def": {
+            "description": "The def name of the thing the cost is paid in.",
             "type": "string"
           }
         },
@@ -21722,25 +22376,31 @@
         "additionalProperties": false,
         "properties": {
           "armor_rating_blunt": {
+            "description": "How much blunt damage it stops, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "armor_rating_heat": {
+            "description": "How much heat damage it stops, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "armor_rating_sharp": {
+            "description": "How much sharp damage it stops, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "beauty": {
+            "description": "How much beauty it adds to its room.",
             "format": "float",
             "type": "number"
           },
           "category": {
+            "description": "The thing category the def belongs to.",
             "type": "string"
           },
           "cost_list": {
+            "description": "What the thing costs to build.",
             "items": {
               "$ref": "#/components/schemas/ThingCostDto"
             },
@@ -21755,39 +22415,50 @@
             "type": "string"
           },
           "flammability": {
+            "description": "How easily it catches fire, 0 to 1.",
             "format": "float",
             "type": "number"
           },
           "insulation_cold": {
+            "description": "How much cold it keeps out, in degrees.",
             "format": "float",
             "type": "number"
           },
           "insulation_heat": {
+            "description": "How much heat it keeps out, in degrees.",
             "format": "float",
             "type": "number"
           },
           "is_apparel": {
+            "description": "Whether it is apparel.",
             "type": "boolean"
           },
           "is_building": {
+            "description": "Whether it is a building.",
             "type": "boolean"
           },
           "is_drug": {
+            "description": "Whether it is a drug.",
             "type": "boolean"
           },
           "is_item": {
+            "description": "Whether it is an item.",
             "type": "boolean"
           },
           "is_medicine": {
+            "description": "Whether it is medicine.",
             "type": "boolean"
           },
           "is_pawn": {
+            "description": "Whether it is a pawn.",
             "type": "boolean"
           },
           "is_plant": {
+            "description": "Whether it is a plant.",
             "type": "boolean"
           },
           "is_weapon": {
+            "description": "Whether the def is a weapon.",
             "type": "boolean"
           },
           "label": {
@@ -21795,22 +22466,27 @@
             "type": "string"
           },
           "market_value": {
+            "description": "What one unit is worth in silver.",
             "format": "float",
             "type": "number"
           },
           "mass": {
+            "description": "How much one unit weighs, in kilograms.",
             "format": "float",
             "type": "number"
           },
           "max_hit_points": {
+            "description": "How much damage one unit takes.",
             "format": "float",
             "type": "number"
           },
           "nutrition": {
+            "description": "How much nutrition one unit holds.",
             "format": "float",
             "type": "number"
           },
           "stack_limit": {
+            "description": "How many units one stack holds.",
             "format": "int32",
             "type": "integer"
           },
@@ -21819,37 +22495,45 @@
               "format": "float",
               "type": "number"
             },
+            "description": "The base values of the def's stats.",
             "type": "object"
           },
           "stuff_categories": {
+            "description": "The material categories it can be built from.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "stuff_stats": {
+            "description": "StuffStats holds the same armor and insulation numbers once per material the def accepts, and only for apparel (ticket #3615): an apparel's protection is mostly its material's, so the abstract...",
             "items": {
               "$ref": "#/components/schemas/StuffStatDto"
             },
             "type": "array"
           },
           "tech_level": {
+            "description": "The tech level the def belongs to.",
             "type": "string"
           },
           "thing_class": {
+            "description": "The C# class the thing runs.",
             "type": "string"
           },
           "trade_tags": {
+            "description": "The trade tags that decide who deals in it.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "work_to_build": {
+            "description": "How much work building one takes.",
             "format": "float",
             "type": "number"
           },
           "work_to_make": {
+            "description": "How much work making one takes.",
             "format": "float",
             "type": "number"
           }
@@ -21884,6 +22568,7 @@
         "additionalProperties": false,
         "properties": {
           "categories": {
+            "description": "The thing categories the def belongs to.",
             "items": {
               "type": "string"
             },
@@ -21898,10 +22583,12 @@
             "type": "string"
           },
           "hit_points": {
+            "description": "The thing's current hit points.",
             "format": "int32",
             "type": "integer"
           },
           "is_forbidden": {
+            "description": "Whether the colony is forbidden to touch it.",
             "type": "boolean"
           },
           "label": {
@@ -21909,10 +22596,12 @@
             "type": "string"
           },
           "market_value": {
+            "description": "What one unit is worth in silver.",
             "format": "double",
             "type": "number"
           },
           "max_hit_points": {
+            "description": "The thing's hit points when unhurt.",
             "format": "int32",
             "type": "integer"
           },
@@ -21926,17 +22615,21 @@
             "type": "integer"
           },
           "rotation": {
+            "description": "The thing's rotation: 0, 90, 180 or 270.",
             "format": "int32",
             "type": "integer"
           },
           "size": {
-            "$ref": "#/components/schemas/PositionDto"
+            "$ref": "#/components/schemas/PositionDto",
+            "description": "How many cells the thing covers."
           },
           "stack_count": {
+            "description": "How many units the stack holds.",
             "format": "int32",
             "type": "integer"
           },
           "stuff_def_name": {
+            "description": "The material's def name, e.g. \"Steel\".",
             "type": "string"
           },
           "thing_id": {
@@ -22013,12 +22706,14 @@
         "additionalProperties": false,
         "properties": {
           "ingredients": {
+            "description": "The ingredients one run of the recipe takes.",
             "items": {
               "$ref": "#/components/schemas/RecipeIngredientDto"
             },
             "type": "array"
           },
           "job_string": {
+            "description": "The sentence the bill shows while it runs.",
             "type": "string"
           },
           "label": {
@@ -22026,28 +22721,34 @@
             "type": "string"
           },
           "produced_at": {
+            "description": "The work tables that run the recipe.",
             "items": {
               "$ref": "#/components/schemas/RecipeProducerDto"
             },
             "type": "array"
           },
           "recipe_def_name": {
+            "description": "The recipe's def name.",
             "type": "string"
           },
           "research_prerequisite": {
+            "description": "The project that must finish first.",
             "type": "string"
           },
           "skill_requirements": {
+            "description": "The skill levels the crafter needs.",
             "items": {
               "$ref": "#/components/schemas/RecipeSkillDto"
             },
             "type": "array"
           },
           "work_amount": {
+            "description": "How much work the recipe takes.",
             "format": "float",
             "type": "number"
           },
           "work_time_seconds": {
+            "description": "How many seconds that work takes at normal speed.",
             "format": "float",
             "type": "number"
           }
@@ -22062,21 +22763,27 @@
         "additionalProperties": false,
         "properties": {
           "can_butcher": {
+            "description": "Whether butchering a corpse yields it.",
             "type": "boolean"
           },
           "can_craft": {
+            "description": "Whether a work bench can make it.",
             "type": "boolean"
           },
           "can_harvest": {
+            "description": "Whether a plant yields it when harvested.",
             "type": "boolean"
           },
           "can_mine": {
+            "description": "Whether a miner digs it out.",
             "type": "boolean"
           },
           "can_trade": {
+            "description": "Whether traders buy or sell it.",
             "type": "boolean"
           },
           "crafting_recipes": {
+            "description": "The recipes that produce it at a work bench.",
             "items": {
               "type": "string"
             },
@@ -22087,6 +22794,7 @@
             "type": "string"
           },
           "harvested_from": {
+            "description": "The plants that yield it when harvested.",
             "items": {
               "type": "string"
             },
@@ -22097,18 +22805,21 @@
             "type": "string"
           },
           "mined_from": {
+            "description": "The rocks that yield it when mined.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "thing_categories": {
+            "description": "The thing categories this entry covers.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "trade_tags": {
+            "description": "The trade tags that decide who deals in it.",
             "items": {
               "type": "string"
             },
@@ -22154,6 +22865,7 @@
             "type": "string"
           },
           "duration_days": {
+            "description": "How many days the thought lasts.",
             "format": "float",
             "type": "number"
           },
@@ -22162,14 +22874,17 @@
             "type": "string"
           },
           "mood_offset": {
+            "description": "How much mood the thought moves.",
             "format": "float",
             "type": "number"
           },
           "stack_limit": {
+            "description": "How many times the thought stacks.",
             "format": "int32",
             "type": "integer"
           },
           "stages": {
+            "description": "The stages the thought passes as it settles.",
             "items": {
               "$ref": "#/components/schemas/ThoughtStageDto"
             },
@@ -22187,10 +22902,12 @@
         "additionalProperties": false,
         "properties": {
           "base_mood_effect": {
+            "description": "How much mood the stage moves.",
             "format": "float",
             "type": "number"
           },
           "base_opinion_offset": {
+            "description": "How much opinion the stage moves.",
             "format": "float",
             "type": "number"
           },
@@ -22866,7 +23583,8 @@
         "additionalProperties": false,
         "properties": {
           "incident_parms": {
-            "$ref": "#/components/schemas/IncidentParmsDto"
+            "$ref": "#/components/schemas/IncidentParmsDto",
+            "description": "The parameters the incident is built with."
           },
           "map_id": {
             "description": "The map's numeric id; 0 is the player's home map.",
@@ -23314,18 +24032,23 @@
         "additionalProperties": false,
         "properties": {
           "api_version": {
+            "description": "The API version the routes answer with.",
             "type": "string"
           },
           "mod_version": {
+            "description": "The mod's assembly version.",
             "type": "string"
           },
           "rim_world_version": {
+            "description": "The game version the mod runs on.",
             "type": "string"
           },
           "save_data_folder": {
+            "description": "The folder this game writes its saves into (ticket #4005): a caller that runs several games tells its own from another game that answers on the same port by it, since the folder is what a game is.",
             "type": "string"
           },
           "version": {
+            "description": "The mod's version, as its About file names it.",
             "type": "string"
           }
         },
@@ -23335,6 +24058,7 @@
         "additionalProperties": false,
         "properties": {
           "accuracy_multiplier": {
+            "description": "How much it spoils shooting.",
             "format": "float",
             "type": "number"
           },
@@ -23351,18 +24075,22 @@
             "type": "string"
           },
           "max_temperature": {
+            "description": "The highest temperature it occurs at.",
             "format": "float",
             "type": "number"
           },
           "min_temperature": {
+            "description": "The lowest temperature the weather occurs at.",
             "format": "float",
             "type": "number"
           },
           "move_speed_multiplier": {
+            "description": "How much it slows movement.",
             "format": "float",
             "type": "number"
           },
           "wind_speed_factor": {
+            "description": "How much wind it brings.",
             "format": "float",
             "type": "number"
           }
@@ -23384,9 +24112,11 @@
             "type": "string"
           },
           "second_name": {
+            "description": "The name to type into the second field.",
             "type": "string"
           },
           "window_types": {
+            "description": "The window kinds to accept.",
             "items": {
               "type": "string"
             },
@@ -23399,31 +24129,37 @@
         "additionalProperties": false,
         "properties": {
           "accepted_count": {
+            "description": "How many windows the call accepted.",
             "format": "int32",
             "type": "integer"
           },
           "accepted_windows": {
+            "description": "The windows the call accepted, one entry each.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "buttons": {
+            "description": "The label of the button each accepted window got, in the same order.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "names": {
+            "description": "The names a naming dialog was given, in the order the dialog asks them, so the caller can compare them with what the game holds.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "reason": {
+            "description": "Why it accepted nothing, when it did not.",
             "type": "string"
           },
           "still_open": {
+            "description": "Windows that matched but could not be pressed; Reason says why.",
             "items": {
               "type": "string"
             },
@@ -23439,9 +24175,11 @@
         "additionalProperties": false,
         "properties": {
           "force_pause_only": {
+            "description": "Whether only a force-pause window is closed.",
             "type": "boolean"
           },
           "window_types": {
+            "description": "The window kinds to close.",
             "items": {
               "type": "string"
             },
@@ -23457,10 +24195,12 @@
         "additionalProperties": false,
         "properties": {
           "closed_count": {
+            "description": "How many windows the call closed.",
             "format": "int32",
             "type": "integer"
           },
           "closed_windows": {
+            "description": "The windows the call closed, one entry each.",
             "items": {
               "type": "string"
             },
@@ -23476,15 +24216,18 @@
         "additionalProperties": false,
         "properties": {
           "options": {
+            "description": "The options the dialog offers, one button each.",
             "items": {
               "$ref": "#/components/schemas/DialogOptionDto"
             },
             "type": "array"
           },
           "text": {
+            "description": "The text the dialog shows above its options.",
             "type": "string"
           },
           "title": {
+            "description": "The heading the dialog draws across its top.",
             "type": "string"
           }
         },
@@ -23494,12 +24237,15 @@
         "additionalProperties": false,
         "properties": {
           "button_text": {
+            "description": "The text on the one button.",
             "type": "string"
           },
           "text": {
+            "description": "The text the message window shows.",
             "type": "string"
           },
           "title": {
+            "description": "The title the message window shows.",
             "type": "string"
           }
         },
@@ -23715,19 +24461,23 @@
             "type": "string"
           },
           "natural_priority": {
+            "description": "The priority the game gives the work type by default.",
             "format": "int32",
             "type": "integer"
           },
           "relevant_skills": {
+            "description": "The skills that speed the work up.",
             "items": {
               "type": "string"
             },
             "type": "array"
           },
           "visible_only_with_work": {
+            "description": "Whether the work type shows only when work exists.",
             "type": "boolean"
           },
           "work_tags": {
+            "description": "The work tags the work type covers.",
             "type": "string"
           }
         },
@@ -23741,9 +24491,11 @@
         "additionalProperties": false,
         "properties": {
           "can_be_randomly_placed": {
+            "description": "Whether the game may place it at random.",
             "type": "boolean"
           },
           "can_have_faction": {
+            "description": "Whether the object can belong to a faction.",
             "type": "boolean"
           },
           "def_name": {
@@ -23755,6 +24507,7 @@
             "type": "string"
           },
           "expanding_icon": {
+            "description": "Whether its icon expands.",
             "type": "boolean"
           },
           "label": {
@@ -23762,9 +24515,11 @@
             "type": "string"
           },
           "never_multi_select": {
+            "description": "Whether it refuses a multi-selection.",
             "type": "boolean"
           },
           "selectable": {
+            "description": "Whether the player can select it.",
             "type": "boolean"
           }
         },
@@ -33682,7 +34437,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8767"
+      "url": "http://localhost:8766"
     }
   ],
   "tags": [
