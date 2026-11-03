@@ -8708,6 +8708,144 @@
         ],
         "type": "object"
       },
+      "CacheEntryDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "absolute_expiration": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the entry expires by wall-clock time; null for another expiry rule."
+          },
+          "created": {
+            "description": "When the entry was written (UTC).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "estimated_size": {
+            "description": "Rough size of the cached value, in bytes.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "hits": {
+            "description": "How often the entry was served.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "key": {
+            "description": "The request the cached response answers, as the cache keys it.",
+            "type": "string"
+          },
+          "last_accessed": {
+            "description": "When the entry was last served (UTC).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "priority": {
+            "description": "The priority the entry was cached with: Low, Normal, High or Critical.",
+            "type": "string"
+          },
+          "remaining_seconds": {
+            "description": "Seconds until the entry expires under its own rule.",
+            "format": "double",
+            "type": "number"
+          },
+          "type": {
+            "description": "The C# type of the cached value.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "created",
+          "last_accessed",
+          "remaining_seconds",
+          "hits",
+          "estimated_size"
+        ],
+        "type": "object"
+      },
+      "CacheStatistics": {
+        "additionalProperties": false,
+        "properties": {
+          "compiled_delegate_count": {
+            "description": "How many property accessors the cache compiled.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "compiled_delegate_hits": {
+            "description": "How often a compiled property accessor was used.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "compiled_delegate_misses": {
+            "description": "How often a property accessor was compiled instead of reused.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "entries": {
+            "description": "One row per cached response; empty unless the request asked for details.",
+            "items": {
+              "$ref": "#/components/schemas/CacheEntryDetail"
+            },
+            "type": "array"
+          },
+          "hit_ratio": {
+            "description": "Hits divided by hits plus misses; 0 while nothing was requested.",
+            "format": "double",
+            "type": "number"
+          },
+          "hits": {
+            "description": "How many requests a cached response answered since the game started.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "last_cleanup": {
+            "description": "When the cache last dropped expired entries (UTC).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "memory_usage_bytes": {
+            "description": "Rough memory the cached responses occupy, in bytes.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "misses": {
+            "description": "How many requests had to be generated because nothing was cached.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "recent_activity": {
+            "description": "The most recent cache requests, newest last.",
+            "items": {
+              "$ref": "#/components/schemas/RecentHitDetail"
+            },
+            "type": "array"
+          },
+          "total_entries": {
+            "description": "How many responses the cache holds right now.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_entries",
+          "hits",
+          "misses",
+          "memory_usage_bytes",
+          "last_cleanup",
+          "hit_ratio",
+          "compiled_delegate_count",
+          "compiled_delegate_hits",
+          "compiled_delegate_misses"
+        ],
+        "type": "object"
+      },
       "CacheStatusDto": {
         "additionalProperties": false,
         "properties": {
@@ -8716,6 +8854,7 @@
             "type": "boolean"
           },
           "statistics": {
+            "$ref": "#/components/schemas/CacheStatistics",
             "description": "The cache's counters, as the server reports them."
           }
         },
@@ -9691,6 +9830,28 @@
         "required": [
           "lat",
           "lon"
+        ],
+        "type": "object"
+      },
+      "CopyAllowedAreaRequestDto": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "description": "The area to copy, by its label or type name; there is no default.",
+            "type": "string"
+          },
+          "map_id": {
+            "description": "The map's numeric id; 0 is the player's home map.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "new_label": {
+            "description": "The name to give the copy; empty takes the game's own default (\"Area 2\").",
+            "type": "string"
+          }
+        },
+        "required": [
+          "map_id"
         ],
         "type": "object"
       },
@@ -19121,6 +19282,29 @@
             "type": "array"
           }
         },
+        "type": "object"
+      },
+      "RecentHitDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "is_hit": {
+            "description": "True when a cached response answered it, false when it was generated.",
+            "type": "boolean"
+          },
+          "key": {
+            "description": "The request the cache looked at.",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "When the request arrived (UTC).",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timestamp",
+          "is_hit"
+        ],
         "type": "object"
       },
       "RecipeDefDto": {
@@ -29638,6 +29822,38 @@
           }
         },
         "summary": "Create an allowed area",
+        "tags": [
+          "MapController"
+        ]
+      }
+    },
+    "/api/v1/map/area/copy": {
+      "post": {
+        "description": "The Manage areas dialog's Copy button: a new allowed area holding the source's cells, at most 10 per map, with the game's own default name unless one is sent",
+        "operationId": "MapController.CopyArea",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyAllowedAreaRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResultOfAreaCellsDto"
+                }
+              }
+            },
+            "description": "The API envelope. A refusal is also HTTP 200, with success=false and the reason in errors."
+          }
+        },
+        "summary": "Copy an allowed area",
         "tags": [
           "MapController"
         ]

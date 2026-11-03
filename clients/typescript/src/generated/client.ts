@@ -2087,6 +2087,14 @@ export class RimApiClient extends RimApiBase {
     return this.call<Types.AreaCellsDto>("POST", "/api/v1/map/area", { body });
   }
   /**
+   * Copy an allowed area
+   *
+   * POST /api/v1/map/area/copy
+   */
+  mapControllerCopyArea(body: Types.CopyAllowedAreaRequestDto): Promise<ApiResult<Types.AreaCellsDto>> {
+    return this.call<Types.AreaCellsDto>("POST", "/api/v1/map/area/copy", { body });
+  }
+  /**
    * Delete an allowed area
    *
    * DELETE /api/v1/map/area/delete

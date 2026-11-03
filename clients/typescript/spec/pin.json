@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
-  "operations": 298,
-  "paths": 293,
-  "sha256": "bc1651e3df16cd8a2068953d29f94a0ed39628b587732cd464351b2b6e648583",
+  "operations": 299,
+  "paths": 294,
+  "sha256": "4032f71cff02dac740436ef0e8295748aeec02156d4f0a3bf9b215208adad408",
   "source": "http://127.0.0.1:8766/api/v1/docs?format=openapi-json",
   "taken": "2026-11-03",
   "version": "1.10.0"

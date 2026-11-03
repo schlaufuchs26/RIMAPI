@@ -604,11 +604,57 @@ export interface BuildingDto {
   type?: string;
 }
 
+export interface CacheEntryDetail {
+  /** When the entry expires by wall-clock time; null for another expiry rule. */
+  absolute_expiration?: string | null;
+  /** When the entry was written (UTC). */
+  created: string;
+  /** Rough size of the cached value, in bytes. */
+  estimated_size: number;
+  /** How often the entry was served. */
+  hits: number;
+  /** The request the cached response answers, as the cache keys it. */
+  key?: string;
+  /** When the entry was last served (UTC). */
+  last_accessed: string;
+  /** The priority the entry was cached with: Low, Normal, High or Critical. */
+  priority?: string;
+  /** Seconds until the entry expires under its own rule. */
+  remaining_seconds: number;
+  /** The C# type of the cached value. */
+  type?: string;
+}
+
+export interface CacheStatistics {
+  /** How many property accessors the cache compiled. */
+  compiled_delegate_count: number;
+  /** How often a compiled property accessor was used. */
+  compiled_delegate_hits: number;
+  /** How often a property accessor was compiled instead of reused. */
+  compiled_delegate_misses: number;
+  /** One row per cached response; empty unless the request asked for details. */
+  entries?: CacheEntryDetail[];
+  /** Hits divided by hits plus misses; 0 while nothing was requested. */
+  hit_ratio: number;
+  /** How many requests a cached response answered since the game started. */
+  hits: number;
+  /** When the cache last dropped expired entries (UTC). */
+  last_cleanup: string;
+  /** Rough memory the cached responses occupy, in bytes. */
+  memory_usage_bytes: number;
+  /** How many requests had to be generated because nothing was cached. */
+  misses: number;
+  /** The most recent cache requests, newest last. */
+  recent_activity?: RecentHitDetail[];
+  /** How many responses the cache holds right now. */
+  total_entries: number;
+}
+
 export interface CacheStatusDto {
   /** Whether the setting is on. */
   enabled: boolean;
   /** The cache's counters, as the server reports them. */
-  statistics?: Json;
+  statistics?: CacheStatistics;
 }
 
 export interface CameraScreenshotRequestDto {
@@ -970,6 +1016,15 @@ export interface CoordinatesDto {
   lat: number;
   /** The longitude, in degrees east of Greenwich. */
   lon: number;
+}
+
+export interface CopyAllowedAreaRequestDto {
+  /** The area to copy, by its label or type name; there is no default. */
+  label?: string;
+  /** The map's numeric id; 0 is the player's home map. */
+  map_id: number;
+  /** The name to give the copy; empty takes the game's own default ("Area 2"). */
+  new_label?: string;
 }
 
 export interface CopyAreaRequestDto {
@@ -4439,6 +4494,15 @@ export interface QuestsDto {
   active_quests?: QuestDto[];
   /** The quests the colony has finished or lost. */
   historical_quests?: QuestDto[];
+}
+
+export interface RecentHitDetail {
+  /** True when a cached response answered it, false when it was generated. */
+  is_hit: boolean;
+  /** The request the cache looked at. */
+  key?: string;
+  /** When the request arrived (UTC). */
+  timestamp: string;
 }
 
 export interface RecipeDefDto {

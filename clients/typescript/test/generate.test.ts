@@ -62,7 +62,7 @@ describe("coverage", () => {
       .split("\n")
       .filter((line) => /^ {2}[A-Za-z_$][\w$]*\(.*\): Promise<ApiResult<.+>> \{$/.test(line));
     expect(methods).toHaveLength(operations);
-    expect(operations).toBe(298);
+    expect(operations).toBe(299);
   });
 
   test("every operationId is reachable under its camelCase name", () => {
@@ -86,12 +86,10 @@ describe("coverage", () => {
       operations,
       typedRoutes: operations,
       untypedRoutes: 0,
-      freeFormFields: 1,
+      freeFormFields: 0,
     });
     expect(thin.routes).toHaveLength(0);
-    expect(thin.fields).toEqual([
-      { schema: "CacheStatusDto", property: "statistics", reason: "property has no schema" },
-    ]);
+    expect(thin.fields).toEqual([]);
   });
 
   test("the public surface has no any", () => {
