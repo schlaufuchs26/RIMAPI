@@ -10,6 +10,7 @@ namespace RIMAPI.Models
     public class CacheStatusDto
     {
         public bool Enabled { get; set; }
+        [ParameterDescription("The cache's counters, as the server reports them.")]
         public CacheStatistics Statistics { get; set; }
     }
 }

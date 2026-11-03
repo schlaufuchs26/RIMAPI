@@ -21,7 +21,7 @@ namespace RIMAPI.Tests
     internal static class PendingFieldDescriptions
     {
         public static readonly HashSet<string> Areas = new HashSet<string>(
-            new[] { "system", "client", "other" },
+            new string[0],
             StringComparer.Ordinal
         );
     }

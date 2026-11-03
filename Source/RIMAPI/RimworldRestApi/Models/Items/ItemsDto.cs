@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using Verse;
+using RIMAPI.Core;
 
 namespace RIMAPI.Models
 {
@@ -10,40 +11,70 @@ namespace RIMAPI.Models
         public string DefName { get; set; }
         public string Label { get; set; }
         public string Description { get; set; }
+        [ParameterDescription("The thing category the def belongs to.")]
         public string Category { get; set; }
+        [ParameterDescription("The C# class the thing runs.")]
         public string ThingClass { get; set; }
+        [ParameterDescription("The base values of the def's stats.")]
         public Dictionary<string, float> StatBase { get; set; }
+        [ParameterDescription("What the thing costs to build.")]
         public List<ThingCostDto> CostList { get; set; }
+        [ParameterDescription("Whether the def is a weapon.")]
         public bool IsWeapon { get; set; }
+        [ParameterDescription("Whether it is apparel.")]
         public bool IsApparel { get; set; }
+        [ParameterDescription("Whether it is an item.")]
         public bool IsItem { get; set; }
+        [ParameterDescription("Whether it is a pawn.")]
         public bool IsPawn { get; set; }
+        [ParameterDescription("Whether it is a plant.")]
         public bool IsPlant { get; set; }
+        [ParameterDescription("Whether it is a building.")]
         public bool IsBuilding { get; set; }
+        [ParameterDescription("Whether it is medicine.")]
         public bool IsMedicine { get; set; }
+        [ParameterDescription("Whether it is a drug.")]
         public bool IsDrug { get; set; }
+        [ParameterDescription("What one unit is worth in silver.")]
         public float MarketValue { get; set; }
+        [ParameterDescription("How much one unit weighs, in kilograms.")]
         public float Mass { get; set; }
+        [ParameterDescription("How much damage one unit takes.")]
         public float MaxHitPoints { get; set; }
+        [ParameterDescription("How easily it catches fire, 0 to 1.")]
         public float Flammability { get; set; }
+        [ParameterDescription("How many units one stack holds.")]
         public int StackLimit { get; set; }
+        [ParameterDescription("How much nutrition one unit holds.")]
         public float Nutrition { get; set; }
+        [ParameterDescription("How much work making one takes.")]
         public float WorkToMake { get; set; }
+        [ParameterDescription("How much work building one takes.")]
         public float WorkToBuild { get; set; }
+        [ParameterDescription("How much beauty it adds to its room.")]
         public float Beauty { get; set; }
+        [ParameterDescription("The tech level the def belongs to.")]
         public string TechLevel { get; set; }
+        [ParameterDescription("The trade tags that decide who deals in it.")]
         public List<string> TradeTags { get; set; }
+        [ParameterDescription("The material categories it can be built from.")]
         public List<string> StuffCategories { get; set; }
+        [ParameterDescription("How much sharp damage it stops, 0 to 1.")]
         public float ArmorRatingSharp { get; set; }
+        [ParameterDescription("How much blunt damage it stops, 0 to 1.")]
         public float ArmorRatingBlunt { get; set; }
+        [ParameterDescription("How much heat damage it stops, 0 to 1.")]
         public float ArmorRatingHeat { get; set; }
+        [ParameterDescription("How much cold it keeps out, in degrees.")]
         public float InsulationCold { get; set; }
+        [ParameterDescription("How much heat it keeps out, in degrees.")]
         public float InsulationHeat { get; set; }
 
         // StuffStats holds the same armor and insulation numbers once per
         // material the def accepts, and only for apparel (ticket #3615): an
         // apparel's protection is mostly its material's, so the abstract value
         // above answers a stuffable def with the game's 0.
+        [ParameterDescription("StuffStats holds the same armor and insulation numbers once per material the def accepts, and only for apparel (ticket #3615): an apparel's protection is mostly its material's, so the abstract...")]
         public List<StuffStatDto> StuffStats { get; set; }
 
         public static ThingDefDto ToDto(ThingDef thing)
@@ -147,12 +178,19 @@ namespace RIMAPI.Models
     /// </summary>
     public class StuffStatDto
     {
+        [ParameterDescription("The material's def name.")]
         public string StuffDefName { get; set; }
+        [ParameterDescription("The material's label, as the game shows it.")]
         public string StuffLabel { get; set; }
+        [ParameterDescription("How much sharp armour the material gives.")]
         public float ArmorRatingSharp { get; set; }
+        [ParameterDescription("How much blunt armour the material gives.")]
         public float ArmorRatingBlunt { get; set; }
+        [ParameterDescription("How much heat armour the material gives.")]
         public float ArmorRatingHeat { get; set; }
+        [ParameterDescription("How much cold the material keeps out.")]
         public float InsulationCold { get; set; }
+        [ParameterDescription("How much heat the material keeps out.")]
         public float InsulationHeat { get; set; }
     }
 

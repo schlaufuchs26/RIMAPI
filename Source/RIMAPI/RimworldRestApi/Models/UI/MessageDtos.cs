@@ -1,3 +1,5 @@
+using RIMAPI.Core;
+
 namespace RIMAPI.Models
 {
     // One entry of the game's own message archive (ticket #3336). The little
@@ -18,22 +20,29 @@ namespace RIMAPI.Models
     {
         // The entry's class as the save writes it: Message for a notification,
         // StandardLetter / DeathLetter / ChoiceLetter_... for a letter.
+        [ParameterDescription("The entry's class as the save writes it: Message for a notification, StandardLetter / DeathLetter / ChoiceLetter_...")]
         public string Class { get; set; }
         // The MessageTypeDef defName: NegativeEvent, ThreatSmall, ThreatBig,
         // PositiveEvent, SilentInput, ...
+        [ParameterDescription("The MessageTypeDef defName: NegativeEvent, ThreatSmall, ThreatBig, PositiveEvent, SilentInput, ...")]
         public string Def { get; set; }
         // A letter's title ("Visitors", "Death: Vulpes"); empty for a
         // notification, which has only its text.
         public string Label { get; set; }
         // The game's own text, e.g. "Rice plant has died because of cold."
+        [ParameterDescription("The game's own text, e.g.")]
         public string Text { get; set; }
         // The game tick the entry was created (a letter: when it arrived), the
         // same clock the game state reads.
+        [ParameterDescription("The game tick the entry was created (a letter: when it arrived), the same clock the game state reads.")]
         public int Tick { get; set; }
+        [ParameterDescription("Whether the message points at a thing.")]
         public bool HasTarget { get; set; }
         // The target thing's label ("Rice plant") when the message names one;
         // empty when the target is only a cell.
+        [ParameterDescription("The target thing's label (\"Rice plant\") when the message names one; empty when the target is only a cell.")]
         public string TargetLabel { get; set; }
+        [ParameterDescription("The def of the thing it points at.")]
         public string TargetDef { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
