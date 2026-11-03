@@ -157,7 +157,7 @@ namespace RIMAPI.Tests
                     Match property = ModelProperty.Match(lines[index]);
                     if (!property.Success || current == null)
                         continue;
-                    if (PendingFieldDescriptions.Types.Contains(current))
+                    if (PendingFieldDescriptions.Areas.Contains(AreaOf(path)))
                         continue;
 
                     string block = AttributeBlock(lines, index);
@@ -232,6 +232,46 @@ namespace RIMAPI.Tests
 
         private static IEnumerable<string> ModelFiles() =>
             SourceTree.Sources(SourceTree.RepoRoot(), "RimworldRestApi", "Models");
+
+        /// <summary>
+        /// The wave a model file belongs to: the model directories that serve
+        /// one area of routes, and the root files (bills, buildings, ideo,
+        /// quests) as the colony area.
+        /// </summary>
+        private static string AreaOf(string path)
+        {
+            string relative = SourceTree.Relative(SourceTree.RepoRoot(), path);
+            string[] parts = relative.Split(Path.DirectorySeparatorChar);
+            int models = Array.IndexOf(parts, "Models");
+            bool nested = models >= 0 && models + 2 < parts.Length;
+            string directory = nested ? parts[models + 1] : "";
+
+            switch (directory)
+            {
+                case "Pawns":
+                case "Combat":
+                    return "pawn";
+                case "Map":
+                case "World":
+                    return "map-world";
+                case "System":
+                case "Def":
+                case "Game":
+                case "Mods":
+                case "Items":
+                case "Server":
+                    return "system";
+                case "Client":
+                case "UI":
+                case "Camera":
+                case "Images_Textures":
+                    return "client";
+                case "Common":
+                    return "other";
+                default:
+                    return "colony";
+            }
+        }
 
         /// <summary>The attribute lines directly above a member.</summary>
         private static string AttributeBlock(string[] lines, int line)
