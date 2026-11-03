@@ -542,7 +542,10 @@ namespace RIMAPI.Models
     /// </summary>
     public class StripRequestDto
     {
+        /// <summary>The colonist who does the stripping.</summary>
         public int PawnId { get; set; }
+
+        /// <summary>The corpse or downed pawn to strip.</summary>
         public int TargetThingId { get; set; }
     }
 
