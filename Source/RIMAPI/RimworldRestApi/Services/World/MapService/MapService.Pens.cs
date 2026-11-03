@@ -67,7 +67,18 @@ namespace RIMAPI.Services
                     Animals = new List<PenAnimalDto>(),
                     Members = new List<PenAnimalMemberDto>(),
                     Stockpiled = new List<PenFoodDto>(),
+                    AutoCut = comp.autoCut,
+                    AnimalsAllowed = new List<string>(),
                 };
+
+                if (comp.AnimalFilter != null)
+                {
+                    foreach (ThingDef allowed in comp.AnimalFilter.AllowedThingDefs)
+                    {
+                        dto.AnimalsAllowed.Add(allowed.defName);
+                    }
+                    dto.AnimalsAllowed.Sort(System.StringComparer.Ordinal);
+                }
 
                 foreach (var info in food.ActualAnimalInfos)
                 {
@@ -126,6 +137,58 @@ namespace RIMAPI.Services
             }
 
             return ApiResult<List<PenDto>>.Ok(result);
+        }
+
+        // The pen's own controls (fox ticket #4316, parity wave 8): the Animals
+        // tab's filter, the Auto-cut tab's checkbox and button, and the marker's
+        // name. Each one resolves the map and the marker, then hands over to the
+        // game's own objects.
+        public ApiResult<PenEditResultDto> SetPenAnimals(PenAnimalsRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<PenEditResultDto>.Fail(error);
+            }
+
+            CompAnimalPenMarker marker = PenEdit.FindPen(map, request.MarkerId, out string penError);
+            if (marker == null)
+            {
+                return ApiResult<PenEditResultDto>.Fail(penError);
+            }
+
+            return PenEdit.SetAnimals(map, marker, request);
+        }
+
+        public ApiResult<PenEditResultDto> SetPenAutoCut(PenAutoCutRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<PenEditResultDto>.Fail(error);
+            }
+
+            CompAnimalPenMarker marker = PenEdit.FindPen(map, request.MarkerId, out string penError);
+            if (marker == null)
+            {
+                return ApiResult<PenEditResultDto>.Fail(penError);
+            }
+
+            return PenEdit.SetAutoCut(map, marker, request);
+        }
+
+        public ApiResult<PenEditResultDto> RenamePen(PenRenameRequestDto request)
+        {
+            if (!TryMap(request?.MapId ?? 0, out Map map, out string error))
+            {
+                return ApiResult<PenEditResultDto>.Fail(error);
+            }
+
+            CompAnimalPenMarker marker = PenEdit.FindPen(map, request.MarkerId, out string penError);
+            if (marker == null)
+            {
+                return ApiResult<PenEditResultDto>.Fail(penError);
+            }
+
+            return PenEdit.Rename(map, marker, request);
         }
     }
 }

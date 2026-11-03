@@ -19,6 +19,11 @@ namespace RIMAPI.Services
 
         ApiResult<List<BlueprintEntryDto>> GetMapBlueprints(int mapId);
         ApiResult<List<PenDto>> GetMapPens(int mapId);
+
+        // The pen's own controls (fox ticket #4316, parity wave 8).
+        ApiResult<PenEditResultDto> SetPenAnimals(PenAnimalsRequestDto request);
+        ApiResult<PenEditResultDto> SetPenAutoCut(PenAutoCutRequestDto request);
+        ApiResult<PenEditResultDto> RenamePen(PenRenameRequestDto request);
         ApiResult<MapCreaturesSummaryDto> GetMapCreaturesSummary(int mapId);
         ApiResult<MapFarmSummaryDto> GenerateFarmSummary(int mapId);
         ApiResult<GrowingZoneDto> GetGrowingZoneById(int mapId, int zoneId);

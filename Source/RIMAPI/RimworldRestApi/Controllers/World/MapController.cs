@@ -118,6 +118,42 @@ namespace RIMAPI.Controllers
             await context.SendJsonResponse(result);
         }
 
+        // The pen's own controls (fox ticket #4316, parity wave 8): the Animals
+        // tab's filter, the Auto-cut tab's checkbox and its button, and the
+        // marker's name.
+        [Post("/api/v1/map/pen/animals")]
+        [ResponseBody(typeof(PenEditResultDto))]
+        [RequestBody(typeof(PenAnimalsRequestDto))]
+        [EndpointMetadata("Set which animals a pen takes", Notes = "The Animals tab's filter: animal defNames or categories to allow or deny; a name the game's own filter does not carry comes back in unknown")]
+        public async Task SetPenAnimals(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<PenAnimalsRequestDto>();
+            var result = _mapService.SetPenAnimals(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/pen/auto-cut")]
+        [ResponseBody(typeof(PenEditResultDto))]
+        [RequestBody(typeof(PenAutoCutRequestDto))]
+        [EndpointMetadata("Switch a pen's auto-cut on or off", Notes = "The Auto-cut tab's checkbox and its Auto-cut now button; the button is refused while the pen is not enclosed, as the game greys it out")]
+        public async Task SetPenAutoCut(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<PenAutoCutRequestDto>();
+            var result = _mapService.SetPenAutoCut(body);
+            await context.SendJsonResponse(result);
+        }
+
+        [Post("/api/v1/map/pen/rename")]
+        [ResponseBody(typeof(PenEditResultDto))]
+        [RequestBody(typeof(PenRenameRequestDto))]
+        [EndpointMetadata("Rename an animal pen", Notes = "The pen marker's rename dialog: an empty name, one longer than 28 characters and one another pen carries are refused")]
+        public async Task RenamePen(HttpListenerContext context)
+        {
+            var body = await context.Request.ReadBodyAsync<PenRenameRequestDto>();
+            var result = _mapService.RenamePen(body);
+            await context.SendJsonResponse(result);
+        }
+
         [Get("/api/v1/map/pens")]
         [ResponseBody(typeof(List<PenDto>))]
         [QueryParameters("map_id:integer")]

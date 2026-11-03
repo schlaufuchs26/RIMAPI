@@ -1770,14 +1770,15 @@ namespace RIMAPI.Helpers
             }
         }
 
-        // ApplyFilterNames sets the allow state of each name on a stockpile's
-        // filter (fox ticket #3206). A name is a thing def first and a thing
+        // ApplyFilterNames sets the allow state of each name on a filter (fox
+        // ticket #3206): a stockpile's, and since #4316 an animal pen's, which
+        // lists animal defs and categories the same way. A name is a thing def first and a thing
         // category second, because both are what the storage tab lists
         // ("RawRice" is a def, "Foods" a category); an exact defName wins, and
         // a case-insensitive defName or label match is the fallback. A name
         // that matches neither goes into unknown, which the answer names
         // instead of reporting a filter change that never happened.
-        private static void ApplyFilterNames(
+        internal static void ApplyFilterNames(
             ThingFilter filter,
             List<string> names,
             bool allow,

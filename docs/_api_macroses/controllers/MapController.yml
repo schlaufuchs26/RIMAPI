@@ -1848,3 +1848,122 @@ desc: |-
     }
     ```
   method: POST
+
+/api/v1/map/pen/animals:
+  desc: |-
+    The pen's Animals tab: which animal kinds the pen takes. Names are animal
+    defNames or categories, and the game's own fixed filter bounds them, so a
+    name it does not carry comes back in unknown instead of being dropped.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/pen/animals' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "marker_id": 77261, "allow": ["Muffalo"], "deny": ["Chicken"]}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "marker_id": 77261, "allow": ["Muffalo"], "deny": ["Chicken"]}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "marker_id": 77261,
+            "label": "Pen 1",
+            "auto_cut": false,
+            "cut_marked": false,
+            "animals_allowed": ["Muffalo"],
+            "applied_defs": ["Muffalo", "Chicken"],
+            "applied_categories": [],
+            "unknown": []
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/pen/auto-cut:
+  desc: |-
+    The pen's Auto-cut tab: the checkbox, and the Auto-cut now button that marks
+    every plant the pen's filter allows. The button is refused while the pen is
+    not enclosed, which is where the game greys it out.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/pen/auto-cut' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "marker_id": 77261, "enabled": true, "cut_now": true}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "marker_id": 77261, "enabled": true, "cut_now": true}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "marker_id": 77261,
+            "label": "Pen 1",
+            "auto_cut": true,
+            "cut_marked": true,
+            "animals_allowed": ["Muffalo"],
+            "applied_defs": [],
+            "applied_categories": [],
+            "unknown": []
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST
+
+/api/v1/map/pen/rename:
+  desc: |-
+    The pen marker's rename dialog: an empty name, a name longer than 28
+    characters and a name another pen carries are refused.
+  curl: |-
+    **Example:**
+    ```bash
+    curl --request POST \
+    --url 'http://localhost:8765/api/v1/map/pen/rename' \
+    --header 'content-type: application/json' \
+    --data '{"map_id": 0, "marker_id": 77261, "label": "Muffalo pen"}'
+    ```
+  request: |-
+    **Request:**
+    ```json
+    {"map_id": 0, "marker_id": 77261, "label": "Muffalo pen"}
+    ```
+  response: |-
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "data": {
+            "marker_id": 77261,
+            "label": "Muffalo pen",
+            "auto_cut": true,
+            "cut_marked": false,
+            "animals_allowed": ["Muffalo"],
+            "applied_defs": [],
+            "applied_categories": [],
+            "unknown": []
+        },
+        "errors": [],
+        "warnings": [],
+        "timestamp": "2025-12-11T19:53:31.8379705Z"
+    }
+    ```
+  method: POST

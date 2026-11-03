@@ -58,6 +58,12 @@ namespace RIMAPI.Models
 
         /// <summary>The food stored inside the pen, per item type.</summary>
         public List<PenFoodDto> Stockpiled { get; set; }
+
+        /// <summary>The Auto-cut tab's checkbox: the pen cuts allowed plants by itself (fox ticket #4316).</summary>
+        public bool AutoCut { get; set; }
+
+        /// <summary>The animal defNames the pen's Animals tab takes, the filter the write route sets.</summary>
+        public List<string> AnimalsAllowed { get; set; }
     }
 
     /// <summary>One animal type in a pen, with the game's own capacity for it.</summary>
